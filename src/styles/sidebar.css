@@ -1,0 +1,11 @@
+/* Custom styles for the hover effect */
+.ant-menu-item:hover, .ant-menu-submenu-title:hover {
+    background-color: #e6f7ff !important; /* Pleasant light blue hover background */
+    color: #1890ff !important; /* Blue text color on hover */
+  }
+  
+  .ant-menu-item:hover .anticon,
+  .ant-menu-submenu-title:hover .anticon {
+    color: #1890ff !important; /* Blue icon color on hover */
+  }
+  
