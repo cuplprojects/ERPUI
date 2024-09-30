@@ -4,7 +4,6 @@ import Navbar from './../components/Navbar';
 import MainDashboard from './../pages/MainDashboard';
 import { Routes, Route } from 'react-router-dom';
 import Footer from '../components/Footer';
-import UserManagement from './../pages/UserManagement'
 import Masters from './../pages/Masters';
 import Features from './../pages/Features'
 import PageNotFound from '../pages/PageNotFound';
@@ -39,7 +38,6 @@ const Userlayout = () => {
           <div className={`flex-grow-1 d-fle m-2 p-3 `} style={{ zIndex: "2" }}>
             <Routes>
               <Route path="/dashboard" element={<MainDashboard />} />
-              <Route path="/user-management" element={<UserManagement />} />
               <Route path="/master" element={<Masters />} />
               <Route path="/features" element={<Features />} />
               {/* --------------- User Menu Routes -------------- */}
