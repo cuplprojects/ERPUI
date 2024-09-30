@@ -1,0 +1,73 @@
+body {
+    font-family: 'Poppins', sans-serif !important;
+  }
+
+
+
+.custom-dark-theme{
+    background-color: #37474F !important;
+    color:white !important;
+}
+.custom-light-theme{
+    background-color: #455A64 !important;
+    color:white !important;
+}
+
+/* userInterface.css */
+
+/* userInterface.css */
+
+/* Container for fixed position and styling */
+.user-interface-container {
+    position: fixed;
+    top: 540px; 
+    /* left: 0px; */
+    right: -20px; 
+    z-index: 1; /* Ensures it stays on top of other content */
+    width: 100px; /* Adjust width as necessary */
+    height: auto; /* Adjust height as necessary */
+    transition: transform 0.5s ; 
+  }
+  
+  .user-interface-container:hover{
+    transform: scale(1.1);
+  }
+  .user-interface-icon {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .settings-icon-ui {
+    position: absolute;
+    left: 32px;
+    font-size: 24px; /* Adjust size of the icon */
+    color: #ffffff; /* Adjust color of the icon */
+    animation: rotate 2s linear infinite; /* Apply rotation animation */
+    z-index: 1; /* Ensure icon is above the image */
+  }
+  
+  .ui-icon-img {
+    width: 50px; /* Adjust size of the image */
+    height: auto;
+  }
+  
+  @keyframes rotate {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  
+  table {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  
