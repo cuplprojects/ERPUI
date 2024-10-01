@@ -32,6 +32,9 @@ const ProjectDetailsTable = ({ tableData, setTableData }) => {
     const customLight = cssClasses[2];
     const customBtn = cssClasses[3];
     const customDarkText = cssClasses[4];
+    const customLightText = cssClasses[5]
+    const customLightBorder = cssClasses[6]
+    const customDarkBorder = cssClasses[7]
 
     const [initialTableData, setInitialTableData] = useState();
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
@@ -42,7 +45,7 @@ const ProjectDetailsTable = ({ tableData, setTableData }) => {
     });
     const [hideCompleted, setHideCompleted] = useState(false);
     const [columnModalShow, setColumnModalShow] = useState(false);
-    const [statusUpdate, setStatusUpdate] = useState('');
+    // const [statusUpdate, setStatusUpdate] = useState(''); // not used currently
     const [alarmModalShow, setAlarmModalShow] = useState(false);
     const [interimQuantityModalShow, setInterimQuantityModalShow] = useState(false);
     const [remarksModalShow, setRemarksModalShow] = useState(false);
@@ -716,7 +719,7 @@ const ProjectDetailsTable = ({ tableData, setTableData }) => {
                         style={{ position: "relative", zIndex: "900" }}
                         striped={true}
                         headerColor="#00ff00"
-                        headerBg="#00000AlarmModal0"
+                        headerBg="#0000"
                         tableLayout="auto"
                         responsive={true}
                         components={{

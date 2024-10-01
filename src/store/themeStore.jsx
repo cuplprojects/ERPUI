@@ -1,32 +1,3 @@
-// import create from 'zustand';
-
-// const themeStore = create((set, get) => ({
-//   theme: 'default', // initial theme
-//   setTheme: (newTheme) => set({ theme: newTheme }),
-//   getCssClasses: () => {
-//     const theme = get().theme; // access the theme state using get()
-//     switch (theme) {
-//       case 'Red':
-//         return ['red-dark', 'red-mid', 'red-light', 'red-btn','red-dark-text'];
-//       case 'Blue':
-//         return ['blue-dark', 'blue-mid', 'blue-light', 'blue-btn','blue-dark-text'];
-//       case 'Green':
-//         return ['green-dark', 'green-mid', 'green-light', 'green-btn','green-dark-text'];
-//       case 'Purple':
-//         return ['purple-dark', 'purple-mid', 'purple-light', 'purple-btn','purple-dark-text'];
-//       case 'Dark':
-//         return ['dark-dark', 'dark-mid', 'dark-light', 'dark-btn','dark-dark-text '];
-//       default:
-//         return ['default-dark', 'default-mid', 'default-light', 'default-btn','default-dark-text'];
-//     }
-//   },
-// }));
-
-// export default themeStore;
-
-//theme store with local storage
-
-// import create from 'zustand';
 import { create } from 'zustand';
 const themeStore = create((set, get) => ({
   theme: localStorage.getItem('app-theme') || 'default', // Initialize from localStorage or fallback to 'default'
