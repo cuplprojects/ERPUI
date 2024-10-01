@@ -18,13 +18,18 @@ import { useStore } from 'zustand';
 import WavyDiv from './WavyDiv';
 import QtySheetUpload from '../pages/QtySheetUpload';
 const Userlayout = () => {
-  const { getCssClasses } = useStore(themeStore);
-  const cssClasses = getCssClasses();
-  const customDark = cssClasses[0];
-  const customMid = cssClasses[1];
-  const customLight = cssClasses[2];
-  const customBtn = cssClasses[3];
-
+  
+    //Theme Change Section
+    const { getCssClasses } = useStore(themeStore);
+    const cssClasses = getCssClasses();
+    const customDark = cssClasses[0];
+    const customMid = cssClasses[1];
+    const customLight = cssClasses[2];
+    const customBtn = cssClasses[3];
+    const customDarkText = cssClasses[4];
+    const customLightText = cssClasses[5]
+    const customLightBorder = cssClasses[6]
+    const customDarkBorder = cssClasses[7]
   return (
     <div className={`container-fluid p-0 vh-100  ${customLight}`}>
       <LockOverlay className="lock-button" />

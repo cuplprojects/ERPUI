@@ -136,8 +136,6 @@ const ProcessTable = () => {
                                         </div>
                                     </Col>
                                 )}
-
-
                                 <div className="d-flex justify-content-center d-lg-none d-md-none ">
                                     <hr className='w-100 center' />
                                 </div>
@@ -188,12 +186,12 @@ const ProcessTable = () => {
                 </Col>
             </Row>
             <Row className='mb-2'>
-                {/* <Col lg={2} md={0} ></Col> */}
+                <Col lg={2} md={0} ></Col>
                 <Col lg={8} md={12} >
                     <ProjectDetailsTable tableData={tableData} setTableData={setTableData} />
                 </Col>
-                {/* <Col lg={2} md={0} ></Col> */}
-                <Col lg={4} md={12}> <UserCard /> </Col>
+                <Col lg={2} md={0} ></Col>
+                {/* <Col lg={4} md={12}> <UserCard /> </Col> */}
             </Row>
             <Row className='mb-4 d-flex justify-content-between'>
                 <Col lg={8} md={12} className='mb-1'>

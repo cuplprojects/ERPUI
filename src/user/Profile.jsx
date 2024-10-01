@@ -7,7 +7,6 @@ import { FaUser } from "react-icons/fa";
 import { BsTelephoneFill } from "react-icons/bs";
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
-
 import SampleUser1 from "./../assets/sampleUsers/sampleUser1.jpg";
 import ChangeMobileNumber from './../menus/ChangeMobileNumber'
 import { FaTimes } from 'react-icons/fa';
@@ -158,7 +157,6 @@ const UserProfile = () => {
       {/* ----------------------------------------------------------------------------------------------------------------------- */}
       <div className={` p-4  rounded-bottom shadow-lg ${customLight} ${customDark === 'dark-dark' ? `${customDarkBorder} border-1` : "border-light"} `}>
         <Row className="align-items-center mb-4">
-
           <Col xs={12} sm={3} md={2} className="text-center position-relative ">
             <img
               src={SampleUser1}
