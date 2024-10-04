@@ -190,14 +190,14 @@ const ProjectChart = ({ title, chartKey, chartdata, onClick, tCatch, type }) => 
                   enabled: true,
                   callbacks: {
                     label: (tooltipItem) => {
-                      return `${tooltipItem.label}: ${tooltipItem.raw}`;
+                      return `${tooltipItem.label}: ${tooltipItem.raw}%`;
                     },
                   },
                 },
               },
             }}
           />
-          <span className="fw-bold">Total Catches-{tCatch}</span>
+          <span className="">Total Catches-{tCatch}</span>
           
         </div>
       </Card>
@@ -363,7 +363,7 @@ const AllProjects = () => {
                         enabled: true,
                         callbacks: {
                           label: (tooltipItem) => {
-                            return `${tooltipItem.label}: ${tooltipItem.raw}`;
+                            return `${tooltipItem.label}: ${tooltipItem.raw}%`;
                           },
                         },
                       },
