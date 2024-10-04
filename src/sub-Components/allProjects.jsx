@@ -1,150 +1,5 @@
-// import React, { useState, useEffect } from 'react';
-// import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
-// import 'react-circular-progressbar/dist/styles.css';
-// import 'bootstrap/dist/css/bootstrap.min.css';
-// import { useNavigate, Link } from 'react-router-dom'; // Import useNavigate for navigation
-// import './../styles/allProjects.css';
-// import Spinner from '../components/Spinner';
-
-// const AllProjects = () => {
-//     const progressData = [
-//         { id: 1, processName: 'Project A', percentage: 75, status: 'In Progress', lot: 1 },
-//         { id: 2, processName: 'Project B', percentage: 50, status: 'Completed', lot: 2 },
-//         { id: 3, processName: 'Project C', percentage: 90, status: 'Warning', lot: 3 },
-//         { id: 4, processName: 'Project D', percentage: 20, status: 'Stopped', lot: 4 },
-//         { id: 5, processName: 'Project E', percentage: 65, status: 'In Progress', lot: 5 },
-//         { id: 6, processName: 'Project F', percentage: 75, status: 'In Progress', lot: 6 },
-//         { id: 7, processName: 'Project G', percentage: 85, status: 'In Progress', lot: 7 },
-//         // Commented out projects for demo purposes
-//     ];
-
-//     const getColor = (status) => {
-//         switch (status) {
-//             case 'In Progress':
-//                 return '#00f'; // Blue
-//             case 'Completed':
-//                 return '#0f0'; // Green
-//             case 'Warning':
-//                 return '#ff0'; // Yellow
-//             case 'Stopped':
-//                 return '#f00'; // Red
-//             default:
-//                 return '#ddd'; // Default color
-//         }
-//     };
-
-//     const [showCharts, setShowCharts] = useState(false);
-//     const navigate = useNavigate(); // Initialize useNavigate hook
-
-//     useEffect(() => {
-//         const timer = setTimeout(() => {
-//             setShowCharts(true);
-//         }, 400); // 400ms delay
-
-//         return () => clearTimeout(timer); // Cleanup the timer if the component unmounts
-//     }, []);
-
-//     // Function to handle navigation with project details
-//     const handleNavigate = (project) => {
-//         navigate(`/project-details/${project.id}`, { state: { project } }); // Pass project details as state
-//     };
-
-//     return (
-//         <div className="container-fluid">
-//             {/* Cards for large screens */}
-//             <div className="d-none d-lg-block">
-//                 <div className="row flex-nowrap overflow-auto p-1">
-//                     {showCharts && progressData.length > 0 ? (
-//                         progressData.slice(0, 3).map((item) => (
-//                             <div key={item.id} className="col-lg-3 mb-3">
-//                                 <div className="card p-1" onClick={() => handleNavigate(item)} style={{ cursor: 'pointer' }}>
-//                                     <div className="card-body d-flex flex-column align-items-center justify-content-start">
-//                                         <div className="position-relative" style={{ width: '110px', height: '110px' }}>
-//                                             <CircularProgressbar
-//                                                 value={item.percentage}
-//                                                 text={`${item.percentage}%`}
-//                                                 styles={buildStyles({
-//                                                     strokeLinecap: "butt",
-//                                                     textColor: '',
-//                                                     pathColor: getColor(item.status), // Color based on status
-//                                                     trailColor: '#ddd',
-//                                                     strokeWidth: 15, // Increase the width of the bar
-//                                                 })}
-//                                             />
-//                                         </div>
-//                                         <span className="text-center mt-2">{item.processName}</span> {/* Label below the chart */}
-//                                         <span className="text-center mt-2">Lot - {item.lot}</span> {/* Label below the chart */}
-//                                     </div>
-//                                 </div>
-//                             </div>
-//                         ))
-//                     ) : (
-//                         <div className="col-lg-3 mb-3">
-//                             <div className="card p-3 text-white bg-white w-100">
-//                                 <div className="card-body d-flex flex-column align-items-center justify-content-center">
-//                                     <div style={{ width: '110px', height: '110px', background: '#ffffff' }}>
-//                                         {/* <Spinner color="custom"/> */}
-//                                     </div>
-//                                     <span className="text-center custom-theme-dark-text mt-2 fs-4">No Current Projects</span>
-//                                 </div>
-//                             </div>
-//                         </div>
-//                     )}
-//                     {progressData.length > 0 && (
-//                         <div className="col-lg-3 mb-3 d-flex align-items-center justify-content-center">
-//                             <Link to="/all-projects" className="btn btn-primary">View All</Link> {/* View All button */}
-//                         </div>
-//                     )}
-//                 </div>
-//             </div>
-
-//             {/* Non-card layout for small screens */}
-//             <div className="d-block d-lg-none bg-white rounded">
-//                 <div className="row g-2 p-2 flex-nowrap overflow-auto no-scrollbar">
-//                     {showCharts && progressData.length > 0 ? (
-//                         progressData.map((item) => (
-//                             <div key={item.id} className="col-4 col-sm-3 col-md-2 d-flex flex-column align-items-center">
-//                                 <div className="d-flex flex-column align-items-center" onClick={() => handleNavigate(item)} style={{ cursor: 'pointer' }}>
-//                                     <div className="position-relative" style={{ width: '100px', height: '100px' }}>
-//                                         <CircularProgressbar
-//                                             value={item.percentage}
-//                                             text={`${item.percentage}%`}
-//                                             styles={buildStyles({
-//                                                 strokeLinecap: "butt",
-//                                                 textColor: '',
-//                                                 pathColor: getColor(item.status), // Color based on status
-//                                                 trailColor: '#ddd',
-//                                                 strokeWidth: 15, // Adjust stroke width for smaller screens
-//                                             })}
-//                                         />
-//                                     </div>
-//                                     <span className="text-center mt-2">{item.processName}</span> {/* Label below the chart */}
-//                                 </div>
-//                             </div>
-//                         ))
-//                     ) : (
-//                         <div className="col-4 col-sm-3 col-md-2 d-flex flex-column align-items-center">
-//                             <div className="d-flex flex-column align-items-center">
-//                                 <div className="position-relative" style={{ width: '100px', height: '100px', background: '#000' }}></div>
-//                                 <span className="text-center mt-2">No Current Projects</span>
-//                             </div>
-//                         </div>
-//                     )}
-//                     {progressData.length > 0 && (
-//                         <span className="d-flex align-items-center justify-content-center" style={{width:"100px"}}>
-//                             <Link to="/all-projects" className="btn btn-primary">View All</Link> {/* View All button */}
-//                         </span>
-//                     )}
-//                 </div>
-//             </div>
-//         </div>
-//     );
-// };
-
-// export default AllProjects;
-
-import React, { useState, useEffect } from "react";
-import { Container, Row, Col, Card } from "react-bootstrap";
+import React, { useState, useEffect, useRef } from "react";
+import { Container, Row, Col, Card, Carousel, Button } from "react-bootstrap";
 import { Doughnut, Bar } from "react-chartjs-2";
 import {
   Chart,
@@ -162,16 +17,14 @@ import DoughnutGraphData from "./../store/doughnutChartData.json";
 import DashboardGrid from "./DashboardGrid";
 import { useNavigate } from "react-router";
 
-
-
 Chart.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip);
 
 const ProjectChart = ({ title, chartKey, chartdata, onClick, tCatch, type }) => (
-  <Col xs={12} sm={6} md={4} lg={2}> {/* Adjust sizes for different screen widths */}
+  <Col xs={12} sm={6} md={4} lg={3} xl={2}>
     <div className="text-center p-3 chart-container c-pointer custom-zoom-btn">
       <Card className="text-center p-1 shadow-lg" onClick={onClick}>
-        <h4 >{title} Lot-{chartKey}</h4>
-        <h5 >Type-{type}</h5>
+        <h4>{title} Lot-{chartKey}</h4>
+        <h5>Type-{type}</h5>
         <div className="chart-wrapper">
           <Doughnut
             data={{
@@ -198,7 +51,6 @@ const ProjectChart = ({ title, chartKey, chartdata, onClick, tCatch, type }) => 
             }}
           />
           <span className="">Total Catches-{tCatch}</span>
-          
         </div>
       </Card>
     </div>
@@ -209,20 +61,28 @@ const AllProjects = () => {
   const [selectedChart, setSelectedChart] = useState({
     label: "",
     lotNumber: "",
-    barLabel: BarGraphData[0].label, // Default bar label to first bar's label
+    barLabel: BarGraphData[0].label,
   });
+  const [showControls, setShowControls] = useState(window.innerWidth >= 992);
 
   const navigate = useNavigate();
+  const carouselRef = useRef(null);
 
-  // Set default selected chart to the first Doughnut chart
   useEffect(() => {
     if (DoughnutGraphData.length > 0) {
       setSelectedChart({
         label: DoughnutGraphData[0].label,
-        lotNumber: DoughnutGraphData[0].lotId, // Lot number for the first chart
-        barLabel: BarGraphData[0].label, // Default bar label set to first bar
+        lotNumber: DoughnutGraphData[0].lotId,
+        barLabel: BarGraphData[0].label,
       });
     }
+
+    const handleResize = () => {
+      setShowControls(window.innerWidth >= 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const handleCardClick = (chartTitle, lotNumber) => {
@@ -234,7 +94,7 @@ const AllProjects = () => {
   };
 
   const handleTitleClick = (project) => {
-    navigate(`/project-details/${project.lotNumber}`, { state: { project } }); // Pass project details as state
+    navigate(`/project-details/${project.lotNumber}`, { state: { project } });
   };
 
   const handleBarClick = (elements) => {
@@ -244,26 +104,76 @@ const AllProjects = () => {
 
       setSelectedChart((prev) => ({
         ...prev,
-        barLabel: clickedBarLabel, // Update the state with clicked bar label
+        barLabel: clickedBarLabel,
       }));
     }
   };
 
+  const handleCarouselControl = (direction) => {
+    if (carouselRef.current) {
+      if (direction === 'prev') {
+        carouselRef.current.prev();
+      } else {
+        carouselRef.current.next();
+      }
+    }
+  };
+
+  const itemsPerSlide = 6; // Adjust this number based on how many items you want per slide
+
+  const carouselItems = [];
+  for (let i = 0; i < DoughnutGraphData.length; i += itemsPerSlide) {
+    carouselItems.push(
+      <Carousel.Item key={i} style={{background:"transparent"}}>
+        <Row className="flex-nowrap">
+          {DoughnutGraphData.slice(i, i + itemsPerSlide).map((data, idx) => (
+            <ProjectChart
+              key={idx}
+              title={data.label}
+              chartdata={[data.completed, data.remaining]}
+              chartKey={data.lotId}
+              tCatch={data.tCatch}
+              type={data.type}
+              onClick={() => handleCardClick(data.label, data.lotId)}
+            />
+          ))}
+        </Row>
+      </Carousel.Item>
+    );
+  }
+
   return (
     <Container fluid>
-      <Row className="mb-4">
-        {DoughnutGraphData.map((data, idx) => (
-          <ProjectChart
-            key={idx}
-            title={data.label}
-            chartdata={[data.completed, data.remaining]}
-            chartKey={data.lotId}
-            tCatch={data.tCatch}
-            type={data.type}
-            onClick={() => handleCardClick(data.label, data.lotId)}
-          />
-        ))}
-      </Row>
+      <div className="position-relative mb-4">
+        {showControls && (
+          <>
+            <Button
+              className="position-absolute top-50 start-0 translate-middle-y  ms-2" style={{zIndex:"9"}}
+              onClick={() => handleCarouselControl('prev')}
+              variant="light"
+            >
+              &lt;
+            </Button>
+            <Button
+              className="position-absolute top-50 end-0 translate-middle-y  me-2"  style={{zIndex:"9"}}
+              onClick={() => handleCarouselControl('next')}
+              variant="light"
+            >
+              &gt;
+            </Button>
+          </>
+        )}
+        <Carousel 
+          ref={carouselRef} 
+          interval={null} 
+          indicators={false} 
+          controls={false}
+          touch={true}
+          slide={true}
+        >
+          {carouselItems}
+        </Carousel>
+      </div>
 
       <marquee className="marquee" style={{ color: "red", fontWeight: "bold" }}>
         <img
@@ -273,24 +183,24 @@ const AllProjects = () => {
           style={{
             transform: "scaleX(-1)",
             width: "80px",
-            marginRight: "10px",
+            marginRight: 10+"px",
           }}
         />
         Important: Please review the latest updates and alerts!
       </marquee>
 
       <Row>
-        <Col xs={12} lg={8}> {/* Adjust the width of the dashboard grid */}
-          <Card className="dcard shadow-lg" style={{height: "400px" }}>
-            <h4 className=" text-dark d-flex justify-content-between">
+        <Col xs={12} lg={8}>
+          <Card className="dcard shadow-lg" style={{ height: "400px" }}>
+            <h4 className="text-dark d-flex justify-content-between">
               <div>
-                {selectedChart.label}  Lot- {selectedChart.lotNumber}{" "}
+                {selectedChart.label} Lot- {selectedChart.lotNumber}{" "}
                 {selectedChart.barLabel && `| ${selectedChart.barLabel}`}
               </div>
               <button
                 type="button"
                 onClick={() => handleTitleClick(selectedChart)}
-                className="btn btn-outline-info "
+                className="btn btn-outline-info"
               >
                 More Info
               </button>
@@ -319,9 +229,8 @@ const AllProjects = () => {
                 }}
               >
                 <h4 className="text-dark">
-                  {selectedChart.label}  Lot- {selectedChart.lotNumber}
+                  {selectedChart.label} Lot- {selectedChart.lotNumber}
                 </h4>
-
               </div>
               <div style={{ width: "100%", height: "90%" }}>
                 <Bar
@@ -381,5 +290,3 @@ const AllProjects = () => {
 };
 
 export default AllProjects;
-
-
