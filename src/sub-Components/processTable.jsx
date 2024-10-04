@@ -19,7 +19,7 @@ import PendingIcon from "./../assets/Icons/pendingIcon.gif";
 import { t } from '../scripts/translation';
 import { Link } from 'react-router-dom';
 import { MdCloudUpload } from "react-icons/md";//upload icon
-
+import { FaRegHourglassHalf } from "react-icons/fa6";//pre process running
 
 const ProcessTable = () => {
 
@@ -114,23 +114,25 @@ const ProcessTable = () => {
                                 </div>
 
                                 {activeUserProcess === 'preProQC' ? (
-                                   <Col lg={3} md={4} xs={12} className='d-flex justify-content-center'>
-                                   <Link to="/quantity-sheet-uploads" className={`${customMid} ${customDarkText} ${customLightBorder} border-3 p1 rounded d-flex align-items-center p-1 text-decoration-none shadow-lg`}>
-                                     <span>
-                                       Quantity
-                                     </span>
-                                     <span>
-                                       <MdCloudUpload className='ms-2'/>
-                                     </span>
-                                   </Link>
-                                 </Col>
+                                    <Col lg={3} md={4} xs={12} className='d-flex justify-content-center'>
+                                        <Link to="/quantity-sheet-uploads" className={`${customMid} ${customDarkText} ${customLightBorder} border-3 p1 rounded d-flex align-items-center p-1 text-decoration-none shadow-lg`}>
+                                            <span>
+                                                Quantity
+                                            </span>
+                                            <span>
+                                                <MdCloudUpload className='ms-2' />
+                                            </span>
+                                        </Link>
+                                    </Col>
                                 ) : (
                                     <Col lg={3} md={4} xs={12}>
                                         <div className={` align-items-center flex-column`}>
                                             <div className='text-center fs-5'>Previous Process </div>
-                                            <div className={`p-1  fs-6 text-primary border ${customDarkBorder} rounded ms-1 d-flex justify-content-center align-items-center ${customDark === 'dark-dark' ? `${customBtn} text-white` : `${customLight} bg-light`}`} style={{ fontWeight: 900 }}> {previousProcess} - {previousProcessPercentage}%
+                                            <div className={`p-1  fs-6 text-primary border ${customDarkBorder} rounded ms-1 d-flex justify-content-center align-items-center ${customDark === 'dark-dark' ? `${customBtn} text-white` : `${customLight} bg-light`}`} style={{ fontWeight: 900 }}> 
+                                                {previousProcess} - {previousProcessPercentage}%
+                                                {/* {previousProcessPercentage}% */}
                                                 <span className='ms-2'>
-                                                    <ProcessingIcon color='blue' size="20" />
+                                                    <FaRegHourglassHalf color='blue' size="20" />
                                                 </span>
                                             </div>
                                         </div>
@@ -150,18 +152,18 @@ const ProcessTable = () => {
                                         <div className='text-center fs-5'>Current Process </div>
                                         <div className={`p-1  fs-6 text-primary border ${customDarkBorder} rounded ms-1 d-flex justify-content-center align-items-center ${customDark === 'dark-dark' ? `${customBtn} text-white` : `${customLight} bg-light text-danger`}`} style={{ fontWeight: 900 }}>{currentProcess}
                                             <span className='ms-2'>
-                                                {/* <MdPending color='red' size="25" /> */}
-                                                <img src={PendingIcon} alt="" width="25px" className='ms-1' style={{ transform: "scale(2)" }} />                                            </span>
+                                                <MdPending color='red' size="25" />
+                                                {/* pending icon here */}
+                                            </span>
                                         </div>
                                     </div>
                                 </Col>
                             </Row>
-
                         </Card.Header>
                     </Card>
                 </Col>
             </Row>
-            {/* ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
+            {/* ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ */}
             <Row>
                 <Col lg={12} md={12}>
                     <div className="marquee-container mt-2 mb-2">
