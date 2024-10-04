@@ -5,7 +5,7 @@ import { Row, Col } from 'react-bootstrap';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 
-const AlertBadge = ({ catchNo,alerts, onClick, status }) => {
+const AlertBadge = ({ catchNo, alerts, onClick, status }) => {
 
     //Theme Change Section
     const { getCssClasses } = useStore(themeStore);

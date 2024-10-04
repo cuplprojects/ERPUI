@@ -171,7 +171,7 @@ const ProcessTable = () => {
                                 {tableData.map((record, index) => (
                                     <>
                                         {record.alerts.length > 0 && (
-                                            <AlertBadge text={record.catchNumber} onClick={() => handleCatchClick(record)} status="level1" />
+                                            <AlertBadge catchNo={record.catchNumber} alerts={record.alerts} onClick={() => handleCatchClick(record)} status="level1" />
                                         )}
                                     </>
                                 ))}
