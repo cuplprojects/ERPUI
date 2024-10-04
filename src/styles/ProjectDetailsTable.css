@@ -35,22 +35,22 @@
   background-color: #ffffff; /* or any color you prefer for even rows */
 }
 
-/* .text-center-table thead{
-    background-color: black !important;
-  } */
-
   .pending-row td {
-    background-color: #ffe6e6; /* light red */
+    background-color: #f8bebe; /* light red */
   }
   
   .started-row td {
-    background-color: #cce6ff; /* light blue */
+    background-color: #abd4fa; /* light blue */
   }
   
   .completed-row td {
-    background-color: #c6f7d0; /* light green */
+    background-color: #9efab1; /* light green */
   }
 
-  /* .custom-table-header {
-    background-color: #dad6d6; 
+  .custom-table-header  {
+    background-color: rgba(0, 0, 0, 0); /* bg is not shown yet (a===0) */
+  }
+
+  /* .custom-table-header .ant-table-thead > tr > th {
+    background: #456d42;
   } */
