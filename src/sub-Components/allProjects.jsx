@@ -63,7 +63,6 @@ const AllProjects = () => {
     lotNumber: "",
     barLabel: BarGraphData[0].label,
   });
-  const [showControls, setShowControls] = useState(window.innerWidth >= 992);
 
   const navigate = useNavigate();
   const carouselRef = useRef(null);
@@ -76,13 +75,7 @@ const AllProjects = () => {
         barLabel: BarGraphData[0].label,
       });
     }
-
-    const handleResize = () => {
-      setShowControls(window.innerWidth >= 768);
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+   
   }, []);
 
   const handleCardClick = (chartTitle, lotNumber) => {
@@ -144,9 +137,9 @@ const AllProjects = () => {
 
   return (
     <Container fluid>
-      <div className="position-relative mb-4">
-        {showControls && (
-          <>
+      <div className="position-relative mb-4 ">
+       
+          <div className="d-none d-lg-block">
             <Button
               className="position-absolute top-50 start-0 translate-middle-y  ms-2" style={{zIndex:"9"}}
               onClick={() => handleCarouselControl('prev')}
@@ -161,8 +154,8 @@ const AllProjects = () => {
             >
               &gt;
             </Button>
-          </>
-        )}
+          </div>
+
         <Carousel 
           ref={carouselRef} 
           interval={null} 
