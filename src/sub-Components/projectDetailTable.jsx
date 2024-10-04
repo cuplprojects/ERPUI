@@ -35,6 +35,7 @@ const ProjectDetailsTable = ({ tableData, setTableData }) => {
     const customLightText = cssClasses[5]
     const customLightBorder = cssClasses[6]
     const customDarkBorder = cssClasses[7]
+    const customThead = cssClasses[8]
 
     const [initialTableData, setInitialTableData] = useState();
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
@@ -45,7 +46,6 @@ const ProjectDetailsTable = ({ tableData, setTableData }) => {
     });
     const [hideCompleted, setHideCompleted] = useState(false);
     const [columnModalShow, setColumnModalShow] = useState(false);
-    // const [statusUpdate, setStatusUpdate] = useState(''); // not used currently
     const [alarmModalShow, setAlarmModalShow] = useState(false);
     const [interimQuantityModalShow, setInterimQuantityModalShow] = useState(false);
     const [remarksModalShow, setRemarksModalShow] = useState(false);
@@ -65,7 +65,7 @@ const ProjectDetailsTable = ({ tableData, setTableData }) => {
     const [selectZoneModalData, setSelectZoneModalData] = useState(null);
     const [assignTeamModalData, setAssignTeamModalData] = useState(null);
     const [showOnlyAlerts, setShowOnlyAlerts] = useState(false);
-    const [showOnlyCompletedPreviousProcess, setShowOnlyCompletedPreviousProcess] = useState(false);
+    const [showOnlyCompletedPreviousProcess, setShowOnlyCompletedPreviousProcess] = useState(true);
     const [showOnlyRemarks, setShowOnlyRemarks] = useState(false);
     const processList = [
         { mss: "MSS" },
@@ -109,22 +109,6 @@ const ProjectDetailsTable = ({ tableData, setTableData }) => {
         const newVisibleKeys = filteredData.map(item => item.catchNumber);
         setVisibleRowKeys(newVisibleKeys);
     }, [searchText, hideCompleted]); // Add other dependencies if necessary
-    const handleSelectAllChange = (e) => {
-        const checked = e.target.checked;
-        setSelectAll(checked);
-
-        if (checked) {
-            // Select only the visible rows
-            setSelectedRowKeys(visibleRowKeys);
-        } else {
-            // Deselect all rows
-            setSelectedRowKeys([]);
-            // Update the checkbox state for each row
-            tableData.forEach((row) => {
-                row.isChecked = false;
-            });
-        }
-    };
     const filteredData = tableData.filter(item =>
         Object.values(item).some(value =>
             value.toString().toLowerCase().includes(searchText.toLowerCase())
@@ -160,35 +144,6 @@ const ProjectDetailsTable = ({ tableData, setTableData }) => {
         setCatchDetailModalData(record);
     };
 
-    //funtion to not to update the catch with alert to completed
-
-    // const handleRowStatusChange = (catchNumber, newStatusIndex) => {
-    //     const statusSteps = ["Pending", "Started", "Completed"];
-    //     const newStatus = statusSteps[newStatusIndex];
-
-    //     // Check if any of the catches have an alarm
-    //     const hasAlarm = tableData.some((row) => row.catchNumber === catchNumber && row.alerts);
-
-    //     if (hasAlarm && newStatus === "Completed") {
-    //       // Prevent marking as completed if there's an alarm
-    //       alert("Cannot mark as completed while there's an alarm");
-    //       return;
-    //     }
-
-    //     if (hasAlarm && newStatusIndex > 1) {
-    //       // Limit status to "Started" if there's an alarm
-    //       newStatusIndex = 1;
-    //     }
-
-    //     const updatedData = tableData.map((row) => {
-    //       if (row.catchNumber === catchNumber) {
-    //         return { ...row, status: statusSteps[newStatusIndex] };
-    //       }
-    //       return row;
-    //     });
-
-    //     setTableData(updatedData);
-    //   };
     const columns = [
         {
             width: '5%',
@@ -233,28 +188,6 @@ const ProjectDetailsTable = ({ tableData, setTableData }) => {
             sorter: (a, b) => a.srNo - b.srNo,
 
         },
-        ...(previousProcess ? [{
-            title: previousProcess,
-            dataIndex: 'previousProcessStats',
-            key: 'previousProcessStats',
-            align: 'center',
-            width: "10%",
-            sorter: (a, b) => {
-                const statusOrder = ['Pending', 'Completed'];
-                return statusOrder.indexOf(a.previousProcessStats) - statusOrder.indexOf(b.previousProcessStats);
-            },
-            render: (text) => {
-                return (
-                    <div className="d-flex justify-content-center">
-                        {text === "Completed" ? (
-                            <IoCheckmarkDoneCircleSharp size={20} color="green" />
-                        ) : (
-                            <MdPending size={20} color="orange" />
-                        )}
-                    </div>
-                );
-            },
-        }] : []),
         {
             width: '15%',
             title: 'Catch No.',
@@ -265,47 +198,71 @@ const ProjectDetailsTable = ({ tableData, setTableData }) => {
             sorter: (a, b) => a.catchNumber.localeCompare(b.catchNumber),
             render: (text, record) => (
                 <>
-                    <button
-                        className="rounded border fs-6 custom-zoom-btn bg-white position-relative "
-                        onClick={() => handleCatchClick(record)}
-                    >
-                        {text}
-
-
-                    </button>
-                    <div className='d-inline'>
-                        <span className='ms-1'>
-                            {record.remarks && (
-                                <FaEdit
-                                    className='ms-5'
-                                    size={20} // Adjust the size to make it smaller as a superscript
-                                    style={{
-                                        position: 'absolute',
-                                        color: 'blue',
+                    <Row>
+                        <Col lg={3} md={3} sm={3} xs={3}>
+                            <div className='d-inline'>
+                                {record.previousProcessStats === "Completed" ? (
+                                    <IoCheckmarkDoneCircleSharp size={20} color="green" className="" />
+                                ) : (
+                                    <MdPending size={20} color="orange" className="" />
+                                )}
+                            </div>
+                        </Col>
+                        <Col lg={5} md={5} sm={5} xs={5}>
+                            <div>
+                                <button
+                                    className="rounded border fs-6 custom-zoom-btn bg-white position-relative "
+                                    onClick={() => handleCatchClick(record)}
+                                >
+                                    {text}
+                                </button>
+                            </div>
+                        </Col>
+                        <Col lg={1} md={1} sm={1} xs={1}>
+                            <div className='d-inline'>
+                                <span
+                                    className=''
+                                    onClick={() => {
+                                        setCatchDetailModalShow(true);
+                                        setCatchDetailModalData(record);
                                     }}
-                                />
-                            )}
-                        </span>
-                        <span
-                            className="fs-6  position-relative "
-                            onClick={() => handleCatchClick(record)}
-                        >
-                            {record.alerts && (
-                                < BiSolidFlag
-                                    title={record.alerts}
-                                    className='ms-2'
-                                    size={20} // Adjust the size to make it smaller as a superscript
-                                    style={{
-                                        position: 'absolute',
-                                        color: 'red',
-                                    }}
-                                />
-                            )}
-                        </span>
-                    </div>
+                                >
+                                    {record.remarks && (
+                                        <FaEdit
+                                            className=''
+                                            size={20} // Adjust the size to make it smaller as a superscript
+                                            style={{
+                                                position: 'absolute',
+                                                color: 'blue',
+                                            }}
+                                        />
+                                    )}
+                                </span>
+                            </div>
+                        </Col>
+                        <Col lg={1} md={1} sm={1} xs={1}>
+                            <div className="d-inline">
+                                <span
+                                    className="fs-6  position-relative "
+                                    onClick={() => handleCatchClick(record)}
+                                >
+                                    {record.alerts && (
+                                        <BiSolidFlag
+                                            title={record.alerts}
+                                            className=''
+                                            size={20} // Adjust the size to make it smaller as a superscript
+                                            style={{
+                                                position: 'absolute',
+                                                color: 'red',
+                                            }}
+                                        />
+                                    )}
+                                </span>
+                            </div>
+                        </Col>
+                    </Row>
                 </>
-            )
-
+            ),
         },
         {
             width: '12%',
@@ -323,12 +280,6 @@ const ProjectDetailsTable = ({ tableData, setTableData }) => {
             key: 'interimQuantity',
             sorter: (a, b) => a.interimQuantity - b.interimQuantity,
         }] : []),
-        // ...(columnVisibility.Alerts ? [{
-        //     title: 'Alerts',
-        //     dataIndex: 'alerts',
-        //     key: 'alerts',
-        //     sorter: (a, b) => a.alerts.localeCompare(b.alerts),
-        // }] : []),
         ...(columnVisibility.Remarks ? [{
             title: 'Remarks',
             dataIndex: 'remarks',
@@ -557,7 +508,7 @@ const ProjectDetailsTable = ({ tableData, setTableData }) => {
         && (!hideCompleted || item.status !== 'Completed')
         && (!showOnlyAlerts || item.alerts)
         && (!showOnlyCompletedPreviousProcess || item.previousProcessStats === 'Completed')
-        && (!showOnlyRemarks || item.remarks) // new condition
+        && (!showOnlyRemarks || item.remarks)
     );
     return (
         <>
@@ -580,7 +531,8 @@ const ProjectDetailsTable = ({ tableData, setTableData }) => {
                                     checked={showOnlyCompletedPreviousProcess}
                                     onChange={() => setShowOnlyCompletedPreviousProcess(!showOnlyCompletedPreviousProcess)}
                                 />
-                                <span className='ms-2'>{previousProcess} Completed</span>
+                                {/* <span className='ms-2'>{previousProcess} Completed</span> */}
+                                <span className='ms-2'>Previous  Completed</span>
                             </Menu.Item>
                             <Menu.Divider />
 
@@ -709,7 +661,15 @@ const ProjectDetailsTable = ({ tableData, setTableData }) => {
                 <Col lg={12} md={12}>
                     <Table
                         rowClassName={rowClassName}
-                        className="striped-table text-center-table custom-table-header"
+                        className={`${customDark === "default-dark" ? "thead-default" : ""}
+                                    ${customDark === "red-dark" ? "thead-red" : ""}
+                                    ${customDark === "green-dark" ? "thead-green" : ""}
+                                    ${customDark === "blue-dark" ? "thead-blue" : ""}
+                                    ${customDark === "dark-dark" ? "thead-dark" : ""}
+                                    ${customDark === "pink-dark" ? "thead-pink" : ""}
+                                    ${customDark === "purple-dark" ? "thead-purple" : ""}
+                                    ${customDark === "light-dark" ? "thead-light" : ""}
+                                    ${customDark === "brown-dark" ? "thead-brown" : ""} `}
                         rowKey="catchNumber"
                         columns={columns}
                         dataSource={filteredDataAlert}
@@ -722,9 +682,6 @@ const ProjectDetailsTable = ({ tableData, setTableData }) => {
                         headerBg="#0000"
                         tableLayout="auto"
                         responsive={true}
-                        components={{
-                            thead: () => <thead style={{ backgroundColor: '#f0f0f0' }} />, // change the background color here
-                        }}
                     />
                 </Col>
             </Row>
