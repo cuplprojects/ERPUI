@@ -162,20 +162,20 @@ const AllProjects = () => {
       <div className="position-relative mb-4 ">
 
         <div className="d-none d-lg-block">
-          <Button
-            className={`position-absolute top-50 start-0 translate-middle-y rounded-circle  ${customDark} ${customDark === "dark-dark" ? `${customMid} border-light border-1`:"border-0"}`} style={{ zIndex: "9" }}
+          <div
+            className={`position-absolute top-50 start-0 translate-middle-y rounded-circle  ${customDark}`} style={{ zIndex: "9",width:"0px",height:"0px" }}
             onClick={() => handleCarouselControl('prev')}
             
           >
-            <IoMdArrowDropleftCircle size={30}/>
-          </Button>
-          <Button
-            className={`position-absolute top-50 end-0 translate-middle-y rounded-circle ${customDark} ${customDark === "dark-dark" ? `${customMid} border-light border-1`:"border-0"}`} style={{ zIndex: "9" }}
+            <IoMdArrowDropleftCircle size={40} className={`${customBtn}  rounded-circle custom-zoom-btn`}/>
+          </div>
+          <div
+            className={`position-absolute top-50 end- translate-middle-y rounded-circle ${customDark} ${customDark === "dark-dark" ? `${customMid} border-light border-1`:"border-0"}`} style={{ zIndex: "9",width:"0px",height:"0px",right:"20px" }}
             onClick={() => handleCarouselControl('next')}
             
            >
-            <IoMdArrowDroprightCircle size={30}/>
-          </Button>
+            <IoMdArrowDroprightCircle size={40} className={`${customBtn}  rounded-circle custom-zoom-btn`}/>
+          </div>
         </div>
 
         <Carousel
