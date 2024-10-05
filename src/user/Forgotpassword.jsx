@@ -122,16 +122,16 @@ const ForgotPassword = () => {
           md={12}
           sm={12}
           className={`d-flex align-items-center justify-content-center p-0 m-0 shadow-lg ${isMediumOrSmaller ? '' : customDark} `}
-          style={{ zIndex: 1, height: '100%' }}
+          style={{ zIndex: 1, height: '100%',borderTopRightRadius:"15%",borderBottomRightRadius:"15%" }}
         >
-          <div className="p-3 rounded-3 shadow-lg" style={{ width: '100%', maxWidth: '450px' }}>
+          <div className="p-3 rounded-3 shadow-lg " style={{ width: '100%', maxWidth: '450px' }}>
             {/* Logo */}
-            <div className={`text-center mb-4 rounded-3 shadow-lg ${customBtn}`}>
+            <div className={`text-center mb-4 rounded-3  ${customBtn}`}>
               <img src={Logo1} alt="Company Logo" className="img-fluid" style={{ maxWidth: '200px' }} />
             </div>
 
             {/* Forgot Password Form */}
-            <Form onSubmit={handleSubmit} className="bg-white p-3 rounded-2 shadow-sm shadow-lg">
+            <Form onSubmit={handleSubmit} className="bg-white p-3 rounded-2 shadow-sm shadow-lg ">
               <h3 className="text-center mb-4">Reset Password</h3>
               <Form.Group controlId="formBasicUserName" className="mb-3">
                 <Form.Label>Enter User Name</Form.Label>
@@ -146,7 +146,7 @@ const ForgotPassword = () => {
 
               {userName && securitySets.map((set, index) => (
                 <div key={index} className="mb-3">
-                  <Form.Group controlId={`formSecurityQuestion${index}`} className="mb-2">
+                  <Form.Group controlId={`formSecurityQuestion${index}`} className="mb-2 custom-zoom-btn">
                     <Form.Label>Security Question {index + 1}</Form.Label>
                     <Form.Select
                       value={set.questionId || ""}
@@ -166,7 +166,7 @@ const ForgotPassword = () => {
                   </Form.Group>
 
                   {set.questionId && (
-                    <Form.Group controlId={`formAnswer${index}`} className="mb-2">
+                    <Form.Group controlId={`formAnswer${index}`} className="mb-2 custom-zoom-btn">
                       <Form.Label>Answer</Form.Label>
                       <Form.Control
                         type="text"
@@ -174,6 +174,7 @@ const ForgotPassword = () => {
                         value={set.answer}
                         onChange={(e) => handleAnswerChange(index, e.target.value)}
                         required
+                        className=''
                       />
                     </Form.Group>
                   )}
@@ -188,19 +189,20 @@ const ForgotPassword = () => {
                     label="I confirm that I want to reset my password"
                     checked={isConfirmed}
                     onChange={(e) => setIsConfirmed(e.target.checked)}
+                    className='custom-zoom-btn'
                   />
                 </Form.Group>
               )}
 
               <Button
                 type="submit"
-                className={`w-100 border-0 ${customBtn}`}
+                className={`w-100 border-0 ${customBtn} custom-zoom-btn`}
                 disabled={!isFirstSetFilled || (securitySets[1].enabled && !isSecondSetFilled) || !isConfirmed} // Disable button based on conditions
               >
                 Reset Password
               </Button>
-              <div className="text-center mt-3">
-                <Link to="/" className={`${customDark === "dark-dark" ? "text-dark" : `${customDarkText}`}`} >Back to login ?</Link>
+              <div className="text-center mt-3 custom-zoom-btn">
+                <Link to="/" className={`${customDark === "dark-dark" ? "text-dark" : `${customDarkText}`} `} >Back to login ?</Link>
               </div>
             </Form>
           </div>
@@ -212,7 +214,7 @@ const ForgotPassword = () => {
             <img
               src={themeImages[customDark] || defaultBrain}
               alt="Forgot Password Illustration"
-              className="img-fluid"
+              className="img-fluid "
               style={{ objectFit: 'contain', maxHeight: '80vh' }} // Limit image height for better responsiveness
             />
           </Col>

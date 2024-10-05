@@ -95,7 +95,7 @@ const SetPassword = () => {
 
       <Row className="h-100">
         {/* Left side: Image (only visible on large screens) */}
-        <Col lg={6} className="d-none d-lg-flex align-items-center justify-content-center p-0">
+        <Col lg={6} className="d-none d-lg-flex align-items-center justify-content-center p-0" >
           <img
             src={BackgroundImage}
             alt="Set Password Theme"
@@ -108,20 +108,21 @@ const SetPassword = () => {
         <Col
           lg={6}
           className={`d-flex align-items-center shadow-lg justify-content-center p-0`}
-          style={
-            isMediumOrSmaller
-              ? { backdropFilter: 'blur(5px)',  }
-              : { backgroundColor: '#37474f' }
-          }
+          style={{
+            borderTopLeftRadius: "10%",
+            borderBottomLeftRadius: "10%",
+            ...(isMediumOrSmaller ? { backdropFilter: 'blur(5px)' } : { backgroundColor: '#37474f' })
+          }}
         >
           <div
-            className={`p-5 bg-white rounded-4 border shadow-lg`}
+            className={`p-5 bg-white rounded-4 border shadow-lg custom-zoom-bt` }
             style={{
               maxWidth: '700px', // Increased width to accommodate 5 questions
               width: '100%',
               position: 'relative',
               zIndex: 1,
               borderColor: "#ccc",
+              
             }}
           >
             {/* Logo */}
@@ -142,7 +143,7 @@ const SetPassword = () => {
 
                 <Row>
                   {securityAnswers.map((qa, index) => (
-                    <Col xs={12} md={6} key={qa.id} className="mb-4">
+                    <Col xs={12} md={6} key={qa.id} className="mb-4 custom-zoom-btn">
                       <Form.Group controlId={`formSecurityQuestion${qa.id}`}>
                         <Form.Label><strong>Question {index + 1}:</strong> {qa.question}</Form.Label>
                         <Form.Control
@@ -158,7 +159,7 @@ const SetPassword = () => {
                 </Row>
 
                 <Button
-                  className="mt-3 w-100 border-0"
+                  className="mt-3 w-100 border-0 custom-zoom-btn"
                   style={{ background: "#37474f", padding: '10px 0', fontSize: '16px' }}
                   type="submit"
                 >
@@ -172,9 +173,9 @@ const SetPassword = () => {
               <Form onSubmit={handleSetPassword}>
                 <h2 className="text-center mb-4">Set Password</h2>
 
-                <Form.Group controlId="formBasicPassword">
+                <Form.Group controlId="formBasicPassword" className='custom-zoom-btn'>
                   <Form.Label><strong>Password</strong></Form.Label>
-                  <div className="position-relative">
+                  <div className="position-relative ">
                     <Form.Control
                       type={showPassword ? "text" : "password"}
                       placeholder="Enter New Password"
@@ -182,9 +183,10 @@ const SetPassword = () => {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       minLength={8} // You can set your desired password length
+                      className=''
                     />
                     <span
-                      className="position-absolute"
+                      className="position-absolute "
                       style={{ right: '10px', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer' }}
                       onClick={() => setShowPassword(!showPassword)}
                     >
@@ -193,7 +195,7 @@ const SetPassword = () => {
                   </div>
                 </Form.Group>
 
-                <Form.Group controlId="formBasicConfirmPassword" className="mt-4">
+                <Form.Group controlId="formBasicConfirmPassword" className="mt-4 custom-zoom-btn">
                   <Form.Label><strong>Confirm Password</strong></Form.Label>
                   <div className="position-relative">
                     <Form.Control
@@ -215,7 +217,7 @@ const SetPassword = () => {
                 </Form.Group>
 
                 <Button
-                  className="mt-4 w-100 border-0"
+                  className="mt-4 w-100 border-0 custom-zoom-btn"
                   style={{ background: "#37474f", padding: '10px 0', fontSize: '16px' }}
                   type="submit"
                 >

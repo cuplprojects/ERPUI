@@ -163,8 +163,8 @@ const Login = () => {
         </Col>
 
         {/* Right side: Login form */}
-        <Col lg={5} md={12} className={`d-flex align-items-center justify-content-center rounded-3 p- ${appliedClass}`}>
-          <div className="shadow-lg rounded-3 p-3" style={{ maxWidth: '450px', width: '100%', position: 'relative', zIndex: 1 }}>
+        <Col lg={5} md={12} className={`d-flex align-items-center justify-content-center   ${appliedClass}`} style={{ borderTopLeftRadius: "15%", borderBottomLeftRadius: "15%" }}>
+          <div className="shadow-lg rounded-5  custom-zoom-btn p-3" style={{ maxWidth: '450px', width: '100%', position: 'relative', zIndex: 1 }}>
             {/* Logo */}
             <div className={`text-center mb-4 ${customDark} rounded-3`}>
               <img
@@ -211,11 +211,11 @@ const Login = () => {
                 </div>
               </Form.Group>
 
-              <Button className={`${customBtn} mt-4 w-100 ${customDark === "dark-dark" ? "border-white" : "border-0"}`} type="submit">
+              <Button className={`${customBtn} mt-4 w-100 ${customDark === "dark-dark" ? "border-white " : "border-0 "} custom-zoom-btn `} type="submit">
                 Login
               </Button>
-              <div className="text-center mt-3">
-                <Link to="/forgotpassword" className={`${customDark === "dark-dark" ? "text-dark" : `${customDarkText}`}`} >Forgot Password?</Link>
+              <div className="text-center mt-3 custom-zoom-btn">
+                <Link to="/forgotpassword" className={`${customDark === "dark-dark" ? "text-dark" : `${customDarkText}`} `} >Forgot Password?</Link>
               </div>
             </Form>
           </div>
