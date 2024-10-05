@@ -16,10 +16,18 @@ import BarGraphData from "./../store/BarGraphData.json";
 import DoughnutGraphData from "./../store/doughnutChartData.json";
 import DashboardGrid from "./DashboardGrid";
 import { useNavigate } from "react-router";
+import themeStore from './../store/themeStore';
+import { useStore } from 'zustand';
+import { IoMdArrowDroprightCircle } from "react-icons/io";
+import { IoMdArrowDropleftCircle } from "react-icons/io";
 
 Chart.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip);
 
 const ProjectChart = ({ title, chartKey, chartdata, onClick, tCatch, type }) => (
+
+
+
+
   <Col xs={12} sm={6} md={4} lg={3} xl={2}>
     <div className="text-center p-3 chart-container c-pointer custom-zoom-btn">
       <Card className="text-center p-1 shadow-lg" onClick={onClick}>
@@ -58,6 +66,20 @@ const ProjectChart = ({ title, chartKey, chartdata, onClick, tCatch, type }) => 
 );
 
 const AllProjects = () => {
+
+  //Theme Change Section
+  const { getCssClasses } = useStore(themeStore);
+  const cssClasses = getCssClasses();
+  const customDark = cssClasses[0];
+  const customMid = cssClasses[1];
+  const customLight = cssClasses[2];
+  const customBtn = cssClasses[3];
+  const customDarkText = cssClasses[4];
+  const customLightText = cssClasses[5]
+  const customLightBorder = cssClasses[6]
+  const customDarkBorder = cssClasses[7]
+  const customThead = cssClasses[8]
+
   const [selectedChart, setSelectedChart] = useState({
     label: "",
     lotNumber: "",
@@ -75,7 +97,7 @@ const AllProjects = () => {
         barLabel: BarGraphData[0].label,
       });
     }
-   
+
   }, []);
 
   const handleCardClick = (chartTitle, lotNumber) => {
@@ -117,7 +139,7 @@ const AllProjects = () => {
   const carouselItems = [];
   for (let i = 0; i < DoughnutGraphData.length; i += itemsPerSlide) {
     carouselItems.push(
-      <Carousel.Item key={i} style={{background:"transparent"}}>
+      <Carousel.Item key={i} style={{ background: "transparent" }}>
         <Row className="flex-nowrap">
           {DoughnutGraphData.slice(i, i + itemsPerSlide).map((data, idx) => (
             <ProjectChart
@@ -138,28 +160,28 @@ const AllProjects = () => {
   return (
     <Container fluid>
       <div className="position-relative mb-4 ">
-       
-          <div className="d-none d-lg-block">
-            <Button
-              className="position-absolute top-50 start-0 translate-middle-y  ms-2" style={{zIndex:"9"}}
-              onClick={() => handleCarouselControl('prev')}
-              variant="light"
-            >
-              &lt;
-            </Button>
-            <Button
-              className="position-absolute top-50 end-0 translate-middle-y  me-2"  style={{zIndex:"9"}}
-              onClick={() => handleCarouselControl('next')}
-              variant="light"
-            >
-              &gt;
-            </Button>
-          </div>
 
-        <Carousel 
-          ref={carouselRef} 
-          interval={null} 
-          indicators={false} 
+        <div className="d-none d-lg-block">
+          <div
+            className={`position-absolute top-50 start-0 translate-middle-y rounded-circle  ${customDark}`} style={{ zIndex: "9",width:"0px",height:"0px" }}
+            onClick={() => handleCarouselControl('prev')}
+            
+          >
+            <IoMdArrowDropleftCircle size={40} className={`${customBtn}  rounded-circle custom-zoom-btn`}/>
+          </div>
+          <div
+            className={`position-absolute top-50 end- translate-middle-y rounded-circle ${customDark} ${customDark === "dark-dark" ? `${customMid} border-light border-1`:"border-0"}`} style={{ zIndex: "9",width:"0px",height:"0px",right:"20px" }}
+            onClick={() => handleCarouselControl('next')}
+            
+           >
+            <IoMdArrowDroprightCircle size={40} className={`${customBtn}  rounded-circle custom-zoom-btn`}/>
+          </div>
+        </div>
+
+        <Carousel
+          ref={carouselRef}
+          interval={null}
+          indicators={false}
           controls={false}
           touch={true}
           slide={true}
@@ -176,7 +198,7 @@ const AllProjects = () => {
           style={{
             transform: "scaleX(-1)",
             width: "80px",
-            marginRight: 10+"px",
+            marginRight: 10 + "px",
           }}
         />
         Important: Please review the latest updates and alerts!

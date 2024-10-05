@@ -1,18 +1,12 @@
-body {
+/* body {
   font-family: 'Poppins', sans-serif !important;
-}
-
-.custom-dark-theme{
-    background-color: #37474F !important;
-    color:white !important;
-}
-.custom-light-theme{
-    background-color: #455A64 !important;
-    color:white !important;
+  } */
+  
+*{
+    font-family: 'Poppins', sans-serif ;
 }
 
 
-/* userInterface.css */
 
 /* Container for fixed position and styling */
 .user-interface-container {

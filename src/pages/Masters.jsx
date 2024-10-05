@@ -22,7 +22,6 @@ import ZoneManager from './Zone';
 import Machine from './ProductionMachine';
 import AddMachine from './AddMachine';
 import AlarmMaster from './Alarm';
-import EnvelopeConfiguration from './EnvelopeConfiguration';
 import './../styles/Sidebar.css'; // Import your custom CSS
 import AddUsers from '../sub-Components/addUsers';
 import AllUsers from '../sub-Components/allUsers';
@@ -85,7 +84,6 @@ const Sidebar = () => {
       ],
     },
     { key: 'alarm', icon: <FaBell className={`${customDarkText} menu-icon`} />, label: 'Alarm' },
-    { key: 'envelope', icon: <FaFileContract className={`${customDarkText} menu-icon`} />, label: 'Envelope Configuration' },
     { key: 'team', icon: <FaUsers className={`${customDarkText} menu-icon`} />, label: 'Team' },
     { key: 'systemSettings', icon: <FaCog className={`${customDarkText} menu-icon`} />, label: 'Process Settings' },
   ];
