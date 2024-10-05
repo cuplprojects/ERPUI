@@ -163,20 +163,20 @@ const Login = () => {
         </Col>
 
         {/* Right side: Login form */}
-        <Col lg={5} className={`d-flex align-items-center justify-content-center p- ${appliedClass}`}>
-          <div className="p-" style={{ maxWidth: '400px', width: '100%', position: 'relative', zIndex: 1 }}>
+        <Col lg={5} md={12} className={`d-flex align-items-center justify-content-center rounded-3 p- ${appliedClass}`}>
+          <div className="shadow-lg rounded-3 p-3" style={{ maxWidth: '450px', width: '100%', position: 'relative', zIndex: 1 }}>
             {/* Logo */}
             <div className={`text-center mb-4 ${customDark} rounded-3`}>
               <img
                 src={Logo1}
                 alt="Logo"
-                className="img-fluid"
+                className="img-fluid "
                 style={{ maxWidth: '250px' }} // Increased size to 200px
               />
             </div>
 
             {/* Login Form */}
-            <Form className="p-4 bg-white rounded-3" onSubmit={handleSubmit}>
+            <Form className="p-4 bg-white rounded-3 " onSubmit={handleSubmit}>
               <h2 className={`text-center mb-4 ${customDark === "dark-dark" ? "" : `${customDarkText}`}`}>Login | ApexERP</h2>
 
               <Form.Group controlId="formBasicUserId">
