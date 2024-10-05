@@ -1,176 +1,147 @@
 import React, { useState } from 'react';
-import { Layout, Menu } from 'antd';
+import { Container, Row, Col, Nav } from 'react-bootstrap';
 import {
-  TeamOutlined,
-  ProjectOutlined,
-  GlobalOutlined,
-  ToolOutlined,
-  BellOutlined,
-  FileProtectOutlined,
-  PlusOutlined,
-  UserOutlined,
-  SettingOutlined,
-  UserAddOutlined,
-  UnorderedListOutlined,
-  CameraOutlined,
-} from '@ant-design/icons';
-import 'antd/dist/reset.css'; // Ant Design styles
+  FaUsers,
+  FaProjectDiagram,
+  FaGlobeAmericas,
+  FaTools,
+  FaBell,
+  FaFileContract,
+  FaUserPlus,
+  FaUserCog,
+  FaListUl,
+  FaCamera,
+  FaCog,
+  FaPlusCircle,
+  FaCaretDown,
+  FaCaretLeft,
+} from 'react-icons/fa';
 import GroupManager from './Group';
 import ProjectManager from './Project';
 import ZoneManager from './Zone';
 import Machine from './ProductionMachine';
-import AddMachine from './AddMachine'; // Component for adding a machine
+import AddMachine from './AddMachine';
 import AlarmMaster from './Alarm';
-import EnvelopeConfiguration from './EnvelopeConfiguration';
-import './../styles/Sidebar.css'; // Import your custom CSS for hover effect
+import './../styles/Sidebar.css'; // Import your custom CSS
 import AddUsers from '../sub-Components/addUsers';
 import AllUsers from '../sub-Components/allUsers';
 import CameraList from './CameraList';
 import RolesAndDepartments from './RolePage';
 import Team from './team';
-import SystemSettings from './SystemSettings'; // Assuming you have a component for System Settings
-
-const { Sider, Content } = Layout;
+import SystemSettings from './SystemSettings';
+import themeStore from './../store/themeStore';
+import { useStore } from 'zustand';
 
 const Sidebar = () => {
-  const [selectedMenu, setSelectedMenu] = useState('group');
+  // Theme Change Section
+  const { getCssClasses } = useStore(themeStore);
+  const cssClasses = getCssClasses();
+  const customDark = cssClasses[0];
+  const customMid = cssClasses[1];
+  const customLight = cssClasses[2];
+  const customBtn = cssClasses[3];
+  const customDarkText = cssClasses[4];
+  const customLightText = cssClasses[5]
+  const customLightBorder = cssClasses[6]
+  const customDarkBorder = cssClasses[7]
 
-  const handleMenuClick = (e) => {
-    setSelectedMenu(e.key);
+  const [selectedMenu, setSelectedMenu] = useState('group'); // Default to 'group'
+  const [expandedMenus, setExpandedMenus] = useState({}); // State to manage expanded menus
+
+  const handleMenuClick = (key) => {
+    setSelectedMenu(key);
+  };
+
+  const toggleDropdown = (key) => {
+    setExpandedMenus((prevState) => ({
+      ...prevState,
+      [key]: !prevState[key], // Toggle the dropdown state
+    }));
   };
 
   const menuItems = [
-
-
     {
       key: 'userManagement',
-      icon: <UserOutlined style={{ fontSize: '30px', color: '#ff85c0' }} />,
+      icon: <FaUsers className={`${customDarkText} menu-icon`} />,
       label: 'User Management',
       children: [
-        {
-          key: 'RolePage',
-          icon: <SettingOutlined style={{ color: '#722ed1' }} />,
-          label: 'Role',
-        },
-        {
-          key: 'addUser',
-          icon: <UserAddOutlined style={{ color: '#1890ff' }} />,
-          label: 'Add User',
-        },
-        {
-          key: 'allUsers',
-          icon: <UnorderedListOutlined style={{ color: '#52c41a' }} />,
-          label: 'All Users',
-        },
+        { key: 'RolePage', icon: <FaUserCog className={`${customDarkText} menu-icon`} />, label: 'Role' },
+        { key: 'addUser', icon: <FaUserPlus className={`${customDarkText} menu-icon`} />, label: 'Add User' },
+        { key: 'allUsers', icon: <FaListUl className={`${customDarkText} menu-icon`} />, label: 'All Users' },
       ],
     },
-    {
-      key: 'group',
-      icon: <TeamOutlined style={{ fontSize: '30px', color: '#1890ff' }} />,
-      label: 'Group',
-    },
-    {
-      key: 'project',
-      icon: <ProjectOutlined style={{ fontSize: '30px', color: '#faad14' }} />,
-      label: 'Project',
-    },
-    {
-      key: 'zone',
-      icon: <GlobalOutlined style={{ fontSize: '30px', color: '#52c41a' }} />,
-      label: 'Zone',
-    },
-    {
-      key: 'camera',
-      icon: <CameraOutlined style={{ fontSize: '30px', color: '#fa541c' }} />,
-      label: 'Camera',
-    },
+    // { key: 'group', icon: <FaUsers className={`${customDarkText} menu-icon`} />, label: 'Group' },
+    { key: 'project', icon: <FaProjectDiagram className={`${customDarkText} menu-icon`} />, label: 'Project' },
+    { key: 'zone', icon: <FaGlobeAmericas className={`${customDarkText} menu-icon`} />, label: 'Zone' },
+    { key: 'camera', icon: <FaCamera className={`${customDarkText} menu-icon`} />, label: 'Camera' },
     {
       key: 'machine',
-      icon: <ToolOutlined style={{ fontSize: '30px', color: '#722ed1' }} />,
+      icon: <FaTools className={`${customDarkText} menu-icon`} />,
       label: 'Machine',
       children: [
-        {
-          key: 'MachineType',
-          icon: <PlusOutlined style={{ fontSize: '20px', color: '#ff4d4f' }} />,
-          label: 'Add Machine',
-        },
-        {
-          key: 'AllMachines',
-          icon: <UnorderedListOutlined style={{ fontSize: '20px', color: '#52c41a' }} />,
-          label: 'All Machines',
-        },
+        { key: 'MachineType', icon: <FaPlusCircle className={`${customDarkText} menu-icon`} />, label: 'Add Machine' },
+        { key: 'AllMachines', icon: <FaListUl className={`${customDarkText} menu-icon`} />, label: 'All Machines' },
       ],
     },
-    {
-      key: 'alarm',
-      icon: <BellOutlined style={{ fontSize: '30px', color: '#eb2f96' }} />,
-      label: 'Alarm',
-    },
-    {
-      key: 'envelope',
-      icon: <FileProtectOutlined style={{ fontSize: '30px', color: '#13c2c2' }} />,
-      label: 'Envelope Configuration',
-    },
-    
-    {
-      key: 'team', // New Team menu item
-      icon: <TeamOutlined style={{ fontSize: '30px', color: '#722ed1' }} />,
-      label: 'Team',
-    },
-    {
-      key: 'systemSettings', // New System Settings menu item
-      icon: <SettingOutlined style={{ fontSize: '30px', color: '#faad14' }} />, // System Settings icon
-      label: 'Process Settings',
-    },
+    { key: 'alarm', icon: <FaBell className={`${customDarkText} menu-icon`} />, label: 'Alarm' },
+    { key: 'team', icon: <FaUsers className={`${customDarkText} menu-icon`} />, label: 'Team' },
+    { key: 'systemSettings', icon: <FaCog className={`${customDarkText} menu-icon`} />, label: 'Process Settings' },
   ];
 
   return (
-    <Layout style={{ height: '100vh' }}>
-      <Sider
-        collapsible
-        theme="light"
-        width={250}
-        style={{
-          backgroundColor: '#ffffff',
-          borderRight: '1px solid #e0e0e0',
-          boxShadow: '2px 0 5px rgba(0,0,0,0.05)',
-          minHeight: '100vh',
-        }}
-      >
-        <Menu
-          theme="light"
-          mode="inline"
-          defaultSelectedKeys={['group']}
-          onClick={handleMenuClick}
-          items={menuItems}
-          style={{ fontSize: '16px' }}
-        />
-      </Sider>
-
-      <Layout>
-        <Content
-          style={{
-            padding: '40px',
-            background: '#f0f2f5',
-            minHeight: '100vh',
-          }}
-        >
+    <Container fluid className='shadow-lg'>
+      <Row className=''>
+        <Col md={3} className={`sidebar rounded-start-4  `}>
+          <Nav className="flex-column ">
+            {menuItems.map((menu) => (
+              <React.Fragment key={menu.key}>
+                <Nav.Link
+                  onClick={() => {
+                    if (menu.children) {
+                      toggleDropdown(menu.key); // Toggle dropdown if it has children
+                    } else {
+                      handleMenuClick(menu.key); // Just handle menu click if no children
+                    }
+                  }}
+                  className={`d-flex align-items-center sidebar-item  ${selectedMenu === menu.key ? 'active rounded-start rounded-end-5' : 'rounded-start rounded-end-5'} ${selectedMenu === menu.key ? customLight : ''}`}
+                >
+                  {menu.icon} <span className={`${customDarkText} ml-3 d-none d-lg-block`}>{menu.label}</span>
+                  {menu.children && (
+                    <span className="ml-auto">
+                      {expandedMenus[menu.key] ? <FaCaretDown className={customDarkText} size={25} /> : <FaCaretLeft className={customDarkText} size={25} />}
+                    </span>
+                  )}
+                </Nav.Link>
+                {menu.children && expandedMenus[menu.key] && menu.children.map((child) => (
+                  <Nav.Link
+                    key={child.key}
+                    onClick={() => handleMenuClick(child.key)}
+                    className={`ml-4 d-flex align-items-center sidebar-item ${selectedMenu === child.key ? 'active rounded-start rounded-end-5' : 'rounded-start rounded-end-5'} ${selectedMenu === child.key ? customLight : ''}`}
+                  >
+                    {child.icon} <span className={`${customDarkText} ml-3`}>{child.label}</span>
+                  </Nav.Link>
+                ))}
+              </React.Fragment>
+            ))}
+          </Nav>
+        </Col>
+        <Col md={9}  className={`content-area rounded-end-4 ${customLight}`}>
           {selectedMenu === 'RolePage' && <RolesAndDepartments />}
           {selectedMenu === 'addUser' && <AddUsers />}
           {selectedMenu === 'allUsers' && <AllUsers />}
-          {selectedMenu === 'group' && <GroupManager />}
+          {/* {selectedMenu === 'group' && <GroupManager />} */}
           {selectedMenu === 'project' && <ProjectManager />}
           {selectedMenu === 'zone' && <ZoneManager />}
           {selectedMenu === 'camera' && <CameraList />}
-          {selectedMenu === 'team' && <Team />} {/* Render Team component */}
-          {selectedMenu === 'systemSettings' && <SystemSettings />} {/* Render System Settings component */}
+          {selectedMenu === 'team' && <Team />}
+          {selectedMenu === 'systemSettings' && <SystemSettings />}
           {selectedMenu === 'MachineType' && <AddMachine />}
           {selectedMenu === 'AllMachines' && <Machine />}
           {selectedMenu === 'alarm' && <AlarmMaster />}
           {selectedMenu === 'envelope' && <EnvelopeConfiguration />}
-        </Content>
-      </Layout>
-    </Layout>
+        </Col>
+      </Row>
+    </Container>
   );
 };
 

@@ -45,7 +45,7 @@ const StatusToggle = ({ initialStatusIndex, onStatusChange, disabled, statusStep
           borderColor: color,
           color: "white",
           transition: "background-color 2.0s ease",
-          width: 92, // Fixed width for the toggle button
+          width: 110, // Fixed width for the toggle button
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
