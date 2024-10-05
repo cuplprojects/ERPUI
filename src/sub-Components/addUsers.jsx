@@ -41,9 +41,21 @@ const AddUsers = () => {
     <div style={{ padding: '20px', border: '1px solid #ddd', borderRadius: '8px' }}>
       <h4>Add Users</h4>
       <Form form={form} layout="vertical" onFinish={handleSubmit}>
-        {/* First Row: First Name, Middle Name, Last Name */}
         <Row gutter={16}>
-          <Col xs={24} sm={12} md={8}>
+        <Col xs={24} sm={12} md={4}>
+            <Form.Item
+              name="userName"
+              label="User Name :"
+              rules={[{ required: true, message: 'Username is required' }]}
+              style={{ fontSize: '16px' }}
+            >
+              <Input
+                placeholder="Enter Username"
+                style={{ height: '45px', fontSize: '16px' }}
+              />
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={12} md={4}>
             <Form.Item
               name="firstName"
               label="First Name :"
@@ -56,7 +68,7 @@ const AddUsers = () => {
               />
             </Form.Item>
           </Col>
-          <Col xs={24} sm={12} md={8}>
+          <Col xs={24} sm={12} md={4}>
             <Form.Item name="middleName" label="Middle Name :" style={{ fontSize: '16px' }}>
               <Input
                 placeholder="Enter middle name"
@@ -64,7 +76,7 @@ const AddUsers = () => {
               />
             </Form.Item>
           </Col>
-          <Col xs={24} sm={12} md={8}>
+          <Col xs={24} sm={12} md={4}>
             <Form.Item name="lastName" label="Last Name :" style={{ fontSize: '16px' }}>
               <Input
                 placeholder="Enter last name"
@@ -76,7 +88,7 @@ const AddUsers = () => {
 
         {/* Second Row: Mobile Number and Email Address */}
         <Row gutter={16}>
-          <Col xs={24} sm={12}>
+          <Col xs={24} sm={4}>
             <Form.Item
               name="mobileNumber"
               label="Mobile Number :"
@@ -93,27 +105,7 @@ const AddUsers = () => {
               />
             </Form.Item>
           </Col>
-          <Col xs={24} sm={12}>
-            <Form.Item
-              name="email"
-              label="Email Address :"
-              rules={[
-                { required: true, message: 'Email address is required' },
-                { type: 'email', message: 'Please enter a valid email address' }
-              ]}
-              style={{ fontSize: '16px' }}
-            >
-              <Input
-                placeholder="Enter email address"
-                style={{ height: '45px', fontSize: '16px' }}
-              />
-            </Form.Item>
-          </Col>
-        </Row>
-
-        {/* Third Row: Role and Department */}
-        <Row gutter={16}>
-          <Col xs={24} sm={12}>
+          <Col xs={24} sm={4}>
             <Form.Item
               name="role"
               label="Role :"
@@ -123,20 +115,6 @@ const AddUsers = () => {
               <Select style={{ height: '45px', fontSize: '16px' }} placeholder="Select a role">
                 <Option value="admin">Admin</Option>
                 <Option value="user">User</Option>
-              </Select>
-            </Form.Item>
-          </Col>
-          <Col xs={24} sm={12}>
-            <Form.Item
-              name="department"
-              label="Department :"
-              rules={[{ required: true, message: 'Department is required' }]}
-              style={{ fontSize: '16px' }}
-            >
-              <Select style={{ height: '45px', fontSize: '16px' }} placeholder="Select a department">
-                <Option value="hr">HR</Option>
-                <Option value="development">Development</Option>
-                <Option value="marketing">Marketing</Option>
               </Select>
             </Form.Item>
           </Col>
