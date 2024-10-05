@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { Container, Row, Col, Form, Button } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import brain from "./../assets/bgImages/brain.svg"; // Background image
 import Logo1 from "./../assets/Logos/CUPLLogoTheme.png"; // Logo
 import { useMediaQuery } from 'react-responsive'; // Importing useMediaQuery react-responsive library
 import themeStore from './../store/themeStore'; // Import theme store
@@ -17,10 +16,8 @@ import darkBrain from "./../assets/bgImages/brain/brainDark.png";
 import brownBrain from "./../assets/bgImages/brain/brainBrown.png";
 import lightBrain from "./../assets/bgImages/brain/brainLight.png";
 import defaultBrain from "./../assets/bgImages/brain/brainDefault.png";
-import { Link } from 'react-router-dom';
 
 const ForgotPassword = () => {
-
   // Theme Change Section
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
@@ -51,10 +48,9 @@ const ForgotPassword = () => {
 
   const [userName, setUserName] = useState('');
   const [securitySets, setSecuritySets] = useState([
-    { question: '', answer: '', enabled: false },
-    { question: '', answer: '', enabled: false }
+    { questionId: null, answer: '', enabled: false },
+    { questionId: null, answer: '', enabled: false }
   ]);
-  const [selectedQuestions, setSelectedQuestions] = useState([]);
   const [isConfirmed, setIsConfirmed] = useState(false); // State to track checkbox confirmation
 
   // Hardcoded questions (will be replaced with API call)
@@ -67,12 +63,17 @@ const ForgotPassword = () => {
   ];
 
   const handleQuestionChange = (index, questionId) => {
-    const question = securityQuestions.find(q => q.id === questionId);
     const updatedSets = [...securitySets];
-    updatedSets[index].question = question.text; // Store the question text
-    updatedSets[index].enabled = true;
+    updatedSets[index].questionId = questionId;
+    // Optionally reset the answer when question changes
+    updatedSets[index].answer = '';
+    if (index > 0 && !updatedSets[index - 1].answer) {
+      // If the previous set's answer is not filled, do not enable the next set
+      updatedSets[index].enabled = false;
+    } else {
+      updatedSets[index].enabled = true;
+    }
     setSecuritySets(updatedSets);
-    setSelectedQuestions(prev => [...prev, questionId]); // Store the question ID
   };
 
   const handleAnswerChange = (index, answer) => {
@@ -90,8 +91,8 @@ const ForgotPassword = () => {
     });
   };
 
-  const isFirstSetFilled = securitySets[0].question && securitySets[0].answer;
-  const isSecondSetFilled = securitySets[1].question && securitySets[1].answer;
+  const isFirstSetFilled = securitySets[0].questionId && securitySets[0].answer;
+  const isSecondSetFilled = securitySets[1].questionId && securitySets[1].answer;
 
   return (
     <Container fluid className="vh-100 position-relative overflow-hidden">
@@ -111,7 +112,7 @@ const ForgotPassword = () => {
           filter: 'blur(5px)', // Apply blur to the background image
           zIndex: -1, // Ensure it's behind the form
         }}
-          className='' />
+        />
       )}
 
       <Row className="h-100 d-flex align-items-center justify-content-center shadow-lg">
@@ -148,20 +149,23 @@ const ForgotPassword = () => {
                   <Form.Group controlId={`formSecurityQuestion${index}`} className="mb-2">
                     <Form.Label>Security Question {index + 1}</Form.Label>
                     <Form.Select
-                      value={set.question}
+                      value={set.questionId || ""}
                       onChange={(e) => handleQuestionChange(index, parseInt(e.target.value))}
-                      disabled={index > 0 && !securitySets[0].enabled} // Disable second dropdown until the first is filled
+                      disabled={index > 0 && !securitySets[index - 1].enabled} // Disable second dropdown until the first is filled
                     >
                       <option value="" disabled>Select a security question</option>
                       {securityQuestions
-                        .filter((q) => !selectedQuestions.includes(q.id)) // Filter out selected questions
-                        .map((q) => (
+                        .filter(q => 
+                          // Exclude questions selected in other sets
+                          !securitySets.some((s, i) => s.questionId === q.id && i !== index)
+                        )
+                        .map(q => (
                           <option key={q.id} value={q.id}>{q.text}</option>
                         ))}
                     </Form.Select>
                   </Form.Group>
 
-                  {set.enabled && (
+                  {set.questionId && (
                     <Form.Group controlId={`formAnswer${index}`} className="mb-2">
                       <Form.Label>Answer</Form.Label>
                       <Form.Control

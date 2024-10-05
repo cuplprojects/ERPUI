@@ -3,8 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Form, Button } from 'react-bootstrap';
 import { AiFillEye, AiFillEyeInvisible } from 'react-icons/ai'; // Import icons from react-icons
 import Logo1 from './../assets/Logos/CUPLLogoTheme.png'; // Import logo from assets
-import themeStore from './../store/themeStore'; // Import theme store
-import { useStore } from 'zustand'; // Import zustand store
 import { useMediaQuery } from 'react-responsive'; // Importing useMediaQuery react-responsive library
 import { ToastContainer, toast } from 'react-toastify'; // Import react-toastify
 import BackgroundImage from './../assets/bgImages/Factory-pana.svg'; // Replace with your background image
@@ -15,12 +13,6 @@ const SetPassword = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
-  // Theme Change Section
-  const { getCssClasses } = useStore(themeStore);
-  const cssClasses = getCssClasses();
-  const customDark = cssClasses[0];
-  const customBtn = cssClasses[3];
-  const customDarkText = cssClasses[4];
 
   // Media Query: true if screen width is less than or equal to 992px
   const isMediumOrSmaller = useMediaQuery({ query: '(max-width: 992px)' });
