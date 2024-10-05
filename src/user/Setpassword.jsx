@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Form, Button } from 'react-bootstrap';
 import { AiFillEye, AiFillEyeInvisible } from 'react-icons/ai'; // Import icons from react-icons
 import Logo1 from './../assets/Logos/CUPLLogoTheme.png'; // Import logo from assets
@@ -13,7 +14,7 @@ const SetPassword = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-
+  const navigate = useNavigate();
   // Theme Change Section
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
@@ -34,6 +35,7 @@ const SetPassword = () => {
 
     // Here you would handle the password update logic
     toast.success("Password set successfully!");
+    navigate('/dashboard');
   };
 
   return (
