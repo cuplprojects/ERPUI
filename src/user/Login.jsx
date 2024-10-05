@@ -1,5 +1,7 @@
-import React from 'react';
-import './../styles/Login.css';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Container, Row, Col, Form, Button } from 'react-bootstrap';
+import { AiFillEye, AiFillEyeInvisible } from 'react-icons/ai'; // Import icons from react-icons
 import BlueTheme from './../assets/bgImages/Factory.svg';
 import PurpleTheme from './../assets/bgImages/FactoryPurple.png';
 import DefaultTheme from './../assets/bgImages/FactoryDefault.png';
@@ -8,29 +10,23 @@ import RedTheme from './../assets/bgImages/FactoryRed.png';
 import DarkTheme from './../assets/bgImages/FactoryDark.png';
 import BrownTheme from './../assets/bgImages/FactoryBrown.png';
 import PinkTheme from './../assets/bgImages/FactoryPink.png';
-import LightTheme from './../assets/bgImages/FactoryLight.png';
-import Logo1 from './../assets/Logos/CUPLLogoTheme.png';
-import { useNavigate } from 'react-router-dom';
-import { ToastContainer, toast } from 'react-toastify';
-import { Form, Input, Button } from 'antd';
-import { EyeInvisibleOutlined, EyeTwoTone } from '@ant-design/icons';
-import 'react-toastify/dist/ReactToastify.css';
-import { validateLogin } from './../scripts/loginValidations.js';
-import themeStore from './../store/themeStore';
-import { useStore } from 'zustand';
+import LightTheme from './../assets/bgImages/FactoryLight.png'; //  Import background images
+import Logo1 from './../assets/Logos/CUPLLogoTheme.png'; //  Import logo from assets
+import themeStore from './../store/themeStore'; //  Import theme store
+import { useStore } from 'zustand'; //  Import zustand store
+import { useMediaQuery } from 'react-responsive'; // Importing useMediaQuery react-responsive library
+import { validateLogin } from './../scripts/loginValidations.js'; //  Importing login validation script
+import { toast, ToastContainer } from 'react-toastify'; // Import react-toastify
+import { Link } from 'react-router-dom';
 
 const Login = () => {
+  // State to handle password visibility
+  const [userId, setUserId] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate(); // For navigation
 
-  //Theme Change Section
-  const { getCssClasses } = useStore(themeStore);
-  const cssClasses = getCssClasses();
-  const customDark = cssClasses[0];
-  const customMid = cssClasses[1];
-  const customLight = cssClasses[2];
-  const customBtn = cssClasses[3];
-  const customDarkText = cssClasses[4];
-
-  //hard coded users
+  //bohot hard coded users 
   const users = {
     user1: { userId: 'admin', password: '12345678' },
     user2: { userId: 'mss', password: '12345678' },
@@ -50,116 +46,182 @@ const Login = () => {
     user16: { userId: 'dispatch', password: '12345678' },
   };
 
+  // storing  users in local storage
   localStorage.setItem('users', JSON.stringify(users));
 
-  const navigate = useNavigate();
 
-  const handleSubmit = (values) => {
-    const { userId, password } = values;
+  // Theme Change Section
+  const { getCssClasses } = useStore(themeStore);
+  const cssClasses = getCssClasses();
+  const customDark = cssClasses[0];
+  const customMid = cssClasses[1];
+  const customLight = cssClasses[2];
+  const customBtn = cssClasses[3];
+  const customDarkText = cssClasses[4];
+  const customLightText = cssClasses[5];
+  const customLightBorder = cssClasses[6];
+  const customDarkBorder = cssClasses[7];
+  const customThead = cssClasses[8];
 
-    // Validate input fields
-    const isValid = validateLogin(userId, password);
-    if (!isValid) return;
-
-    const activeUser = { userId, password };
-    localStorage.setItem('activeUser', JSON.stringify(activeUser));
-    localStorage.removeItem('users');
-
-    // Show loading toast and navigate
-    toast.loading('Processing...', {
-      position: 'top-right',
-      autoClose: 2000,
-      hideProgressBar: true,
-      closeOnClick: true,
-      draggable: true,
-      style: { backgroundColor: '#3362CC', color: 'white' },
-    });
-
-    setTimeout(() => {
-      navigate('/dashboard');
-    }, 2000);
+  const themeImages = {
+    "purple-dark": PurpleTheme,
+    "blue-dark": BlueTheme,
+    "green-dark": GreenTheme,
+    "red-dark": RedTheme,
+    "dark-dark": DarkTheme,
+    "light-dark": LightTheme,
+    "pink-dark": PinkTheme,
+    "brown-dark": BrownTheme,
+    "default": DefaultTheme
   };
 
-  const handleForgotPassword = () => {
-    toast.loading('Processing...', {
-      position: 'top-right',
-      autoClose: 2000,
-      hideProgressBar: true,
-      closeOnClick: true,
-      draggable: true,
-      style: { backgroundColor: '#3362CC', color: 'white' },
-    });
+  // Media Query: true if screen width is less than or equal to 992px (medium and smaller screens)
+  const isMediumOrSmaller = useMediaQuery({ query: '(max-width: 992px)' });
+  // Additional Media Query for Tablet Portrait Mode
+  const isTabletPortrait = useMediaQuery({ query: '(max-width: 768px) and (orientation: portrait)' });
+
+  // Conditionally apply classes based on screen size
+  const appliedClass = !isMediumOrSmaller ? customDark : ''; // Apply customDark only on large screens
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    // Validation
+    const errors = validateLogin(userId, password);
+    if (Object.keys(errors).length > 0) {
+      // Show validation error messages using toast
+      Object.values(errors).forEach(error => toast.error(error));
+      return;
+    }
+
+    // Check if the user exists
+    const matchingUser = Object.values(users).find(
+      user => user.userId === userId && user.password === password
+    );
+
+    if (!matchingUser) {
+      toast.error("Invalid User ID or Password.");
+      return;
+    }
+
+    // Processing toast
+    toast.info("Processing...");
 
     setTimeout(() => {
-      navigate('/forgotpassword');
-    }, 2000);
+      // Set active user and navigate to the dashboard
+      localStorage.setItem('activeUser', JSON.stringify({ userId, password }));
+      // toast.success("Successfully logged in!"); // not working right now
+      // navigate('/dashboard');// route to dashboard
+      navigate('/setpassword');// route to setpasword
+    }, 1000); // Simulate 1-second delay
   };
 
+  useEffect(() => {
+    // Check if loggedOut flag is present in localStorage
+    if (localStorage.getItem('loggedOut')) {
+      toast.success('Successfully logged out!', {
+        position: 'top-right',
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      // Remove the flag from localStorage after showing the toast
+      localStorage.removeItem('loggedOut');
+    }
+  }, []);
   return (
-    <div className="login-container">
-      <div className="image-section">
-        {/* Images Based on Theme */}
-        {customDark === "purple-dark" ? (<img src={PurpleTheme} alt="Purple Theme" className='login-image' />)
-        : customDark === "blue-dark" ? (<img src={BlueTheme} alt="Blue Theme" className='login-image' />):
-          customDark === "green-dark" ? (<img src={GreenTheme} alt="Green Theme" className='login-image' />):
-          customDark === "red-dark" ? (<img src={RedTheme} alt="Red Theme" className='login-image' />):
-          customDark === "dark-dark" ? (<img src={DarkTheme} alt="Dark Theme" className='login-image' />):
-          customDark === "light-dark" ? (<img src={LightTheme} alt="Light Theme" className='login-image' />):
-          customDark === "pink-dark" ? (<img src={PinkTheme} alt="Pink Theme" className='login-image' />):
-          customDark === "brown-dark" ? (<img src={BrownTheme} alt="Brown Theme" className='login-image' />):
-          (<img src={DefaultTheme} alt="Default Theme" className='login-image' />)}
-      </div>
-      <div className={`panel-section custom-theme-dark-bg ${customDark}`}>
-        <img src={Logo1} alt="company-logo" className="comp-logo-1" />
-        <div className="card login-card">
-          <h3 className={`login-title custom-theme-dark-text ${customDarkText}`}>Login | ApexERP</h3>
-          {/* <h3 className="login-title custom-theme-dark-text"> <AnimatedText/> </h3> */}
-          <Form
-            layout="vertical"
-            onFinish={handleSubmit}
-            className="login-form"
-          >
-            <Form.Item
-              className={`fw-bold  ${customDarkText}`}
-              label={<span>User Id <span style={{ color: 'red' }}>*</span></span>}
-              name="userId"
-              rules={[{ message: 'Please input your User Id!' }]}
-            >
-              <Input
-                placeholder="User Id"
-                style={{ height: '45px' }}  // Adjusted height for User Id input
-              />
-            </Form.Item>
+    <Container fluid className="vh-100 position-relative overflow-hidden">
+      <ToastContainer /> {/* Toast container for showing notifications */}
+      {/* Background Image for Tablet Portrait Mode */}
+      {isTabletPortrait && (
+        <img
+          src={themeImages[customDark] || DefaultTheme}
+          alt="Background Image"
+          className={`position-absolute w-100 h-100 `}
+          style={{
+            objectFit: 'cover',
+            zIndex: -1,
+            filter: 'blur(8px)', // Blurriness of the image
+            top: 0,
+            left: 0,
+          }}
+        />
+      )}
 
-            <Form.Item
-              label={<span>Password <span style={{ color: 'red' }}>*</span></span>}
-              name="password"
-              rules={[{ message: 'Please input your Password!' }]}
-              className={`fw-bold  ${customDarkText}`}
-            >
-              <Input.Password
-                placeholder="Password"
-                style={{ height: '45px' }}  // Adjusted height for Password input
-                iconRender={visible => (visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />)}
-              />
-            </Form.Item>
+      <Row className="h-100">
+        {/* Left side: Image (only visible on large screens) */}
+        <Col lg={7} className="d-none d-lg-flex align-items-center justify-content-center p-0">
+          <img
+            src={themeImages[customDark] || DefaultTheme}
+            alt="Login Theme"
+            className="w-100"
+            style={{ objectFit: 'contain', maxHeight: '90vh' }} // Added padding and objectFit: 'contain'
+          />
+        </Col>
 
-            <div className="d-flex justify-content-between">
-              <Button
-                className={`w-50 m-1 ${customBtn}`}
-                onClick={handleForgotPassword}
-              >
-                Forgot Password
-              </Button>
-              <Button htmlType="submit" className={`w-50 m-1 ${customBtn}`}>
+        {/* Right side: Login form */}
+        <Col lg={5} className={`d-flex align-items-center justify-content-center p- ${appliedClass}`}>
+          <div className="p-" style={{ maxWidth: '400px', width: '100%', position: 'relative', zIndex: 1 }}>
+            {/* Logo */}
+            <div className={`text-center mb-4 ${customDark} rounded-3`}>
+              <img
+                src={Logo1}
+                alt="Logo"
+                className="img-fluid"
+                style={{ maxWidth: '250px' }} // Increased size to 200px
+              />
+            </div>
+
+            {/* Login Form */}
+            <Form className="p-4 bg-white rounded-3" onSubmit={handleSubmit}>
+              <h2 className={`text-center mb-4 ${customDark === "dark-dark" ? "" : `${customDarkText}`}`}>Login | ApexERP</h2>
+
+              <Form.Group controlId="formBasicUserId">
+                <Form.Label>User ID</Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder="Enter User ID"
+                  value={userId}
+                  onChange={(e) => setUserId(e.target.value)}
+                  required
+                />
+              </Form.Group>
+
+              <Form.Group controlId="formBasicPassword" className="mt-3">
+                <Form.Label>Password</Form.Label>
+                <div className="position-relative">
+                  <Form.Control
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    minLength={8}
+                    required
+                  />
+                  <span
+                    className="position-absolute"
+                    style={{ right: '10px', top: '5px', cursor: 'pointer' }}
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <AiFillEye size={20} /> : <AiFillEyeInvisible size={20} />}
+                  </span>
+                </div>
+              </Form.Group>
+
+              <Button className={`${customBtn} mt-4 w-100 ${customDark === "dark-dark" ? "border-white" : "border-0"}`} type="submit">
                 Login
               </Button>
-            </div>
-          </Form>
-        </div>
-        <ToastContainer className="responsive-toast" />
-      </div>
-    </div>
+              <div className="text-center mt-3">
+                <Link to="/forgotpassword" className={`${customDark === "dark-dark" ? "text-dark" : `${customDarkText}`}`} >Forgot Password?</Link>
+              </div>
+            </Form>
+          </div>
+        </Col>
+      </Row>
+    </Container>
   );
 };
 

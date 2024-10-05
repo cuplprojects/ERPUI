@@ -1,107 +1,137 @@
-import React from 'react';
-import './../styles/setpassword.css';
-import svgImg from "./../assets/bgImages/Factory-pana.svg";
-import Logo1 from "./../assets/Logos/CUPLLogoLogin.png";
-import { useNavigate } from 'react-router-dom';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { Form, Input, Button } from 'antd';
-import 'antd/dist/reset.css'; // Ensure Ant Design styles are included
+import React, { useState } from 'react';
+import { Container, Row, Col, Form, Button } from 'react-bootstrap';
+import { AiFillEye, AiFillEyeInvisible } from 'react-icons/ai'; // Import icons from react-icons
+import Logo1 from './../assets/Logos/CUPLLogoTheme.png'; // Import logo from assets
+import themeStore from './../store/themeStore'; // Import theme store
+import { useStore } from 'zustand'; // Import zustand store
+import { useMediaQuery } from 'react-responsive'; // Importing useMediaQuery react-responsive library
+import { ToastContainer, toast } from 'react-toastify'; // Import react-toastify
+import BackgroundImage from './../assets/bgImages/Factory-pana.svg'; // Replace with your background image
 
-const Setpassword = () => {
-  const navigate = useNavigate();
+const SetPassword = () => {
+  // State for password visibility and value
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = (values) => {
-    const changingPasswordToastId = toast.loading('Changing Password...', {
-      position: "top-right",
-      autoClose: false,
-      hideProgressBar: true,
-      closeOnClick: false,
-      draggable: true,
-      style: { backgroundColor: '#EDC568', color: 'white' },
-    });
+  // Theme Change Section
+  const { getCssClasses } = useStore(themeStore);
+  const cssClasses = getCssClasses();
+  const customDark = cssClasses[0];
+  const customBtn = cssClasses[3];
+  const customDarkText = cssClasses[4];
 
-    setTimeout(() => {
-      toast.update(changingPasswordToastId, {
-        render: 'Password Changed',
-        type: 'success',
-        autoClose: 1000,
-        hideProgressBar: true,
-        closeOnClick: true,
-        draggable: true,
-        icon: <i className="fas fa-check" style={{ color: 'white' }}></i>,
-        style: { backgroundColor: '#28a745', color: 'white' },
-      });
+  // Media Query: true if screen width is less than or equal to 992px
+  const isMediumOrSmaller = useMediaQuery({ query: '(max-width: 992px)' });
 
-      setTimeout(() => {
-        toast.loading('Logging in...', {
-          position: "top-right",
-          autoClose: 2000,
-          hideProgressBar: true,
-          closeOnClick: true,
-          draggable: true,
-          style: { backgroundColor: '#3362CC', color: 'white' },
-        });
-        setTimeout(() => {
-          navigate('/dashboard');
-        }, 1000);
-      }, 1000);
-    }, 1000);
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match!");
+      return;
+    }
+
+    // Here you would handle the password update logic
+    toast.success("Password set successfully!");
   };
 
   return (
-    <div className="login-container setp">
-      <div className="image-section">
-        <img src={svgImg} alt="Login Illustration" className="login-image" />
-      </div>
-      <div className="panel-section custom-theme-dark-bg">
-        <img src={Logo1} alt="company-logo" className='comp-logo-1' />
-        <div className="card login-card">
-          <h3 className="login-title">Set New Password</h3>
-          <Form onFinish={handleSubmit} layout="vertical">
-            <Form.Item
-              name="currentPassword"
-              label="Current Password"
-              rules={[{ required: true, message: 'Please input your current password!' }]}
-            >
-              <Input.Password placeholder="Current Password" style={{ height: 45 }} />
-            </Form.Item>
-            <Form.Item
-              name="newPassword"
-              label="New Password"
-              rules={[{ required: true, message: 'Please input your new password!' }]}
-            >
-              <Input.Password placeholder="New Password" style={{ height: 45 }} />
-            </Form.Item>
-            <Form.Item
-              name="confirmNewPassword"
-              label="Confirm New Password"
-              dependencies={['newPassword']}
-              rules={[
-                { required: true, message: 'Please confirm your new password!' },
-                ({ getFieldValue }) => ({
-                  validator(_, value) {
-                    if (!value || getFieldValue('newPassword') === value) {
-                      return Promise.resolve();
-                    }
-                    return Promise.reject(new Error('The two passwords that you entered do not match!'));
-                  },
-                }),
-              ]}
-            >
-              <Input.Password placeholder="Confirm New Password" style={{ height: 45 }} />
-            </Form.Item>
-            <Form.Item>
-              <Button type="primary" htmlType="submit" style={{ background: "#FF725E", borderColor: "#FF725E", color: "white" }} className="w-100">
+    <Container fluid className="vh-100 position-relative overflow-hidden"
+      style={{
+        backgroundImage: isMediumOrSmaller ? `url(${BackgroundImage})` : 'none',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      }}>
+      <ToastContainer /> {/* Toast container for showing notifications */}
+
+      <Row className="h-100">
+        {/* Left side: Image (only visible on large screens) */}
+        <Col lg={7} className="d-none d-lg-flex align-items-center justify-content-center p-0">
+          <img
+            src={BackgroundImage}
+            alt="Set Password Theme"
+            className="w-100"
+            style={{ objectFit: 'contain', maxHeight: '90vh' }} // Adjust as needed
+          />
+        </Col>
+
+        {/* Right side: Set Password form */}
+        <Col lg={5} className={`d-flex align-items-center justify-content-center p-`}
+          style={isMediumOrSmaller ? { backdropFilter: 'blur(5px)' } : { background: "#FF725E" }}>
+          <div className={`p-4 bg-white rounded-3 border border-5 shadow-lg`}
+            style={{
+              maxWidth: '400px',
+              width: '100%',
+              position: 'relative',
+              zIndex: 1,
+              borderColor:"#FF725E"
+            }}>
+            {/* Logo */}
+            <div className={`text-center mb-4 rounded-3`} style={{ background: "#FF725E" }}>
+              <img
+                src={Logo1}
+                alt="Logo"
+                className="img-fluid"
+                style={{ maxWidth: '250px' }}
+              />
+            </div>
+
+            {/* Set Password Form */}
+            <Form onSubmit={handleSubmit}>
+              <h2 className={`text-center mb-4`}>Set Password</h2>
+
+              <Form.Group controlId="formBasicPassword">
+                <Form.Label>Password</Form.Label>
+                <div className="position-relative">
+                  <Form.Control
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter New Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    minLength={8} // You can set your desired password length
+                  />
+                  <span
+                    className="position-absolute"
+                    style={{ right: '10px', top: '5px', cursor: 'pointer' }}
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <AiFillEye size={20} /> : <AiFillEyeInvisible size={20} />}
+                  </span>
+                </div>
+              </Form.Group>
+
+              <Form.Group controlId="formBasicConfirmPassword" className="mt-3">
+                <Form.Label>Confirm Password</Form.Label>
+                <div className="position-relative">
+                  <Form.Control
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Confirm New Password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    minLength={8} // Match the same minimum length as above
+                  />
+                  <span
+                    className="position-absolute"
+                    style={{ right: '10px', top: '5px', cursor: 'pointer' }}
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <AiFillEye size={20} /> : <AiFillEyeInvisible size={20} />}
+                  </span>
+                </div>
+              </Form.Group>
+
+              <Button className={`mt-4 w-100 border-0`} style={{ background: "#FF725E" }} type="submit">
                 Set Password
               </Button>
-            </Form.Item>
-          </Form>
-        </div>
-      </div>
-      <ToastContainer className="responsive-toast" />
-    </div>
+            </Form>
+          </div>
+        </Col>
+      </Row>
+    </Container>
   );
 };
 
-export default Setpassword;
+export default SetPassword;
