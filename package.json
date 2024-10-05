@@ -28,6 +28,7 @@
     "ag-grid-react": "^32.2.0",
     "antd": "^5.20.6",
     "apexcharts": "^3.53.0",
+    "axios": "^1.7.7",
     "bootstrap": "^5.3.3",
     "chart.js": "^4.4.4",
     "chartjs-plugin-datalabels": "^2.2.0",

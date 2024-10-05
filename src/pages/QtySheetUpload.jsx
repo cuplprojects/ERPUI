@@ -33,8 +33,8 @@ const QtySheetUpload = () => {
                 setUploading(false);
             }, 2000);
         });
-
     };
+
     const props = {
         onRemove: (file) => {
             const index = fileList.indexOf(file);
@@ -59,6 +59,7 @@ const QtySheetUpload = () => {
         },
         fileList,
     };
+
     const handleDownloadTemplate = () => {
         const link = document.createElement('a');
         link.href = 'path_to_your_template_file.xlsx'; // local QS file 
@@ -68,14 +69,12 @@ const QtySheetUpload = () => {
 
     return (
         <div className={`container ${customDarkText} ${customLight} ${customDark === "dark-dark" ? "border" : "border-0"} rounded shadow-lg`}>
-            {/* row 1 */}
             <Row className='mt-2 mb-2'>
                 <Col lg={12} md={12} sm={12} xs={12} className='d-flex  justify-content-center'>
 
                     <h1 className={`text-center p-2 mt-3 rounded w-50  ${customDarkText} ${customDarkText} `}>Upload Quantity Sheet</h1>
                 </Col>
             </Row>
-            {/* row 2 */}
             <Row>
                 <Col lg={6} md={6} sm={12} xs={12}>
                     <Button type="primary" onClick={handleDownloadTemplate} className={`custom-zoom-btn ${customBtn} ${customDark === "dark-dark" ? "border-white" : "border-0"}`}>
@@ -83,10 +82,8 @@ const QtySheetUpload = () => {
                     </Button>
                 </Col>
                 <Col lg={6} md={6} sm={12} xs={12}>
-                    {/* Add other form fields or components here */}
                 </Col>
             </Row>
-            {/* row 3 */}
             <Row className='mt-2 mb-2'>
                 <Col lg={6} md={6} sm={12} xs={12}>
                     <Form form={form} onFinish={handleUpload} layout="vertical">
@@ -139,10 +136,8 @@ const QtySheetUpload = () => {
                     </Form>
                 </Col>
                 <Col lg={6} md={6} sm={12} xs={12}>
-                    {/* Add other form fields or components here */}
                 </Col>
             </Row>
-            {/* row 4 */}
             <Row className='mt- mb-2'>
                 <Col lg={12} md={12} sm={12} xs={12} className='mb-3'>
                     <h4 className={`text-start p-2 ${customDarkText} ${customMid} rounded w-`}>Basic Details</h4>
@@ -180,7 +175,6 @@ const QtySheetUpload = () => {
                                     options={[
                                         { value: 'Hindi', label: 'Hindi' },
                                         { value: 'English', label: 'English' },
-                                        // Add more languages here
                                     ]}
                                 />
                             </Form.Item>
@@ -198,7 +192,6 @@ const QtySheetUpload = () => {
                     )}
                 </Col>
             </Row>
-            {/* row 5 */}
             <Row>
                 <Col lg={6} md={6} sm={12} xs={12}>
                     <Form layout="vertical">
@@ -207,14 +200,12 @@ const QtySheetUpload = () => {
                                 style={{ height: 40 }}
                                 placeholder="Select No. Of Questions"
                                 onChange={(value) => {
-                                    // handle change logic here
                                 }}
                             >
                                 <Select.Option value="50">50</Select.Option>
                                 <Select.Option value="75">75</Select.Option>
                                 <Select.Option value="100">100</Select.Option>
                                 <Select.Option value="150">150</Select.Option>
-                                {/* add more options here */}
                             </Select>
                         </Form.Item>
                     </Form>
@@ -249,7 +240,6 @@ const QtySheetUpload = () => {
                                 style={{ height: 40 }}
                                 placeholder="Select Key Provided"
                                 onChange={(value) => {
-                                    // handle change logic here
                                 }}
                                 disabled={!showBookletOptions}
                             >
@@ -266,7 +256,6 @@ const QtySheetUpload = () => {
                                 style={{ height: 40 }}
                                 placeholder="Select No of series to be printed"
                                 onChange={(value) => {
-                                    // handle change logic here
                                 }}
                                 disabled={!showBookletOptions}
                             >
@@ -274,13 +263,11 @@ const QtySheetUpload = () => {
                                 <Select.Option value="2" disabled={!showBookletOptions}>2</Select.Option>
                                 <Select.Option value="3" disabled={!showBookletOptions}>3</Select.Option>
                                 <Select.Option value="4" disabled={!showBookletOptions}>4</Select.Option>
-                                {/* add more options here */}
                             </Select>
                         </Form.Item>
                     </Form>
                 </Col>
             </Row>
-            {/* row 6 */}
             <Row>
                 <Col lg={4} md={4} sm={12} xs={12}>
                     <Form layout="vertical">
