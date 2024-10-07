@@ -67,7 +67,7 @@ const Login = () => {
     const errors = validateLogin(userName, password);
     if (Object.keys(errors).length > 0) {
       // Show validation error messages using toast
-      Object.values(errors).forEach(error => toast.error(error));
+      Object.values(errors).forEach(error => toast.error(error)); 
       return;
     }
 
