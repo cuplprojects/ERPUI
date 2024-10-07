@@ -1,92 +1,153 @@
-import React, { useState } from 'react';
-import { Tabs, Table, Button, Modal, Input, Switch, notification } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Tabs, Table, Button, Modal, Input, Switch, Select, notification } from 'antd';
 import { 
   AppstoreAddOutlined, 
   BuildOutlined, 
   SettingOutlined 
 } from '@ant-design/icons';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import './../styles/SystemSettings.css'; // Importing external CSS file for styles
+import './../styles/SystemSettings.css';
 
 const { TabPane } = Tabs;
-
-// Data for Modules
-const initialFeatureList = [
-  { key: '1', name: 'Dashboard' },
-  { key: '2', name: 'Zone' },
-  { key: '3', name: 'Remarks' },
-  { key: '4', name: 'Alarm/Voice Notes' },
-  { key: '5', name: 'Interim Quantity' },
-  { key: '6', name: 'Update Pages' },
-  { key: '7', name: 'Select Team' },
-];
-
-// Data for Processes
-const processData = [
-  { key: '1', id: '1', name: 'MSS' },
-  { key: '2', id: '2', name: 'DTP' },
-  { key: '3', id: '3', name: 'ProofReading' },
-  { key: '4', id: '4', name: 'Factory' },
-  { key: '5', id: '5', name: 'FinalQC' },
-  { key: '6', id: '6', name: 'CTP' },
-];
-
-// Data for Features Configuration table
-const featureConfigDataSource = [
-  { key: '1', Module_ID: '1', Configurations: { P1: true, P2: false, P3: true, P4: false, P5: true, P6: false } },
-  { key: '2', Module_ID: '2', Configurations: { P1: true, P2: true, P3: false, P4: true, P5: false, P6: true } },
-  { key: '3', Module_ID: '3', Configurations: { P1: false, P2: true, P3: true, P4: false, P5: true, P6: true } },
-];
 
 const SystemSettings = () => {
   const [featureModalVisible, setFeatureModalVisible] = useState(false);
   const [processModalVisible, setProcessModalVisible] = useState(false);
-  const [features, setFeatures] = useState(initialFeatureList);
-  const [processes, setProcesses] = useState(processData);
-  const [featureConfigData, setFeatureConfigData] = useState(featureConfigDataSource);
+  const [features, setFeatures] = useState([]);
+  const [processes, setProcesses] = useState([]);
+  const [featureConfigData, setFeatureConfigData] = useState([]);
 
   const [featureName, setFeatureName] = useState('');
+  const [processId, setProcessId] = useState('');
   const [processName, setProcessName] = useState('');
+  const [processStatus, setProcessStatus] = useState(false);
+  const [processWeightage, setProcessWeightage] = useState('');
+  const [processInstalledFeatures, setProcessInstalledFeatures] = useState([]);
+
+  // Validation states
+  const [processNameError, setProcessNameError] = useState('');
+  const [processWeightageError, setProcessWeightageError] = useState('');
+
+  useEffect(() => {
+    // Example: Fetch data for features and processes from the server
+    const fetchFeatures = async () => {
+      // Fetch the features from your backend
+      // Example: const data = await fetch('/api/features');
+      const data = []; // Replace with actual API response
+      setFeatures(data);
+    };
+
+    const fetchProcesses = async () => {
+      // Fetch the processes from your backend
+      // Example: const data = await fetch('/api/processes');
+      const data = []; // Replace with actual API response
+      setProcesses(data);
+    };
+
+    fetchFeatures();
+    fetchProcesses();
+  }, []);
 
   const showAddFeatureModal = () => {
     setFeatureModalVisible(true);
   };
 
   const handleAddFeature = () => {
-    if (featureName) {
-      const newFeature = {
-        key: (features.length + 1).toString(),
-        name: featureName,
-      };
-      setFeatures([...features, newFeature]);
-      setFeatureName('');
-      setFeatureModalVisible(false);
-      notification.success({ message: 'Module added successfully!' });
+    const isValidName = /^[A-Za-z\s]+$/.test(featureName);
+
+    if (!featureName) {
+      notification.error({ message: 'Feature name cannot be empty!' });
+      return;
     }
+
+    if (!isValidName) {
+      notification.error({ message: 'Feature name must contain only letters and spaces!' });
+      return;
+    }
+
+    const isDuplicate = features.some(
+      feature => feature.name.toLowerCase() === featureName.toLowerCase()
+    );
+
+    if (isDuplicate) {
+      notification.error({ message: 'Feature name already exists' });
+      return;
+    }
+
+    const newFeature = {
+      key: (features.length + 1).toString(),
+      name: featureName,
+    };
+
+    // Add the new feature to the features list
+    const updatedFeatures = [...features, newFeature];
+    setFeatures(updatedFeatures);
+
+    // Add new feature to featureConfigData
+    const newConfigEntry = {
+      key: newFeature.key, // Use the same key as the feature
+      Module_ID: newFeature.key,
+      Configurations: {},
+    };
+
+    // Initialize configurations for all existing processes
+    processes.forEach(process => {
+      newConfigEntry.Configurations[process.id] = false; // Default value
+    });
+
+    setFeatureConfigData([...featureConfigData, newConfigEntry]);
+
+    // Reset the modal and show a success message
+    setFeatureName('');
+    setFeatureModalVisible(false);
+    notification.success({ message: 'Feature added successfully!' });
   };
 
   const showAddProcessModal = () => {
+    setProcessId('');
+    setProcessName('');
+    setProcessStatus(false);
+    setProcessWeightage('');
+    setProcessInstalledFeatures([]);
+    setProcessNameError('');
+    setProcessWeightageError('');
     setProcessModalVisible(true);
   };
 
   const handleAddProcess = () => {
-    if (processName) {
+    let valid = true;
+    setProcessNameError('');
+    setProcessWeightageError('');
+
+    if (!/^[A-Za-z\s]+$/.test(processName)) {
+      setProcessNameError('Process name must contain only letters.');
+      valid = false;
+    }
+
+    if (processes.some(process => process.name.toLowerCase() === processName.toLowerCase())) {
+      setProcessNameError('Process name must be unique.');
+      valid = false;
+    }
+
+    if (!/^\d*\.?\d+$/.test(processWeightage)) {
+      setProcessWeightageError('Weightage must be a numeric value.');
+      valid = false;
+    }
+
+    if (valid) {
       const newProcess = {
         key: (processes.length + 1).toString(),
-        id: `P${processes.length + 1}`,
+        id: `${processes.length + 1}`,
         name: processName,
+        status: processStatus,
+        weightage: processWeightage,
+        installedFeatures: processInstalledFeatures.join(', '),
       };
       setProcesses([...processes, newProcess]);
-      setProcessName('');
       setProcessModalVisible(false);
-
-      // Add the new process to each module's configurations
-      const updatedFeatureConfigData = featureConfigData.map((config) => ({
-        ...config,
-        Configurations: { ...config.Configurations, [newProcess.id]: false },
-      }));
-      setFeatureConfigData(updatedFeatureConfigData);
       notification.success({ message: 'Process added successfully!' });
+    } else {
+      notification.error({ message: 'Please fix the validation errors.' });
     }
   };
 
@@ -106,10 +167,20 @@ const SystemSettings = () => {
     setFeatureConfigData(updatedData);
   };
 
-  // Columns for Feature Configuration Table
+  const handleToggleStatus = (processId) => {
+    const updatedProcesses = processes.map((process) => {
+      if (process.id === processId) {
+        return { ...process, status: !process.status };
+      }
+      return process;
+    });
+    setProcesses(updatedProcesses);
+    notification.success({ message: 'Process status updated successfully!' });
+  };
+
   const featureConfigColumns = [
     {
-      title: 'Module Name',
+      title: 'Feature Name',
       dataIndex: 'Module_ID',
       key: 'Module_ID',
       render: (moduleId) => {
@@ -117,7 +188,6 @@ const SystemSettings = () => {
         return module ? module.name : 'Unknown';
       },
     },
-    // Dynamic columns for each process
     ...processes.map((process) => ({
       title: process.name,
       dataIndex: 'Configurations',
@@ -131,41 +201,36 @@ const SystemSettings = () => {
     })),
   ];
 
-  // Drag-and-Drop Handlers
   const onDragEnd = (result) => {
     const { source, destination } = result;
 
-    // Check if the destination is valid
     if (!destination || source.index === destination.index) {
       return;
     }
 
-    // Create a new features array
     const updatedFeatures = Array.from(features);
     const [movedFeature] = updatedFeatures.splice(source.index, 1);
     updatedFeatures.splice(destination.index, 0, movedFeature);
 
-    // Update state with the new order
     setFeatures(updatedFeatures);
   };
 
   return (
     <div style={{ padding: '20px' }}>
       <Tabs defaultActiveKey="1">
-        {/* Features Tab */}
         <TabPane 
           tab={
             <span>
               <AppstoreAddOutlined style={{ fontSize: '25px', marginRight: '8px' }} /> 
-              Module
+              Feature
             </span>
           } 
           key="1"
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3>Module List</h3>
+            <h3>Feature List</h3>
             <Button type="primary" onClick={showAddFeatureModal}>
-              Add New Module
+              Add New Feature
             </Button>
           </div>
           <DragDropContext onDragEnd={onDragEnd}>
@@ -173,7 +238,7 @@ const SystemSettings = () => {
               {(provided) => (
                 <div ref={provided.innerRef} {...provided.droppableProps}>
                   <Table
-                    dataSource={features} 
+                    dataSource={features}
                     columns={[
                       {
                         title: 'ID',
@@ -181,7 +246,7 @@ const SystemSettings = () => {
                         key: 'key',
                       },
                       {
-                        title: 'Module Name',
+                        title: 'Feature Name',
                         dataIndex: 'name',
                         key: 'name',
                         render: (text, record, index) => (
@@ -191,16 +256,6 @@ const SystemSettings = () => {
                                 ref={provided.innerRef} 
                                 {...provided.draggableProps} 
                                 {...provided.dragHandleProps}
-                                style={{ 
-                                  display: 'flex', 
-                                  alignItems: 'center', 
-                                  padding: '8px', 
-                                  border: '1px solid #ddd', 
-                                  marginBottom: '4px', 
-                                  borderRadius: '4px', 
-                                  backgroundColor: 'white', 
-                                  ...provided.draggableProps.style 
-                                }}
                               >
                                 {text}
                               </div>
@@ -208,92 +263,128 @@ const SystemSettings = () => {
                           </Draggable>
                         ),
                       },
-                    ]} 
-                    rowKey="key"
+                    ]}
                     pagination={false}
-                    style={{ marginTop: '16px' }} 
-                    className="features-table"
                   />
-                  {provided.placeholder} {/* This is necessary for the droppable to work */}
+                  {provided.placeholder}
                 </div>
               )}
             </Droppable>
           </DragDropContext>
-
           <Modal
-            title="Add Module"
+            title="Add New Feature"
             visible={featureModalVisible}
             onOk={handleAddFeature}
             onCancel={() => setFeatureModalVisible(false)}
           >
-            <Input 
-              placeholder="Module Name" 
-              value={featureName} 
-              onChange={(e) => setFeatureName(e.target.value)} 
+            <Input
+              placeholder="Enter feature name"
+              value={featureName}
+              onChange={(e) => setFeatureName(e.target.value)}
             />
           </Modal>
         </TabPane>
 
-        {/* Processes Tab */}
-        <TabPane 
+        <TabPane
           tab={
             <span>
               <BuildOutlined style={{ fontSize: '25px', marginRight: '8px' }} /> 
-              Processes
+              Process
             </span>
           } 
           key="2"
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3>Processes List</h3>
+            <h3>Process List</h3>
             <Button type="primary" onClick={showAddProcessModal}>
               Add New Process
             </Button>
           </div>
-          <Table 
-            dataSource={processes} 
+          <Table
+            dataSource={processes}
             columns={[
-              { title: 'Process ID', dataIndex: 'id', key: 'id' },
-              { title: 'Process Name', dataIndex: 'name', key: 'name' }
-            ]} 
-            rowKey="id"
+              {
+                title: 'ID',
+                dataIndex: 'key',
+                key: 'key',
+              },
+              {
+                title: 'Process Name',
+                dataIndex: 'name',
+                key: 'name',
+              },
+              {
+                title: 'Status',
+                dataIndex: 'status',
+                key: 'status',
+                render: (status, record) => (
+                  <Switch
+                    checked={status}
+                    onChange={() => handleToggleStatus(record.id)}
+                  />
+                ),
+              },
+              {
+                title: 'Weightage',
+                dataIndex: 'weightage',
+                key: 'weightage',
+              },
+              {
+                title: 'Installed Features',
+                dataIndex: 'installedFeatures',
+                key: 'installedFeatures',
+              },
+            ]}
             pagination={false}
-            style={{ marginTop: '16px' }} 
-            className="processes-table"
           />
-
           <Modal
-            title="Add Process"
+            title="Add New Process"
             visible={processModalVisible}
             onOk={handleAddProcess}
             onCancel={() => setProcessModalVisible(false)}
           >
-            <Input 
-              placeholder="Process Name" 
-              value={processName} 
-              onChange={(e) => setProcessName(e.target.value)} 
+            <Input
+              placeholder="Enter process name"
+              value={processName}
+              onChange={(e) => setProcessName(e.target.value)}
             />
+            {processNameError && <div style={{ color: 'red' }}>{processNameError}</div>}
+            <Input
+              placeholder="Enter weightage"
+              value={processWeightage}
+              onChange={(e) => setProcessWeightage(e.target.value)}
+              style={{ width: '100%', marginTop: '10px' }}
+            />
+            {processWeightageError && <div style={{ color: 'red' }}>{processWeightageError}</div>}
+            <Select
+              mode="multiple"
+              placeholder="Select installed features"
+              value={processInstalledFeatures}
+              onChange={setProcessInstalledFeatures}
+              style={{ width: '100%', marginTop: '10px' }}
+            >
+              {features.map(feature => (
+                <Select.Option key={feature.key} value={feature.name}>
+                  {feature.name}
+                </Select.Option>
+              ))}
+            </Select>
           </Modal>
         </TabPane>
 
-        {/* Feature Configuration Tab */}
-        <TabPane 
+        <TabPane
           tab={
             <span>
               <SettingOutlined style={{ fontSize: '25px', marginRight: '8px' }} /> 
-              Feature Configuration
+              Feature Configurations
             </span>
           } 
           key="3"
         >
-          <Table 
-            dataSource={featureConfigData} 
-            columns={featureConfigColumns} 
-            rowKey="key"
+          <Table
+            dataSource={featureConfigData}
+            columns={featureConfigColumns}
             pagination={false}
-            style={{ marginTop: '16px', borderCollapse: 'collapse' }} 
-            className="feature-config-table"
-            bordered
           />
         </TabPane>
       </Tabs>

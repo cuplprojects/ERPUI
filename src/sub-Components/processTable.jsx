@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Card, Spinner, Row, Col } from 'react-bootstrap'; // Import Bootstrap components
-import ProjectDetailsTable from './../sub-Components/projectDetailTable'; // Import the new component
-import dummyData from "./../store/dd.json";
+import ProjectDetailsTable from './projectDetailTable'; // Import the new component
+import dummyData from "../store/dd.json";
 import StatusPieChart from "./StatusPieChart";
 import StatusBarChart from "./StatusBarChart"; // Import the updated bar chart component
 import "./../styles/processTable.css";
 import { Switch } from 'antd';
 import CatchProgressBar from './catchProgressBar';
-import AlertBadge from "./../sub-Components/AlertBadge";
+import AlertBadge from "./AlertBadge";
 import CatchDetailModal from '../menus/CatchDetailModal';
-import UserCard from "./../sub-Components/UserCard";
-import themeStore from './../store/themeStore';
+import UserCard from "./UserCard";
+import themeStore from '../store/themeStore';
 import { useStore } from 'zustand';
 import ProcessingIcon from '../components/ProcessingIcon';
 import { MdPending } from "react-icons/md";
