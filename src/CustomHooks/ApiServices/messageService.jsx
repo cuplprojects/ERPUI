@@ -1,6 +1,7 @@
 /**
  * messageService: Handles message-related operations
  * Created by Shivom on 2023-10-05
+ * Updated on 2023-10-06
  * 
  * This service uses the custom API instance for making requests
  */
@@ -9,7 +10,7 @@ import API from '../MasterApiHooks/api';
 
 export const fetchMessages = async () => {
   try {
-    const response = await API.get('/api/messages');
+    const response = await API.get('/Messages');
     return response.data;
   } catch (error) {
     console.error('Error fetching messages:', error);
@@ -19,7 +20,7 @@ export const fetchMessages = async () => {
 
 export const updateMessage = async (message) => {
   try {
-    const response = await API.put(`/api/messages/${message.id}`, message);
+    const response = await API.put(`/messages/${message.messageId}`, message);
     return response.data;
   } catch (error) {
     console.error('Error updating message:', error);
@@ -29,7 +30,7 @@ export const updateMessage = async (message) => {
 
 export const addMessage = async (message) => {
   try {
-    const response = await API.post('/api/messages', message);
+    const response = await API.post('/messages', message);
     return response.data;
   } catch (error) {
     console.error('Error adding message:', error);
@@ -37,25 +38,36 @@ export const addMessage = async (message) => {
   }
 };
 
-export const getMessageByLangAndType = async (lang, type) => {
+export const getMessageByLangAndType = async (lang, id) => {
   try {
-    const response = await API.get(`/api/messages?lang=${lang}&type=${type}`);
-    return response.data || getDefaultMessage(type);
+    const response = await API.get(`/Messages/messagebyId/${id}?lang=${lang}`);
+    return {
+      messageId: response.data.messageId,
+      title: response.data.title,
+      description: response.data.description
+    };
   } catch (error) {
     console.error('Error fetching message by language and type:', error);
-    return getDefaultMessage(type);
+    return console.log({lang, type});
   }
 };
 
-const getDefaultMessage = (type) => {
-  switch (type) {
-    case 'success':
-      return { description: "Operation completed successfully" };
-    case 'error':
-      return { description: "An error occurred" };
-    case 'info':
-      return { description: "Information message" };
-    default:
-      return { description: "Default message" };
-  }
+
+const getDefaultMessage = (lang, type) => {
+  const messages = {
+    en: {
+      success: "Operation completed successfully",
+      error: "An error occurred",
+      info: "Information message",
+      default: "Default message"
+    },
+    hi: {
+      success: "कार्य सफलतापूर्वक पूरा हुआ",
+      error: "एक त्रुटि उत्पन्न हुई",
+      info: "सूचना संदेश",
+      default: "डिफ़ॉल्ट संदेश"
+    }
+  };
+
+  return { description: messages[lang]?.[type] || messages[lang]?.default || messages.en.default };
 };
