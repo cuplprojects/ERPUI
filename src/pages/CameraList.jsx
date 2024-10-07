@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Modal, Input, Form, Card, Row, Col, message, Switch } from 'antd';
+import { Table, Button, Modal, Input, Form, Card, Row, Col, message } from 'antd';
 import axios from 'axios';
 
 const CameraList = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [cameras, setCameras] = useState([]);
   const [form] = Form.useForm();
+  const [editingIndex, setEditingIndex] = useState(null);
+  const [editingName, setEditingName] = useState('');
 
   const showModal = () => {
     setIsModalOpen(true);
@@ -31,7 +33,7 @@ const CameraList = () => {
 
   const handleOk = () => {
     form.validateFields().then(async (values) => {
-      const newCamera = { name: values.name, isCamera: true }; // Assuming isCamera should be true
+      const newCamera = { name: values.name }; // Add new camera
       try {
         const response = await axios.post('https://localhost:7223/api/Cameras', newCamera);
         setCameras([...cameras, response.data]); // Add the camera from the response
@@ -44,29 +46,22 @@ const CameraList = () => {
     });
   };
 
-  const handleStatusChange = async (name) => {
-    const cameraToUpdate = cameras.find(camera => camera.name === name);
-
-    if (!cameraToUpdate) {
-      message.error('Camera not found!');
-      return;
-    }
-
-    const updatedStatus = !cameraToUpdate.isCamera;
+  const handleEditSave = async (index) => {
+    const updatedCamera = {
+      ...cameras[index],
+      name: editingName,
+    };
 
     try {
-      await axios.put(`https://localhost:7223/api/Cameras/${cameraToUpdate.cameraId}`, { 
-        ...cameraToUpdate,
-        isCamera: updatedStatus 
-      });
-      const updatedCameras = cameras.map(camera =>
-        camera.name === name ? { ...camera, isCamera: updatedStatus } : camera
-      );
-
+      await axios.put(`https://localhost:7223/api/Cameras/${updatedCamera.cameraId}`, updatedCamera);
+      const updatedCameras = [...cameras];
+      updatedCameras[index] = updatedCamera;
       setCameras(updatedCameras);
-      message.success('Camera status updated successfully!');
+      setEditingIndex(null);
+      setEditingName('');
+      message.success('Camera updated successfully!');
     } catch (error) {
-      message.error('Failed to update camera status!');
+      message.error('Failed to update camera');
     }
   };
 
@@ -76,21 +71,41 @@ const CameraList = () => {
       dataIndex: 'serial',
       key: 'serial',
       render: (text, record, index) => index + 1,
+      width: '10%',
     },
     {
       title: 'Camera Name',
       dataIndex: 'name',
       key: 'name',
+      render: (text, record, index) => (
+        editingIndex === index ? (
+          <Input
+            value={editingName}
+            onChange={(e) => setEditingName(e.target.value)}
+            onPressEnter={() => handleEditSave(index)}
+            onBlur={() => handleEditSave(index)}
+          />
+        ) : (
+          <span>{text}</span>
+        )
+      ),
+      width: '70%',
     },
     {
-      title: 'Status',
-      dataIndex: 'isCamera',
-      key: 'isCamera',
-      render: (isCamera, record) => (
-        <Switch 
-          checked={isCamera} 
-          onChange={() => handleStatusChange(record.name)} 
-        />
+      title: 'Action',
+      key: 'action',
+      render: (_, record, index) => (
+        editingIndex === index ? (
+          <>
+            <Button type="link" onClick={() => handleEditSave(index)}>Save</Button>
+            <Button type="link" onClick={() => setEditingIndex(null)}>Cancel</Button>
+          </>
+        ) : (
+          <Button type="link" onClick={() => {
+            setEditingIndex(index);
+            setEditingName(record.name);
+          }}>Edit</Button>
+        )
       ),
     },
   ];
@@ -101,7 +116,8 @@ const CameraList = () => {
     <Card
       title="Camera List"
       bordered={true}
-      style={{ width: '400px', margin: '0 auto', padding: '20px' }}
+      style={{ padding: '20px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)' }}
+
     >
       <Row justify="end" style={{ marginBottom: '20px' }}>
         <Col>
