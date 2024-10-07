@@ -16,12 +16,14 @@ import {
   FaCaretDown,
   FaCaretLeft,
 } from 'react-icons/fa';
+import { BsQuestionSquareFill } from "react-icons/bs";
 import GroupManager from './Group';
 import ProjectManager from './Project';
 import ZoneManager from './Zone';
 import Machine from './ProductionMachine';
 import AddMachine from './AddMachine';
 import AlarmMaster from './Alarm';
+import SecurityQ from './SecurityQuestions.jsx';
 import EnvelopeConfiguration from './EnvelopeConfiguration';
 import './../styles/Sidebar.css'; // Import your custom CSS
 import AddUsers from '../sub-Components/addUsers';
@@ -69,6 +71,7 @@ const Sidebar = () => {
         { key: 'RolePage', icon: <FaUserCog className={`${customDarkText} menu-icon`} />, label: 'Role' },
         { key: 'addUser', icon: <FaUserPlus className={`${customDarkText} menu-icon`} />, label: 'Add User' },
         { key: 'allUsers', icon: <FaListUl className={`${customDarkText} menu-icon`} />, label: 'All Users' },
+        { key: 'securityQuestions', icon: <BsQuestionSquareFill className={`${customDarkText} menu-icon`} />, label: 'Add Questions' },
       ],
     },
     // { key: 'group', icon: <FaUsers className={`${customDarkText} menu-icon`} />, label: 'Group' },
@@ -131,6 +134,7 @@ const Sidebar = () => {
           {selectedMenu === 'RolePage' && <RolesAndDepartments />}
           {selectedMenu === 'addUser' && <AddUsers />}
           {selectedMenu === 'allUsers' && <AllUsers />}
+          {selectedMenu === 'securityQuestions' && <SecurityQ />}
           {/* {selectedMenu === 'group' && <GroupManager />} */}
           {selectedMenu === 'project' && <ProjectManager />}
           {selectedMenu === 'zone' && <ZoneManager />}
