@@ -418,7 +418,7 @@ const Login = () => {
 
         {/* Right side: Login form */}
         <Col lg={5} md={12} className={`d-flex align-items-center justify-content-center   ${appliedClass}`} style={{ borderTopLeftRadius: "15%", borderBottomLeftRadius: "15%" }}>
-          <div className="shadow-lg rounded-5  custom-zoom-btn p-3" style={{ maxWidth: '450px', width: '100%', position: 'relative', zIndex: 1 }}>
+          <div className={`shadow-lg rounded-5  custom-zoom-btn p-3 ${customDark === "dark-dark" ? `${customMid}` : ""}`} style={{ maxWidth: '450px', width: '100%', position: 'relative', zIndex: 1 }}>
             {/* Logo */}
             <div className={`text-center mb-4 ${customDark} rounded-3`}>
               <img
