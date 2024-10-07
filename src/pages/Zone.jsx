@@ -1,82 +1,251 @@
-import React, { useState } from 'react';
-import { Input, Button, Switch, Select, Table, Form, message, Modal } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Input, Button, Select, Table, Form, message, Modal } from 'antd';
+const { Option } = Select;
+import axios from 'axios';
 
 const Zone = () => {
   const [zones, setZones] = useState([]);
-  const [isModalVisible, setIsModalVisible] = useState(false); // Control modal visibility
+  const [camera, setCamera] = useState([]);
+  const [machine, setMachine] = useState([]);
+  const [isModalVisible, setIsModalVisible] = useState(false);
   const [form] = Form.useForm();
+  const [editingIndex, setEditingIndex] = useState(null);
+  const [editingZone, setEditingZone] = useState({});
+  const [originalZone, setOriginalZone] = useState({});
 
-  // Function to handle adding a zone
-  const handleAddZone = (values) => {
-    const { zoneName, zoneDescription, cameraId, status } = values;
+  useEffect(() => {
+    const fetchData = async () => {
+      await Promise.all([getCamera(), getMachine()]);
+      await getZone();
+    };
 
-    // Check if the zone name already exists
-    const existingZone = zones.find(zone => zone.zoneName === zoneName);
+    fetchData();
+  }, []);
+
+  const getZone = async () => {
+    try {
+      const response = await axios.get('https://localhost:7223/api/Zones');
+      setZones(response.data);
+    } catch (error) {
+      console.error("Failed to fetch zones", error);
+    }
+  };
+
+  const getCamera = async () => {
+    try {
+      const response = await axios.get('https://localhost:7223/api/Cameras');
+      setCamera(response.data);
+    } catch (error) {
+      console.error("Failed to fetch cameras", error);
+    }
+  };
+
+  const getMachine = async () => {
+    try {
+      const response = await axios.get('https://localhost:7223/api/Machines');
+      setMachine(response.data);
+    } catch (error) {
+      console.error("Failed to fetch machines", error);
+    }
+  };
+
+  const handleAddZone = async (values) => {
+    const { zoneNo, zoneDescription, cameraIds, machineId } = values;
+    const existingZone = zones.find(zone => zone.zoneNo === zoneNo);
     if (existingZone) {
       message.error('Zone Name already exists!');
       return;
     }
 
-    const newZone = { zoneName, zoneDescription, cameraId, status: status || false };
-    setZones([...zones, newZone]);
-    form.resetFields();
-    setIsModalVisible(false); // Close the modal
-    message.success('Zone added successfully!');
+    const newZone = {
+      zoneNo,
+      zoneDescription,
+      cameraIds: Array.isArray(cameraIds) ? cameraIds : [cameraIds],
+      machineId: Array.isArray(machineId) ? machineId : [machineId],
+    };
+
+    try {
+      await axios.post('https://localhost:7223/api/Zones', newZone);
+      getZone();
+      form.resetFields();
+      setIsModalVisible(false);
+      message.success('Zone added successfully!');
+    } catch (error) {
+      console.error("Failed to add zone", error);
+      message.error('Failed to add zone. Please try again.');
+    }
   };
 
-  // Function to handle status change
-  const handleStatusChange = (zoneName) => {
-    const updatedZones = zones.map(zone =>
-      zone.zoneName === zoneName ? { ...zone, status: !zone.status } : zone
-    );
-    setZones(updatedZones);
+  const handleEditZone = async (index) => {
+    const updatedZone = {
+      ...originalZone,
+      ...editingZone,
+      cameraIds: editingZone.cameraIds || originalZone.cameraIds,
+      machineId: editingZone.machineId || originalZone.machineId,
+    };
+
+    const existingZone = zones.find(zone => zone.zoneNo === updatedZone.zoneNo && zone.zoneNo !== originalZone.zoneNo);
+    if (existingZone) {
+      message.error('Zone Name already exists!');
+      return;
+    }
+
+    try {
+      await axios.put(`https://localhost:7223/api/Zones/${originalZone.zoneId}`, updatedZone);
+      const updatedZones = [...zones];
+      updatedZones[index] = updatedZone;
+      setZones(updatedZones);
+      getZone();
+      message.success('Zone updated successfully!');
+    } catch (error) {
+      console.error("Failed to update zone", error);
+      message.error('Failed to update zone. Please try again.');
+    } finally {
+      setEditingIndex(null);
+      setEditingZone({});
+      setOriginalZone({});
+    }
   };
 
-  // Columns for the table
+  const handleCancelEdit = () => {
+    setEditingIndex(null);
+    setEditingZone({});
+    setOriginalZone({});
+  };
+
   const columns = [
     {
       title: 'SN.',
       key: 'serial',
-      render: (text, record, index) => index + 1, // Render the serial number based on the index
+      render: (text, record, index) => index + 1,
     },
     {
       title: 'Zone Name',
-      dataIndex: 'zoneName',
-      key: 'zoneName',
+      dataIndex: 'zoneNo',
+      key: 'zoneNo',
+      render: (text, record, index) => (
+        editingIndex === index ? (
+          <Input
+            value={editingZone.zoneNo || record.zoneNo}
+            onChange={(e) => setEditingZone({ ...editingZone, zoneNo: e.target.value })}
+            onPressEnter={() => handleEditZone(index)}
+            onBlur={() => handleEditZone(index)}
+          />
+        ) : (
+          <span onClick={() => {
+            setEditingIndex(index);
+            setEditingZone({ zoneNo: record.zoneNo });
+            setOriginalZone(record);
+          }}>{text}</span>
+        )
+      ),
     },
     {
       title: 'Zone Description',
       dataIndex: 'zoneDescription',
       key: 'zoneDescription',
+      render: (text, record, index) => (
+        editingIndex === index ? (
+          <Input.TextArea
+            value={editingZone.zoneDescription || record.zoneDescription}
+            onChange={(e) => setEditingZone({ ...editingZone, zoneDescription: e.target.value })}
+            onPressEnter={() => handleEditZone(index)}
+            onBlur={() => handleEditZone(index)}
+          />
+        ) : (
+          <span onClick={() => {
+            setEditingIndex(index);
+            setEditingZone({ zoneDescription: record.zoneDescription });
+            setOriginalZone(record);
+          }}>{text}</span>
+        )
+      ),
     },
     {
-      title: 'Assign Camera ID',
-      dataIndex: 'cameraId',
-      key: 'cameraId',
+      title: 'Assign Camera Names',
+      dataIndex: 'cameraNames',
+      key: 'cameraNames',
+      render: (cameraNames, record, index) => (
+        editingIndex === index ? (
+          <Select
+            mode="multiple"
+            value={editingZone.cameraIds || record.cameraIds}
+            onChange={(value) => setEditingZone({ ...editingZone, cameraIds: value })}
+            onBlur={() => handleEditZone(index)}
+          >
+            {camera.map(c => (
+              <Option key={c.cameraId} value={c.cameraId}>
+                {c.name}
+              </Option>
+            ))}
+          </Select>
+        ) : (
+          <span onClick={() => {
+            setEditingIndex(index);
+            setEditingZone({ cameraIds: record.cameraIds });
+            setOriginalZone(record);
+          }}>{cameraNames.join(', ')}</span>
+        )
+      ),
     },
     {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status, record) => (
-        <Switch 
-          checked={status} 
-          checkedChildren="Active" 
-          unCheckedChildren="Archive" 
-          onChange={() => handleStatusChange(record.zoneName)} // Handle status toggle
-        />
+      title: 'Assign Machine Names',
+      dataIndex: 'machineNames',
+      key: 'machineNames',
+      render: (machineNames, record, index) => (
+        editingIndex === index ? (
+          <Select
+            mode="multiple"
+            value={editingZone.machineId || record.machineId}
+            onChange={(value) => setEditingZone({ ...editingZone, machineId: value })}
+            onBlur={() => handleEditZone(index)}
+          >
+            {machine.map(m => (
+              <Option key={m.machineId} value={m.machineId}>
+                {m.machineName}
+              </Option>
+            ))}
+          </Select>
+        ) : (
+          <span onClick={() => {
+            setEditingIndex(index);
+            setEditingZone({ machineId: record.machineId });
+            setOriginalZone(record);
+          }}>{machineNames.join(', ')}</span>
+        )
+      ),
+    },
+    {
+      title: 'Action',
+      key: 'action',
+      render: (_, record, index) => (
+        editingIndex === index ? (
+          <>
+            <Button type="link" onClick={() => handleEditZone(index)}>Save</Button>
+            <Button type="link" onClick={handleCancelEdit}>Cancel</Button>
+          </>
+        ) : (
+          <Button type="link" onClick={() => {
+            setEditingIndex(index);
+            setEditingZone({ 
+              zoneNo: record.zoneNo, 
+              zoneDescription: record.zoneDescription,
+              cameraIds: record.cameraIds,
+              machineId: record.machineId
+            });
+            setOriginalZone(record);
+          }}>Edit</Button>
+        )
       ),
     },
   ];
 
-  // Show the modal
   const showModal = () => {
     setIsModalVisible(true);
   };
 
-  // Handle cancel event of the modal
   const handleCancel = () => {
-    form.resetFields(); // Reset form when modal is canceled
+    form.resetFields();
     setIsModalVisible(false);
   };
 
@@ -91,7 +260,7 @@ const Zone = () => {
       </div>
 
       <Table
-        dataSource={zones.map((zone, index) => ({ ...zone, key: index }))} // Unique key for each row
+        dataSource={zones.map((zone, index) => ({ ...zone, key: index }))}
         columns={columns}
         pagination={false}
         bordered
@@ -100,22 +269,33 @@ const Zone = () => {
 
       <Modal
         title="Add Zone"
-        visible={isModalVisible}
+        open={isModalVisible}
         onCancel={handleCancel}
-        footer={null} // No default footer to allow custom buttons in form
+        footer={null}
       >
         <Form form={form} onFinish={handleAddZone} layout="vertical">
-          <Form.Item name="zoneName" label="Zone Name" rules={[{ required: true, message: 'Please input Zone Name!' }]}>
+          <Form.Item name="zoneNo" label="Zone Name" rules={[{ required: true, message: 'Please input Zone Name!' }]}>
             <Input placeholder="Zone Name" />
           </Form.Item>
           <Form.Item name="zoneDescription" label="Zone Description" rules={[{ required: true, message: 'Please input Zone Description!' }]}>
             <Input.TextArea placeholder="Zone Description" />
           </Form.Item>
-          <Form.Item name="cameraId" label="Assign Camera ID" rules={[{ required: true, message: 'Please select Camera ID!' }]}>
-            <Select placeholder="Select Camera">
-              <Select.Option value="camera1">Camera 1</Select.Option>
-              <Select.Option value="camera2">Camera 2</Select.Option>
-              <Select.Option value="camera3">Camera 3</Select.Option>
+          <Form.Item name="cameraIds" label="Assign Camera ID" rules={[{ required: true, message: 'Please select Camera ID!' }]}>
+            <Select mode="multiple" placeholder="Select Camera">
+              {camera.map(c => (
+                <Option key={c.cameraId} value={c.cameraId}>
+                  {c.name}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+          <Form.Item name="machineId" label="Assign Machine ID" rules={[{ required: true, message: 'Please select Machine ID!' }]}>
+            <Select mode="multiple" placeholder="Select Machine">
+              {machine.map(m => (
+                <Option key={m.machineId} value={m.machineId}>
+                  {m.machineName}
+                </Option>
+              ))}
             </Select>
           </Form.Item>
           <Form.Item>

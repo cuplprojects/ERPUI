@@ -16,12 +16,12 @@ import {
   FaCaretDown,
   FaCaretLeft,
 } from 'react-icons/fa';
-import GroupManager from './Group';
+import GroupManager from './Group'
 import ProjectManager from './Project';
 import ZoneManager from './Zone';
-import Machine from './ProductionMachine';
-import AddMachine from './AddMachine';
+import Type from './Type';
 import AlarmMaster from './Alarm';
+import Machine from './ProductionMachine';
 import './../styles/Sidebar.css'; // Import your custom CSS
 import AddUsers from '../sub-Components/addUsers';
 import AllUsers from '../sub-Components/allUsers';
@@ -70,19 +70,12 @@ const Sidebar = () => {
         { key: 'allUsers', icon: <FaListUl className={`${customDarkText} menu-icon`} />, label: 'All Users' },
       ],
     },
-    // { key: 'group', icon: <FaUsers className={`${customDarkText} menu-icon`} />, label: 'Group' },
+    { key: 'group', icon: <FaUsers className={`${customDarkText} menu-icon`} />, label: 'Group' },
+    { key: 'type', icon: <FaUsers className={`${customDarkText} menu-icon`} />, label: 'Type' },
     { key: 'project', icon: <FaProjectDiagram className={`${customDarkText} menu-icon`} />, label: 'Project' },
     { key: 'zone', icon: <FaGlobeAmericas className={`${customDarkText} menu-icon`} />, label: 'Zone' },
     { key: 'camera', icon: <FaCamera className={`${customDarkText} menu-icon`} />, label: 'Camera' },
-    {
-      key: 'machine',
-      icon: <FaTools className={`${customDarkText} menu-icon`} />,
-      label: 'Machine',
-      children: [
-        { key: 'MachineType', icon: <FaPlusCircle className={`${customDarkText} menu-icon`} />, label: 'Add Machine' },
-        { key: 'AllMachines', icon: <FaListUl className={`${customDarkText} menu-icon`} />, label: 'All Machines' },
-      ],
-    },
+    {key: 'machine',icon: <FaListUl className={`${customDarkText} menu-icon`} />, label: 'Machines'},
     { key: 'alarm', icon: <FaBell className={`${customDarkText} menu-icon`} />, label: 'Alarm' },
     { key: 'team', icon: <FaUsers className={`${customDarkText} menu-icon`} />, label: 'Team' },
     { key: 'systemSettings', icon: <FaCog className={`${customDarkText} menu-icon`} />, label: 'Process Settings' },
@@ -129,14 +122,14 @@ const Sidebar = () => {
           {selectedMenu === 'RolePage' && <RolesAndDepartments />}
           {selectedMenu === 'addUser' && <AddUsers />}
           {selectedMenu === 'allUsers' && <AllUsers />}
-          {/* {selectedMenu === 'group' && <GroupManager />} */}
+          {selectedMenu === 'group' && <GroupManager />}
+          {selectedMenu === 'type' && <Type />}
           {selectedMenu === 'project' && <ProjectManager />}
           {selectedMenu === 'zone' && <ZoneManager />}
           {selectedMenu === 'camera' && <CameraList />}
           {selectedMenu === 'team' && <Team />}
           {selectedMenu === 'systemSettings' && <SystemSettings />}
-          {selectedMenu === 'MachineType' && <AddMachine />}
-          {selectedMenu === 'AllMachines' && <Machine />}
+          {selectedMenu === 'machine' && <Machine />}
           {selectedMenu === 'alarm' && <AlarmMaster />}
           {selectedMenu === 'envelope' && <EnvelopeConfiguration />}
         </Col>
