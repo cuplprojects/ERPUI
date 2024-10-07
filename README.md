@@ -20,7 +20,66 @@ ApexERP is a comprehensive Enterprise Resource Planning system designed to strea
 ## Google Sheet Reference
 For detailed project planning and documentation, please refer to our [Google Sheet](https://docs.google.com/spreadsheets/d/1YajPg5hwe0ow8eHWkJlVeO5g7RX93A3zy9A3Cl6khts/edit?gid=747833457#gid=747833457).
 
+## API Usage Instructions
 
+To use the API in this project, follow these steps:
+
+1. Import the API instance:
+   ```javascript
+   import API from 'src\CustomHooks\MasterApiHooks\api.jsx';
+   ```
+
+2. Use the API instance to make requests:
+   ```javascript
+   const fetchData = async () => {
+     try {
+       const response = await API.get('/endpoint');
+       // Handle the response
+     } catch (error) {
+       // Handle any errors
+     }
+   };
+   ```
+
+3. To prevent multiple API calls for the same data, create service files for each feature or module. For example:
+
+   ```javascript
+   // userService.js
+   import API from './api';
+
+   export const fetchUserData = async (userId) => {
+     try {
+       const response = await API.get(`/users/${userId}`);
+       return response.data;
+     } catch (error) {
+       throw error;
+     }
+   };
+   ```
+
+   Then, in your components, use the service instead of calling the API directly:
+
+   ```javascript
+   import { fetchUserData } from './userService';
+
+   const UserComponent = ({ userId }) => {
+     const [userData, setUserData] = useState(null);
+
+     useEffect(() => {
+       const loadUserData = async () => {
+         try {
+           const data = await fetchUserData(userId);
+           setUserData(data);
+         } catch (error) {
+           // Handle error
+         }
+       };
+       loadUserData();
+     }, [userId]);
+
+     // Render component using userData
+   };
+   ```
 
 # Vite Project Build and Deploy Instructions
 
