@@ -64,7 +64,7 @@ const SecurityQuestions = () => {
         type="primary"
         onClick={addQuestion}
         loading={loading}
-        disabled={newQuestion.trim() === '' || loading}  {/* Disable when input is empty */}
+        disabled={newQuestion.trim() === '' || loading} 
       >
         Add Question
       </Button>
