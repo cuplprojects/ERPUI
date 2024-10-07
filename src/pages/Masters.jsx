@@ -88,7 +88,6 @@ const Sidebar = () => {
       ],
     },
     { key: 'alarm', icon: <FaBell className={`${customDarkText} menu-icon`} />, label: 'Alarm' },
-    { key: 'envelope', icon: <FaFileContract className={`${customDarkText} menu-icon`} />, label: 'Envelope Configuration' },
     { key: 'team', icon: <FaUsers className={`${customDarkText} menu-icon`} />, label: 'Team' },
     { key: 'systemSettings', icon: <FaCog className={`${customDarkText} menu-icon`} />, label: 'Process Settings' },
   ];

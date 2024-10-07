@@ -1,137 +1,88 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, Card, Table, Modal, Input, Switch, message, Tabs } from 'antd';
-import { IdcardOutlined, ApartmentOutlined } from '@ant-design/icons'; // Use TeamOutlined for Departments
+import { IdcardOutlined } from '@ant-design/icons';
+import axios from 'axios'; // Import axios for API calls
 
 const { TabPane } = Tabs;
 
-const DEFAULT_ROLE_VALUE = {
-  roleId: 0,
-  roleName: '',
-  isActive: true,
-};
-
-const DEFAULT_DEPARTMENT_VALUE = {
-  departmentId: 0,
-  departmentName: '',
-  isActive: true,
-};
-
 const RolesAndDepartments = () => {
-  const [roles, setRoles] = useState([
-    { roleId: 1, roleName: 'Admin', isActive: true },
-    { roleId: 2, roleName: 'Editor', isActive: true },
-    { roleId: 3, roleName: 'Viewer', isActive: false },
-  ]);
-
-  const [departments, setDepartments] = useState([
-    { departmentId: 1, departmentName: 'HR', isActive: true },
-    { departmentId: 2, departmentName: 'Finance', isActive: true },
-    { departmentId: 3, departmentName: 'IT', isActive: false },
-  ]);
-
-  const [newRole, setNewRole] = useState(DEFAULT_ROLE_VALUE);
-  const [newDepartment, setNewDepartment] = useState(DEFAULT_DEPARTMENT_VALUE);
+  const [roles, setRoles] = useState([]);
+  const [newRole, setNewRole] = useState({ roleId: 0, roleName: '', priorityOrder: 0, status: true });
   const [isRoleModalVisible, setIsRoleModalVisible] = useState(false);
-  const [isDepartmentModalVisible, setIsDepartmentModalVisible] = useState(false);
 
-  // Role Modal Handlers
+  // Fetch roles from the API on component mount
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        const response = await axios.get('https://localhost:7223/api/Roles'); // Update with your API endpoint
+        setRoles(response.data);
+      } catch (error) {
+        message.error('Failed to fetch roles');
+      }
+    };
+
+    fetchRoles();
+  }, []);
+
   const onCreateRole = () => {
-    setNewRole(DEFAULT_ROLE_VALUE);
+    setNewRole({roleName: '', priorityOrder: 0, status: true });
     setIsRoleModalVisible(true);
   };
 
-  const handleRoleOk = () => {
+  const handleRoleOk = async () => {
     const trimmedRoleName = newRole.roleName.trim();
-
-    // Validation: role name cannot be empty
     if (!trimmedRoleName) {
       message.error('Role name cannot be empty');
       return;
     }
-
-    // Validation: role name should not contain numeric or alphanumeric characters
     if (/[^a-zA-Z\s]/.test(trimmedRoleName)) {
       message.error('Role name should contain only alphabetic characters');
       return;
     }
-
-    // Check if role name already exists
-    const isRoleExists = roles.some(
-      role => role.roleName.toLowerCase() === trimmedRoleName.toLowerCase()
-    );
+    const isRoleExists = roles.some(role => role.roleName.toLowerCase() === trimmedRoleName.toLowerCase());
     if (isRoleExists) {
       message.error('Role name already exists');
       return;
     }
+    const isPriorityOrderExists = roles.some(role => role.priorityOrder === newRole.priorityOrder);
+    if (isPriorityOrderExists) {
+      message.error('Priority order must be unique');
+      return;
+    }
 
-    const newRoleId = roles.length ? roles[roles.length - 1].roleId + 1 : 1;
-    setRoles([...roles, { ...newRole, roleId: newRoleId, roleName: trimmedRoleName }]);
-    setIsRoleModalVisible(false);
-    message.success('Role added successfully');
+
+    try {
+      // Sending the payload with the new structure
+      const response = await axios.post('https://localhost:7223/api/Roles', {
+        roleName: trimmedRoleName,
+        priorityOrder: newRole.priorityOrder,
+        status: newRole.status,
+      });
+      
+      // Assuming your API returns the created role
+      setRoles([...roles, { ...response.data }]);
+      setIsRoleModalVisible(false);
+      message.success('Role added successfully');
+    } catch (error) {
+      message.error('Failed to add role');
+    }
   };
 
   const handleRoleCancel = () => {
     setIsRoleModalVisible(false);
   };
 
-  // Department Modal Handlers
-  const onCreateDepartment = () => {
-    setNewDepartment(DEFAULT_DEPARTMENT_VALUE);
-    setIsDepartmentModalVisible(true);
-  };
-
-  const handleDepartmentOk = () => {
-    const trimmedDepartmentName = newDepartment.departmentName.trim();
-
-    // Validation: department name cannot be empty
-    if (!trimmedDepartmentName) {
-      message.error('Department name cannot be empty');
-      return;
+  const handleRoleStatusChange = async (checked, roleId) => {
+    try {
+      await axios.patch(`https://localhost:7223/api/Roles/${roleId}`, { status: checked }); // Update role status in the API
+      const updatedRoles = roles.map(role =>
+        role.roleId === roleId ? { ...role, status: checked } : role
+      );
+      setRoles(updatedRoles);
+      message.success('Role status updated');
+    } catch (error) {
+      message.error('Failed to update role status');
     }
-
-    // Validation: department name should not contain numeric or alphanumeric characters
-    if (/[^a-zA-Z\s]/.test(trimmedDepartmentName)) {
-      message.error('Department name should contain only alphabetic characters');
-      return;
-    }
-
-    // Check if department name already exists
-    const isDepartmentExists = departments.some(
-      department => department.departmentName.toLowerCase() === trimmedDepartmentName.toLowerCase()
-    );
-    if (isDepartmentExists) {
-      message.error('Department name already exists');
-      return;
-    }
-
-    const newDepartmentId = departments.length
-      ? departments[departments.length - 1].departmentId + 1
-      : 1;
-    setDepartments([...departments, { ...newDepartment, departmentId: newDepartmentId, departmentName: trimmedDepartmentName }]);
-    setIsDepartmentModalVisible(false);
-    message.success('Department added successfully');
-  };
-
-  const handleDepartmentCancel = () => {
-    setIsDepartmentModalVisible(false);
-  };
-
-  // Handle Role Status Change
-  const handleRoleStatusChange = (checked, roleId) => {
-    const updatedRoles = roles.map((role) =>
-      role.roleId === roleId ? { ...role, isActive: checked } : role
-    );
-    setRoles(updatedRoles);
-    message.success('Role status updated');
-  };
-
-  // Handle Department Status Change
-  const handleDepartmentStatusChange = (checked, departmentId) => {
-    const updatedDepartments = departments.map((department) =>
-      department.departmentId === departmentId ? { ...department, isActive: checked } : department
-    );
-    setDepartments(updatedDepartments);
-    message.success('Department status updated');
   };
 
   const roleColumns = [
@@ -146,39 +97,19 @@ const RolesAndDepartments = () => {
       width: 200,
     },
     {
-      title: 'Status',
-      dataIndex: 'isActive',
-      align: 'center',
-      width: 75,
-      render: (status, record) => (
-        <Switch
-          checked={record.isActive}
-          onChange={(checked) => handleRoleStatusChange(checked, record.roleId)}
-        />
-      ),
-    },
-  ];
-
-  const departmentColumns = [
-    {
-      title: 'SN.',
-      dataIndex: 'departmentId',
-      width: 100,
-    },
-    {
-      title: 'Name',
-      dataIndex: 'departmentName',
+      title: 'Order',
+      dataIndex: 'priorityOrder',
       width: 200,
     },
     {
       title: 'Status',
-      dataIndex: 'isActive',
+      dataIndex: 'status',
       align: 'center',
       width: 75,
       render: (status, record) => (
         <Switch
-          checked={record.isActive}
-          onChange={(checked) => handleDepartmentStatusChange(checked, record.departmentId)}
+          checked={record.status}
+          onChange={(checked) => handleRoleStatusChange(checked, record.roleId)}
         />
       ),
     },
@@ -186,9 +117,9 @@ const RolesAndDepartments = () => {
 
   // Pagination configuration
   const paginationConfig = {
-    pageSize: 5, // Number of items per page
-    showSizeChanger: true, // Allow changing page size
-    pageSizeOptions: [5, 10, 20], // Options for page sizes
+    pageSize: 5,
+    showSizeChanger: true,
+    pageSizeOptions: [5, 10, 20],
   };
 
   return (
@@ -219,11 +150,10 @@ const RolesAndDepartments = () => {
             dataSource={roles}
             style={{ fontSize: '12px' }}
           />
-
           {/* Modal for Adding New Role */}
           <Modal
             title="Add New Role"
-            visible={isRoleModalVisible}
+            open={isRoleModalVisible}
             onOk={handleRoleOk}
             onCancel={handleRoleCancel}
             okText="Add Role"
@@ -233,69 +163,25 @@ const RolesAndDepartments = () => {
               placeholder="Role Name"
               value={newRole.roleName}
               onChange={(e) => setNewRole({ ...newRole, roleName: e.target.value })}
-              onPressEnter={handleRoleOk} // Trigger handleRoleOk when Enter is pressed
+              onPressEnter={handleRoleOk}
             />
+            <div style={{ marginTop: 10 }}>
+              <Input
+                type="number"
+                placeholder="Priority Order"
+                value={newRole.priorityOrder}
+                onChange={(e) => setNewRole({ ...newRole, priorityOrder: Number(e.target.value) })}
+              />
+            </div>
             <div style={{ marginTop: 10 }}>
               <span>Status: </span>
               <Switch
-                checked={newRole.isActive}
-                onChange={(checked) => setNewRole({ ...newRole, isActive: checked })}
+                checked={newRole.status}
+                onChange={(checked) => setNewRole({ ...newRole, status: checked })}
               />
             </div>
-          </Modal>
-        </Card>
-      </TabPane>
-
-      <TabPane
-        tab={
-          <span>
-            <ApartmentOutlined  style={{ fontSize: '25px', marginRight: '8px' }}/> Departments
-          </span>
-        }
-        key="2"
-      >
-        <Card
-          title="Department List"
-          extra={
-            <Button type="primary" onClick={onCreateDepartment}>
-              New Department
-            </Button>
-          }
-          style={{ width: '60%', margin: '0 auto', padding: '16px' }}
-          bodyStyle={{ padding: '12px' }}
-        >
-          <Table
-            rowKey="departmentId"
-            size="small"
-            pagination={paginationConfig}
-            columns={departmentColumns}
-            dataSource={departments}
-            style={{ fontSize: '12px' }}
+            {/* Optional: Add an input for priorityOrder */}
             
-          />
-
-          {/* Modal for Adding New Department */}
-          <Modal
-            title="Add New Department"
-            visible={isDepartmentModalVisible}
-            onOk={handleDepartmentOk}
-            onCancel={handleDepartmentCancel}
-            okText="Add Department"
-            okButtonProps={{ type: 'primary' }}
-          >
-            <Input
-              placeholder="Department Name"
-              value={newDepartment.departmentName}
-              onChange={(e) => setNewDepartment({ ...newDepartment, departmentName: e.target.value })}
-              onPressEnter={handleDepartmentOk} // Trigger handleDepartmentOk when Enter is pressed
-            />
-            <div style={{ marginTop: 10 }}>
-              <span>Status: </span>
-              <Switch
-                checked={newDepartment.isActive}
-                onChange={(checked) => setNewDepartment({ ...newDepartment, isActive: checked })}
-              />
-            </div>
           </Modal>
         </Card>
       </TabPane>

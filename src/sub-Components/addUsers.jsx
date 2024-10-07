@@ -112,6 +112,7 @@ const AddUsers = () => {
 
   return (
     <div style={{ padding: '20px', border: '1px solid #ddd', borderRadius: '8px' }}>
+
       <h4 className={`${customDarkText}`}>Add Users</h4>
       <Form onSubmit={handleSubmit}>
         {/* First Row: First Name, Middle Name, Last Name */}
@@ -122,6 +123,7 @@ const AddUsers = () => {
               <Form.Control
                 type="text"
                 name="firstName"
+
                 placeholder="Enter first name"
                 value={formData.firstName}
                 onChange={handleInputChange}
@@ -130,12 +132,14 @@ const AddUsers = () => {
               />
             </Form.Group>
           </Col>
+
           <Col xs={12} md={4}>
             <Form.Group>
               <Form.Label className={customDarkText}>Middle Name:</Form.Label>
               <Form.Control
                 type="text"
                 name="middleName"
+
                 placeholder="Enter middle name"
                 value={formData.middleName}
                 onChange={handleInputChange}
@@ -143,12 +147,14 @@ const AddUsers = () => {
               />
             </Form.Group>
           </Col>
+
           <Col xs={12} md={4}>
             <Form.Group>
               <Form.Label className={customDarkText}>Last Name:</Form.Label>
               <Form.Control
                 type="text"
                 name="lastName"
+
                 placeholder="Enter last name"
                 value={formData.lastName}
                 onChange={handleInputChange}
@@ -158,6 +164,7 @@ const AddUsers = () => {
             </Form.Group>
           </Col>
         </Row>
+
 
         {/* Username Suggestion */}
         <Row className="mb-3">
@@ -170,10 +177,12 @@ const AddUsers = () => {
                 value={formData.username}
                 onChange={handleInputChange} // Allow manual editing
                 isInvalid={usernameError !== '' && formData.username.length > 0} // Conditional error styling
+
               />
               <Form.Control.Feedback type="invalid">{usernameError}</Form.Control.Feedback>
             </Form.Group>
           </Col>
+
 
 
           <Col lg={6} md={12} sm={12} xs={12}>
@@ -228,6 +237,7 @@ const AddUsers = () => {
               </Form.Select>
             </Form.Group>
           </Col>
+
         </Row>
 
         {/* Add and Reset Buttons */}

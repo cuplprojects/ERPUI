@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { Table, Input, Button, Switch, Form, message, Modal } from 'antd';
 
 const Group = () => {
@@ -6,34 +7,80 @@ const Group = () => {
   const [isModalVisible, setIsModalVisible] = useState(false); // Control modal visibility
   const [form] = Form.useForm(); // Form instance
 
+  // Fetch groups from the server
+  const fetchGroups = async () => {
+    try {
+      const response = await axios.get('https://localhost:7223/api/Groups'); // Adjust the endpoint as needed
+      setGroups(response.data);
+    } catch (error) {
+      message.error('Failed to fetch groups!');
+    }
+  };
+
+  // UseEffect to fetch groups on component mount
+  useEffect(() => {
+    fetchGroups();
+  }, []);
+
   // Function to handle group addition
-  const handleAddGroup = (values) => {
-    const { groupName, status } = values;
+  const handleAddGroup = async (values) => {
+    const { name, status } = values;
 
     // Check if the group name already exists
-    const existingGroup = groups.find(group => group.groupName.toLowerCase() === groupName.toLowerCase());
+    const existingGroup = groups.find(group => group.name.toLowerCase() === name.toLowerCase());
 
     if (existingGroup) {
       message.error('Group name already exists!'); // Show error message
       return;
     }
 
-    const newGroup = { groupName, status };
-    setGroups([...groups, newGroup]); // Update group list
-    form.resetFields(); // Reset the form fields after submission
-    setIsModalVisible(false); // Close the modal after submission
+    try {
+      // Make POST request to add a new group
+      const newGroup = { name, status };
+      await axios.post('https://localhost:7223/api/Groups', newGroup); // Adjust the endpoint as needed
+      setGroups([...groups, newGroup]); // Update group list
+      form.resetFields(); // Reset the form fields after submission
+      setIsModalVisible(false); // Close the modal after submission
 
-    // Show success message
-    message.success('Group added successfully!');
+      // Show success message
+      message.success('Group added successfully!');
+    } catch (error) {
+      message.error('Failed to add group!');
+    }
   };
 
   // Function to handle status change of the group
-  const handleStatusChange = (groupName) => {
-    const updatedGroups = groups.map(group =>
-      group.groupName === groupName ? { ...group, status: !group.status } : group
-    );
-    setGroups(updatedGroups);
+  const handleStatusChange = async (name) => {
+    // Find the group by name to get its current status and ID
+    const groupToUpdate = groups.find(group => group.name === name);
+  
+    if (!groupToUpdate) {
+      message.error('Group not found!');
+      return;
+    }
+  
+    const updatedStatus = !groupToUpdate.status;
+    
+    try {
+      // Make a PUT request to update group status, including the name
+      await axios.put(`https://localhost:7223/api/Groups/${groupToUpdate.id}`, { 
+       ...groupToUpdate, // Send the group name
+        status: updatedStatus 
+      });
+      
+      // Update local state
+      const updatedGroups = groups.map(group =>
+        group.name === name ? { ...group, status: updatedStatus } : group
+      );
+      
+      setGroups(updatedGroups);
+      message.success('Group status updated successfully')
+    } catch (error) {
+      message.error('Failed to update group status!');
+    }
   };
+  
+  
 
   const columns = [
     {
@@ -44,8 +91,8 @@ const Group = () => {
     },
     {
       title: 'Group Name',
-      dataIndex: 'groupName',
-      key: 'groupName',
+      dataIndex: 'name',
+      key: 'name',
     },
     {
       title: 'Status',
@@ -54,7 +101,7 @@ const Group = () => {
       render: (status, record) => (
         <Switch 
           checked={status} 
-          onChange={() => handleStatusChange(record.groupName)} 
+          onChange={() => handleStatusChange(record.name)} 
         />
       ),
     },
@@ -76,7 +123,6 @@ const Group = () => {
 
   return (
     <div style={{ padding: '20px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)' }}>
-      <h2 style={{ marginBottom: '20px' }}>Group</h2>
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
         <Button type="primary" onClick={showModal}>
           Add Group
@@ -86,7 +132,7 @@ const Group = () => {
       <Table
         dataSource={groups.map((group, index) => ({ ...group, serial: index + 1 }))} // Add serial index
         columns={columns}
-        rowKey="groupName"
+        rowKey="name"
         pagination={false}
         rowClassName={rowClassName}
         bordered
@@ -94,7 +140,7 @@ const Group = () => {
 
       <Modal
         title="Add Group"
-        visible={isModalVisible}
+        open={isModalVisible}
         onCancel={handleCancel}
         footer={null} // No default footer to allow custom buttons in form
       >
@@ -102,14 +148,14 @@ const Group = () => {
           form={form} 
           onFinish={handleAddGroup} 
           layout="vertical"
-          onKeyPress={(e) => { // Check for Enter key press
+          onKeyUp={(e) => { // Check for Enter key press
             if (e.key === 'Enter') {
               form.submit(); // Trigger form submission
             }
           }}
         >
           <Form.Item
-            name="groupName"
+            name="name"
             label="Group Name"
             rules={[
               { required: true, message: 'Please input group name!' },
@@ -134,7 +180,7 @@ const Group = () => {
 
           <Form.Item>
             <Button type="primary" htmlType="submit">
-              Add Group
+              Submit
             </Button>
           </Form.Item>
         </Form>
