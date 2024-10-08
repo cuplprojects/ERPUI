@@ -39,6 +39,7 @@
     "framer-motion": "^11.3.31",
     "highcharts": "^11.4.8",
     "i18next": "^23.14.0",
+    "jwt-decode": "^4.0.0",
     "notistack": "^3.0.1",
     "plotly.js": "^2.35.2",
     "react": "^18.3.1",

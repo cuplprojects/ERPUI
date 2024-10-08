@@ -6,6 +6,10 @@ const Group = () => {
   const [groups, setGroups] = useState([]); // State to store groups
   const [isModalVisible, setIsModalVisible] = useState(false); // Control modal visibility
   const [form] = Form.useForm(); // Form instance
+  const [editingIndex, setEditingIndex] = useState(null); // Index of the group being edited
+  const [editingValue, setEditingValue] = useState(''); // Value of the input during editing
+  const [editingStatus, setEditingStatus] = useState(true); // Status during editing
+  const [originalData, setOriginalData] = useState({}); // Store original data for cancel functionality
 
   // Fetch groups from the server
   const fetchGroups = async () => {
@@ -49,11 +53,41 @@ const Group = () => {
     }
   };
 
+  // Function to handle editing a group
+  const handleEditSave = async (index) => {
+    const groupToEdit = groups[index];
+    const updatedGroup = { ...groupToEdit, name: editingValue, status: editingStatus };
+
+    // Check for existing group name
+    const existingGroup = groups.find(group => 
+      group.name.toLowerCase() === editingValue.toLowerCase() && group.name !== groupToEdit.name
+    );
+
+    if (existingGroup) {
+      message.error('Group name already exists!');
+      return;
+    }
+
+    try {
+      await axios.put(`https://localhost:7223/api/Groups/${groupToEdit.id}`, updatedGroup);
+      const updatedGroups = [...groups];
+      updatedGroups[index] = updatedGroup;
+      setGroups(updatedGroups);
+      message.success('Group updated successfully!');
+    } catch (error) {
+      message.error('Failed to update group');
+      fetchGroups(); // Refresh groups to get the latest data
+    } finally {
+      setEditingIndex(null);
+      setEditingValue('');
+      setEditingStatus(true);
+    }
+  };
+
   // Function to handle status change of the group
   const handleStatusChange = async (name) => {
-    // Find the group by name to get its current status and ID
     const groupToUpdate = groups.find(group => group.name === name);
-  
+    
     if (!groupToUpdate) {
       message.error('Group not found!');
       return;
@@ -62,25 +96,27 @@ const Group = () => {
     const updatedStatus = !groupToUpdate.status;
     
     try {
-      // Make a PUT request to update group status, including the name
       await axios.put(`https://localhost:7223/api/Groups/${groupToUpdate.id}`, { 
-       ...groupToUpdate, // Send the group name
+        ...groupToUpdate,
         status: updatedStatus 
       });
       
-      // Update local state
       const updatedGroups = groups.map(group =>
         group.name === name ? { ...group, status: updatedStatus } : group
       );
       
       setGroups(updatedGroups);
-      message.success('Group status updated successfully')
+      message.success('Group status updated successfully');
     } catch (error) {
       message.error('Failed to update group status!');
     }
   };
-  
-  
+
+  const handleCancelEdit = () => {
+    setEditingIndex(null);
+    setEditingValue(originalData.name);
+    setEditingStatus(originalData.status);
+  };
 
   const columns = [
     {
@@ -93,6 +129,23 @@ const Group = () => {
       title: 'Group Name',
       dataIndex: 'name',
       key: 'name',
+      render: (text, record, index) => (
+        editingIndex === index ? (
+          <Input
+            value={editingValue}
+            onChange={(e) => setEditingValue(e.target.value)}
+            onPressEnter={() => handleEditSave(index)}
+            onBlur={() => handleEditSave(index)}
+          />
+        ) : (
+          <span onClick={() => {
+            setEditingIndex(index);
+            setEditingValue(record.name);
+            setEditingStatus(record.status);
+            setOriginalData(record); // Store original data
+          }}>{text}</span>
+        )
+      ),
     },
     {
       title: 'Status',
@@ -105,10 +158,26 @@ const Group = () => {
         />
       ),
     },
+    {
+      title: 'Action',
+      key: 'action',
+      render: (_, record, index) => (
+        editingIndex === index ? (
+          <>
+            <Button type="link" onClick={() => handleEditSave(index)}>Save</Button>
+            <Button type="link" onClick={handleCancelEdit}>Cancel</Button>
+          </>
+        ) : (
+          <Button type="link" onClick={() => {
+            setEditingIndex(index);
+            setEditingValue(record.name);
+            setEditingStatus(record.status);
+            setOriginalData(record); // Store original data
+          }}>Edit</Button>
+        )
+      ),
+    },
   ];
-
-  // Define row class name for striped effect
-  const rowClassName = (record, index) => (index % 2 === 0 ? 'striped-row' : '');
 
   // Show the modal
   const showModal = () => {
@@ -132,9 +201,8 @@ const Group = () => {
       <Table
         dataSource={groups.map((group, index) => ({ ...group, serial: index + 1 }))} // Add serial index
         columns={columns}
-        rowKey="name"
+        rowKey="id" // Use a unique key for each row
         pagination={false}
-        rowClassName={rowClassName}
         bordered
       />
 
@@ -148,28 +216,11 @@ const Group = () => {
           form={form} 
           onFinish={handleAddGroup} 
           layout="vertical"
-          onKeyUp={(e) => { // Check for Enter key press
-            if (e.key === 'Enter') {
-              form.submit(); // Trigger form submission
-            }
-          }}
         >
           <Form.Item
             name="name"
             label="Group Name"
-            rules={[
-              { required: true, message: 'Please input group name!' },
-              { 
-                validator: (_, value) => {
-                  // Check if the value is not purely numeric
-                  const isNumeric = /^\d+$/;
-                  if (value && isNumeric.test(value)) {
-                    return Promise.reject(new Error('Group name cannot contain only numbers!'));
-                  }
-                  return Promise.resolve();
-                }
-              }
-            ]}
+            rules={[{ required: true, message: 'Please input group name!' }]}
           >
             <Input placeholder="Group Name" />
           </Form.Item>

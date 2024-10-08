@@ -1,30 +1,30 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Container, Row, Col, Form, Button } from "react-bootstrap";
-import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
-import BlueTheme from "./../assets/bgImages/Factory.svg";
-import PurpleTheme from "./../assets/bgImages/FactoryPurple.png";
-import DefaultTheme from "./../assets/bgImages/FactoryDefault.png";
-import GreenTheme from "./../assets/bgImages/FactoryGreen.png";
-import RedTheme from "./../assets/bgImages/FactoryRed.png";
-import DarkTheme from "./../assets/bgImages/FactoryDark.png";
-import BrownTheme from "./../assets/bgImages/FactoryBrown.png";
-import PinkTheme from "./../assets/bgImages/FactoryPink.png";
-import LightTheme from "./../assets/bgImages/FactoryLight.png";
-import Logo1 from "./../assets/Logos/CUPLLogoTheme.png";
-import themeStore from "./../store/themeStore";
-import { useStore } from "zustand";
-import { useMediaQuery } from "react-responsive";
-import { validateLogin } from "./../scripts/loginValidations.js";
-import { toast, ToastContainer } from "react-toastify";
-import { Link } from "react-router-dom";
-import AuthService from "../CustomHooks/ApiServices/AuthService.jsx";
-import { useTranslation } from "react-i18next";
 
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Container, Row, Col, Form, Button } from 'react-bootstrap';
+import { AiFillEye, AiFillEyeInvisible } from 'react-icons/ai';
+import BlueTheme from './../assets/bgImages/Factory.svg';
+import PurpleTheme from './../assets/bgImages/FactoryPurple.png';
+import DefaultTheme from './../assets/bgImages/FactoryDefault.png';
+import GreenTheme from './../assets/bgImages/FactoryGreen.png';
+import RedTheme from './../assets/bgImages/FactoryRed.png';
+import DarkTheme from './../assets/bgImages/FactoryDark.png';
+import BrownTheme from './../assets/bgImages/FactoryBrown.png';
+import PinkTheme from './../assets/bgImages/FactoryPink.png';
+import LightTheme from './../assets/bgImages/FactoryLight.png';
+import Logo1 from './../assets/Logos/CUPLLogoTheme.png';
+import themeStore from './../store/themeStore';
+import { useStore } from 'zustand';
+import { useMediaQuery } from 'react-responsive';
+
+import { toast, ToastContainer } from 'react-toastify';
+import { Link } from 'react-router-dom';
+import axios from 'axios'; 
 const Login = () => {
-  // State to handle password visibility
-  const [userName, setuserName] = useState("");
-  const [password, setPassword] = useState("");
+
+  const [userName, setUserName] = useState('');
+  const [password, setPassword] = useState('');
+
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate(); // For navigation
   const { login } = AuthService;
@@ -34,7 +34,6 @@ const Login = () => {
   const cssClasses = getCssClasses();
   const customDark = cssClasses[0];
   const customMid = cssClasses[1];
-  const customLight = cssClasses[2];
   const customBtn = cssClasses[3];
   const customDarkText = cssClasses[4];
   const customLightText = cssClasses[5];
@@ -54,6 +53,7 @@ const Login = () => {
     default: DefaultTheme,
   };
 
+
   // Media Query: true if screen width is less than or equal to 992px (medium and smaller screens)
   const isMediumOrSmaller = useMediaQuery({ query: "(max-width: 992px)" });
   // Additional Media Query for Tablet Portrait Mode
@@ -67,42 +67,53 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validation
-    const errors = validateLogin(userName, password);
-    if (Object.keys(errors).length > 0) {
-      // Show validation error messages using toast
-      Object.values(errors).forEach((error) => toast.error(error));
-      return;
-    }
-
     try {
       // Show processing toast
       toast.info("Processing...", {
         autoClose: 2000,
         toastId: "processing", // Prevent duplicate toasts
       });
-
+  
       // Replace the URL below with your actual login API endpoint
-      const response = await login(userName, password);
+
+      const response = await axios.post('https://localhost:7212/api/Login/login', {
+        userName,
+        password
+      });
+  
 
       // Assuming the API returns a success status and a token
       if (response.status === 200) {
         toast.dismiss("processing"); // Dismiss the processing toast
         toast.success("Successfully logged in!");
 
-        // Extract the token from response.data
-        const { token } = response.data;
-
+  
+        // Extract the token and autogenPass from response.data
+        const { token, autogenPass } = response.data;
+        // console.log(response.data)//console to see the response data from API
+  
         if (token) {
           // Store only the token in localStorage
-          localStorage.setItem("authToken", token);
+
+          localStorage.setItem('authToken', token);
+          
+          // Navigate based on autogenPass value
+          if (autogenPass) {
+            setTimeout(() => {
+              navigate('/setpassword'); // Navigate to set password if autogenPass is true
+            }, 1500);
+          } else {
+            setTimeout(() => {
+              navigate('/dashboard'); // Navigate to dashboard if autogenPass is false
+            }, 1500);
+          }
+
+
         } else {
           toast.error("Authentication token not found in the response.");
           return;
         }
 
-        // Navigate to the desired route after successful login
-        navigate("/setpassword"); // or navigate('/dashboard');
       } else {
         // Handle unexpected success responses
         toast.dismiss("processing");
@@ -143,6 +154,24 @@ const Login = () => {
       }
     }
   };
+  
+
+  useEffect(() => {
+    // Check if loggedOut flag is present in localStorage
+    if (localStorage.getItem('loggedOut')) {
+      toast.success('Successfully logged out!', {
+        position: 'top-right',
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      // Remove the flag from localStorage after showing the toast
+      localStorage.removeItem('loggedOut');
+    }
+  }, []);
 
   useEffect(() => {
     // Check if loggedOut flag is present in localStorage
@@ -194,21 +223,10 @@ const Login = () => {
         </Col>
 
         {/* Right side: Login form */}
-        <Col
-          lg={5}
-          md={12}
-          className={`d-flex align-items-center justify-content-center   ${appliedClass}`}
-          style={{ borderTopLeftRadius: "15%", borderBottomLeftRadius: "15%" }}
-        >
-          <div
-            className="shadow-lg rounded-5  custom-zoom-btn p-3"
-            style={{
-              maxWidth: "450px",
-              width: "100%",
-              position: "relative",
-              zIndex: 1,
-            }}
-          >
+
+        <Col lg={5} md={12} className={`d-flex align-items-center justify-content-center   ${appliedClass}`} style={{ borderTopLeftRadius: "15%", borderBottomLeftRadius: "15%" }}>
+          <div className={`shadow-lg rounded-5  custom-zoom-btn p-3 ${customDark === "dark-dark" ? `${customMid}` : ""}`} style={{ maxWidth: '450px', width: '100%', position: 'relative', zIndex: 1 }}>
+
             {/* Logo */}
             <div className={`text-center mb-4 ${customDark} rounded-3`}>
               <img
@@ -235,7 +253,9 @@ const Login = () => {
                   type="text"
                   placeholder="Enter User ID"
                   value={userName}
-                  onChange={(e) => setuserName(e.target.value)}
+
+                  onChange={(e) => setUserName(e.target.value)}
+
                   required
                 />
               </Form.Group>
