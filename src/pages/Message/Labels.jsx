@@ -1,3 +1,10 @@
+/**
+ * Labels Component: Handles label management operations
+ * Created by Shivom on 2023-10-08
+ * 
+ * This component uses the textLabelService for API requests
+ */
+
 import React, { useState, useEffect } from 'react';
 import { Table, Input, Pagination, Button, message } from 'antd';
 import { Form, Row, Col } from 'react-bootstrap';

@@ -1,7 +1,7 @@
 /**
  * Message Component: Handles message management operations
  * Created by Shivom on 2023-10-05
- * Updated by Assistant on 2023-10-07
+ * Updated by Shivom on 2023-10-07
  * 
  * This component uses the messageService for API requests
  */
@@ -53,6 +53,11 @@ const Message = () => {
   const fetchMessages = async () => {
     try {
       const data = await fetchMessagesApi();
+      // const data = await axios.get("apiurl}{/message", {
+      //   headers: {
+      //     Authorization: `Bearer ${token}`,
+      //   }
+      // });
       setMessages(data);
     } catch (error) {
       console.error('Error fetching messages:', error);
