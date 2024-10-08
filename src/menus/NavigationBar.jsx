@@ -19,7 +19,7 @@ const NavigationBar = ({ onLinkClick }) => {
   const customDarkText = cssClasses[4];
 const permissions = {
   dashboard: true,
-  master: false,
+  master: true,
   message: true,
   reports: true,
 };

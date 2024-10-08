@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Table, Select, Input, Space, Modal, Button, Typography, Row, Col, Card } from 'antd';
 import { EyeOutlined, EditOutlined } from '@ant-design/icons';
 import 'antd/dist/reset.css'; // Import AntD styles
+import { fetchUsers } from '../CustomHooks/ApiServices/userService';
 
 const { Option } = Select;
 const { Title } = Typography;
@@ -31,6 +32,20 @@ const AllUsers = () => {
     setFilterType(value);
     setFilterValue('');
   };
+
+  useEffect(() => {
+    const GetUsers = async () => {
+      try {
+        const res = await fetchUsers();
+        console.log(res);
+        setFilteredData(res);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
+    };
+
+    GetUsers();
+  }, []);
 
   const handleSearch = () => {
     let filtered = sampleData;
