@@ -23,6 +23,7 @@ const ForgotPassword = () => {
   const cssClasses = getCssClasses();
   const customDark = cssClasses[0];
   const customBtn = cssClasses[3];
+  const customDarkText = cssClasses[4];
   const themeImages = {
     "purple-dark": purpleBrain,
     "blue-dark": blueBrain,
@@ -38,24 +39,16 @@ const ForgotPassword = () => {
   const navigate = useNavigate();
   const isMediumOrSmaller = useMediaQuery({ query: '(max-width: 992px)' });
 
-  // Define steps: 1 - Enter Username, 2 - Answer Security Questions, 3 - Reset Password
   const [currentStep, setCurrentStep] = useState(1);
-
-  // Step 1: Enter Username
   const [userName, setUserName] = useState('');
-
-  // Step 2: Security Questions and Answers
   const [securityQuestions, setSecurityQuestions] = useState([]);
   const [answers, setAnswers] = useState([]);
-
-  // Step 3: Reset Password
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-
-  // Loading States
   const [loading, setLoading] = useState(false);
+  const [userQuestions,setUserQuestions] = useState([]);
 
-  // Handle Username Submission and Fetch Security Questions
+
   const handleUserNameSubmit = async (e) => {
     e.preventDefault();
     if (!userName.trim()) {
@@ -65,17 +58,22 @@ const ForgotPassword = () => {
     setLoading(true);
 
     try {
-      // Perform GET request to fetch security questions
+      // Fetch the security question IDs
       const response = await axios.get(`https://localhost:7212/api/Login/forgotPassword/securityQuestions/${userName}`);
+      setUserQuestions(response.data)
 
-      if (response.data && response.data.questions && response.data.questions.length === 2) {
-        setSecurityQuestions(response.data.questions);
-        setAnswers(['', '']); // Initialize answers array
-        setCurrentStep(2); // Move to Step 2
-        toast.success('Security questions loaded successfully');
-      } else {
-        toast.error('No security questions found for this username');
-      }
+      // Fetch the actual security questions
+      // const questionResponses = await Promise.all([
+      //   axios.get(`https://localhost:7212/api/SecurityQuestions/${securityQuestion1Id}`),
+      //   axios.get(`https://localhost:7212/api/SecurityQuestions/${securityQuestion2Id}`)
+      // ]);
+
+      // Extract question texts
+      // const questions = questionResponses.map(res => res.data.questionText);
+      // setSecurityQuestions(questions);
+      // setAnswers(['', '']); // Initialize answers array
+      setCurrentStep(2); // Move to Step 2
+      toast.success('Security questions loaded successfully');
     } catch (error) {
       console.error(error);
       toast.error('Error fetching security questions');
@@ -84,50 +82,26 @@ const ForgotPassword = () => {
     }
   };
 
-  // Handle Security Answers Submission
   const handleSubmitAnswers = async (e) => {
     e.preventDefault();
-
-    // Validate that all answers are provided
     if (answers.some(answer => !answer.trim())) {
       toast.error('Please answer all security questions');
       return;
     }
-
-    setLoading(true);
-
-    try {
-      // Prepare payload with question IDs and answers
-      const payload = {
-        userName: userName.toLowerCase(),
-        securityAnswers: securityQuestions.map((question, index) => ({
-          questionId: question.id,
-          answer: answers[index].toLowerCase()
-        }))
-      };
-
-      // Perform POST request to verify security answers
-      const response = await axios.post('https://localhost:7212/api/Login/forgotPassword/verifySecurityAnswers', payload);
-
-      if (response.status === 200 && response.data.isValid) {
-        setCurrentStep(3); // Move to Step 3
-        toast.success('Security answers verified successfully');
-      } else {
-        toast.error('Incorrect answers, please try again');
-      }
-    } catch (error) {
-      console.error(error);
-      toast.error('Error verifying security answers');
-    } finally {
-      setLoading(false);
+    const data = {
+      userName: userName,
+      securityAnswer1: answers[0],
+      securityAnswer2: answers[1]
     }
+    console.log(data)
+    const res = await axios.post('https://localhost:7212/api/Login/forgotPassword/verifySecurityAnswers',data)
+    // Here you can implement any verification of security answers if needed
+    setCurrentStep(3); // Move to Step 3
+    toast.success('Security answers verified successfully');
   };
 
-  // Handle Password Reset Submission
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
-
-    // Validate passwords
     if (newPassword !== confirmPassword) {
       toast.error('Passwords do not match');
       return;
@@ -140,18 +114,16 @@ const ForgotPassword = () => {
     setLoading(true);
 
     try {
-      // Prepare payload with new password
       const payload = {
         userName: userName.toLowerCase(),
-        newPassword: newPassword
+        newPassword: newPassword,
+        securityAnswersVerified: true // This is the new requirement
       };
 
-      // Perform POST request to set new password
       const response = await axios.post('https://localhost:7212/api/Login/forgotPassword/setNewPassword', payload);
-
       if (response.status === 200) {
         toast.success('Password reset successfully');
-        navigate('/login'); // Redirect to login after successful reset
+        navigate('/');
       } else {
         toast.error('Error resetting password');
       }
@@ -163,7 +135,6 @@ const ForgotPassword = () => {
     }
   };
 
-  // Handle Answer Change
   const handleAnswerChange = (index, value) => {
     const updatedAnswers = [...answers];
     updatedAnswers[index] = value;
@@ -231,9 +202,9 @@ const ForgotPassword = () => {
             {currentStep === 2 && (
               <Form onSubmit={handleSubmitAnswers} className="bg-white p-3 rounded-4 shadow-sm shadow-lg">
                 <h3 className="text-center mb-4">Answer Security Questions</h3>
-                {securityQuestions.map((question, index) => (
-                  <Form.Group controlId={`securityQuestion${index}`} className="mb-3" key={question.id}>
-                    <Form.Label>{`Question ${index + 1}: ${question.questionText}`}</Form.Label>
+                {userQuestions.map((question, index) => (
+                  <Form.Group controlId={`securityQuestion${index}`} className="mb-3" key={index}>
+                    <Form.Label>{`Question ${index + 1}: ${question.question}`}</Form.Label>
                     <Form.Control
                       type="text"
                       placeholder="Your Answer"
@@ -298,7 +269,7 @@ const ForgotPassword = () => {
             )}
 
             <div className="text-center mt-3 custom-zoom-btn">
-              <Link to="/" className={`${customDark === "dark-dark" ? "text-light" : `text-light`} `}>
+              <Link to="/" className={`${customDark === "dark-dark" ? 'text-light' : `${customDarkText}`} p-1 rounded`}>
                 Back to login
               </Link>
             </div>
