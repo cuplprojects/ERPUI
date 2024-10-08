@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, Modal, Form, Input, Select, Table, Card, Typography, Divider } from 'antd';
 import { PlusOutlined, TeamOutlined } from '@ant-design/icons';
 
@@ -9,15 +9,23 @@ const Team = () => {
   const [teams, setTeams] = useState([]); // List of teams
   const [isModalVisible, setIsModalVisible] = useState(false); // Modal visibility
   const [form] = Form.useForm(); // Form instance
+  const [users, setUsers] = useState([]);
 
-  // Dummy data for team members
-  const allUsers = [
-    { userId: 1, fullName: 'John Doe' },
-    { userId: 2, fullName: 'Jane Smith' },
-    { userId: 3, fullName: 'Alice Johnson' },
-    { userId: 4, fullName: 'Bob Brown' },
-  ];
 
+  const getUsers = async () => {
+    try {
+      const response = await axios.get('https://localhost:7223/api/Users')
+      setUsers(response.data)
+    }
+    catch (error) {
+      console.error("Failed to fetch Users");
+    }
+
+    useEffect(() => {
+      getUsers();
+    }, [])
+
+  }
   // Handle opening of the modal
   const showModal = () => {
     setIsModalVisible(true);
@@ -68,24 +76,20 @@ const Team = () => {
       key: 'teamMembers',
       render: (members) =>
         members
-          .map((id) => allUsers.find((user) => user.userId === id)?.fullName)
+          .map((id) => users.find((user) => user.userId === id)?.fullName)
           .join(', '),
     },
+    
   ];
 
   return (
     <div style={{ padding: '40px' }}>
       <Card style={{ boxShadow: '0 4px 8px rgba(0,0,0,0.1)', borderRadius: '10px' }}>
-        <div style={{ textAlign: 'center' }}>
-          <Title level={2} style={{ color: '#1890ff' }}>
-            <TeamOutlined /> Team Management
-          </Title>
-          <Text type="secondary">Manage your teams and their members effectively.</Text>
-        </div>
+
 
         {/* Add Team Button */}
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
-          <Button type="primary" icon={<PlusOutlined />} onClick={showModal} size="large">
+          <Button type="primary" onClick={showModal} size="large">
             Add Team
           </Button>
         </div>
@@ -108,7 +112,7 @@ const Team = () => {
       {/* Modal for Adding Team */}
       <Modal
         title="Add New Team"
-        visible={isModalVisible}
+        open={isModalVisible}
         onOk={handleOk}
         onCancel={handleCancel}
         okText="Add Team"
@@ -138,7 +142,7 @@ const Team = () => {
               allowClear
               size="large"
             >
-              {allUsers.map((user) => (
+              {users.map((user) => (
                 <Option key={user.userId} value={user.userId}>
                   {user.fullName}
                 </Option>

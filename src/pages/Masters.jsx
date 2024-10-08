@@ -18,26 +18,23 @@ import {
 } from 'react-icons/fa';
 
 import GroupManager from './Group'
-
 import ProjectManager from './Project';
 import ZoneManager from './Zone';
 import Type from './Type';
 import AlarmMaster from './Alarm';
-
 import Machine from './ProductionMachine';
-
 import SecurityQ from './SecurityQuestions.jsx';
-
-
 import './../styles/Sidebar.css'; // Import your custom CSS
 import AddUsers from '../sub-Components/addUsers';
 import AllUsers from '../sub-Components/allUsers';
 import CameraList from './CameraList';
 import RolesAndDepartments from './RolePage';
-import Team from './team';
+//import Team from './team';
 import SystemSettings from './SystemSettings';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
+import { BsQuestionSquareFill } from 'react-icons/bs';
+
 
 const Sidebar = () => {
   // Theme Change Section
@@ -85,7 +82,7 @@ const Sidebar = () => {
     { key: 'camera', icon: <FaCamera className={`${customDarkText} menu-icon`} />, label: 'Camera' },
     {key: 'machine',icon: <FaListUl className={`${customDarkText} menu-icon`} />, label: 'Machines'},
     { key: 'alarm', icon: <FaBell className={`${customDarkText} menu-icon`} />, label: 'Alarm' },
-    { key: 'team', icon: <FaUsers className={`${customDarkText} menu-icon`} />, label: 'Team' },
+    //{ key: 'team', icon: <FaUsers className={`${customDarkText} menu-icon`} />, label: 'Team' },
     { key: 'systemSettings', icon: <FaCog className={`${customDarkText} menu-icon`} />, label: 'Process Settings' },
   ];
 
