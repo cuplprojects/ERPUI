@@ -62,16 +62,6 @@ const ForgotPassword = () => {
       const response = await axios.get(`https://localhost:7212/api/Login/forgotPassword/securityQuestions/${userName}`);
       setUserQuestions(response.data)
 
-      // Fetch the actual security questions
-      // const questionResponses = await Promise.all([
-      //   axios.get(`https://localhost:7212/api/SecurityQuestions/${securityQuestion1Id}`),
-      //   axios.get(`https://localhost:7212/api/SecurityQuestions/${securityQuestion2Id}`)
-      // ]);
-
-      // Extract question texts
-      // const questions = questionResponses.map(res => res.data.questionText);
-      // setSecurityQuestions(questions);
-      // setAnswers(['', '']); // Initialize answers array
       setCurrentStep(2); // Move to Step 2
       toast.success('Security questions loaded successfully');
     } catch (error) {

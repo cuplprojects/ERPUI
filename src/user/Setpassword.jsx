@@ -1,4 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
+
 import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Form, Button } from 'react-bootstrap';
 import { AiFillEye, AiFillEyeInvisible } from 'react-icons/ai'; // Import icons from react-icons
@@ -7,8 +9,10 @@ import { useMediaQuery } from 'react-responsive'; // Importing useMediaQuery rea
 import { ToastContainer, toast } from 'react-toastify'; // Import react-toastify
 import 'react-toastify/dist/ReactToastify.css'; // Import react-toastify CSS
 import BackgroundImage from './../assets/bgImages/setpass/defaultSetPass.png'; // Replace with your background image
+
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
+
 const SetPassword = () => {
   const navigate = useNavigate();
   const isMediumOrSmaller = useMediaQuery({ query: '(max-width: 992px)' });
@@ -42,6 +46,7 @@ const SetPassword = () => {
       });
   }, []);
 
+
   // Handler to update the selected question and its answer
   const handleQuestionSelect = (key, questionId) => {
     // const question = securityQuestions.find(q => q.id === parseInt(questionId));
@@ -52,6 +57,8 @@ const SetPassword = () => {
         questionId: questionId,
         answer: ''
       }
+
+
     });
   };
 
@@ -98,6 +105,7 @@ const SetPassword = () => {
         toast.error("An error occurred while setting security questions.");
       });
 
+
     // Optionally, reset the selected questions
     setSelectedQuestions({
       first: { questionId: '', question: '', answer: '' },
@@ -132,6 +140,29 @@ const SetPassword = () => {
       .catch((error) => {
         toast.error("An error occurred while setting password.");
       });
+
+    // Optionally, reset password fields
+    setPassword('');
+    setConfirmPassword('');
+  };
+
+  // Get the remaining questions for the second dropdown (those not selected in the first dropdown)
+  const availableQuestionsForSecond = securityQuestions.filter(q => q.id !== parseInt(selectedQuestions.first.questionId));
+
+  // Handler for Set Password form submission
+  const handleSetPassword = (e) => {
+    e.preventDefault();
+
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match!");
+      return;
+    }
+
+    // Here you would handle the password update logic (e.g., API call)
+    toast.success("Password set successfully!", {
+      onClose: () => navigate('/dashboard'), // Redirect to dashboard
+      autoClose: 3000,
+    });
 
     // Optionally, reset password fields
     setPassword('');
@@ -210,7 +241,9 @@ const SetPassword = () => {
                   >
                     <option value="">Select a question</option>
                     {securityQuestions.map(q => (
+
                       <option key={q.questionId} value={q.questionId}>{q.securityQuestions}</option>
+
                     ))}
                   </Form.Control>
                   <Form.Control
@@ -232,11 +265,13 @@ const SetPassword = () => {
                     required
                   >
                     <option value="">Select a question</option>
+
                     {securityQuestions
                       .filter(q => q.questionId !== parseInt(selectedQuestions.first.questionId)) // Filter out the first question
                       .map(q => (
                         <option key={q.questionId} value={q.questionId}>{q.securityQuestions}</option>
                       ))}
+
                   </Form.Control>
                   <Form.Control
                     type="text"
@@ -247,6 +282,7 @@ const SetPassword = () => {
                     className="mt-2"
                   />
                 </Form.Group>
+
                 <Button
                   className="mt-3 w-100 border-0 custom-zoom-btn"
                   style={{ background: "#37474f", padding: '10px 0', fontSize: '16px' }}
@@ -256,9 +292,11 @@ const SetPassword = () => {
                 </Button>
               </Form>
             )}
+
             {currentStep === 'setPassword' && (
               /* Set Password Form */
               <Form onSubmit={handleSetPassword} className=''>
+
                 <h2 className="text-center mb-4">Set Password</h2>
 
                 <Form.Group controlId="formBasicPassword" className='custom-zoom-btn'>
