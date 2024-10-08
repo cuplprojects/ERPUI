@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Form, Button } from 'react-bootstrap';
@@ -23,9 +24,11 @@ const Login = () => {
 
   const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
+
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate(); // For navigation
-
+  const { login } = AuthService;
+  const {t} = useTranslation()
   // Theme Change Section
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
@@ -47,37 +50,41 @@ const Login = () => {
     "light-dark": LightTheme,
     "pink-dark": PinkTheme,
     "brown-dark": BrownTheme,
-    "default": DefaultTheme
+    default: DefaultTheme,
   };
 
 
   // Media Query: true if screen width is less than or equal to 992px (medium and smaller screens)
-  const isMediumOrSmaller = useMediaQuery({ query: '(max-width: 992px)' });
+  const isMediumOrSmaller = useMediaQuery({ query: "(max-width: 992px)" });
   // Additional Media Query for Tablet Portrait Mode
-  const isTabletPortrait = useMediaQuery({ query: '(max-width: 768px) and (orientation: portrait)' });
+  const isTabletPortrait = useMediaQuery({
+    query: "(max-width: 768px) and (orientation: portrait)",
+  });
 
   // Conditionally apply classes based on screen size
-  const appliedClass = !isMediumOrSmaller ? customDark : ''; // Apply customDark only on large screens
+  const appliedClass = !isMediumOrSmaller ? customDark : ""; // Apply customDark only on large screens
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     try {
       // Show processing toast
       toast.info("Processing...", {
         autoClose: 2000,
-        toastId: 'processing', // Prevent duplicate toasts
+        toastId: "processing", // Prevent duplicate toasts
       });
   
       // Replace the URL below with your actual login API endpoint
+
       const response = await axios.post('https://localhost:7212/api/Login/login', {
         userName,
         password
       });
   
+
       // Assuming the API returns a success status and a token
       if (response.status === 200) {
-        toast.dismiss('processing'); // Dismiss the processing toast
+        toast.dismiss("processing"); // Dismiss the processing toast
         toast.success("Successfully logged in!");
 
   
@@ -87,6 +94,7 @@ const Login = () => {
   
         if (token) {
           // Store only the token in localStorage
+
           localStorage.setItem('authToken', token);
           
           // Navigate based on autogenPass value
@@ -100,19 +108,19 @@ const Login = () => {
             }, 1500);
           }
 
+
         } else {
           toast.error("Authentication token not found in the response.");
           return;
         }
 
-
       } else {
         // Handle unexpected success responses
-        toast.dismiss('processing');
+        toast.dismiss("processing");
         toast.error("Unexpected response from the server.");
       }
     } catch (error) {
-      toast.dismiss('processing'); // Dismiss the processing toast
+      toast.dismiss("processing"); // Dismiss the processing toast
 
       if (error.response) {
         // Server responded with a status other than 2xx
@@ -133,7 +141,9 @@ const Login = () => {
             toast.error("Server Error. Please try again later.");
             break;
           default:
-            toast.error(`Error: ${error.response.data.message || 'An error occurred.'}`);
+            toast.error(
+              `Error: ${error.response.data.message || "An error occurred."}`
+            );
         }
       } else if (error.request) {
         // No response received from server
@@ -165,9 +175,9 @@ const Login = () => {
 
   useEffect(() => {
     // Check if loggedOut flag is present in localStorage
-    if (localStorage.getItem('loggedOut')) {
-      toast.success('Successfully logged out!', {
-        position: 'top-right',
+    if (localStorage.getItem("loggedOut")) {
+      toast.success("Successfully logged out!", {
+        position: "top-right",
         autoClose: 3000,
         hideProgressBar: false,
         closeOnClick: true,
@@ -176,7 +186,7 @@ const Login = () => {
         progress: undefined,
       });
       // Remove the flag from localStorage after showing the toast
-      localStorage.removeItem('loggedOut');
+      localStorage.removeItem("loggedOut");
     }
   }, []);
 
@@ -190,50 +200,62 @@ const Login = () => {
           alt="Background Image"
           className={`position-absolute w-100 h-100 `}
           style={{
-            objectFit: 'cover',
+            objectFit: "cover",
             zIndex: -1,
-            filter: 'blur(8px)', // Blurriness of the image
+            filter: "blur(8px)", // Blurriness of the image
             top: 0,
             left: 0,
           }}
         />
       )}
-
       <Row className="h-100">
         {/* Left side: Image (only visible on large screens) */}
-        <Col lg={7} className="d-none d-lg-flex align-items-center justify-content-center p-0">
+        <Col
+          lg={7}
+          className="d-none d-lg-flex align-items-center justify-content-center p-0"
+        >
           <img
             src={themeImages[customDark] || DefaultTheme}
             alt="Login Theme"
             className="w-100"
-            style={{ objectFit: 'contain', maxHeight: '90vh' }} // Added padding and objectFit: 'contain'
+            style={{ objectFit: "contain", maxHeight: "90vh" }} // Added padding and objectFit: 'contain'
           />
         </Col>
 
         {/* Right side: Login form */}
+
         <Col lg={5} md={12} className={`d-flex align-items-center justify-content-center   ${appliedClass}`} style={{ borderTopLeftRadius: "15%", borderBottomLeftRadius: "15%" }}>
           <div className={`shadow-lg rounded-5  custom-zoom-btn p-3 ${customDark === "dark-dark" ? `${customMid}` : ""}`} style={{ maxWidth: '450px', width: '100%', position: 'relative', zIndex: 1 }}>
+
             {/* Logo */}
             <div className={`text-center mb-4 ${customDark} rounded-3`}>
               <img
                 src={Logo1}
                 alt="Logo"
                 className="img-fluid "
-                style={{ maxWidth: '250px' }} // Increased size to 250px
+                style={{ maxWidth: "250px" }} // Increased size to 250px
               />
             </div>
 
             {/* Login Form */}
             <Form className="p-4 bg-white rounded-3 " onSubmit={handleSubmit}>
-              <h2 className={`text-center mb-4 ${customDark === "dark-dark" ? "" : `${customDarkText}`}`}>Login | ApexERP</h2>
+              <h2
+                className={`text-center mb-4 ${
+                  customDark === "dark-dark" ? "" : `${customDarkText}`
+                }`}
+              >
+                {t('webtitle')}
+              </h2>
 
-              <Form.Group controlId="formBasicUserId">
+              <Form.Group controlId="formBasicuserName">
                 <Form.Label>User ID</Form.Label>
                 <Form.Control
                   type="text"
                   placeholder="Enter User ID"
                   value={userName}
+
                   onChange={(e) => setUserName(e.target.value)}
+
                   required
                 />
               </Form.Group>
@@ -251,19 +273,37 @@ const Login = () => {
                   />
                   <span
                     className="position-absolute"
-                    style={{ right: '10px', top: '5px', cursor: 'pointer' }}
+                    style={{ right: "10px", top: "5px", cursor: "pointer" }}
                     onClick={() => setShowPassword(!showPassword)}
                   >
-                    {showPassword ? <AiFillEye size={20} /> : <AiFillEyeInvisible size={20} />}
+                    {showPassword ? (
+                      <AiFillEye size={20} />
+                    ) : (
+                      <AiFillEyeInvisible size={20} />
+                    )}
                   </span>
                 </div>
               </Form.Group>
 
-              <Button className={`${customBtn} mt-4 w-100 ${customDark === "dark-dark" ? "border-white " : "border-0 "} custom-zoom-btn `} type="submit">
+              <Button
+                className={`${customBtn} mt-4 w-100 ${
+                  customDark === "dark-dark" ? "border-white " : "border-0 "
+                } custom-zoom-btn `}
+                type="submit"
+              >
                 Login
               </Button>
               <div className="text-center mt-3 custom-zoom-btn">
-                <Link to="/forgotpassword" className={`${customDark === "dark-dark" ? "text-dark" : `${customDarkText}`} `} >Forgot Password?</Link>
+                <Link
+                  to="/forgotpassword"
+                  className={`${
+                    customDark === "dark-dark"
+                      ? "text-dark"
+                      : `${customDarkText}`
+                  } `}
+                >
+                  Forgot Password?
+                </Link>
               </div>
             </Form>
           </div>

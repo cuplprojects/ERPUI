@@ -1,15 +1,12 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Hindi from "./../assets/Icons/Hindi.png";
 import English from "./../assets/Icons/English.png";
 import { Form } from 'react-bootstrap';
 import './../styles/LanguageSwitcher.css'; // Custom styles
+import useLanguageStore from '../store/languageStore';
 
 const LanguageSwitcher = () => {
-    const [selectedLanguage, setSelectedLanguage] = useState('en'); // 'en' is the default language
-
-    const changeLanguage = (lang) => {
-        setSelectedLanguage(lang);
-    };
+    const { language, setLanguage } = useLanguageStore();
 
     return (
         <div className="language-switcher-container">
@@ -17,8 +14,8 @@ const LanguageSwitcher = () => {
             <div className="language-switcher">
                 {/* Hindi Button */}
                 <button
-                    className={`language-btn rounded-4 ${selectedLanguage === 'hi' ? 'active' : ''}`}
-                    onClick={() => changeLanguage('hi')}
+                    className={`language-btn rounded-4 ${language === 'hi' ? 'active' : ''}`}
+                    onClick={() => setLanguage('hi')}
                 >
                     <img src={Hindi} alt="Hindi" className="language-icon" />
                     <span>हिन्दी</span>
@@ -26,8 +23,8 @@ const LanguageSwitcher = () => {
 
                 {/* English Button */}
                 <button
-                    className={`language-btn rounded-4 ${selectedLanguage === 'en' ? 'active' : ''}`}
-                    onClick={() => changeLanguage('en')}
+                    className={`language-btn rounded-4 ${language === 'en' ? 'active' : ''}`}
+                    onClick={() => setLanguage('en')}
                 >
                     <img src={English} alt="English" className="language-icon" />
                     <span>English</span>

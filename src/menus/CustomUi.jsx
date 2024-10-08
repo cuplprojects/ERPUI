@@ -16,6 +16,7 @@ import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import LanguageSwitcher from './LanguageSwitcher';
 import { AiFillCloseSquare } from "react-icons/ai";
+import useShowLabelIdStore from './../store/showLabelIdStore';
 
 const CustomUi = () => {
 
@@ -31,11 +32,8 @@ const CustomUi = () => {
   const customLightBorder = cssClasses[6]
   const customDarkBorder = cssClasses[7]
 
-  const [showSidebar, setShowSidebar] = useState(false);
+  const { showLabelId, toggleShowLabelId } = useShowLabelIdStore();
 
-  const handleToggleClick = () => {
-    setShowSidebar(!showSidebar);
-  };
   const [show, setShow] = useState(false);
   const [fontSize, setFontSize] = useState(() => {
     // Retrieve font size from local storage or default to 16 if not set
@@ -207,13 +205,13 @@ const CustomUi = () => {
           </Row>
           <Row className="mt-4 align-items-center">
             <Col>
-              <Form.Label>Navigation Menu</Form.Label>
+              <Form.Label>Show Label ID</Form.Label>
               <Form.Check
                 type="switch"
-                id="fullScreenSwitch"
-                checked={showSidebar}
-                onChange={handleToggleClick}
-                label={showSidebar ? "Left" : "Top"}
+                id="showLabelIdSwitch"
+                checked={showLabelId}
+                onChange={toggleShowLabelId}
+                label={showLabelId ? "On" : "Off"}
               />
             </Col>
           </Row>
