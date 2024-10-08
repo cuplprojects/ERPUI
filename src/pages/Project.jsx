@@ -1,15 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Input, Switch, Form, message, Modal, Card, Row, Col } from 'antd';
+import { Table, Button, Input, Switch, Form, message, Modal, Card, Row, Col, Select } from 'antd';
 import axios from 'axios';
+
+const { Option } = Select;
 
 const Project = () => {
   const [projects, setProjects] = useState([]);
-  const [isModalVisible, setIsModalVisible] = useState(false); // Control modal visibility
+  const [groups, setGroups] = useState([]);
+  const [types, setTypes] = useState([]);
+  const [isModalVisible, setIsModalVisible] = useState(false);
   const [form] = Form.useForm();
   const [editingIndex, setEditingIndex] = useState(null);
   const [editingName, setEditingName] = useState('');
   const [editingDescription, setEditingDescription] = useState('');
   const [editingStatus, setEditingStatus] = useState(false);
+  const [selectedGroup, setSelectedGroup] = useState(null);
+  const [selectedType, setSelectedType] = useState(null);
 
   const getProjects = async () => {
     try {
@@ -20,8 +26,28 @@ const Project = () => {
     }
   };
 
+  const getGroups = async () => {
+    try {
+      const response = await axios.get('https://localhost:7223/api/Groups');
+      setGroups(response.data);
+    } catch (error) {
+      console.error('Failed to fetch groups');
+    }
+  };
+
+  const getTypes = async () => {
+    try {
+      const response = await axios.get('https://localhost:7223/api/PaperTypes');
+      setTypes(response.data);
+    } catch (error) {
+      console.error('Failed to fetch types');
+    }
+  };
+
   useEffect(() => {
     getProjects();
+    getGroups();
+    getTypes();
   }, []);
 
   const handleAddProject = async (values) => {
@@ -41,7 +67,7 @@ const Project = () => {
       });
       setProjects([...projects, response.data]);
       form.resetFields();
-      setIsModalVisible(false); // Close the modal
+      setIsModalVisible(false);
       message.success('Project added successfully!');
     } catch (error) {
       message.error('Error adding project');
@@ -147,15 +173,30 @@ const Project = () => {
     },
   ];
 
-  // Show the modal
   const showModal = () => {
     setIsModalVisible(true);
   };
 
-  // Handle cancel event of the modal
   const handleCancel = () => {
-    form.resetFields(); // Reset form when modal is canceled
+    form.resetFields();
     setIsModalVisible(false);
+    setSelectedGroup(null);
+    setSelectedType(null);
+  };
+
+  const handleGroupChange = (value) => {
+    setSelectedGroup(value);
+    updateProjectName(value, selectedType);
+  };
+
+  const handleTypeChange = (value) => {
+    setSelectedType(value);
+    updateProjectName(selectedGroup, value);
+  };
+
+  const updateProjectName = (group, type) => {
+    const projectName = `${group || ''} ${type || ''}`; // Customize as needed
+    form.setFieldsValue({ name: projectName });
   };
 
   return (
@@ -186,12 +227,35 @@ const Project = () => {
       >
         <Form form={form} onFinish={handleAddProject} layout="vertical">
           <Form.Item
+            name="group"
+            label="Group"
+            rules={[{ required: true, message: 'Please select a group!' }]}
+          >
+            <Select onChange={handleGroupChange} placeholder="Select Group">
+              {groups.map(group => (
+                <Option key={group.id} value={group.name}>{group.name}</Option>
+              ))}
+            </Select>
+          </Form.Item>
+          <Form.Item
+            name="type"
+            label="Type"
+            rules={[{ required: true, message: 'Please select a type!' }]}
+          >
+            <Select onChange={handleTypeChange} placeholder="Select Type">
+              {types.map(type => (
+                <Option key={type.typeId} value={type.types}>{type.types}</Option>
+              ))}
+            </Select>
+          </Form.Item>
+          <Form.Item
             name="name"
             label="Project Name"
             rules={[{ required: true, message: 'Please input project name!' }]}
           >
             <Input placeholder="Project Name" />
           </Form.Item>
+
           <Form.Item
             name="description"
             label="Project Description"
@@ -202,6 +266,7 @@ const Project = () => {
           <Form.Item name="status" label="Status" valuePropName="checked" initialValue={true}>
             <Switch />
           </Form.Item>
+
           <Form.Item>
             <Button type="primary" htmlType="submit">
               Add Project
