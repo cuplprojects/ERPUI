@@ -16,6 +16,7 @@ const AddUsers = () => {
 
   // Initial state for the form data
   const initialState = {
+
     username: '',
     firstName: '',
     middleName: '',
@@ -23,6 +24,7 @@ const AddUsers = () => {
     gender: '',
     mobileNo: '',
     roleId: '',
+
   };
 
   const [usernameError, setUsernameError] = useState('');
@@ -39,8 +41,10 @@ const AddUsers = () => {
       { name: 'firstName', value: formData.firstName },
       { name: 'lastName', value: formData.lastName },
       { name: 'gender', value: formData.gender },
+
       { name: 'mobileNo', value: formData.mobileNo },
       { name: 'roleId', value: formData.roleId },
+
     ];
 
     const errors = requiredFields
@@ -94,7 +98,9 @@ const AddUsers = () => {
 
     // Check username suggestion length
     if (usernameSuggestion.length >= 6 && usernameSuggestion.length <= 10) {
+
       setFormData((prev) => ({ ...prev, username: usernameSuggestion }));
+
       setUsernameError('');
     } else {
       setUsernameError('Username must be between 6 and 10 characters.');
@@ -102,7 +108,9 @@ const AddUsers = () => {
   }, [formData.firstName, formData.middleName, formData.lastName]);
 
   // Validate username length
-  const isUsernameValid = formData.username.length >= 6 && formData.username.length <= 10;
+
+  const isUsernameValid = formData.userName.length >= 6 && formData.userName.length <= 10;
+
 
   // Function to handle reset
   const handleReset = () => {
@@ -174,9 +182,11 @@ const AddUsers = () => {
               <Form.Control
                 type="text"
                 name="username"
+
                 value={formData.username}
                 onChange={handleInputChange} // Allow manual editing
                 isInvalid={usernameError !== '' && formData.username.length > 0} // Conditional error styling
+
 
               />
               <Form.Control.Feedback type="invalid">{usernameError}</Form.Control.Feedback>
@@ -208,7 +218,9 @@ const AddUsers = () => {
               <Form.Label className={customDarkText}>Mobile Number:</Form.Label>
               <Form.Control
                 type="text"
+
                 name="mobileNo"
+
                 placeholder="Enter mobile number"
                 value={formData.mobileNo}
                 onChange={(event) => {
@@ -223,6 +235,7 @@ const AddUsers = () => {
             <Form.Group>
               <Form.Label className={customDarkText}>Role:</Form.Label>
               <Form.Select
+
                 name="roleId"
                 value={formData.roleId}
                 onChange={handleInputChange}
@@ -234,6 +247,7 @@ const AddUsers = () => {
                 <option value={3}>Manager</option>
                 <option value={4}>Supervisor</option>
                 <option value={5}>Operator</option>
+
               </Form.Select>
             </Form.Group>
           </Col>
@@ -254,7 +268,9 @@ const AddUsers = () => {
         <ToastContainer />
       </div>
       <SuccessModal
+
         show={showModal} username={userDetails.userName} password={userDetails.password}
+
       />
     </div>
   );

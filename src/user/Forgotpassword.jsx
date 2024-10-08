@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { Container, Row, Col, Form, Button } from 'react-bootstrap';
 import { useNavigate, Link } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
+
 import axios from 'axios';
 import 'react-toastify/dist/ReactToastify.css';
 import { useMediaQuery } from 'react-responsive';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import Logo1 from "./../assets/Logos/CUPLLogoTheme.png";
+
 import redBrain from "./../assets/bgImages/brain/brainRed.png";
 import greenBrain from "./../assets/bgImages/brain/brainGreen.png";
 import blueBrain from "./../assets/bgImages/brain/brainBlue.png";
@@ -19,10 +21,12 @@ import lightBrain from "./../assets/bgImages/brain/brainLight.png";
 import defaultBrain from "./../assets/bgImages/brain/brainDefault.png";
 
 const ForgotPassword = () => {
+
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
   const customDark = cssClasses[0];
   const customBtn = cssClasses[3];
+
   const themeImages = {
     "purple-dark": purpleBrain,
     "blue-dark": blueBrain,
@@ -37,6 +41,7 @@ const ForgotPassword = () => {
 
   const navigate = useNavigate();
   const isMediumOrSmaller = useMediaQuery({ query: '(max-width: 992px)' });
+
   const [userName, setUserName] = useState('');
   const [securityQuestions, setSecurityQuestions] = useState([]);
   const [answers, setAnswers] = useState(['', '']);
@@ -44,15 +49,18 @@ const ForgotPassword = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [showPasswordFields, setShowPasswordFields] = useState(false);
+
   const [loadingQuestions, setLoadingQuestions] = useState(false);
 
   // Handle Username Submission and Fetch Security Questions
   const handleUserNameSubmit = async (e) => {
     e.preventDefault();
+
     if (!userName) {
       toast.error('Please enter your username');
       return;
     }
+
     setLoadingQuestions(true);
 
     try {
@@ -66,6 +74,7 @@ const ForgotPassword = () => {
 
       if (response.data && response.data.questions) {
         setSecurityQuestions(response.data.questions);
+
         setLoadingQuestions(false);
         toast.success('Security questions loaded successfully');
       } else {
@@ -78,15 +87,18 @@ const ForgotPassword = () => {
     }
   };
 
+
   // Handle Answer Submission
   const handleSubmitAnswers = async (e) => {
     e.preventDefault();
+
     if (!isConfirmed) {
       toast.error('Please confirm to proceed');
       return;
     }
 
     try {
+
       const response = await axios.post('https://localhost:7212/api/Login/forgotPassword', {
         userName: userName.toLowerCase(),
         securityAnswer1: answers[0].toLowerCase(),
@@ -97,12 +109,14 @@ const ForgotPassword = () => {
       if (response.status === 200) {
         toast.success('Answers submitted successfully');
         setShowPasswordFields(true); // Show password fields upon success
+
       } else {
         toast.error('Incorrect answers, please try again');
       }
     } catch (error) {
       toast.error('Error submitting answers');
     }
+
   };
 
   // Handle Password Submission
@@ -131,11 +145,14 @@ const ForgotPassword = () => {
     } catch (error) {
       toast.error('Error submitting new password');
     }
+
   };
 
   return (
     <Container fluid className="vh-100 position-relative overflow-hidden">
+
       <ToastContainer className="responsive-toast" />
+
       {isMediumOrSmaller && (
         <div style={{
           position: 'absolute',
@@ -146,12 +163,14 @@ const ForgotPassword = () => {
           backgroundImage: `url(${themeImages[customDark] || defaultBrain})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
+
           filter: 'blur(5px)',
           zIndex: -1,
         }}
         />
       )}
       <Row className="h-100 d-flex align-items-center justify-content-center shadow-lg">
+
         <Col
           lg={5}
           md={12}
@@ -160,9 +179,12 @@ const ForgotPassword = () => {
           style={{ zIndex: 1, height: '100%', borderTopRightRadius: "15%", borderBottomRightRadius: "15%" }}
         >
           <div className="p-3 rounded-5 shadow-lg" style={{ width: '100%', maxWidth: '450px' }}>
+
+
             <div className={`text-center mb-2 rounded-3 ${customBtn}`}>
               <img src={Logo1} alt="Company Logo" className="img-fluid" style={{ maxWidth: '150px' }} />
             </div>
+
 
             {!showPasswordFields ? (
               <Form onSubmit={handleUserNameSubmit} className="bg-white p-3 rounded-4 shadow-sm shadow-lg">
@@ -209,15 +231,18 @@ const ForgotPassword = () => {
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     minLength="8"
                     required
+
                   />
                 </Form.Group>
 
                 <Button
                   type="submit"
                   className={`w-100 border-0 ${customBtn} custom-zoom-btn`}
+
                   disabled={newPassword.length < 8 || confirmPassword.length < 8 || newPassword !== confirmPassword}
                 >
                   Reset Password
+
                 </Button>
               </Form>
             )}
@@ -229,13 +254,16 @@ const ForgotPassword = () => {
             </div>
           </div>
         </Col>
+
         {!isMediumOrSmaller && (
           <Col lg={7} className="d-flex align-items-center justify-content-center p-0 position-relative">
             <img
               src={themeImages[customDark] || defaultBrain}
               alt="Forgot Password Illustration"
               className="img-fluid"
+
               style={{ objectFit: 'contain', maxHeight: '80vh' }}
+
             />
           </Col>
         )}
