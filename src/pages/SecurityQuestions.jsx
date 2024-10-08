@@ -17,7 +17,7 @@ const SecurityQuestions = () => {
 
     try {
       // Post the new question to the backend API
-      const response = await axios.post('/api/security-questions', { question: newQuestion });
+      const response = await axios.post('https://localhost:7212/api/SecurityQuestions', { question: newQuestion });
 
       if (response.status === 200) {
         const newEntry = {

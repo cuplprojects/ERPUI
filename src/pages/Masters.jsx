@@ -24,7 +24,7 @@ import Machine from './ProductionMachine';
 import AddMachine from './AddMachine';
 import AlarmMaster from './Alarm';
 import SecurityQ from './SecurityQuestions.jsx';
-import EnvelopeConfiguration from './EnvelopeConfiguration';
+// import EnvelopeConfiguration from './EnvelopeConfiguration';
 import './../styles/Sidebar.css'; // Import your custom CSS
 import AddUsers from '../sub-Components/addUsers';
 import AllUsers from '../sub-Components/allUsers';
