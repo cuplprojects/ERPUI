@@ -43,10 +43,10 @@ const UserMenu = ({ onClose }) => {
     navigate('/profile');
   };
 
-  // const handleSettingsClick = () => {
-  //   setCurrentPage('My Settings', '/settings');
-  //   navigate('/settings');
-  // };
+  const handleSettingsClick = () => {
+    setCurrentPage('My Settings', '/settings');
+    navigate('/settings');
+  };
 
   const handleChangePasswordClick = () => {
     setCurrentPage('Change Password', '/change-password');
@@ -55,18 +55,10 @@ const UserMenu = ({ onClose }) => {
 
   // Function to handle confirmed logout
   const handleLogoutConfirm = () => {
-    localStorage.clear();
+    // localStorage.clear();
+    localStorage.setItem('loggedOut', 'true');
     navigate('/');
     setShowModal(false);
-    toast.success('Logged out successfully!', { // Show logout success toast
-      position: 'top-right',
-      autoClose: 3000, // Close after 3 seconds
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-    });
   };
 
   // Function to handle modal close
@@ -104,10 +96,10 @@ const UserMenu = ({ onClose }) => {
           <ImProfile className="me-2 text-light " />
           <Link to="/profile" className="text-decoration-none text-light d-block" onClick={handleProfileClick}>Profile</Link>
         </li>
-        {/* <li className="p-2 border-bottom d-flex align-items-center custom-zoom-btn">
+        <li className="p-2 border-bottom d-flex align-items-center custom-zoom-btn">
           <IoSettingsSharp className="me-2 text-light settings-icon" />
           <Link to="/settings" className="text-decoration-none text-light d-block" onClick={handleSettingsClick}>My Settings</Link>
-        </li> */}
+        </li>
         <li className="p-2 border-bottom d-flex align-items-center custom-zoom-btn">
           <RiLockPasswordFill className="me-2 text-light" />
           <Link to="/change-password" className="text-decoration-none text-light d-block" onClick={handleChangePasswordClick}>Change Password</Link>

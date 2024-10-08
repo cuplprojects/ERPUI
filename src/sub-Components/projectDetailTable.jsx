@@ -8,7 +8,6 @@ import CatchDetailModal from './../menus/CatchDetailModal';
 import SelectZoneModal from './../menus/SelectZoneModal';
 import AssignTeamModal from './../menus/AssignTeamModal';
 import './../styles/ProjectDetailsTable.css';
-// import dummyData from './../store/dd.json';
 import { IoCloseCircle } from "react-icons/io5";
 import StatusToggle from '../menus/StatusToggle';
 import { PiDotsNineBold } from "react-icons/pi";
@@ -28,14 +27,8 @@ const ProjectDetailsTable = ({ tableData, setTableData }) => {
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = getCssClasses();
     const customDark = cssClasses[0];
-    const customMid = cssClasses[1];
-    const customLight = cssClasses[2];
     const customBtn = cssClasses[3];
     const customDarkText = cssClasses[4];
-    const customLightText = cssClasses[5]
-    const customLightBorder = cssClasses[6]
-    const customDarkBorder = cssClasses[7]
-    const customThead = cssClasses[8]
 
     const [initialTableData, setInitialTableData] = useState();
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
@@ -193,7 +186,6 @@ const ProjectDetailsTable = ({ tableData, setTableData }) => {
             title: 'Catch No.',
             dataIndex: 'catchNumber',
             key: 'catchNumber',
-            // fixed:"left",
             align: 'center',
             sorter: (a, b) => a.catchNumber.localeCompare(b.catchNumber),
             render: (text, record) => (
@@ -678,8 +670,6 @@ const ProjectDetailsTable = ({ tableData, setTableData }) => {
                         scroll={{ y: 400 }}
                         style={{ position: "relative", zIndex: "900" }}
                         striped={true}
-                        headerColor="#00ff00"
-                        headerBg="#0000"
                         tableLayout="auto"
                         responsive={true}
                     />

@@ -1,59 +1,191 @@
-import React, { useState } from 'react';
-import { Table, Button, Form, Input, Select, Switch, message, Modal } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Table, Button, Input, Select, Switch, message, Modal, Spin } from 'antd';
+import axios from 'axios';
+import { v4 as uuidv4 } from 'uuid'; // Importing uuid for unique IDs
 
-const { Option } = Select;
+const API_URL = 'https://localhost:7223/api/Machines'; // API URL variable
 
 const Machine = () => {
   const [machines, setMachines] = useState([]);
-  const [form] = Form.useForm();
+  const [newMachineName, setNewMachineName] = useState('');
+  const [newMachineProcessId, setNewMachineProcessId] = useState(null);
+  const [newMachineStatus, setNewMachineStatus] = useState(true);
+  const [editingIndex, setEditingIndex] = useState(null);
+  const [editingValue, setEditingValue] = useState('');
+  const [editingProcessId, setEditingProcessId] = useState(null);
+  const [editingStatus, setEditingStatus] = useState(true);
+  const [processes, setProcesses] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [editingMachine, setEditingMachine] = useState(null);
-
-  const handleAddMachine = (values) => {
-    const newMachine = { ...values, key: Date.now() }; // Generate a unique key
-    setMachines([...machines, newMachine]);
-    form.resetFields();
-    setIsModalVisible(false);
-    message.success('Machine added successfully!');
+  
+  const fetchMachines = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(API_URL);
+      setMachines(response.data);
+    } catch (error) {
+      console.error("Failed to fetch machines", error);
+      message.error('Failed to fetch machines');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleEditMachine = (values) => {
-    const updatedMachines = machines.map((machine) =>
-      machine.key === editingMachine.key ? { ...editingMachine, ...values } : machine
-    );
-    setMachines(updatedMachines);
-    form.resetFields();
-    setIsModalVisible(false);
-    message.success('Machine updated successfully!');
-    setEditingMachine(null);
+  const fetchProcesses = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get('https://localhost:7223/api/Processes');
+      setProcesses(response.data);
+    } catch (error) {
+      console.error("Failed to fetch processes", error);
+      message.error('Failed to fetch processes');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const openModal = (machine) => {
-    setEditingMachine(machine);
-    form.setFieldsValue(machine);
-    setIsModalVisible(true);
+  useEffect(() => {
+    fetchMachines();
+    fetchProcesses();
+  }, []);
+
+  const handleAddMachine = async () => {
+    if (!newMachineName || !newMachineProcessId) {
+      message.error('Please fill in all fields!');
+      return;
+    }
+
+    const newMachine = {
+      machineId: uuidv4(),
+      machineName: newMachineName,
+      status: newMachineStatus,
+      processId: newMachineProcessId
+    };
+
+    try {
+      await axios.post(API_URL, newMachine);
+      setMachines([...machines, newMachine]);
+      setNewMachineName('');
+      setNewMachineProcessId(null);
+      setNewMachineStatus(true);
+      setIsModalVisible(false);
+      message.success('Machine added successfully!');
+    } catch (error) {
+      console.error("Failed to add machine", error);
+      message.error('Failed to add machine');
+    }
+  };
+
+  const handleEditSave = async (index) => {
+    if (!editingValue || !editingProcessId) {
+      message.error('Please fill in all fields!');
+      return;
+    }
+
+    const updatedMachine = {
+      ...machines[index],
+      machineName: editingValue,
+      processId: editingProcessId,
+      status: editingStatus,
+    };
+
+    try {
+      await axios.put(`${API_URL}/${updatedMachine.machineId}`, updatedMachine);
+      const updatedMachines = [...machines];
+      updatedMachines[index] = updatedMachine;
+      setMachines(updatedMachines);
+      message.success('Machine updated successfully!');
+      setEditingIndex(null);
+      setEditingValue('');
+      setEditingProcessId(null);
+      setEditingStatus(true);
+    } catch (error) {
+      console.error("Failed to update machine", error);
+      message.error('Failed to update machine');
+    }
   };
 
   const columns = [
     {
-        title: 'SN.', // Serial Number Column
-        dataIndex: 'serial',
-        key: 'serial',
-        render: (text, record, index) => index + 1, // Render the serial number based on the index
-      },
-    { title: 'Machine Name', dataIndex: 'machineName', key: 'machineName' },
-    { title: 'Machine Type', dataIndex: 'machineType', key: 'machineType' },
-    { title: 'Specifications', dataIndex: 'machineSpecification', key: 'machineSpecification' },
-    { title: 'Machine Zone', dataIndex: 'machineZone', key: 'machineZone' },
-    { title: 'Department/Process/Division', dataIndex: 'machineDepartment', key: 'machineDepartment' },
-    { title: 'Status', dataIndex: 'machineStatus', key: 'machineStatus', render: (status) => (
-      <Switch checked={status === 'Operational'} checkedChildren="Operational" unCheckedChildren="Not Operational" />
-    ) },
+      title: 'SN.',
+      dataIndex: 'serial',
+      key: 'serial',
+      render: (_, __, index) => index + 1,
+      width: '10%',
+    },
     {
-      title: 'Actions',
-      key: 'actions',
-      render: (text, machine) => (
-        <Button type="link" onClick={() => openModal(machine)}>Edit</Button>
+      title: 'Machine Name',
+      dataIndex: 'machineName',
+      key: 'machineName',
+      render: (text, record, index) => (
+        editingIndex === index ? (
+          <Input
+            value={editingValue}
+            onChange={(e) => setEditingValue(e.target.value)}
+            onPressEnter={() => handleEditSave(index)}
+            onBlur={() => handleEditSave(index)}
+          />
+        ) : (
+          <span>{text}</span>
+        )
+      ),
+      width: '30%',
+    },
+    {
+      title: 'Process',
+      dataIndex: 'processId',
+      key: 'processId',
+      render: (text, record, index) => (
+        editingIndex === index ? (
+          <Select
+            value={editingProcessId}
+            onChange={setEditingProcessId}
+            style={{ width: '100%' }}
+          >
+            {processes.map(process => (
+              <Select.Option key={process.id} value={process.id}>
+                {process.name}
+              </Select.Option>
+            ))}
+          </Select>
+        ) : (
+          <span>{record.processName}</span>
+        )
+      ),
+      width: '30%',
+    },
+    {
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status, record, index) => (
+        editingIndex === index ? (
+          <Switch
+            checked={editingStatus}
+            onChange={setEditingStatus}
+          />
+        ) : (
+          <Switch checked={status} checkedChildren="Operational" unCheckedChildren="Not Operational" disabled />
+        )
+      ),
+    },
+    {
+      title: 'Action',
+      key: 'action',
+      render: (_, record, index) => (
+        editingIndex === index ? (
+          <>
+            <Button type="link" onClick={() => handleEditSave(index)}>Save</Button>
+            <Button type="link" onClick={() => setEditingIndex(null)}>Cancel</Button>
+          </>
+        ) : (
+          <Button type="link" onClick={() => {
+            setEditingIndex(index);
+            setEditingValue(record.machineName);
+            setEditingProcessId(record.processId);
+            setEditingStatus(record.status);
+          }}>Edit</Button>
+        )
       ),
     },
   ];
@@ -62,53 +194,56 @@ const Machine = () => {
     <div style={{ padding: '20px', background: '#f9f9f9', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)' }}>
       <h2 style={{ marginBottom: '20px' }}>Production Machines</h2>
       <Button type="primary" onClick={() => setIsModalVisible(true)} style={{ marginBottom: '20px' }}>
-        Add
+        Add Machine
       </Button>
 
-      <Table
-        dataSource={machines.map((machines, index) => ({ ...machines, serial: index + 1 }))} 
-        columns={columns}
-        rowKey="key"
-        pagination={false}
-        bordered
-        style={{ marginTop: '20px' }}
-      />
+      {loading ? (
+        <Spin />
+      ) : (
+        <Table
+          dataSource={machines}
+          columns={columns}
+          rowKey="machineId"
+          pagination={false}
+          bordered
+          style={{ marginTop: '20px' }}
+        />
+      )}
 
       <Modal
-        title={editingMachine ? 'Edit Machine' : 'Add Machine'}
-        visible={isModalVisible}
+        title="Add Machine"
+        open={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
         footer={null}
       >
-        <Form form={form} onFinish={editingMachine ? handleEditMachine : handleAddMachine} layout="vertical">
-          <Form.Item name="machineName" label="Machine Name" rules={[{ required: true, message: 'Please input Machine Name!' }]}>
-            <Input placeholder="Enter Machine Name" />
-          </Form.Item>
-          <Form.Item name="machineType" label="Machine Type" rules={[{ required: true, message: 'Please select Machine Type!' }]}>
-            <Select placeholder="Select Machine Type">
-              <Option value="Offset Printing">Offset Printing</Option>
-              <Option value="CTP">CTP</Option>
-              <Option value="Digital Printing">Digital Printing</Option>
-            </Select>
-          </Form.Item>
-          <Form.Item name="machineSpecification" label="Machine Specification" rules={[{ required: true, message: 'Please input Machine Specification!' }]}>
-            <Input placeholder="Enter Specifications (e.g., Booklet - 16, Paper 16)" />
-          </Form.Item>
-          <Form.Item name="machineZone" label="Machine Zone" rules={[{ required: true, message: 'Please input Machine Zone!' }]}>
-            <Input placeholder="Enter Machine Zone" />
-          </Form.Item>
-          <Form.Item name="machineDepartment" label="Department/Process/Division" rules={[{ required: true, message: 'Please input Department/Process/Division!' }]}>
-            <Input placeholder="Enter Department/Process/Division" />
-          </Form.Item>
-          <Form.Item name="machineStatus" label="Machine Status" valuePropName="checked">
-            <Switch checkedChildren="Operational" unCheckedChildren="Not Operational" />
-          </Form.Item>
-          <Form.Item>
-            <Button type="primary" htmlType="submit">
-              {editingMachine ? 'Update Machine' : 'Add Machine'}
-            </Button>
-          </Form.Item>
-        </Form>
+        <Input
+          placeholder="Enter Machine Name"
+          value={newMachineName}
+          onChange={(e) => setNewMachineName(e.target.value)}
+        />
+        <Select
+          placeholder="Select Process"
+          value={newMachineProcessId}
+          onChange={setNewMachineProcessId}
+          style={{ marginTop: '10px', marginBottom: '10px', width: '100%' }}
+        >
+          {processes.map(process => (
+            <Select.Option key={process.id} value={process.id}>
+              {process.name}
+            </Select.Option>
+          ))}
+        </Select>
+        <Switch
+          checked={newMachineStatus}
+          checkedChildren="Operational"
+          unCheckedChildren="Not Operational"
+          onChange={setNewMachineStatus}
+          style={{ marginBottom: '10px' }}
+        />
+        <div style={{ textAlign: 'right', marginTop: '16px' }}>
+          <Button onClick={() => setIsModalVisible(false)} style={{ marginRight: '8px' }}>Cancel</Button>
+          <Button type="primary" onClick={handleAddMachine}>Add</Button>
+        </div>
       </Modal>
     </div>
   );
