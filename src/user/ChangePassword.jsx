@@ -7,13 +7,23 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { jwtDecode } from 'jwt-decode';
 import axios from 'axios';
+import themeStore from './../store/themeStore';
+import { useStore } from 'zustand';
 import API from '../CustomHooks/MasterApiHooks/api';
 const ChangePassword = () => {
   // Static class names for simplicity
-  const customBtn = 'btn-primary'; // Example static class
-  const customDarkText = 'text-dark';
-  const customLight = 'bg-light';
-  const customLightBorder = 'border-light';
+  //Theme Change Section
+  const { getCssClasses } = useStore(themeStore);
+  const cssClasses = getCssClasses();
+  const customDark = cssClasses[0];
+  const customMid = cssClasses[1];
+  const customLight = cssClasses[2];
+  const customBtn = cssClasses[3];
+  const customDarkText = cssClasses[4];
+  const customLightText = cssClasses[5]
+  const customLightBorder = cssClasses[6]
+  const customDarkBorder = cssClasses[7]
+
 
   // State object to store oldPassword and newPassword
   const [formData, setFormData] = useState({
