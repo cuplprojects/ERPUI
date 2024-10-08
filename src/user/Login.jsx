@@ -15,30 +15,21 @@ import Logo1 from './../assets/Logos/CUPLLogoTheme.png';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import { useMediaQuery } from 'react-responsive';
-import { validateLogin } from './../scripts/loginValidations.js';
 import { toast, ToastContainer } from 'react-toastify';
 import { Link } from 'react-router-dom';
-import axios from 'axios'; // Import axios
-
+import axios from 'axios'; 
 const Login = () => {
-  // State to handle password visibility
   const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate(); // For navigation
-
   // Theme Change Section
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
   const customDark = cssClasses[0];
   const customMid = cssClasses[1];
-  const customLight = cssClasses[2];
   const customBtn = cssClasses[3];
   const customDarkText = cssClasses[4];
-  const customLightText = cssClasses[5];
-  const customLightBorder = cssClasses[6];
-  const customDarkBorder = cssClasses[7];
-  const customThead = cssClasses[8];
 
   const themeImages = {
     "purple-dark": PurpleTheme,
@@ -62,46 +53,47 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Validation
-    const errors = validateLogin(userName, password);
-    if (Object.keys(errors).length > 0) {
-      // Show validation error messages using toast
-      Object.values(errors).forEach(error => toast.error(error)); 
-      return;
-    }
-
+  
     try {
       // Show processing toast
       toast.info("Processing...", {
         autoClose: 2000,
         toastId: 'processing', // Prevent duplicate toasts
       });
-
+  
       // Replace the URL below with your actual login API endpoint
       const response = await axios.post('https://localhost:7212/api/Login/login', {
         userName,
         password
       });
-
+  
       // Assuming the API returns a success status and a token
       if (response.status === 200) {
         toast.dismiss('processing'); // Dismiss the processing toast
         toast.success("Successfully logged in!");
-
-        // Extract the token from response.data
-        const { token } = response.data;
-
+  
+        // Extract the token and autogenPass from response.data
+        const { token, autogenPass } = response.data;
+        // console.log(response.data)//console to see the response data from API
+  
         if (token) {
           // Store only the token in localStorage
           localStorage.setItem('authToken', token);
+          
+          // Navigate based on autogenPass value
+          if (autogenPass) {
+            setTimeout(() => {
+              navigate('/setpassword'); // Navigate to set password if autogenPass is true
+            }, 1500);
+          } else {
+            setTimeout(() => {
+              navigate('/dashboard'); // Navigate to dashboard if autogenPass is false
+            }, 1500);
+          }
         } else {
           toast.error("Authentication token not found in the response.");
           return;
         }
-
-        // Navigate to the desired route after successful login
-        navigate('/setpassword'); // or navigate('/dashboard');
       } else {
         // Handle unexpected success responses
         toast.dismiss('processing');
@@ -109,7 +101,7 @@ const Login = () => {
       }
     } catch (error) {
       toast.dismiss('processing'); // Dismiss the processing toast
-
+  
       if (error.response) {
         // Server responded with a status other than 2xx
         switch (error.response.status) {
@@ -140,6 +132,7 @@ const Login = () => {
       }
     }
   };
+  
 
   useEffect(() => {
     // Check if loggedOut flag is present in localStorage
@@ -205,7 +198,7 @@ const Login = () => {
             <Form className="p-4 bg-white rounded-3 " onSubmit={handleSubmit}>
               <h2 className={`text-center mb-4 ${customDark === "dark-dark" ? "" : `${customDarkText}`}`}>Login | ApexERP</h2>
 
-              <Form.Group controlId="formBasicUserName">
+              <Form.Group controlId="formBasicUserId">
                 <Form.Label>User ID</Form.Label>
                 <Form.Control
                   type="text"

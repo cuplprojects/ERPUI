@@ -16,18 +16,18 @@ const AddUsers = () => {
 
   // Initial state for the form data
   const initialState = {
+    username: '',
     firstName: '',
     middleName: '',
     lastName: '',
-    username: '',
     gender: '',
-    mobileNumber: '',
-    role: '',
+    mobileNo: '',
+    roleId: '',
   };
 
   const [usernameError, setUsernameError] = useState('');
   const [formData, setFormData] = useState(initialState);
-  const [userDetails, setUserDetails] = useState({ username: '', password: '' });
+  const [userDetails, setUserDetails] = useState({ userName: '', password: '' });
   const [showModal, setShowModal] = useState(false);
 
   // Function to handle form submission
@@ -39,8 +39,8 @@ const AddUsers = () => {
       { name: 'firstName', value: formData.firstName },
       { name: 'lastName', value: formData.lastName },
       { name: 'gender', value: formData.gender },
-      { name: 'mobileNumber', value: formData.mobileNumber },
-      { name: 'role', value: formData.role },
+      { name: 'mobileNo', value: formData.mobileNo },
+      { name: 'roleId', value: formData.roleId },
     ];
 
     const errors = requiredFields
@@ -56,11 +56,11 @@ const AddUsers = () => {
       const { success } = validateFormData(formData); // Validate the form data
       if (success) {
         try {
-          const response = await axios.post('/api/users', formData); // API call to add user
-          const { username, password } = response.data;
+          const response = await axios.post('https://localhost:7212/api/User/create', formData); // API call to add user
+          const { userName, password } = response.data;
 
           // Set user details for modal
-          setUserDetails({ username, password });
+          setUserDetails({ userName, password });
           setShowModal(true);
           toast.success('User added successfully!');
         } catch (error) {
@@ -208,12 +208,12 @@ const AddUsers = () => {
               <Form.Label className={customDarkText}>Mobile Number:</Form.Label>
               <Form.Control
                 type="text"
-                name="mobileNumber"
+                name="mobileNo"
                 placeholder="Enter mobile number"
-                value={formData.mobileNumber}
+                value={formData.mobileNo}
                 onChange={(event) => {
                   const value = event.target.value.replace(/\D/g, ''); // Remove non-numeric characters
-                  setFormData({ ...formData, mobileNumber: value });
+                  setFormData({ ...formData, mobileNo: value });
                 }}
                 required
               />
@@ -223,17 +223,17 @@ const AddUsers = () => {
             <Form.Group>
               <Form.Label className={customDarkText}>Role:</Form.Label>
               <Form.Select
-                name="role"
-                value={formData.role}
+                name="roleId"
+                value={formData.roleId}
                 onChange={handleInputChange}
                 required
               >
-                <option value="">Select a role</option>
-                <option value="admin">Admin</option>
-                <option value="head">Head</option>
-                <option value="manager">Manager</option>
-                <option value="supervisor">Supervisor</option>
-                <option value="operator">Operator</option>
+                <option value="">Select a Role</option>
+                <option value={1}>Admin</option>
+                <option value={2}>Head</option>
+                <option value={3}>Manager</option>
+                <option value={4}>Supervisor</option>
+                <option value={5}>Operator</option>
               </Form.Select>
             </Form.Group>
           </Col>
@@ -254,10 +254,9 @@ const AddUsers = () => {
         <ToastContainer />
       </div>
       <SuccessModal
-        show={showModal} username={userDetails.username} password={userDetails.password}
+        show={showModal} username={userDetails.userName} password={userDetails.password}
       />
     </div>
   );
 };
-
 export default AddUsers;
