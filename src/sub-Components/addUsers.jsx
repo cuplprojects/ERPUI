@@ -1,18 +1,51 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ToastContainer } from 'react-toastify';
-import { Form, Input, Button, Row, Col, Select } from 'antd';
-import { toast } from 'react-toastify'; // Toast for notifications
+import { Form, Button, Row, Col } from 'react-bootstrap'; // Updated to use React Bootstrap
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { validateFormData } from './../scripts/addUsersValidations'; 
-
-const { Option } = Select;
+import { validateFormData } from './../scripts/addUsersValidations';
+import themeStore from './../store/themeStore';
+import { useStore } from 'zustand';
+import axios from 'axios';
+import SuccessModal from './../menus/addedUserModal.jsx';
 
 const AddUsers = () => {
-  const [form] = Form.useForm();
-    
+  const { getCssClasses } = useStore(themeStore);
+  const cssClasses = getCssClasses();
+  const customDarkText = cssClasses[4];
+
+  // Initial state for the form data
+  const initialState = {
+    firstName: '',
+    middleName: '',
+    lastName: '',
+    userName: '',
+    gender: '',
+    mobileNo: '',
+    role: '',
+  };
+
+  const [usernameError, setUsernameError] = useState('');
+  const [formData, setFormData] = useState(initialState);
+  const [userDetails, setUserDetails] = useState({ userName: '', password: '' });
+  const [showModal, setShowModal] = useState(false);
+
   // Function to handle form submission
-  const handleSubmit = (values) => {
-    const { errors, success } = validateFormData(values); // Validate the form data
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    // Validation logic for required fields
+    const requiredFields = [
+      { name: 'firstName', value: formData.firstName },
+      { name: 'lastName', value: formData.lastName },
+      { name: 'gender', value: formData.gender },
+      { name: 'mobileNumber', value: formData.mobileNo },
+      { name: 'role', value: formData.role },
+    ];
+
+    const errors = requiredFields
+      .filter(field => !field.value)
+      .map(field => `${field.name.charAt(0).toUpperCase() + field.name.slice(1)} is required`);
 
     // Clear previous notifications
     toast.dismiss();
@@ -20,117 +53,199 @@ const AddUsers = () => {
     if (errors.length > 0) {
       errors.forEach((error) => toast.error(error)); // Display errors using toast
     } else {
-      toast.success('User added successfully!');
-      console.log(success); // Log success data
-      // You can store the data or send it to a backend here
+      const { success } = validateFormData(formData); // Validate the form data
+      if (success) {
+        try {
+          const response = await axios.post('https://localhost:7212/api/User/create', formData); // API call to add user
+          const { userName, password } = response.data;
+
+          // Set user details for modal
+          setUserDetails({ userName, password });
+          setShowModal(true);
+          toast.success('User added successfully!');
+        } catch (error) {
+          toast.error('Failed to add user: ' + error.response.data.message);
+        }
+      }
     }
   };
 
-  // Function to handle form reset
-  const handleReset = () => {
-    form.resetFields();
+  // Function to handle input changes
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
+    setFormData({ ...formData, [name]: value });
   };
 
-  // Function to handle mobile number input
-  const handleMobileNumberChange = (event) => {
-    const value = event.target.value.replace(/\D/g, ''); // Remove non-numeric characters
-    form.setFieldsValue({ mobileNumber: value });
+  // Generate username suggestion based on input
+  useEffect(() => {
+    const { firstName, middleName, lastName } = formData;
+    let usernameBase = '';
+
+    if (firstName && middleName && lastName) {
+      usernameBase = `${firstName.charAt(0)}${middleName.charAt(0)}${lastName}`;
+    } else if (firstName && lastName) {
+      usernameBase = `${firstName.charAt(0)}${lastName}`;
+    } else if (firstName) {
+      usernameBase = firstName;
+    }
+
+    const randomNum = Math.floor(Math.random() * 100);
+    const usernameSuggestion = `${usernameBase}${randomNum}`;
+
+    // Check username suggestion length
+    if (usernameSuggestion.length >= 6 && usernameSuggestion.length <= 10) {
+      setFormData((prev) => ({ ...prev, userName: usernameSuggestion }));
+      setUsernameError('');
+    } else {
+      setUsernameError('Username must be between 6 and 10 characters.');
+    }
+  }, [formData.firstName, formData.middleName, formData.lastName]);
+
+  // Validate username length
+  const isUsernameValid = formData.userName.length >= 6 && formData.userName.length <= 10;
+
+  // Function to handle reset
+  const handleReset = () => {
+    setFormData(initialState); // Reset to the initial state
+    setUsernameError('');
   };
 
   return (
     <div style={{ padding: '20px', border: '1px solid #ddd', borderRadius: '8px' }}>
-      <h4>Add Users</h4>
-      <Form form={form} layout="vertical" onFinish={handleSubmit}>
-        <Row gutter={16}>
-        <Col xs={24} sm={12} md={4}>
-            <Form.Item
-              name="userName"
-              label="User Name :"
-              rules={[{ required: true, message: 'Username is required' }]}
-              style={{ fontSize: '16px' }}
-            >
-              <Input
-                placeholder="Enter Username"
-                style={{ height: '45px', fontSize: '16px' }}
-              />
-            </Form.Item>
-          </Col>
-          <Col xs={24} sm={12} md={4}>
-            <Form.Item
-              name="firstName"
-              label="First Name :"
-              rules={[{ required: true, message: 'First name is required' }]}
-              style={{ fontSize: '16px' }}
-            >
-              <Input
+      <h4 className={`${customDarkText}`}>Add Users</h4>
+      <Form onSubmit={handleSubmit}>
+        {/* First Row: First Name, Middle Name, Last Name */}
+        <Row className="mb-3">
+          <Col xs={12} md={4}>
+            <Form.Group>
+              <Form.Label className={customDarkText}>First Name:</Form.Label>
+              <Form.Control
+                type="text"
+                name="firstName"
                 placeholder="Enter first name"
-                style={{ height: '45px', fontSize: '16px' }}
+                value={formData.firstName}
+                onChange={handleInputChange}
+                required
+                autoComplete='off'
               />
-            </Form.Item>
+            </Form.Group>
           </Col>
-          <Col xs={24} sm={12} md={4}>
-            <Form.Item name="middleName" label="Middle Name :" style={{ fontSize: '16px' }}>
-              <Input
+          <Col xs={12} md={4}>
+            <Form.Group>
+              <Form.Label className={customDarkText}>Middle Name:</Form.Label>
+              <Form.Control
+                type="text"
+                name="middleName"
                 placeholder="Enter middle name"
-                style={{ height: '45px', fontSize: '16px' }}
+                value={formData.middleName}
+                onChange={handleInputChange}
+                autoComplete='off'
               />
-            </Form.Item>
+            </Form.Group>
           </Col>
-          <Col xs={24} sm={12} md={4}>
-            <Form.Item name="lastName" label="Last Name :" style={{ fontSize: '16px' }}>
-              <Input
+          <Col xs={12} md={4}>
+            <Form.Group>
+              <Form.Label className={customDarkText}>Last Name:</Form.Label>
+              <Form.Control
+                type="text"
+                name="lastName"
                 placeholder="Enter last name"
-                style={{ height: '45px', fontSize: '16px' }}
+                value={formData.lastName}
+                onChange={handleInputChange}
+                required
+                autoComplete='off'
               />
-            </Form.Item>
+            </Form.Group>
           </Col>
         </Row>
 
-        {/* Second Row: Mobile Number and Email Address */}
-        <Row gutter={16}>
-          <Col xs={24} sm={4}>
-            <Form.Item
-              name="mobileNumber"
-              label="Mobile Number :"
-              rules={[
-                { required: true, message: 'Mobile number is required' },
-                { pattern: /^[0-9]{10}$/, message: 'Mobile number must be 10 digits and contain only numbers' }
-              ]}
-              style={{ fontSize: '16px' }}
-            >
-              <Input
-                placeholder="Enter mobile number"
-                style={{ height: '45px', fontSize: '16px' }}
-                onChange={handleMobileNumberChange} // Handle input change
+        {/* Username Suggestion */}
+        <Row className="mb-3">
+          <Col lg={6} md={12} sm={12} xs={12}>
+            <Form.Group>
+              <Form.Label className={customDarkText}>Username Suggestion:</Form.Label>
+              <Form.Control
+                type="text"
+                name="username"
+                value={formData.userName}
+                onChange={handleInputChange} // Allow manual editing
+                isInvalid={usernameError !== '' && formData.userName.length > 0} // Conditional error styling
               />
-            </Form.Item>
+              <Form.Control.Feedback type="invalid">{usernameError}</Form.Control.Feedback>
+            </Form.Group>
           </Col>
-          <Col xs={24} sm={4}>
-            <Form.Item
-              name="role"
-              label="Role :"
-              rules={[{ required: true, message: 'Role is required' }]}
-              style={{ fontSize: '16px' }}
-            >
-              <Select style={{ height: '45px', fontSize: '16px' }} placeholder="Select a role">
-                <Option value="admin">Admin</Option>
-                <Option value="user">User</Option>
-              </Select>
-            </Form.Item>
+
+
+          <Col lg={6} md={12} sm={12} xs={12}>
+            <Form.Group>
+              <Form.Label className={customDarkText}>Gender:</Form.Label>
+              <Form.Select
+                name="gender"
+                value={formData.gender}
+                onChange={handleInputChange}
+                required
+              >
+                <option value="">Select gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="others">Others</option>
+              </Form.Select>
+            </Form.Group>
+          </Col>
+        </Row>
+        <Row className="mb-3">
+          <Col lg={6} md={12} sm={12} xs={12}>
+            <Form.Group>
+              <Form.Label className={customDarkText}>Mobile Number:</Form.Label>
+              <Form.Control
+                type="text"
+                name="mobileNumber"
+                placeholder="Enter mobile number"
+                value={formData.mobileNo}
+                onChange={(event) => {
+                  const value = event.target.value.replace(/\D/g, ''); // Remove non-numeric characters
+                  setFormData({ ...formData, mobileNo: value });
+                }}
+                required
+              />
+            </Form.Group>
+          </Col>
+          <Col lg={6} md={12} sm={12} xs={12}>
+            <Form.Group>
+              <Form.Label className={customDarkText}>Role:</Form.Label>
+              <Form.Select
+                name="role"
+                value={formData.role}
+                onChange={handleInputChange}
+                required
+              >
+                <option value="">Select a role</option>
+                <option value="admin">Admin</option>
+                <option value="head">Head</option>
+                <option value="manager">Manager</option>
+                <option value="supervisor">Supervisor</option>
+                <option value="operator">Operator</option>
+              </Form.Select>
+            </Form.Group>
           </Col>
         </Row>
 
         {/* Add and Reset Buttons */}
         <div style={{ textAlign: 'right' }}>
-          <Button style={{ marginRight: 8 }} onClick={handleReset} className="fs-6">
+          <Button variant="secondary" onClick={handleReset}>
             Reset
           </Button>
-          <Button type="submit" className="custom-theme-dark-btn fs-6" htmlType="submit">
+          <Button type="submit" className="custom-theme-dark-btn ms-2" disabled={!isUsernameValid}>
             Add
           </Button>
         </div>
       </Form>
-      <ToastContainer />
+      <div>
+        <ToastContainer />
+      </div>
+      <SuccessModal
+        show={showModal} username={userDetails.username} password={userDetails.password}
+      />
     </div>
   );
 };

@@ -45,7 +45,7 @@ export const validateLogin = (userId, password) => {
   }
 
   // Fetch stored users from local storage
-  const storedUsers = JSON.parse(localStorage.getItem('users'));
+ // const storedUsers = JSON.parse(localStorage.getItem('users'));
 
   // Validate user credentials against stored data
   const userExists = Object.values(storedUsers).some(

@@ -26,7 +26,7 @@ import './../styles/Sidebar.css'; // Import your custom CSS
 import AddUsers from '../sub-Components/addUsers';
 import AllUsers from '../sub-Components/allUsers';
 import CameraList from './CameraList';
-import RolesAndDepartments from './RolePage';
+import RolesAndDepartments from './Roles/RolePage';
 import Team from './team';
 import SystemSettings from './SystemSettings';
 import themeStore from './../store/themeStore';
