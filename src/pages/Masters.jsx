@@ -16,7 +16,7 @@ import {
   FaCaretDown,
   FaCaretLeft,
 } from 'react-icons/fa';
-
+import { BsQuestionSquareFill } from "react-icons/bs";
 import GroupManager from './Group'
 
 import ProjectManager from './Project';

@@ -79,7 +79,9 @@ const AddUsers = () => {
     const { name, value } = event.target;
     setFormData({ ...formData, [name]: value });
   };
-
+  const handleCloseModal = () =>{
+    setShowModal(false);
+  } 
   // Generate username suggestion based on input
   useEffect(() => {
     const { firstName, middleName, lastName } = formData;
@@ -268,9 +270,7 @@ const AddUsers = () => {
         <ToastContainer />
       </div>
       <SuccessModal
-
-        show={showModal} username={userDetails.userName} password={userDetails.password}
-
+        show={showModal} username={userDetails.userName} password={userDetails.password} onClose={handleCloseModal}
       />
     </div>
   );

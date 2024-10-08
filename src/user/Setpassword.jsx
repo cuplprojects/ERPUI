@@ -27,6 +27,8 @@ const SetPassword = () => {
     first: { questionId: '', question: '', answer: '' },
     second: { questionId: '', question: '', answer: '' },
   });
+  console.log(selectedQuestions.first.questionId)
+  console.log(selectedQuestions.second.questionId)
   //get user id here -->
   const userToken = localStorage.getItem('authToken');
   const authToken = userToken; // assume you have the token stored in a variable
@@ -47,12 +49,12 @@ const SetPassword = () => {
 
   // Handler to update the selected question and its answer
   const handleQuestionSelect = (key, questionId) => {
-    const question = securityQuestions.find(q => q.id === parseInt(questionId));
+    // const question = securityQuestions.find(q => q.id === parseInt(questionId));
+    // console.log(questionId)
     setSelectedQuestions({
       ...selectedQuestions,
       [key]: {
-        questionId: question?.id,
-        question: question?.question,
+        questionId: questionId,
         answer: ''
       }
 
@@ -80,6 +82,7 @@ const SetPassword = () => {
       toast.error("Please answer both security questions!");
       return;
     }
+    // console.log(selectedQuestions)
     axios.post('https://localhost:7212/api/Login/setSecurityAnswers', {
       userId: userIdApi,
       securityQuestion1Id: selectedQuestions.first.questionId,
@@ -92,6 +95,7 @@ const SetPassword = () => {
           toast.success("Security questions set successfully!", {
             onClose: () => setCurrentStep('setPassword'), // Proceed to next step
             autoClose: 3000,
+            
           });
         } else {
           toast.error("Failed to set security questions.");
