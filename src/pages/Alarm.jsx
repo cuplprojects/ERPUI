@@ -18,7 +18,7 @@ const AlarmMaster = () => {
       const response = await axios.get('https://localhost:7223/api/Alarms');
       setAlarms(response.data);
     } catch (error) {
-      message.error('Failed to fetch alarms');
+      console.error('Failed to fetch alarms');
     } finally {
       setLoading(false);
     }

@@ -25,7 +25,6 @@ const Machine = () => {
       setMachines(response.data);
     } catch (error) {
       console.error("Failed to fetch machines", error);
-      message.error('Failed to fetch machines');
     } finally {
       setLoading(false);
     }
@@ -38,7 +37,6 @@ const Machine = () => {
       setProcesses(response.data);
     } catch (error) {
       console.error("Failed to fetch processes", error);
-      message.error('Failed to fetch processes');
     } finally {
       setLoading(false);
     }

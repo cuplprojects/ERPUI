@@ -3,63 +3,55 @@ import axios from 'axios';
 import { Table, Input, Button, Switch, Form, message, Modal } from 'antd';
 
 const Group = () => {
-  const [groups, setGroups] = useState([]); // State to store groups
-  const [isModalVisible, setIsModalVisible] = useState(false); // Control modal visibility
-  const [form] = Form.useForm(); // Form instance
-  const [editingIndex, setEditingIndex] = useState(null); // Index of the group being edited
-  const [editingValue, setEditingValue] = useState(''); // Value of the input during editing
-  const [editingStatus, setEditingStatus] = useState(true); // Status during editing
-  const [originalData, setOriginalData] = useState({}); // Store original data for cancel functionality
+  const [groups, setGroups] = useState([]);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [form] = Form.useForm();
+  const [editingIndex, setEditingIndex] = useState(null);
+  const [editingValue, setEditingValue] = useState('');
+  const [editingStatus, setEditingStatus] = useState(true);
+  const [originalData, setOriginalData] = useState({});
 
-  // Fetch groups from the server
   const fetchGroups = async () => {
     try {
-      const response = await axios.get('https://localhost:7223/api/Groups'); // Adjust the endpoint as needed
+      const response = await axios.get('https://localhost:7223/api/Groups');
       setGroups(response.data);
     } catch (error) {
+
       // message.error('Failed to fetch groups!');
       console.log('Failed to fetch groups!');
+
     }
   };
 
-  // UseEffect to fetch groups on component mount
   useEffect(() => {
     fetchGroups();
   }, []);
 
-  // Function to handle group addition
   const handleAddGroup = async (values) => {
     const { name, status } = values;
 
-    // Check if the group name already exists
     const existingGroup = groups.find(group => group.name.toLowerCase() === name.toLowerCase());
-
     if (existingGroup) {
-      message.error('Group name already exists!'); // Show error message
+      message.error('Group name already exists!');
       return;
     }
 
     try {
-      // Make POST request to add a new group
       const newGroup = { name, status };
-      await axios.post('https://localhost:7223/api/Groups', newGroup); // Adjust the endpoint as needed
-      setGroups([...groups, newGroup]); // Update group list
-      form.resetFields(); // Reset the form fields after submission
-      setIsModalVisible(false); // Close the modal after submission
-
-      // Show success message
+      await axios.post('https://localhost:7223/api/Groups', newGroup);
+      setGroups([...groups, newGroup]);
+      form.resetFields();
+      setIsModalVisible(false);
       message.success('Group added successfully!');
     } catch (error) {
       message.error('Failed to add group!');
     }
   };
 
-  // Function to handle editing a group
   const handleEditSave = async (index) => {
     const groupToEdit = groups[index];
     const updatedGroup = { ...groupToEdit, name: editingValue, status: editingStatus };
 
-    // Check for existing group name
     const existingGroup = groups.find(group => 
       group.name.toLowerCase() === editingValue.toLowerCase() && group.name !== groupToEdit.name
     );
@@ -77,39 +69,11 @@ const Group = () => {
       message.success('Group updated successfully!');
     } catch (error) {
       message.error('Failed to update group');
-      fetchGroups(); // Refresh groups to get the latest data
+      fetchGroups();
     } finally {
       setEditingIndex(null);
       setEditingValue('');
       setEditingStatus(true);
-    }
-  };
-
-  // Function to handle status change of the group
-  const handleStatusChange = async (name) => {
-    const groupToUpdate = groups.find(group => group.name === name);
-    
-    if (!groupToUpdate) {
-      message.error('Group not found!');
-      return;
-    }
-  
-    const updatedStatus = !groupToUpdate.status;
-    
-    try {
-      await axios.put(`https://localhost:7223/api/Groups/${groupToUpdate.id}`, { 
-        ...groupToUpdate,
-        status: updatedStatus 
-      });
-      
-      const updatedGroups = groups.map(group =>
-        group.name === name ? { ...group, status: updatedStatus } : group
-      );
-      
-      setGroups(updatedGroups);
-      message.success('Group status updated successfully');
-    } catch (error) {
-      message.error('Failed to update group status!');
     }
   };
 
@@ -139,12 +103,7 @@ const Group = () => {
             onBlur={() => handleEditSave(index)}
           />
         ) : (
-          <span onClick={() => {
-            setEditingIndex(index);
-            setEditingValue(record.name);
-            setEditingStatus(record.status);
-            setOriginalData(record); // Store original data
-          }}>{text}</span>
+          <span>{text}</span>
         )
       ),
     },
@@ -152,11 +111,15 @@ const Group = () => {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
-      render: (status, record) => (
-        <Switch 
-          checked={status} 
-          onChange={() => handleStatusChange(record.name)} 
-        />
+      render: (status, record, index) => (
+        editingIndex === index ? (
+          <Switch 
+            checked={editingStatus} 
+            onChange={(checked) => setEditingStatus(checked)} // Update status on toggle
+          />
+        ) : (
+          <Switch checked={status} disabled /> // Display as read-only
+        )
       ),
     },
     {
@@ -173,21 +136,19 @@ const Group = () => {
             setEditingIndex(index);
             setEditingValue(record.name);
             setEditingStatus(record.status);
-            setOriginalData(record); // Store original data
+            setOriginalData(record);
           }}>Edit</Button>
         )
       ),
     },
   ];
 
-  // Show the modal
   const showModal = () => {
     setIsModalVisible(true);
   };
 
-  // Handle cancel event of the modal
   const handleCancel = () => {
-    form.resetFields(); // Reset form when modal is canceled
+    form.resetFields();
     setIsModalVisible(false);
   };
 
@@ -200,9 +161,9 @@ const Group = () => {
       </div>
 
       <Table
-        dataSource={groups.map((group, index) => ({ ...group, serial: index + 1 }))} // Add serial index
+        dataSource={groups.map((group, index) => ({ ...group, serial: index + 1 }))}
         columns={columns}
-        rowKey="id" // Use a unique key for each row
+        rowKey="id"
         pagination={false}
         bordered
       />
@@ -211,7 +172,7 @@ const Group = () => {
         title="Add Group"
         open={isModalVisible}
         onCancel={handleCancel}
-        footer={null} // No default footer to allow custom buttons in form
+        footer={null}
       >
         <Form 
           form={form} 

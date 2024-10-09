@@ -25,7 +25,6 @@ const Type = () => {
             setTypes(response.data);
         } catch (error) {
             console.error(error);
-            message.error("Failed to fetch Types");
         } finally {
             setLoading(false);
         }
@@ -43,7 +42,6 @@ const Type = () => {
             setProcessMap(map);
         } catch (error) {
             console.error(error);
-            message.error("Failed to fetch Processes");
         } finally {
             setLoading(false);
         }
@@ -63,7 +61,6 @@ const Type = () => {
             form.resetFields();
         } catch (error) {
             console.error(error);
-            message.error("Failed to create Type");
         }
     };
 
