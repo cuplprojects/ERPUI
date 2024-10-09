@@ -33,8 +33,6 @@ import Team from './team';
 import SystemSettings from './SystemSettings';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
-import { BsQuestionSquareFill } from 'react-icons/bs';
-
 
 const Sidebar = () => {
   // Theme Change Section
@@ -127,13 +125,9 @@ const Sidebar = () => {
           {selectedMenu === 'RolePage' && <RolesAndDepartments />}
           {selectedMenu === 'addUser' && <AddUsers />}
           {selectedMenu === 'allUsers' && <AllUsers />}
-
           {selectedMenu === 'group' && <GroupManager />}
           {selectedMenu === 'type' && <Type />}
-
           {selectedMenu === 'securityQuestions' && <SecurityQ />}
-          {/* {selectedMenu === 'group' && <GroupManager />} */}
-
           {selectedMenu === 'project' && <ProjectManager />}
           {selectedMenu === 'zone' && <ZoneManager />}
           {selectedMenu === 'camera' && <CameraList />}
@@ -141,7 +135,6 @@ const Sidebar = () => {
           {selectedMenu === 'systemSettings' && <SystemSettings />}
           {selectedMenu === 'machine' && <Machine />}
           {selectedMenu === 'alarm' && <AlarmMaster />}
-          {selectedMenu === 'envelope' && <EnvelopeConfiguration />}
         </Col>
       </Row>
     </Container>
