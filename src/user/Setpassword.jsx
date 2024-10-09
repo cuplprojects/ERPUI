@@ -12,6 +12,8 @@ import { jwtDecode } from 'jwt-decode';
 
 const SetPassword = () => {
   const navigate = useNavigate();
+
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const isMediumOrSmaller = useMediaQuery({ query: '(max-width: 992px)' });
   const [currentStep, setCurrentStep] = useState('securityQuestions');
   const [password, setPassword] = useState('');
@@ -75,8 +77,8 @@ const SetPassword = () => {
     })
       .then((response) => {
         if (response.status === 200) {
+          setCurrentStep('setPassword'); // Move to next step immediately
           toast.success("Security questions set successfully!", {
-            onClose: () => setCurrentStep('setPassword'),
             autoClose: 3000,
           });
         } else {
@@ -110,8 +112,8 @@ const SetPassword = () => {
       .then((response) => {
         if (response.status === 200) {
           toast.success("Password set successfully!", {
-            onClose: () => navigate('/dashboard'),
-            autoClose: 3000,
+            onClose: () => navigate('/dashboard'), // Wait for toast to close before navigating
+            autoClose: 1500,
           });
         } else {
           toast.error("Failed to set password.");
@@ -267,7 +269,7 @@ const SetPassword = () => {
                   <Form.Label><strong>Confirm Password</strong></Form.Label>
                   <div className="position-relative">
                     <Form.Control
-                      type={showPassword ? "text" : "password"}
+                      type={showConfirmPassword ? "text" : "password"}
                       placeholder="Confirm New Password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
@@ -277,9 +279,9 @@ const SetPassword = () => {
                     <span
                       className="position-absolute"
                       style={{ right: '10px', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer' }}
-                      onClick={() => setShowPassword(!showPassword)}
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     >
-                      {showPassword ? <AiFillEye size={20} /> : <AiFillEyeInvisible size={20} />}
+                      {showConfirmPassword ? <AiFillEye size={20} /> : <AiFillEyeInvisible size={20} />}
                     </span>
                   </div>
                 </Form.Group>

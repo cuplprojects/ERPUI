@@ -18,9 +18,9 @@ import { useMediaQuery } from 'react-responsive';
 import { useTranslation } from 'react-i18next';
 import { toast, ToastContainer } from 'react-toastify';
 import { Link } from 'react-router-dom';
-import axios from 'axios'; 
+import axios from 'axios';
 import AuthService from '../CustomHooks/ApiServices/AuthService';
-
+import { jwtDecode } from 'jwt-decode';
 const Login = () => {
   const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
@@ -65,7 +65,7 @@ const Login = () => {
 
     try {
       toast.info("Processing...", {
-        autoClose: 2000,
+        autoClose: 1000,
         toastId: "processing",
       });
 
@@ -82,7 +82,7 @@ const Login = () => {
 
         if (token) {
           localStorage.setItem('authToken', token);
-          
+
           if (autogenPass) {
             setTimeout(() => {
               navigate('/setpassword');
@@ -109,7 +109,7 @@ const Login = () => {
             toast.error("Bad Request. Please check your input.");
             break;
           case 401:
-            toast.error("Unauthorized. Invalid User ID or Password.");
+            toast.error("Unauthorized. Invalid User Name or Password.");
             break;
           case 403:
             toast.error("Forbidden. You do not have access.");
@@ -137,7 +137,7 @@ const Login = () => {
     if (localStorage.getItem('loggedOut')) {
       toast.success('Successfully logged out!', {
         position: 'top-right',
-        autoClose: 3000,
+        autoClose: 1000,
         hideProgressBar: false,
         closeOnClick: true,
         pauseOnHover: true,
@@ -150,7 +150,7 @@ const Login = () => {
 
   return (
     <Container fluid className="vh-100 position-relative overflow-hidden">
-      <ToastContainer />
+      <ToastContainer autoClose={1000} />
       {isTabletPortrait && (
         <img
           src={themeImages[customDark] || DefaultTheme}
@@ -174,7 +174,7 @@ const Login = () => {
             src={themeImages[customDark] || DefaultTheme}
             alt="Login Theme"
             className="w-100"
-            style={{ objectFit: "contain", maxHeight: "90vh" }}
+            style={{ objectFit: "contain", maxHeight: "100vh" }}
           />
         </Col>
 
@@ -191,18 +191,17 @@ const Login = () => {
 
             <Form className="p-4 bg-white rounded-3" onSubmit={handleSubmit}>
               <h2
-                className={`text-center mb-4 ${
-                  customDark === "dark-dark" ? "" : `${customDarkText}`
-                }`}
+                className={`text-center mb-4 ${customDark === "dark-dark" ? "" : `${customDarkText}`
+                  }`}
               >
                 {t('webtitle')}
               </h2>
 
               <Form.Group controlId="formBasicuserName">
-                <Form.Label>User ID</Form.Label>
+                <Form.Label>User Name</Form.Label>
                 <Form.Control
                   type="text"
-                  placeholder="Enter User ID"
+                  placeholder="Enter User Name"
                   value={userName}
                   onChange={(e) => setUserName(e.target.value)}
                   required
@@ -226,18 +225,17 @@ const Login = () => {
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
-                      <AiFillEye size={20} />
+                      <AiFillEye size={20} className={`${customDark === "dark-dark" ? `` : `${customDarkText}`}`} />
                     ) : (
-                      <AiFillEyeInvisible size={20} />
+                      <AiFillEyeInvisible size={20} className={`${customDark === "dark-dark" ? `` : `${customDarkText}`}`} />
                     )}
                   </span>
                 </div>
               </Form.Group>
 
               <Button
-                className={`${customBtn} mt-4 w-100 ${
-                  customDark === "dark-dark" ? "border-white " : "border-0 "
-                } custom-zoom-btn `}
+                className={`${customBtn} mt-4 w-100 ${customDark === "dark-dark" ? "border-white " : "border-0 "
+                  } custom-zoom-btn `}
                 type="submit"
               >
                 Login
@@ -245,11 +243,10 @@ const Login = () => {
               <div className="text-center mt-3 custom-zoom-btn">
                 <Link
                   to="/forgotpassword"
-                  className={`${
-                    customDark === "dark-dark"
-                      ? "text-dark"
-                      : `${customDarkText}`
-                  } `}
+                  className={`${customDark === "dark-dark"
+                    ? "text-dark"
+                    : `${customDarkText}`
+                    } `}
                 >
                   Forgot Password?
                 </Link>

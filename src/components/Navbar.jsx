@@ -10,15 +10,20 @@ import { RiNotification2Fill } from "react-icons/ri";
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import SampleUser1 from "./../assets/sampleUsers/sampleUser1.jpg";
+import { Link } from 'react-router-dom';
 const Navbar = () => {
 
-  //Theme Changer Section
+  //Theme Change Section
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
-  const customDark = cssClasses[0]; 
-  const customMid= cssClasses[1]; 
-  const customLight= cssClasses[2]; 
-  const customBtn= cssClasses[3]; 
+  const customDark = cssClasses[0];
+  const customMid = cssClasses[1];
+  const customLight = cssClasses[2];
+  const customBtn = cssClasses[3];
+  const customDarkText = cssClasses[4];
+  const customLightText = cssClasses[5]
+  const customLightBorder = cssClasses[6]
+  const customDarkBorder = cssClasses[7]
 
   const [showNav, setShowNav] = useState(false);
   const [userMenu, setUserMenu] = useState(false);
@@ -114,7 +119,7 @@ const Navbar = () => {
             </button>
           </Col>
           <Col xs={9} md={10} lg={10} className="d-flex align-items-center justify-content-center">
-            <div className="ms-2 fw-bold fs-4">CUPL | ApexERP</div>
+            <Link to="/dashboard" className="ms-2 fw-bold fs-4 text-light " style={{textDecoration:"none"}}>CUPL | ApexERP</Link>
           </Col>
           <Col xs={2} md={1} lg={1} className="d-flex align-items-center justify-content-end">
             <button
