@@ -23,7 +23,7 @@ const CameraList = () => {
       const response = await axios.get('https://localhost:7223/api/Cameras');
       setCameras(response.data);
     } catch (error) {
-      message.error('Failed to fetch cameras');
+      console.error('Failed to fetch cameras');
     }
   };
 
