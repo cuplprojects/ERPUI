@@ -13,7 +13,7 @@ const Group = () => {
 
   const fetchGroups = async () => {
     try {
-      const response = await axios.get('https://localhost:7223/api/Groups');
+      const response = await axios.get('https://localhost:7212/api/Groups');
       setGroups(response.data);
     } catch (error) {
       console.error('Failed to fetch groups!');
@@ -35,7 +35,7 @@ const Group = () => {
 
     try {
       const newGroup = { name, status };
-      await axios.post('https://localhost:7223/api/Groups', newGroup);
+      await axios.post('https://localhost:7212/api/Groups', newGroup);
       setGroups([...groups, newGroup]);
       form.resetFields();
       setIsModalVisible(false);
@@ -59,7 +59,7 @@ const Group = () => {
     }
 
     try {
-      await axios.put(`https://localhost:7223/api/Groups/${groupToEdit.id}`, updatedGroup);
+      await axios.put(`https://localhost:7212/api/Groups/${groupToEdit.id}`, updatedGroup);
       const updatedGroups = [...groups];
       updatedGroups[index] = updatedGroup;
       setGroups(updatedGroups);

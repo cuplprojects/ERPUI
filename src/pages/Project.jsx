@@ -19,7 +19,7 @@ const Project = () => {
 
   const getProjects = async () => {
     try {
-      const response = await axios.get('https://localhost:7223/api/Project');
+      const response = await axios.get('https://localhost:7212/api/Project');
       setProjects(response.data);
     } catch (error) {
       console.error('Failed to fetch projects');
@@ -28,7 +28,7 @@ const Project = () => {
 
   const getGroups = async () => {
     try {
-      const response = await axios.get('https://localhost:7223/api/Groups');
+      const response = await axios.get('https://localhost:7212/api/Groups');
       setGroups(response.data);
     } catch (error) {
       console.error('Failed to fetch groups');
@@ -37,7 +37,7 @@ const Project = () => {
 
   const getTypes = async () => {
     try {
-      const response = await axios.get('https://localhost:7223/api/PaperTypes');
+      const response = await axios.get('https://localhost:7212/api/PaperTypes');
       setTypes(response.data);
     } catch (error) {
       console.error('Failed to fetch types');
@@ -62,7 +62,7 @@ const Project = () => {
     const newProject = { name, status, description };
 
     try {
-      const response = await axios.post('https://localhost:7223/api/Project', newProject, {
+      const response = await axios.post('https://localhost:7212/api/Project', newProject, {
         headers: { 'Content-Type': 'application/json' },
       });
       setProjects([...projects, response.data]);
@@ -83,7 +83,7 @@ const Project = () => {
     };
 
     try {
-      await axios.put(`https://localhost:7223/api/Project/${updatedProject.projectId}`, updatedProject, {
+      await axios.put(`https://localhost:7212/api/Project/${updatedProject.projectId}`, updatedProject, {
         headers: { 'Content-Type': 'application/json' },
       });
       const updatedProjects = [...projects];

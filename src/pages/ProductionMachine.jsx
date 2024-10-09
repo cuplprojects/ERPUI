@@ -3,7 +3,7 @@ import { Table, Button, Input, Select, Switch, message, Modal, Spin } from 'antd
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid'; // Importing uuid for unique IDs
 
-const API_URL = 'https://localhost:7223/api/Machines'; // API URL variable
+const API_URL = 'https://localhost:7212/api/Machines'; // API URL variable
 
 const Machine = () => {
   const [machines, setMachines] = useState([]);
@@ -33,7 +33,7 @@ const Machine = () => {
   const fetchProcesses = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('https://localhost:7223/api/Processes');
+      const response = await axios.get('https://localhost:7212/api/Processes');
       setProcesses(response.data);
     } catch (error) {
       console.error("Failed to fetch processes", error);

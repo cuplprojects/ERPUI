@@ -21,7 +21,7 @@ const Type = () => {
     const fetchTypes = async () => {
         setLoading(true);
         try {
-            const response = await axios.get('https://localhost:7223/api/PaperTypes');
+            const response = await axios.get('https://localhost:7212/api/PaperTypes');
             setTypes(response.data);
         } catch (error) {
             console.error(error);
@@ -33,7 +33,7 @@ const Type = () => {
     const fetchProcesses = async () => {
         setLoading(true);
         try {
-            const response = await axios.get('https://localhost:7223/api/Processes');
+            const response = await axios.get('https://localhost:7212/api/Processes');
             setProcesses(response.data);
             const map = response.data.reduce((acc, proc) => {
                 acc[proc.id] = proc.name;
@@ -54,7 +54,7 @@ const Type = () => {
 
     const handleAddType = async (values) => {
         try {
-            const response = await axios.post('https://localhost:7223/api/PaperTypes', values);
+            const response = await axios.post('https://localhost:7212/api/PaperTypes', values);
             setTypes(prev => [...prev, response.data]);
             message.success("Type created successfully");
             setIsModalVisible(false);
@@ -73,7 +73,7 @@ const Type = () => {
         };
 
         try {
-            await axios.put(`https://localhost:7223/api/PaperTypes/${updatedType.typeId}`, updatedType);
+            await axios.put(`https://localhost:7212/api/PaperTypes/${updatedType.typeId}`, updatedType);
             const updatedTypes = [...types];
             updatedTypes[index] = updatedType;
             setTypes(updatedTypes);
