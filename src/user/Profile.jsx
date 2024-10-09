@@ -44,6 +44,7 @@ const UserProfile = () => {
         setLastName(userData.lastName);
         setMobileNumber(userData.mobileNo);
         setUserName(userData.userName);
+        setAddress(userData.address)
         console.log(userData)//console the api response data
       })
       .catch(error => {
