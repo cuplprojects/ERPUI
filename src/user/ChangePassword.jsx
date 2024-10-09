@@ -1,175 +1,17 @@
-// import React, { useState } from 'react';
-// import { Container, Row, Col, Form, Button, Image, InputGroup, FormControl } from 'react-bootstrap';
-// import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
-// import LockImg from './../assets/images/Lock.svg';
-// import './../styles/changePassword.css';
-// import { FaLock } from "react-icons/fa";
-// import { IoMdLock } from "react-icons/io";
-// import { ToastContainer } from 'react-toastify';
-// import 'react-toastify/dist/ReactToastify.css';
-// import { validateCurrentPassword, validateNewPasswords } from './../scripts/changePassValidations';
-// import themeStore from './../store/themeStore';
-// import { useStore } from 'zustand';
-
-// const ChangePassword = () => {
-
-//   //Theme Change Section
-//   const { getCssClasses } = useStore(themeStore);
-//   const cssClasses = getCssClasses();
-//   const customDark = cssClasses[0];
-//   const customMid = cssClasses[1];
-//   const customLight = cssClasses[2];
-//   const customBtn = cssClasses[3];
-//   const customDarkText = cssClasses[4];
-//   const customLightText = cssClasses[5]
-//   const customLightBorder = cssClasses[6]
-//   const customDarkBorder = cssClasses[7]
-
-
-//   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-//   const [showNewPassword, setShowNewPassword] = useState(false);
-//   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-//   const [currentPassword, setCurrentPassword] = useState('');
-//   const [newPassword, setNewPassword] = useState('');
-//   const [confirmPassword, setConfirmPassword] = useState('');
-
-//   // Fetch active user from local storage
-//   const activeUser = JSON.parse(localStorage.getItem('activeUser'));
-
-//   const handleSubmit = (event) => {
-//     event.preventDefault();
-
-//     // Validate current password
-//     const isCurrentPasswordValid = validateCurrentPassword(currentPassword, activeUser);
-//     if (!isCurrentPasswordValid) return;
-
-//     // Validate new password and confirm password
-//     const areNewPasswordsValid = validateNewPasswords(newPassword, confirmPassword);
-//     if (!areNewPasswordsValid) return;
-
-//     // Update the active user's password in local storage
-//     activeUser.password = newPassword;
-//     localStorage.setItem('activeUser', JSON.stringify(activeUser));
-//     toast.success('Password updated successfully', {
-//       position: "top-right",
-//       autoClose: 3000,
-//       hideProgressBar: true,
-//       closeOnClick: true,
-//       draggable: true,
-//       style: { backgroundColor: '#28a745', color: 'white' },
-//     });
-
-//     // Optionally reset the form fields
-//     setCurrentPassword('');
-//     setNewPassword('');
-//     setConfirmPassword('');
-//   };
-
-//   return (
-//     <Container className={`mt-5 w-75 ${customLight} shadow-lg rounded-5 p-4 ${customLightBorder}`} style={{height:"410px"}}>
-//       <Row className=''>
-//         <Col lg={12}>
-//           <div className="d-flex align-items-center justify-content-center mb-4">
-//             <div className="icon me-2">
-//               <FaLock size={25} className={`${(customBtn === 'dark-dark' ? "text-white" : `${customDarkText}`)}`} />
-//             </div>
-//             <h2 className={`text-center  fw-bold ${(customBtn === 'dark-dark' ? "text-white" : `${customDarkText}`)}`}>
-//               Change Password
-//             </h2>
-//           </div>
-//         </Col>
-//       </Row>
-//       <Row className="align-items-center justify-content-center w-50">
-//         <Col md={6} lg={5} className="text-center text-md-start d-none d-sm-block text-center d-flex justify-content-center">
-//         <div>
-//            <IoMdLock size={300} className={`${(customBtn === 'dark-dark' ? "text-white" : `${customDarkText}`)} text-center`} />
-//         </div>
-//         </Col>
-//         <Col md={6} lg={7}>
-//           <Form onSubmit={handleSubmit}>
-//             <Form.Group className="mb-2" controlId="formCurrentPassword">
-//               <Form.Label className={`${(customBtn === 'dark-dark' ? "text-white" : `${customDarkText}`)}`}>Current Password</Form.Label>
-//               <InputGroup>
-//                 <FormControl
-//                   type={showCurrentPassword ? 'text' : 'password'}
-//                   placeholder="Enter current password"
-//                   className='rounded-start'
-//                   value={currentPassword}
-//                   onChange={(e) => setCurrentPassword(e.target.value)}
-//                 />
-//                 <InputGroup.Text
-//                   className={`password-eye-icon ${customBtn}`}
-//                   onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-//                 >
-//                   {showCurrentPassword ? <AiOutlineEye className={`${customBtn}`} /> : <AiOutlineEyeInvisible className={`${customBtn}`} />}
-//                 </InputGroup.Text>
-//               </InputGroup>
-//             </Form.Group>
-
-//             <Form.Group className="mb-2" controlId="formNewPassword">
-//               <Form.Label className={`${(customBtn === 'dark-dark' ? "text-white" : `${customDarkText}`)}`}>New Password</Form.Label>
-//               <InputGroup>
-//                 <FormControl
-//                   type={showNewPassword ? 'text' : 'password'}
-//                   placeholder="Enter new password"
-//                   className='rounded-start'
-//                   value={newPassword}
-//                   onChange={(e) => setNewPassword(e.target.value)}
-//                 />
-//                 <InputGroup.Text
-//                   className={`password-eye-icon ${customBtn}`}
-//                   onClick={() => setShowNewPassword(!showNewPassword)}
-                  
-//                 >
-//                   {showNewPassword ? <AiOutlineEye className={`${customBtn}`} /> : <AiOutlineEyeInvisible className={`${customBtn}`} />}
-//                 </InputGroup.Text>
-//               </InputGroup>
-//             </Form.Group>
-
-//             <Form.Group className="mb-2" controlId="formConfirmPassword">
-//               <Form.Label className={`${(customBtn === 'dark-dark' ? "text-white" : `${customDarkText}`)}`}>Confirm New Password</Form.Label>
-//               <InputGroup>
-//                 <FormControl
-//                   type={showConfirmPassword ? 'text' : 'password'}
-//                   placeholder="Confirm new password"
-//                   className='rounded-start'
-//                   value={confirmPassword}
-//                   onChange={(e) => setConfirmPassword(e.target.value)}
-//                 />
-//                 <InputGroup.Text
-//                   className={`password-eye-icon ${customBtn}`}
-//                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-//                 >
-//                   {showConfirmPassword ? <AiOutlineEye className={`${customBtn}`} /> : <AiOutlineEyeInvisible className={`${customBtn}`} />}
-//                 </InputGroup.Text>
-//               </InputGroup>
-//             </Form.Group>
-
-//             <Button type="submit" className={`${customBtn} ${(customDark === 'dark-dark' ? 'border border-white' : 'border-0')} custom-zoom-btn`}>
-//               Submit
-//             </Button>
-//           </Form>
-//           <ToastContainer />
-//         </Col>
-//       </Row>
-//     </Container>
-//   );
-// };
-
-// export default ChangePassword;
-import React, { useState } from 'react';
+import React, { useId, useState } from 'react';
 import { Container, Row, Col, Form, Button, InputGroup, FormControl } from 'react-bootstrap';
 import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
 import { FaLock } from "react-icons/fa";
 import { IoMdLock } from "react-icons/io";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { validateCurrentPassword, validateNewPasswords } from './../scripts/changePassValidations';
+import { jwtDecode } from 'jwt-decode';
+import axios from 'axios';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
-
+import API from '../CustomHooks/MasterApiHooks/api';
 const ChangePassword = () => {
+  // Static class names for simplicity
   //Theme Change Section
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
@@ -178,58 +20,129 @@ const ChangePassword = () => {
   const customLight = cssClasses[2];
   const customBtn = cssClasses[3];
   const customDarkText = cssClasses[4];
-  const customLightText = cssClasses[5];
-  const customLightBorder = cssClasses[6];
-  const customDarkBorder = cssClasses[7];
+  const customLightText = cssClasses[5]
+  const customLightBorder = cssClasses[6]
+  const customDarkBorder = cssClasses[7]
 
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
+
+  // State object to store oldPassword and newPassword
+  const [formData, setFormData] = useState({
+    oldPassword: '',
+    newPassword: '',
+  });
+
+  // State for confirmPassword (used for future validations)
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  // Fetch active user from local storage
-  const activeUser = JSON.parse(localStorage.getItem('activeUser'));
+  // State to handle password visibility
+  const [showPasswords, setShowPasswords] = useState({
+    showOldPassword: false,
+    showNewPassword: false,
+    showConfirmPassword: false,
+  });
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
-
-    // Validate current password
-    const isCurrentPasswordValid = validateCurrentPassword(currentPassword, activeUser);
-    if (!isCurrentPasswordValid) return;
-
-    // Validate new password and confirm password
-    const areNewPasswordsValid = validateNewPasswords(newPassword, confirmPassword);
-    if (!areNewPasswordsValid) return;
-
-    // Update the active user's password in local storage
-    activeUser.password = newPassword;
-    localStorage.setItem('activeUser', JSON.stringify(activeUser));
-    toast.success('Password updated successfully', {
-      position: "top-right",
-      autoClose: 3000,
-      hideProgressBar: true,
-      closeOnClick: true,
-      draggable: true,
-      style: { backgroundColor: '#28a745', color: 'white' },
-    });
-
-    // Optionally reset the form fields
-    setCurrentPassword('');
-    setNewPassword('');
-    setConfirmPassword('');
+  /**
+   * Handle input changes for formData
+   */
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
   };
 
+  /**
+   * Handle confirmPassword change
+   */
+  const handleConfirmPasswordChange = (e) => {
+    setConfirmPassword(e.target.value);
+  };
+
+  /**
+   * Toggle password visibility
+   */
+  const togglePasswordVisibility = (field) => {
+    setShowPasswords((prevState) => ({
+      ...prevState,
+      [field]: !prevState[field],
+    }));
+  };
+  //get user id here -->
+  const userToken = localStorage.getItem('authToken');
+  const authToken = userToken; // assume you have the token stored in a variable
+  const decodedToken = jwtDecode(authToken);
+  const [firstKey, userIdApi] = Object.entries(decodedToken)[0]; // extract the userId from the decoded token
+  // console.log("user id with token -",userIdApi)//console for checking user  id with token
+
+  /**
+   * Handle form submission
+   * Currently, it only displays a success toast without any logic
+   */
+  const handleSubmit = (event) => {
+    event.preventDefault();
+  
+    if (formData.newPassword !== confirmPassword) {
+      toast.error('New passwords do not match!', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: true,
+        closeOnClick: true,
+        draggable: true,
+        style: { backgroundColor: '#dc3545', color: 'white' },
+      });
+      return;
+    }
+  
+    const userId = userIdApi; // extracted from the decoded token
+    const apiUrl = `/Login/Changepassword/${userId}`;
+    const payload = {
+      oldPassword: formData.oldPassword,
+      newPassword: formData.newPassword,
+    };
+  
+    API.put(apiUrl, payload)
+      .then((response) => {
+        toast.info('Password changed successfully!', {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: true,
+          closeOnClick: true,
+          draggable: true,
+          style: { backgroundColor: '#17a2b8', color: 'white' },
+        });
+      })
+      .catch((error) => {
+        toast.error('Error changing password: ' + error.message, {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: true,
+          closeOnClick: true,
+          draggable: true,
+          style: { backgroundColor: '#dc3545', color: 'white' },
+        });
+      });
+  
+    // Optionally reset the form fields
+    setFormData({
+      oldPassword: '',
+      newPassword: '',
+    });
+    setConfirmPassword('');
+  };
+  
   return (
-    <Container className={`mt-5 w-100 p-4 shadow-lg rounded-5 ${customLightBorder} ${customLight}`} style={{ maxWidth: '800px' }}>
+    <Container
+      className={`mt-5 w-100 p-4 shadow-lg rounded-5 ${customLightBorder} ${customLight}`}
+      style={{ maxWidth: '800px' }}
+    >
       <Row>
         <Col lg={12}>
           <div className="d-flex align-items-center justify-content-center mb-4">
             <div className="icon me-2">
-              <FaLock size={25} className={`${(customBtn === 'dark-dark' ? "text-white" : `${customDarkText}`)}`} />
+              <FaLock size={25} className={`${customBtn === 'btn-dark' ? "text-white" : `${customDarkText}`}`} />
             </div>
-            <h2 className={`text-center fw-bold ${(customBtn === 'dark-dark' ? "text-white" : `${customDarkText}`)}`}>
+            <h2 className={`text-center fw-bold ${customBtn === 'btn-dark' ? "text-white" : `${customDarkText}`}`}>
               Change Password
             </h2>
           </div>
@@ -237,74 +150,84 @@ const ChangePassword = () => {
       </Row>
       <Row className="align-items-center justify-content-center">
         <Col md={6} lg={5} className="text-center d-none d-md-block">
-          <IoMdLock size={250} className={`${(customBtn === 'dark-dark' ? "text-white" : `${customDarkText}`)}`} />
+          <IoMdLock size={250} className={`${customBtn === 'btn-dark' ? "text-white" : `${customDarkText}`}`} />
         </Col>
         <Col md={6} lg={7}>
           <Form onSubmit={handleSubmit}>
-            <Form.Group className="mb-3" controlId="formCurrentPassword">
-              <Form.Label className={`${(customBtn === 'dark-dark' ? "text-white" : `${customDarkText}`)}`}>
+            {/* Old Password Field */}
+            <Form.Group className="mb-3" controlId="formOldPassword">
+              <Form.Label className={`${customBtn === 'btn-dark' ? "text-white" : `${customDarkText}`}`}>
                 Current Password
               </Form.Label>
               <InputGroup>
                 <FormControl
-                  type={showCurrentPassword ? 'text' : 'password'}
+                  type={showPasswords.showOldPassword ? 'text' : 'password'}
                   placeholder="Enter current password"
-                  className='rounded-start'
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  name="oldPassword"
+                  value={formData.oldPassword}
+                  onChange={handleInputChange}
                 />
                 <InputGroup.Text
                   className={`password-eye-icon ${customBtn}`}
-                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                  onClick={() => togglePasswordVisibility('showOldPassword')}
+                  style={{ cursor: 'pointer' }}
                 >
-                  {showCurrentPassword ? <AiOutlineEye /> : <AiOutlineEyeInvisible />}
+                  {showPasswords.showOldPassword ? <AiOutlineEye /> : <AiOutlineEyeInvisible />}
                 </InputGroup.Text>
               </InputGroup>
             </Form.Group>
 
+            {/* New Password Field */}
             <Form.Group className="mb-3" controlId="formNewPassword">
-              <Form.Label className={`${(customBtn === 'dark-dark' ? "text-white" : `${customDarkText}`)}`}>
+              <Form.Label className={`${customBtn === 'btn-dark' ? "text-white" : `${customDarkText}`}`}>
                 New Password
               </Form.Label>
               <InputGroup>
                 <FormControl
-                  type={showNewPassword ? 'text' : 'password'}
+                  type={showPasswords.showNewPassword ? 'text' : 'password'}
                   placeholder="Enter new password"
-                  className='rounded-start'
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
+                  name="newPassword"
+                  value={formData.newPassword}
+                  onChange={handleInputChange}
                 />
                 <InputGroup.Text
                   className={`password-eye-icon ${customBtn}`}
-                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  onClick={() => togglePasswordVisibility('showNewPassword')}
+                  style={{ cursor: 'pointer' }}
                 >
-                  {showNewPassword ? <AiOutlineEye /> : <AiOutlineEyeInvisible />}
+                  {showPasswords.showNewPassword ? <AiOutlineEye /> : <AiOutlineEyeInvisible />}
                 </InputGroup.Text>
               </InputGroup>
             </Form.Group>
 
+            {/* Confirm New Password Field */}
             <Form.Group className="mb-3" controlId="formConfirmPassword">
-              <Form.Label className={`${(customBtn === 'dark-dark' ? "text-white" : `${customDarkText}`)}`}>
+              <Form.Label className={`${customBtn === 'btn-dark' ? "text-white" : `${customDarkText}`}`}>
                 Confirm New Password
               </Form.Label>
               <InputGroup>
                 <FormControl
-                  type={showConfirmPassword ? 'text' : 'password'}
+                  type={showPasswords.showConfirmPassword ? 'text' : 'password'}
                   placeholder="Confirm new password"
-                  className='rounded-start'
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  onChange={handleConfirmPasswordChange}
                 />
                 <InputGroup.Text
                   className={`password-eye-icon ${customBtn}`}
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  onClick={() => togglePasswordVisibility('showConfirmPassword')}
+                  style={{ cursor: 'pointer' }}
                 >
-                  {showConfirmPassword ? <AiOutlineEye /> : <AiOutlineEyeInvisible />}
+                  {showPasswords.showConfirmPassword ? <AiOutlineEye /> : <AiOutlineEyeInvisible />}
                 </InputGroup.Text>
               </InputGroup>
             </Form.Group>
 
-            <Button type="submit" className={`${customBtn} ${customDark === "dark-dark" ? "border border-white" : "border-0"} custom-zoom-btn w-100`}>
+            {/* Submit Button */}
+            <Button
+              type="submit"
+              disabled={false} // No submission logic, so always enabled
+              className={`${customBtn} ${customBtn === "btn-dark" ? "border border-white" : "border-0"} custom-zoom-btn w-100`}
+            >
               Submit
             </Button>
           </Form>

@@ -2,19 +2,20 @@ import React, { useEffect, useState } from 'react';
 import { Button, Card, Table, Modal, Input, Switch, message, Tabs } from 'antd';
 import { IdcardOutlined } from '@ant-design/icons';
 import axios from 'axios'; // Import axios for API calls
+import Permissions from './Permissions';
 
 const { TabPane } = Tabs;
 
 const RolesAndDepartments = () => {
   const [roles, setRoles] = useState([]);
-  const [newRole, setNewRole] = useState({ roleId: 0, roleName: '', priorityOrder: 0, status: true });
+  const [newRole, setNewRole] = useState({ roleId: 0, roleName: '', priorityOrder: 0, status: true, permissions:[] });
   const [isRoleModalVisible, setIsRoleModalVisible] = useState(false);
 
   // Fetch roles from the API on component mount
   useEffect(() => {
     const fetchRoles = async () => {
       try {
-        const response = await axios.get('https://localhost:7223/api/Roles'); // Update with your API endpoint
+        const response = await axios.get('https://localhost:7212/api/Roles'); // Update with your API endpoint
         setRoles(response.data);
       } catch (error) {
         console.error('Failed to fetch roles');
@@ -25,7 +26,7 @@ const RolesAndDepartments = () => {
   }, []);
 
   const onCreateRole = () => {
-    setNewRole({roleName: '', priorityOrder: 0, status: true });
+    setNewRole({roleName: '', priorityOrder: 0, status: true,permissions:[] });
     setIsRoleModalVisible(true);
   };
 
@@ -53,10 +54,11 @@ const RolesAndDepartments = () => {
 
     try {
       // Sending the payload with the new structure
-      const response = await axios.post('https://localhost:7223/api/Roles', {
+      const response = await axios.post('https://localhost:7212/api/Roles', {
         roleName: trimmedRoleName,
         priorityOrder: newRole.priorityOrder,
         status: newRole.status,
+        permissions: newRole.permissions,
       });
       
       // Assuming your API returns the created role
@@ -74,7 +76,7 @@ const RolesAndDepartments = () => {
 
   const handleRoleStatusChange = async (checked, roleId) => {
     try {
-      await axios.patch(`https://localhost:7223/api/Roles/${roleId}`, { status: checked }); // Update role status in the API
+      await axios.patch(`https://localhost:7212/api/Roles/${roleId}`, { status: checked }); // Update role status in the API
       const updatedRoles = roles.map(role =>
         role.roleId === roleId ? { ...role, status: checked } : role
       );
@@ -83,6 +85,10 @@ const RolesAndDepartments = () => {
     } catch (error) {
       message.error('Failed to update role status');
     }
+  };
+
+  const handlePermissionChange = (checkedValues) => {
+    setNewRole({ ...newRole, permissions: checkedValues });
   };
 
   const roleColumns = [
@@ -180,6 +186,11 @@ const RolesAndDepartments = () => {
                 onChange={(checked) => setNewRole({ ...newRole, status: checked })}
               />
             </div>
+            {/* Include Permissions Component */}
+            <Permissions
+              selectedPermissions={newRole.permissions}
+              onChange={handlePermissionChange}
+            />
             {/* Optional: Add an input for priorityOrder */}
             
           </Modal>

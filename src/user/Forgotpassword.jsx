@@ -1,12 +1,13 @@
 // import React, { useState } from 'react';
-// import { Container, Row, Col, Form, Button } from 'react-bootstrap';
+// import { Container, Row, Col, Form, Button, Spinner } from 'react-bootstrap';
 // import { useNavigate, Link } from 'react-router-dom';
 // import { ToastContainer, toast } from 'react-toastify';
+// import axios from 'axios';
 // import 'react-toastify/dist/ReactToastify.css';
-// import Logo1 from "./../assets/Logos/CUPLLogoTheme.png"; // Logo
-// import { useMediaQuery } from 'react-responsive'; // Importing useMediaQuery react-responsive library
-// import themeStore from './../store/themeStore'; // Import theme store
-// import { useStore } from 'zustand'; // Import zustand store
+// import { useMediaQuery } from 'react-responsive';
+// import themeStore from './../store/themeStore';
+// import { useStore } from 'zustand';
+// import Logo1 from "./../assets/Logos/CUPLLogoTheme.png";
 // import redBrain from "./../assets/bgImages/brain/brainRed.png";
 // import greenBrain from "./../assets/bgImages/brain/brainGreen.png";
 // import blueBrain from "./../assets/bgImages/brain/brainBlue.png";
@@ -18,19 +19,11 @@
 // import defaultBrain from "./../assets/bgImages/brain/brainDefault.png";
 
 // const ForgotPassword = () => {
-//   // Theme Change Section
 //   const { getCssClasses } = useStore(themeStore);
 //   const cssClasses = getCssClasses();
 //   const customDark = cssClasses[0];
-//   const customMid = cssClasses[1];
-//   const customLight = cssClasses[2];
 //   const customBtn = cssClasses[3];
 //   const customDarkText = cssClasses[4];
-//   const customLightText = cssClasses[5];
-//   const customLightBorder = cssClasses[6];
-//   const customDarkBorder = cssClasses[7];
-//   const customThead = cssClasses[8];
-
 //   const themeImages = {
 //     "purple-dark": purpleBrain,
 //     "blue-dark": blueBrain,
@@ -46,176 +39,239 @@
 //   const navigate = useNavigate();
 //   const isMediumOrSmaller = useMediaQuery({ query: '(max-width: 992px)' });
 
+//   const [currentStep, setCurrentStep] = useState(1);
 //   const [userName, setUserName] = useState('');
-//   const [securitySets, setSecuritySets] = useState([
-//     { questionId: null, answer: '', enabled: false },
-//     { questionId: null, answer: '', enabled: false }
-//   ]);
-//   const [isConfirmed, setIsConfirmed] = useState(false); // State to track checkbox confirmation
+//   const [securityQuestions, setSecurityQuestions] = useState([]);
+//   const [answers, setAnswers] = useState([]);
+//   const [newPassword, setNewPassword] = useState('');
+//   const [confirmPassword, setConfirmPassword] = useState('');
+//   const [loading, setLoading] = useState(false);
+//   const [userQuestions,setUserQuestions] = useState([]);
 
-//   // Hardcoded questions (will be replaced with API call)
-//   const securityQuestions = [
-//     { id: 1, text: "What was the name of your first pet?" },
-//     { id: 2, text: "What is your mother's maiden name?" },
-//     { id: 3, text: "What was the name of your elementary school?" },
-//     { id: 4, text: "In what city were you born?" },
-//     { id: 5, text: "What is your favorite food?" }
-//   ];
 
-//   const handleQuestionChange = (index, questionId) => {
-//     const updatedSets = [...securitySets];
-//     updatedSets[index].questionId = questionId;
-//     // Optionally reset the answer when question changes
-//     updatedSets[index].answer = '';
-//     if (index > 0 && !updatedSets[index - 1].answer) {
-//       // If the previous set's answer is not filled, do not enable the next set
-//       updatedSets[index].enabled = false;
-//     } else {
-//       updatedSets[index].enabled = true;
-//     }
-//     setSecuritySets(updatedSets);
-//   };
-
-//   const handleAnswerChange = (index, answer) => {
-//     const updatedSets = [...securitySets];
-//     updatedSets[index].answer = answer;
-//     setSecuritySets(updatedSets);
-//   };
-
-//   const handleSubmit = (e) => {
+//   const handleUserNameSubmit = async (e) => {
 //     e.preventDefault();
-//     // Handle submission logic (e.g., API call)
-//     toast.success('Form submitted successfully!', {
-//       onClose: () => navigate('/'), // Navigate when the toast closes
-//       autoClose: 3000,
-//     });
+//     if (!userName.trim()) {
+//       toast.error('Please enter your username');
+//       return;
+//     }
+//     setLoading(true);
+
+//     try {
+//       // Fetch the security question IDs
+//       const response = await axios.get(`https://localhost:7212/api/Login/forgotPassword/securityQuestions/${userName}`);
+//       setUserQuestions(response.data)
+
+//       setCurrentStep(2); // Move to Step 2
+//       toast.success('Security questions loaded successfully');
+//     } catch (error) {
+//       console.error(error);
+//       toast.error('Error fetching security questions');
+//     } finally {
+//       setLoading(false);
+//     }
 //   };
 
-//   const isFirstSetFilled = securitySets[0].questionId && securitySets[0].answer;
-//   const isSecondSetFilled = securitySets[1].questionId && securitySets[1].answer;
+//   const handleSubmitAnswers = async (e) => {
+//     e.preventDefault();
+//     if (answers.some(answer => !answer.trim())) {
+//       toast.error('Please answer all security questions');
+//       return;
+//     }
+//     const data = {
+//       userName: userName,
+//       securityAnswer1: answers[0],
+//       securityAnswer2: answers[1]
+//     }
+//     console.log(data)
+//     const res = await axios.post('https://localhost:7212/api/Login/forgotPassword/verifySecurityAnswers',data)
+//     // Here you can implement any verification of security answers if needed
+//     setCurrentStep(3); // Move to Step 3
+//     toast.success('Security answers verified successfully');
+//   };
+
+//   const handlePasswordSubmit = async (e) => {
+//     e.preventDefault();
+//     if (newPassword !== confirmPassword) {
+//       toast.error('Passwords do not match');
+//       return;
+//     }
+//     if (newPassword.length < 8) {
+//       toast.error('Password must be at least 8 characters long');
+//       return;
+//     }
+
+//     setLoading(true);
+
+//     try {
+//       const payload = {
+//         userName: userName.toLowerCase(),
+//         newPassword: newPassword,
+//         securityAnswersVerified: true // This is the new requirement
+//       };
+
+//       const response = await axios.post('https://localhost:7212/api/Login/forgotPassword/setNewPassword', payload);
+//       if (response.status === 200) {
+//         toast.success('Password reset successfully');
+//         navigate('/');
+//       } else {
+//         toast.error('Error resetting password');
+//       }
+//     } catch (error) {
+//       console.error(error);
+//       toast.error('Error submitting new password');
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const handleAnswerChange = (index, value) => {
+//     const updatedAnswers = [...answers];
+//     updatedAnswers[index] = value;
+//     setAnswers(updatedAnswers);
+//   };
 
 //   return (
 //     <Container fluid className="vh-100 position-relative overflow-hidden">
-//       <ToastContainer className="responsive-toast" /> {/* Toast container for showing notifications */}
-
-//       {/* Background Image for Medium and Smaller Screens */}
+//       <ToastContainer className="responsive-toast" />
 //       {isMediumOrSmaller && (
-//         <div style={{
-//           position: 'absolute',
-//           top: 0,
-//           left: 0,
-//           right: 0,
-//           bottom: 0,
-//           backgroundImage: `url(${themeImages[customDark] || defaultBrain})`,
-//           backgroundSize: 'cover',
-//           backgroundPosition: 'center',
-//           filter: 'blur(5px)', // Apply blur to the background image
-//           zIndex: -1, // Ensure it's behind the form
-//         }}
+//         <div
+//           style={{
+//             position: 'absolute',
+//             top: 0,
+//             left: 0,
+//             right: 0,
+//             bottom: 0,
+//             backgroundImage: `url(${themeImages[customDark] || defaultBrain})`,
+//             backgroundSize: 'cover',
+//             backgroundPosition: 'center',
+//             filter: 'blur(5px)',
+//             zIndex: -1,
+//           }}
 //         />
 //       )}
-
 //       <Row className="h-100 d-flex align-items-center justify-content-center shadow-lg">
-//         {/* Left side: Forgot Password form */}
 //         <Col
 //           lg={5}
 //           md={12}
 //           sm={12}
-//           className={`d-flex align-items-center justify-content-center p-0 m-0 shadow-lg ${isMediumOrSmaller ? '' : customDark} `}
-//           style={{ zIndex: 1, height: '100%',borderTopRightRadius:"15%",borderBottomRightRadius:"15%" }}
+//           className={`d-flex align-items-center justify-content-center p-0 m-0 shadow-lg ${isMediumOrSmaller ? '' : customDark}`}
+//           style={{ zIndex: 1, height: '100%', borderTopRightRadius: "15%", borderBottomRightRadius: "15%" }}
 //         >
-//           <div className="p-3 rounded-5 shadow-lg " style={{ width: '100%', maxWidth: '450px' }}>
-//             {/* Logo */}
-//             <div className={`text-center mb-2 rounded-3  ${customBtn}`}>
+//           <div className="p-3 rounded-5 shadow-lg" style={{ width: '100%', maxWidth: '450px' }}>
+//             <div className={`text-center mb-2 rounded-3 ${customBtn}`}>
 //               <img src={Logo1} alt="Company Logo" className="img-fluid" style={{ maxWidth: '150px' }} />
 //             </div>
 
-//             {/* Forgot Password Form */}
-//             <Form onSubmit={handleSubmit} className="bg-white p-3 rounded-4 shadow-sm shadow-lg ">
-//               <h3 className="text-center mb-">Reset Password</h3>
-//               <Form.Group controlId="formBasicUserName" className="mb-3">
-//                 <Form.Label>Enter User Name</Form.Label>
-//                 <Form.Control
-//                   type="text"
-//                   placeholder="Enter User Name"
-//                   value={userName}
-//                   onChange={(e) => setUserName(e.target.value)}
-//                   required
-//                 />
-//               </Form.Group>
+//             {/* Step 1: Enter Username */}
+//             {currentStep === 1 && (
+//               <Form onSubmit={handleUserNameSubmit} className="bg-white p-3 rounded-4 shadow-sm shadow-lg">
+//                 <h3 className="text-center mb-4">Reset Password</h3>
+//                 <Form.Group controlId="formBasicUserName" className="mb-3">
+//                   <Form.Label>Enter Username</Form.Label>
+//                   <Form.Control
+//                     type="text"
+//                     placeholder="Enter Username"
+//                     value={userName}
+//                     onChange={(e) => setUserName(e.target.value)}
+//                     required
+//                   />
+//                 </Form.Group>
 
-//               {/* Keep both sets visible */}
-//               {securitySets.map((set, index) => (
-//                 <div key={index} className="mb-3">
-//                   <Form.Group controlId={`formSecurityQuestion${index}`} className="mb-2 custom-zoom-btn">
-//                     <Form.Label>Security Question {index + 1}</Form.Label>
-//                     <Form.Select
-//                       value={set.questionId || ""}
-//                       onChange={(e) => handleQuestionChange(index, parseInt(e.target.value))}
-//                       disabled={index > 0 && !securitySets[index - 1].enabled} // Disable second dropdown until the first is filled
-//                     >
-//                       <option value="" disabled>Select a security question</option>
-//                       {securityQuestions
-//                         .filter(q => 
-//                           // Exclude questions selected in other sets
-//                           !securitySets.some((s, i) => s.questionId === q.id && i !== index)
-//                         )
-//                         .map(q => (
-//                           <option key={q.id} value={q.id}>{q.text}</option>
-//                         ))}
-//                     </Form.Select>
+//                 <Button
+//                   type="submit"
+//                   className={`w-100 border-0 ${customBtn} custom-zoom-btn`}
+//                   disabled={loading}
+//                 >
+//                   {loading ? <Spinner animation="border" size="sm" /> : 'Submit Username'}
+//                 </Button>
+//               </Form>
+//             )}
+
+//             {/* Step 2: Answer Security Questions */}
+//             {currentStep === 2 && (
+//               <Form onSubmit={handleSubmitAnswers} className="bg-white p-3 rounded-4 shadow-sm shadow-lg">
+//                 <h3 className="text-center mb-4">Answer Security Questions</h3>
+//                 {userQuestions.map((question, index) => (
+//                   <Form.Group controlId={`securityQuestion${index}`} className="mb-3" key={index}>
+//                     <Form.Label>{`Question ${index + 1}: ${question.question}`}</Form.Label>
+//                     <Form.Control
+//                       type="text"
+//                       placeholder="Your Answer"
+//                       value={answers[index]}
+//                       onChange={(e) => handleAnswerChange(index, e.target.value)}
+//                       required
+//                     />
 //                   </Form.Group>
+//                 ))}
 
-//                   {set.questionId && (
-//                     <Form.Group controlId={`formAnswer${index}`} className="mb-2 custom-zoom-btn">
-//                       <Form.Label>Answer</Form.Label>
-//                       <Form.Control
-//                         type="text"
-//                         placeholder="Enter Answer"
-//                         value={set.answer}
-//                         onChange={(e) => handleAnswerChange(index, e.target.value)}
-//                         required
-//                       />
-//                     </Form.Group>
-//                   )}
-//                 </div>
-//               ))}
+//                 <Button
+//                   type="submit"
+//                   className={`w-100 border-0 ${customBtn} custom-zoom-btn`}
+//                   disabled={loading}
+//                 >
+//                   {loading ? <Spinner animation="border" size="sm" /> : 'Submit Answers'}
+//                 </Button>
+//               </Form>
+//             )}
 
-//               {/* Checkbox for confirmation */}
-//               <Form.Group className="mb-3">
-//                 <Form.Check
-//                   type="checkbox"
-//                   label="I confirm that I want to reset my password"
-//                   checked={isConfirmed}
-//                   onChange={(e) => setIsConfirmed(e.target.checked)}
-//                   className='custom-zoom-btn'
-//                 />
-//               </Form.Group>
+//             {/* Step 3: Reset Password */}
+//             {currentStep === 3 && (
+//               <Form onSubmit={handlePasswordSubmit} className="bg-white p-3 rounded-4 shadow-sm shadow-lg">
+//                 <h3 className="text-center mb-4">Set New Password</h3>
+//                 <Form.Group controlId="formNewPassword" className="mb-3">
+//                   <Form.Label>New Password</Form.Label>
+//                   <Form.Control
+//                     type="password"
+//                     placeholder="Enter New Password"
+//                     value={newPassword}
+//                     onChange={(e) => setNewPassword(e.target.value)}
+//                     minLength="8"
+//                     required
+//                   />
+//                 </Form.Group>
 
-//               <Button
-//                 type="submit"
-//                 className={`w-100 border-0 ${customBtn} custom-zoom-btn`}
-//                 disabled={!isFirstSetFilled || (securitySets[1].enabled && !isSecondSetFilled) || !isConfirmed} // Disable button based on conditions
-//               >
-//                 Reset Password
-//               </Button>
-//               <div className="text-center mt-3 custom-zoom-btn">
-//                 <Link to="/" className={`${customDark === "dark-dark" ? "text-dark" : `${customDarkText}`} `}>
-//                   Back to login ?
-//                 </Link>
-//               </div>
-//             </Form>
+//                 <Form.Group controlId="formConfirmPassword" className="mb-3">
+//                   <Form.Label>Confirm New Password</Form.Label>
+//                   <Form.Control
+//                     type="password"
+//                     placeholder="Confirm New Password"
+//                     value={confirmPassword}
+//                     onChange={(e) => setConfirmPassword(e.target.value)}
+//                     minLength="8"
+//                     required
+//                   />
+//                 </Form.Group>
+
+//                 <Button
+//                   type="submit"
+//                   className={`w-100 border-0 ${customBtn} custom-zoom-btn`}
+//                   disabled={
+//                     loading ||
+//                     newPassword.length < 8 ||
+//                     confirmPassword.length < 8 ||
+//                     newPassword !== confirmPassword
+//                   }
+//                 >
+//                   {loading ? <Spinner animation="border" size="sm" /> : 'Reset Password'}
+//                 </Button>
+//               </Form>
+//             )}
+
+//             <div className="text-center mt-3 custom-zoom-btn">
+//               <Link to="/" className={`${customDark === "dark-dark" ? 'text-light' : `${customDarkText}`} p-1 rounded`}>
+//                 Back to login
+//               </Link>
+//             </div>
 //           </div>
 //         </Col>
-
-//         {/* Right side: Big image for Large Screens */}
 //         {!isMediumOrSmaller && (
 //           <Col lg={7} className="d-flex align-items-center justify-content-center p-0 position-relative">
 //             <img
 //               src={themeImages[customDark] || defaultBrain}
 //               alt="Forgot Password Illustration"
 //               className="img-fluid"
-//               style={{ objectFit: 'contain', maxHeight: '80vh' }} // Limit image height for better responsiveness
+//               style={{ objectFit: 'contain', maxHeight: '80vh' }}
 //             />
 //           </Col>
 //         )}
@@ -226,15 +282,15 @@
 
 // export default ForgotPassword;
 import React, { useState } from 'react';
-import { Container, Row, Col, Form, Button } from 'react-bootstrap';
+import { Container, Row, Col, Form, Button, Spinner } from 'react-bootstrap';
 import { useNavigate, Link } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
-import axios from 'axios'; // Import axios for API calls
+import axios from 'axios';
 import 'react-toastify/dist/ReactToastify.css';
-import Logo1 from "./../assets/Logos/CUPLLogoTheme.png"; // Logo
-import { useMediaQuery } from 'react-responsive'; // Importing useMediaQuery react-responsive library
-import themeStore from './../store/themeStore'; // Import theme store
-import { useStore } from 'zustand'; // Import zustand store
+import { useMediaQuery } from 'react-responsive';
+import themeStore from './../store/themeStore';
+import { useStore } from 'zustand';
+import Logo1 from "./../assets/Logos/CUPLLogoTheme.png";
 import redBrain from "./../assets/bgImages/brain/brainRed.png";
 import greenBrain from "./../assets/bgImages/brain/brainGreen.png";
 import blueBrain from "./../assets/bgImages/brain/brainBlue.png";
@@ -244,21 +300,14 @@ import darkBrain from "./../assets/bgImages/brain/brainDark.png";
 import brownBrain from "./../assets/bgImages/brain/brainBrown.png";
 import lightBrain from "./../assets/bgImages/brain/brainLight.png";
 import defaultBrain from "./../assets/bgImages/brain/brainDefault.png";
-
+import { AiFillEyeInvisible } from "react-icons/ai";
+import { AiFillEye } from "react-icons/ai";
 const ForgotPassword = () => {
-  // Theme Change Section
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
   const customDark = cssClasses[0];
-  const customMid = cssClasses[1];
-  const customLight = cssClasses[2];
   const customBtn = cssClasses[3];
   const customDarkText = cssClasses[4];
-  const customLightText = cssClasses[5];
-  const customLightBorder = cssClasses[6];
-  const customDarkBorder = cssClasses[7];
-  const customThead = cssClasses[8];
-
   const themeImages = {
     "purple-dark": purpleBrain,
     "blue-dark": blueBrain,
@@ -274,183 +323,281 @@ const ForgotPassword = () => {
   const navigate = useNavigate();
   const isMediumOrSmaller = useMediaQuery({ query: '(max-width: 992px)' });
 
+  const [currentStep, setCurrentStep] = useState(1);
   const [userName, setUserName] = useState('');
   const [securityQuestions, setSecurityQuestions] = useState([]);
-  const [answers, setAnswers] = useState(['', '']);
-  const [isConfirmed, setIsConfirmed] = useState(false);
-  const [loadingQuestions, setLoadingQuestions] = useState(false);
+  const [answers, setAnswers] = useState([]);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [userQuestions, setUserQuestions] = useState([]);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Handle Username Submission and Fetch Security Questions
   const handleUserNameSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!userName) {
+    if (!userName.trim()) {
       toast.error('Please enter your username');
       return;
     }
-    
-    setLoadingQuestions(true);
+    setLoading(true);
 
     try {
-      const response = await axios.get(`/api/security-questions?username=${userName.toLowerCase()}`);
-      if (response.data && response.data.questions) {
-        setSecurityQuestions(response.data.questions); // Update with fetched questions
-        setLoadingQuestions(false);
-        toast.success('Security questions loaded successfully');
-      } else {
-        toast.error('No security questions found for this username');
-        setLoadingQuestions(false);
-      }
+      // Fetch the security question IDs
+      const response = await axios.get(`https://localhost:7212/api/Login/forgotPassword/securityQuestions/${userName}`);
+      setUserQuestions(response.data)
+
+      setCurrentStep(2); // Move to Step 2
+      toast.success('Security questions loaded successfully');
     } catch (error) {
-      toast.error('Error fetching security questions');
-      setLoadingQuestions(false);
+      if (error.response.status === 404) {
+        toast.error('No security questions found for this username');
+      } else {
+        toast.error('An error occurred while fetching security questions');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Handle Answer Changes
+  const handleSubmitAnswers = async (e) => {
+    e.preventDefault();
+    if (answers.some(answer => !answer.trim())) {
+      toast.error('Please answer all security questions');
+      return;
+    }
+    const data = {
+      userName: userName,
+      securityAnswer1: answers[0],
+      securityAnswer2: answers[1]
+    }
+    console.log(data)
+    try {
+      const res = await axios.post('https://localhost:7212/api/Login/forgotPassword/verifySecurityAnswers', data)
+      setCurrentStep(3); // Move to Step 3
+      toast.success('Security answers verified successfully');
+    } catch (error) {
+      if (error.response.status === 401) {
+        toast.error('Security answers are incorrect');
+      } else {
+        toast.error('An error occurred while verifying security answers');
+      }
+    }
+  };
+
+  const handlePasswordSubmit = async (e) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
+    if (newPassword.length < 8) {
+      toast.error('Password must be at least 8 characters long');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const payload = {
+        userName: userName.toLowerCase(),
+        newPassword: newPassword,
+        securityAnswersVerified: true // This is the new requirement
+      };
+
+      const response = await axios.post('https://localhost:7212/api/Login/forgotPassword/setNewPassword', payload);
+      if (response.status === 200) {
+        toast.success('Password reset successfully', {
+          autoClose: 1500,
+          onClose: () => navigate('/')
+        });
+      } else {
+        toast.error('An error occurred while resetting password');
+      }
+    } catch (error) {
+      toast.error('An error occurred while resetting password');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleAnswerChange = (index, value) => {
     const updatedAnswers = [...answers];
     updatedAnswers[index] = value;
     setAnswers(updatedAnswers);
   };
 
-  // Handle Form Submission (POST answers)
-  const handleSubmitAnswers = async (e) => {
-    e.preventDefault();
-    
-    if (!isConfirmed) {
-      toast.error('Please confirm to proceed');
-      return;
-    }
-
-    try {
-      const response = await axios.post('/api/submit-answers', {
-        username: userName.toLowerCase(),
-        answers: answers.map(answer => answer.toLowerCase()),
-      });
-      
-      if (response.status === 200) {
-        toast.success('Answers submitted successfully');
-        navigate('/reset-password'); // Redirect after success
-      } else {
-        toast.error('Incorrect answers, please try again');
-      }
-    } catch (error) {
-      toast.error('Error submitting answers');
-    }
-  };
-
   return (
     <Container fluid className="vh-100 position-relative overflow-hidden">
-      <ToastContainer className="responsive-toast" /> {/* Toast container for showing notifications */}
-
-      {/* Background Image for Medium and Smaller Screens */}
+      <ToastContainer className="responsive-toast" />
       {isMediumOrSmaller && (
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundImage: `url(${themeImages[customDark] || defaultBrain})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          filter: 'blur(5px)', // Apply blur to the background image
-          zIndex: -1, // Ensure it's behind the form
-        }}
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundImage: `url(${themeImages[customDark] || defaultBrain})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            filter: 'blur(5px)',
+            zIndex: -1,
+          }}
         />
       )}
-
       <Row className="h-100 d-flex align-items-center justify-content-center shadow-lg">
-        {/* Left side: Forgot Password form */}
         <Col
           lg={5}
           md={12}
           sm={12}
-          className={`d-flex align-items-center justify-content-center p-0 m-0 shadow-lg ${isMediumOrSmaller ? '' : customDark} `}
+          className={`d-flex align-items-center justify-content-center p-0 m-0 shadow-lg ${isMediumOrSmaller ? '' : customDark}`}
           style={{ zIndex: 1, height: '100%', borderTopRightRadius: "15%", borderBottomRightRadius: "15%" }}
         >
           <div className="p-3 rounded-5 shadow-lg" style={{ width: '100%', maxWidth: '450px' }}>
-            {/* Logo */}
             <div className={`text-center mb-2 rounded-3 ${customBtn}`}>
               <img src={Logo1} alt="Company Logo" className="img-fluid" style={{ maxWidth: '150px' }} />
             </div>
 
-            {/* Username Submission Form */}
-            <Form onSubmit={handleUserNameSubmit} className="bg-white p-3 rounded-4 shadow-sm shadow-lg">
-              <h3 className="text-center mb-">Reset Password</h3>
-              <Form.Group controlId="formBasicUserName" className="mb-3">
-                <Form.Label>Enter User Name</Form.Label>
-                <Form.Control
-                  type="text"
-                  placeholder="Enter User Name"
-                  value={userName}
-                  onChange={(e) => setUserName(e.target.value)}
-                  required
-                />
-              </Form.Group>
-
-              <Button
-                type="submit"
-                className={`w-100 border-0 ${customBtn} custom-zoom-btn`}
-                disabled={loadingQuestions}
-              >
-                {loadingQuestions ? 'Loading Questions...' : 'Submit Username'}
-              </Button>
-            </Form>
-
-            {/* Display Security Questions and Answers if fetched */}
-            {securityQuestions.length > 0 && (
-              <Form onSubmit={handleSubmitAnswers} className="bg-white p-3 rounded-4 shadow-sm shadow-lg mt-4">
-                {securityQuestions.map((question, index) => (
-                  <Form.Group controlId={`formAnswer${index}`} className="mb-3" key={question.id}>
-                    <Form.Label>{question.text}</Form.Label>
-                    <Form.Control
-                      type="text"
-                      placeholder="Enter Answer"
-                      value={answers[index] || ''}
-                      onChange={(e) => handleAnswerChange(index, e.target.value)}
-                      required
-                    />
-                  </Form.Group>
-                ))}
-
-                <Form.Group className="mb-3">
-                  <Form.Check
-                    type="checkbox"
-                    label="I confirm that I want to reset my password"
-                    checked={isConfirmed}
-                    onChange={(e) => setIsConfirmed(e.target.checked)}
-                    className='custom-zoom-btn'
+            {/* Step 1: Enter Username */}
+            {currentStep === 1 && (
+              <Form onSubmit={handleUserNameSubmit} className="bg-white p-3 rounded-4 shadow-sm shadow-lg">
+                <h3 className="text-center mb-4">Reset Password</h3>
+                <Form.Group controlId="formBasicUserName" className="mb-3">
+                  <Form.Label>Enter Username</Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder="Enter Username"
+                    value={userName}
+                    onChange={(e) => setUserName(e.target.value)}
+                    required
                   />
                 </Form.Group>
 
                 <Button
                   type="submit"
                   className={`w-100 border-0 ${customBtn} custom-zoom-btn`}
-                  disabled={!isConfirmed || answers.some(answer => !answer)}
+                  disabled={loading}
                 >
-                  Submit Answers
+                  {loading ? <Spinner animation="border" size="sm" /> : 'Submit Username'}
                 </Button>
+                <div className="text-center mt-3 custom-zoom-btn">
+                  <Link to="/" className={`${customDark === "dark-dark" ? `text-dark` : `${customDarkText}`}`}>
+                    Back to login
+                  </Link>
+                </div>
               </Form>
             )}
 
-            <div className="text-center mt-3 custom-zoom-btn">
-              <Link to="/" className={`${customDark === "dark-dark" ? "text-light" : `text-light`} `}>
-                Back to login ?
-              </Link>
-            </div>
+            {/* Step 2: Answer Security Questions */}
+            {currentStep === 2 && (
+              <Form onSubmit={handleSubmitAnswers} className="bg-white p-3 rounded-4 shadow-sm shadow-lg">
+                <h3 className="text-center mb-4">Answer Security Questions</h3>
+                {userQuestions.map((question, index) => (
+                  <Form.Group controlId={`securityQuestion${index}`} className="mb-3" key={index}>
+                    <Form.Label>{`Question ${index + 1}: ${question.question}`}</Form.Label>
+                    <Form.Control
+                      type="text"
+                      placeholder="Your Answer"
+                      value={answers[index]}
+                      onChange={(e) => handleAnswerChange(index, e.target.value)}
+                      required
+                    />
+                  </Form.Group>
+                ))}
+
+                <Button
+                  type="submit"
+                  className={`w-100 border-0 ${customBtn} custom-zoom-btn`}
+                  disabled={loading}
+                >
+                  {loading ? <Spinner animation="border" size="sm" /> : 'Submit Answers'}
+                </Button>
+                <div className="text-center mt-3 custom-zoom-btn">
+                  <Link to="/" className={`${customDark === "dark-dark" ? `text-dark` : `${customDarkText}`}`}>
+                    Back to login
+                  </Link>
+                </div>
+              </Form>
+            )}
+
+            {/* Step 3: Reset Password */}
+            {currentStep === 3 && (
+              <Form onSubmit={handlePasswordSubmit} className="bg-white p-3 rounded-4 shadow-sm shadow-lg">
+                <h3 className="text-center mb-4">Set New Password</h3>
+                <Form.Group controlId="formNewPassword" className="mb-3">
+                  <Form.Label>New Password</Form.Label>
+                  <div className="position-relative">
+                    <Form.Control
+                      type={showNewPassword ? "text" : "password"}
+                      placeholder="Enter New Password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      minLength="8"
+                      required
+                    />
+                    <span
+                      className="position-absolute"
+                      style={{ right: '10px', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer' }}
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                    >
+                      {showNewPassword ? <AiFillEye size={20} className={`${customDark === "dark-dark" ? `` : `${customDarkText}`}`} /> : <AiFillEyeInvisible size={20} className={`${customDark === "dark-dark" ? `` : `${customDarkText}`}`} />}
+                    </span>
+                  </div>
+                </Form.Group>
+
+                <Form.Group controlId="formConfirmPassword" className="mb-3">
+                  <Form.Label>Confirm New Password</Form.Label>
+                  <div className="position-relative">
+                    <Form.Control
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="Confirm New Password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      minLength="8"
+                      required
+                    />
+                    <span
+                      className="position-absolute"
+                      style={{ right: '10px', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer' }}
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    >
+                      {showConfirmPassword ? <AiFillEye size={20} /> : <AiFillEyeInvisible size={20} />}
+                    </span>
+                  </div>
+                </Form.Group>
+
+                <Button
+                  type="submit"
+                  className={`w-100 border-0 ${customBtn} custom-zoom-btn`}
+                  disabled={
+                    loading ||
+                    newPassword.length < 8 ||
+                    confirmPassword.length < 8 ||
+                    newPassword !== confirmPassword
+                  }
+                >
+                  {loading ? <Spinner animation="border" size="sm" /> : 'Reset Password'}
+                </Button>
+                <div className="text-center mt-3 custom-zoom-btn">
+                  <Link to="/" className={`${customDark === "dark-dark" ? `text-dark` : `${customDarkText}`}`}>
+                    Back to login
+                  </Link>
+                </div>
+              </Form>
+
+            )}
+
+
           </div>
         </Col>
-
-        {/* Right side: Big image for Large Screens */}
         {!isMediumOrSmaller && (
           <Col lg={7} className="d-flex align-items-center justify-content-center p-0 position-relative">
             <img
               src={themeImages[customDark] || defaultBrain}
               alt="Forgot Password Illustration"
               className="img-fluid"
-              style={{ objectFit: 'contain', maxHeight: '80vh' }} // Limit image height for better responsiveness
+              style={{ objectFit: 'contain', maxHeight: '100vh' }}
             />
           </Col>
         )}
@@ -460,3 +607,4 @@ const ForgotPassword = () => {
 };
 
 export default ForgotPassword;
+

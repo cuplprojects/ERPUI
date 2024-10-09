@@ -18,6 +18,7 @@ import { useStore } from 'zustand';
 import WavyDiv from './WavyDiv';
 import QtySheetUpload from '../pages/QtySheetUpload';
 import Message from '../pages/Message/Message';
+import Labels from '../pages/Message/Labels';
 const Userlayout = () => {
   
     //Theme Change Section
@@ -53,6 +54,7 @@ const Userlayout = () => {
               <Route path="/quantity-sheet-uploads" element={<QtySheetUpload />} />
               <Route path="/project-details/:id" element={<ProcessTable />} />
               <Route path="/message" element={<Message />} />
+              <Route path="/labels" element={<Labels />} />
               <Route path="/*" element={<PageNotFound />} />
             </Routes>
           </div>

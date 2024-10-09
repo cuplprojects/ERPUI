@@ -16,18 +16,20 @@ const AddUsers = () => {
 
   // Initial state for the form data
   const initialState = {
+
+    username: '',
     firstName: '',
     middleName: '',
     lastName: '',
-    username: '',
     gender: '',
-    mobileNumber: '',
-    role: '',
+    mobileNo: '',
+    roleId: '',
+
   };
 
   const [usernameError, setUsernameError] = useState('');
   const [formData, setFormData] = useState(initialState);
-  const [userDetails, setUserDetails] = useState({ username: '', password: '' });
+  const [userDetails, setUserDetails] = useState({ userName: '', password: '' });
   const [showModal, setShowModal] = useState(false);
 
   // Function to handle form submission
@@ -37,10 +39,12 @@ const AddUsers = () => {
     // Validation logic for required fields
     const requiredFields = [
       { name: 'firstName', value: formData.firstName },
-      { name: 'lastName', value: formData.lastName },
+      // { name: 'lastName', value: formData.lastName },//last name not required
       { name: 'gender', value: formData.gender },
-      { name: 'mobileNumber', value: formData.mobileNumber },
-      { name: 'role', value: formData.role },
+
+      { name: 'mobileNo', value: formData.mobileNo },
+      { name: 'roleId', value: formData.roleId },
+
     ];
 
     const errors = requiredFields
@@ -56,11 +60,11 @@ const AddUsers = () => {
       const { success } = validateFormData(formData); // Validate the form data
       if (success) {
         try {
-          const response = await axios.post('/api/users', formData); // API call to add user
-          const { username, password } = response.data;
+          const response = await axios.post('https://localhost:7212/api/User/create', formData); // API call to add user
+          const { userName, password } = response.data;
 
           // Set user details for modal
-          setUserDetails({ username, password });
+          setUserDetails({ userName, password });
           setShowModal(true);
           toast.success('User added successfully!');
         } catch (error) {
@@ -75,7 +79,9 @@ const AddUsers = () => {
     const { name, value } = event.target;
     setFormData({ ...formData, [name]: value });
   };
-
+  const handleCloseModal = () =>{
+    setShowModal(false);
+  } 
   // Generate username suggestion based on input
   useEffect(() => {
     const { firstName, middleName, lastName } = formData;
@@ -94,7 +100,9 @@ const AddUsers = () => {
 
     // Check username suggestion length
     if (usernameSuggestion.length >= 6 && usernameSuggestion.length <= 10) {
+
       setFormData((prev) => ({ ...prev, username: usernameSuggestion }));
+
       setUsernameError('');
     } else {
       setUsernameError('Username must be between 6 and 10 characters.');
@@ -102,7 +110,9 @@ const AddUsers = () => {
   }, [formData.firstName, formData.middleName, formData.lastName]);
 
   // Validate username length
+
   const isUsernameValid = formData.username.length >= 6 && formData.username.length <= 10;
+
 
   // Function to handle reset
   const handleReset = () => {
@@ -158,7 +168,6 @@ const AddUsers = () => {
                 placeholder="Enter last name"
                 value={formData.lastName}
                 onChange={handleInputChange}
-                required
                 autoComplete='off'
               />
             </Form.Group>
@@ -174,9 +183,11 @@ const AddUsers = () => {
               <Form.Control
                 type="text"
                 name="username"
+
                 value={formData.username}
                 onChange={handleInputChange} // Allow manual editing
                 isInvalid={usernameError !== '' && formData.username.length > 0} // Conditional error styling
+
 
               />
               <Form.Control.Feedback type="invalid">{usernameError}</Form.Control.Feedback>
@@ -208,12 +219,14 @@ const AddUsers = () => {
               <Form.Label className={customDarkText}>Mobile Number:</Form.Label>
               <Form.Control
                 type="text"
-                name="mobileNumber"
+
+                name="mobileNo"
+
                 placeholder="Enter mobile number"
-                value={formData.mobileNumber}
+                value={formData.mobileNo}
                 onChange={(event) => {
                   const value = event.target.value.replace(/\D/g, ''); // Remove non-numeric characters
-                  setFormData({ ...formData, mobileNumber: value });
+                  setFormData({ ...formData, mobileNo: value });
                 }}
                 required
               />
@@ -223,17 +236,19 @@ const AddUsers = () => {
             <Form.Group>
               <Form.Label className={customDarkText}>Role:</Form.Label>
               <Form.Select
-                name="role"
-                value={formData.role}
+
+                name="roleId"
+                value={formData.roleId}
                 onChange={handleInputChange}
                 required
               >
-                <option value="">Select a role</option>
-                <option value="admin">Admin</option>
-                <option value="head">Head</option>
-                <option value="manager">Manager</option>
-                <option value="supervisor">Supervisor</option>
-                <option value="operator">Operator</option>
+                <option value="">Select a Role</option>
+                <option value={1}>Admin</option>
+                <option value={2}>Head</option>
+                <option value={3}>Manager</option>
+                <option value={4}>Supervisor</option>
+                <option value={5}>Operator</option>
+
               </Form.Select>
             </Form.Group>
           </Col>
@@ -254,10 +269,9 @@ const AddUsers = () => {
         <ToastContainer />
       </div>
       <SuccessModal
-        show={showModal} username={userDetails.username} password={userDetails.password}
+        show={showModal} username={userDetails.userName} password={userDetails.password} onClose={handleCloseModal}
       />
     </div>
   );
 };
-
 export default AddUsers;

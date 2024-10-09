@@ -11,6 +11,8 @@ import SampleUser1 from "./../assets/sampleUsers/sampleUser1.jpg";
 import ChangeMobileNumber from './../menus/ChangeMobileNumber'
 import { FaTimes } from 'react-icons/fa';
 import "./../styles/Profile.css";
+import { jwtDecode } from 'jwt-decode';
+import axios from 'axios';
 const UserProfile = () => {
 
   //Theme Change Section
@@ -24,28 +26,55 @@ const UserProfile = () => {
   const customLightText = cssClasses[5]
   const customLightBorder = cssClasses[6]
   const customDarkBorder = cssClasses[7]
-
+  
+  const [displayedName, setDisplayedName] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
-  const [firstName, setFirstName] = useState("Jayant");
-  const [middleName, setMiddleName] = useState("Roy");
+  const [firstName, setFirstName] = useState("");
+  const [middleName, setMiddleName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [gender, setGender] = useState("Male");
-  const [language, setLanguage] = useState("English");
-  const [mobileNumber, setMobileNumber] = useState("+91 8400019683");
-
+  const [gender, setGender] = useState("");
+  const [language, setLanguage] = useState("");
+  const [mobileNumber, setMobileNumber] = useState("");
+  const [userName, setUserName] = useState("");
+  const userToken = localStorage.getItem('authToken');
+  const decodedToken = jwtDecode(userToken);
+  const [, userIdApi] = Object.entries(decodedToken)[0];
+  // console.log(userIdApi)//loop issue
+  useEffect(() => {
+    axios.get(`https://localhost:7212/api/User/${userIdApi}`)
+      .then(response => {
+        const userData = response.data;
+        setFirstName(userData.firstName);
+        setMiddleName(userData.middleName);
+        setLastName(userData.lastName);
+        // setDisplayedName(`${firstName} ${middleName} ${lastName}`);
+        setMobileNumber(userData.mobileNo);
+        setUserName(userData.userName);
+        // Note: The API response does not contain 'gender' and 'language' fields.
+        // You may need to add these fields to the API response or handle them differently.
+        // For now, I'll leave them as they are in the initialValues state variable.
+        console.log(userData)
+      })
+      .catch(error => {
+        console.error(error);
+      });
+  }, [userIdApi]);
+  useEffect(() => {
+    setDisplayedName(`${firstName} ${middleName} ${lastName}`);
+  }, [firstName, middleName, lastName]);
   const [initialValues, setInitialValues] = useState({
-    firstName: "Jayant",
-    middleName: "Roy",
+    firstName: "",
+    middleName: "",
     lastName: "",
-    gender: "Male",
-    language: "English",
+    gender: "",
+    language: "",
   });
-  const [role] = useState("Developer");
-  const [department] = useState("Information Technology (IT)");
-  const [permissions] = useState("Edit, View, Delete");
+  
+  const [role] = useState("");
+  const [department] = useState("");
+  const [permissions] = useState("");
   const permissionArray = permissions.split(', ');
-  const [displayedName, setDisplayedName] = useState(`${firstName} ${middleName} ${lastName}`);
   const [isZoomed, setIsZoomed] = useState(false);
 
   const handleImageClick = (event) => {
@@ -88,7 +117,6 @@ const UserProfile = () => {
     });
 
     if (isUpdated) {
-      setDisplayedName(`${firstName} ${middleName} ${lastName}`);
       setInitialValues({ // Update the initial values
         firstName,
         middleName,
@@ -119,10 +147,7 @@ const UserProfile = () => {
       <div className={` d-flex justify-content-between align-items-center ${customDark} ${customDark === 'dark-dark' ? `${customLightBorder} border-top border-start border-end border-light border-bottom-0` : ""} 
       ${customBtn === 'dark-dark' ? "" : ""} text-white p-3 rounded-top`}>
         <div className="greet">
-          <h2>Welcome, Jayant</h2>
-          {/* <p className="mb-0">{currentDateTime.toLocaleString()} - {new Intl.DateTimeFormat('en-US', {
-            weekday: 'long',
-          }).format(currentDateTime)}</p> */}
+          <h2>Welcome, {firstName}</h2>
           <p className="mb-0 d-none d-md-block">
             {new Intl.DateTimeFormat('en-US', {
               day: '2-digit',
@@ -182,8 +207,8 @@ const UserProfile = () => {
           </Col>
 
           <Col xs={12} sm={12} md={8} className="mt-3">
-            <h4 className={`${customDarkText}`}>Mr. {displayedName}</h4>
-            <p className={`text-muted mb-0 ${customDarkText}`}>jayanta@chandrakala.co.in</p>
+            <h4 className={`${customDarkText}`}>{userName}</h4>
+            <p className={`text-muted mb-0 ${customDarkText}`}>{displayedName}</p>
           </Col>
 
           <Col xs={12} sm={2} className="text-sm-end mt-2 mt-sm-0 d-none d-lg-block d-md-block">
@@ -266,6 +291,7 @@ const UserProfile = () => {
               <Form.Group controlId="formRole">
                 <Form.Label className={`${customDarkText}`}>Role</Form.Label>
                 <Form.Control
+                placeholder="Your Role"
                   value={role}
                   className='rounded'
                   disabled
@@ -299,7 +325,7 @@ const UserProfile = () => {
                 </Form.Select>
               </Form.Group>
             </Col>
-            <Col xs={12} sm={6} md={8}>
+            {/* <Col xs={12} sm={6} md={8}>
               <Form.Group controlId="formPermissions">
                 <Form.Label className={`${customDarkText}`}>Permissions</Form.Label>
                 <div className="d-flex flex-wrap">
@@ -313,12 +339,12 @@ const UserProfile = () => {
                   ))}
                 </div>
               </Form.Group>
-            </Col>
+            </Col> */}
           </Row>
         </Form>
 
         <Row className='d-flex justify-content-between '>
-          <Col xs={12} md={6} lg={5}>
+          {/* <Col xs={12} md={6} lg={5}>
             <div className="mt-2">
               <h5 className={`${customDarkText} fw-bold`}>My Email Address</h5>
               <Row className="align-items-center d-flex align-items-center justify-content-between">
@@ -345,8 +371,8 @@ const UserProfile = () => {
                 </Button>
               </div>
             </div>
-          </Col>
-          <Col xs={12} md={6} lg={5}>
+          </Col> */}
+          <Col xs={12} md={12} lg={12}>
             <div className="mt-2">
               <h5 className={`${customDarkText} fw-bold`}>My Mobile Number</h5>
               <Row className="align-items-center">

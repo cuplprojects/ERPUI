@@ -1,0 +1,78 @@
+{
+  "messageManagement": {
+    "id": 1,
+    "text": "संदेश प्रबंधन"
+  },
+  "messageType": {
+    "id": 2,
+    "text": "संदेश प्रकार"
+  },
+  "selectType": {
+    "id": 3,
+    "text": "प्रकार चुनें"
+  },
+  "success": {
+    "id": 4,
+    "text": "सफलता"
+  },
+  "error": {
+    "id": 5,
+    "text": "त्रुटि"
+  },
+  "info": {
+    "id": 6,
+    "text": "जानकारी"
+  },
+  "l1Title": {
+    "id": 7,
+    "text": "L1 शीर्षक"
+  },
+  "l1Description": {
+    "id": 8,
+    "text": "L1 विवरण"
+  },
+  "l2Title": {
+    "id": 9,
+    "text": "L2 शीर्षक (हिंदी)"
+  },
+  "l2Description": {
+    "id": 10,
+    "text": "L2 विवरण (हिंदी)"
+  },
+  "updateMessage": {
+    "id": 11,
+    "text": "संदेश अपडेट करें"
+  },
+  "addMessage": {
+    "id": 12,
+    "text": "संदेश जोड़ें"
+  },
+  "cancel": {
+    "id": 13,
+    "text": "रद्द करें"
+  },
+  "searchMessages": {
+    "id": 14,
+    "text": "संदेश खोजें"
+  },
+  "id": {
+    "id": 15,
+    "text": "आईडी"
+  },
+  "type": {
+    "id": 16,
+    "text": "प्रकार"
+  },
+  "actions": {
+    "id": 17,
+    "text": "कार्रवाई"
+  },
+  "edit": {
+    "id": 18,
+    "text": "संपादित करें"
+  },
+  "status": {
+    "id": 19,
+    "text": "स्थिति"
+  }
+}

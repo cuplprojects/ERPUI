@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Modal, Form, Input, Select, Table, Card, Typography, Divider } from 'antd';
 import { PlusOutlined, TeamOutlined } from '@ant-design/icons';
+import axios from 'axios';
 
 const { Option } = Select;
 const { Title, Text } = Typography;
@@ -14,7 +15,7 @@ const Team = () => {
 
   const getUsers = async () => {
     try {
-      const response = await axios.get('https://localhost:7223/api/Users')
+      const response = await axios.get('https://localhost:7223/api/User')
       setUsers(response.data)
     }
     catch (error) {
@@ -76,7 +77,7 @@ const Team = () => {
       key: 'teamMembers',
       render: (members) =>
         members
-          .map((id) => users.find((user) => user.userId === id)?.fullName)
+          .map((id) => users.find((user) => user.userId === id)?.firstName)
           .join(', '),
     },
     
@@ -144,7 +145,7 @@ const Team = () => {
             >
               {users.map((user) => (
                 <Option key={user.userId} value={user.userId}>
-                  {user.fullName}
+                  {user.firstName}
                 </Option>
               ))}
             </Select>

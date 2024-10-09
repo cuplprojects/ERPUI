@@ -16,7 +16,7 @@ import {
   FaCaretDown,
   FaCaretLeft,
 } from 'react-icons/fa';
-
+import { BsQuestionSquareFill } from "react-icons/bs";
 import GroupManager from './Group'
 import ProjectManager from './Project';
 import ZoneManager from './Zone';
@@ -28,8 +28,8 @@ import './../styles/Sidebar.css'; // Import your custom CSS
 import AddUsers from '../sub-Components/addUsers';
 import AllUsers from '../sub-Components/allUsers';
 import CameraList from './CameraList';
-import RolesAndDepartments from './RolePage';
-//import Team from './team';
+import RolesAndDepartments from './Roles/RolePage';
+import Team from './team';
 import SystemSettings from './SystemSettings';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
