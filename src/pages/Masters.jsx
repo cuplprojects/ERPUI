@@ -35,6 +35,7 @@ import SystemSettings from './SystemSettings';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import Report from './Report.jsx';
+import {BsQuestionSquareFill} from 'react-icons/bs'
 
 const Sidebar = () => {
   // Theme Change Section
