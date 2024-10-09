@@ -20,10 +20,10 @@ const CameraList = () => {
 
   const getCameras = async () => {
     try {
-      const response = await axios.get('https://localhost:7223/api/Cameras');
+      const response = await axios.get('https://localhost:7212/api/Cameras');
       setCameras(response.data);
     } catch (error) {
-      message.error('Failed to fetch cameras');
+      console.error('Failed to fetch cameras');
     }
   };
 
@@ -35,7 +35,7 @@ const CameraList = () => {
     form.validateFields().then(async (values) => {
       const newCamera = { name: values.name }; // Add new camera
       try {
-        const response = await axios.post('https://localhost:7223/api/Cameras', newCamera);
+        const response = await axios.post('https://localhost:7212/api/Cameras', newCamera);
         setCameras([...cameras, response.data]); // Add the camera from the response
         form.resetFields();
         setIsModalOpen(false);
@@ -53,7 +53,7 @@ const CameraList = () => {
     };
 
     try {
-      await axios.put(`https://localhost:7223/api/Cameras/${updatedCamera.cameraId}`, updatedCamera);
+      await axios.put(`https://localhost:7212/api/Cameras/${updatedCamera.cameraId}`, updatedCamera);
       const updatedCameras = [...cameras];
       updatedCameras[index] = updatedCamera;
       setCameras(updatedCameras);

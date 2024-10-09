@@ -14,6 +14,7 @@ import "./styles/customStyles.css";
 import "react-toastify/dist/ReactToastify.css";
 import "./index.css";
 import useLanguageStore from "./store/languageStore";
+import ErrorPage from "./pages/ErrorPage";
 
 function App() {
   const { initializeLanguage } = useLanguageStore();
@@ -28,6 +29,7 @@ function App() {
           <Route path="/" element={<Login />} />
           <Route path="/setpassword" element={<Setpassword />} />
           <Route path="/forgotpassword" element={<Forgotpassword />} />
+          <Route path="/server-error" element={<ErrorPage />} />
           <Route path="/*" element={<Userlayout />} />
         </Routes>
       </HashRouter>
