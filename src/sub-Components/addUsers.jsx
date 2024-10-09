@@ -39,7 +39,7 @@ const AddUsers = () => {
     // Validation logic for required fields
     const requiredFields = [
       { name: 'firstName', value: formData.firstName },
-      { name: 'lastName', value: formData.lastName },
+      // { name: 'lastName', value: formData.lastName },//last name not required
       { name: 'gender', value: formData.gender },
 
       { name: 'mobileNo', value: formData.mobileNo },
@@ -111,7 +111,7 @@ const AddUsers = () => {
 
   // Validate username length
 
-  const isUsernameValid = formData.userName.length >= 6 && formData.userName.length <= 10;
+  const isUsernameValid = formData.username.length >= 6 && formData.username.length <= 10;
 
 
   // Function to handle reset
@@ -168,7 +168,6 @@ const AddUsers = () => {
                 placeholder="Enter last name"
                 value={formData.lastName}
                 onChange={handleInputChange}
-                required
                 autoComplete='off'
               />
             </Form.Group>
