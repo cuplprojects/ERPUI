@@ -15,10 +15,10 @@ const AlarmMaster = () => {
   const fetchAlarms = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('https://localhost:7223/api/Alarms');
+      const response = await axios.get('https://localhost:7212/api/Alarms');
       setAlarms(response.data);
     } catch (error) {
-      message.error('Failed to fetch alarms');
+      console.error('Failed to fetch alarms');
     } finally {
       setLoading(false);
     }
@@ -53,7 +53,7 @@ const AlarmMaster = () => {
     message.success('Alarm added successfully!');
 
     try {
-      await axios.post('https://localhost:7223/api/Alarms', newAlarm);
+      await axios.post('https://localhost:7212/api/Alarms', newAlarm);
     } catch (error) {
       message.error('Failed to add alarm');
       setAlarms(prev => prev.filter(alarm => alarm.alarmId !== newAlarm.alarmId)); // Revert optimistic update
@@ -85,7 +85,7 @@ const AlarmMaster = () => {
     setEditingValue('');
 
     try {
-      await axios.put(`https://localhost:7223/api/Alarms/${alarms[index].alarmId}`, updatedAlarm);
+      await axios.put(`https://localhost:7212/api/Alarms/${alarms[index].alarmId}`, updatedAlarm);
     } catch (error) {
       message.error('Failed to update alarm');
       fetchAlarms(); // Refresh alarms to get the latest data

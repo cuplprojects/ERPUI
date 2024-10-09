@@ -18,19 +18,13 @@ import {
   FaFileAlt,
   FaCogs
 } from 'react-icons/fa';
-import { BsQuestionSquareFill } from "react-icons/bs";
 import GroupManager from './Group'
-
 import ProjectManager from './Project';
 import ZoneManager from './Zone';
 import Type from './Type';
 import AlarmMaster from './Alarm';
-
 import Machine from './ProductionMachine';
-
 import SecurityQ from './SecurityQuestions.jsx';
-
-
 import './../styles/Sidebar.css'; // Import your custom CSS
 import AddUsers from '../sub-Components/addUsers';
 import AllUsers from '../sub-Components/allUsers';
@@ -88,7 +82,7 @@ const Sidebar = () => {
     { key: 'camera', icon: <FaCamera className={`${customDarkText} menu-icon`} />, label: 'Camera' },
     {key: 'machine',icon: <FaCogs  className={`${customDarkText} menu-icon`} />, label: 'Machines'},
     { key: 'alarm', icon: <FaBell className={`${customDarkText} menu-icon`} />, label: 'Alarm' },
-    { key: 'team', icon: <FaUsers className={`${customDarkText} menu-icon`} />, label: 'Team' },
+    //{ key: 'team', icon: <FaUsers className={`${customDarkText} menu-icon`} />, label: 'Team' },
     { key: 'systemSettings', icon: <FaCog className={`${customDarkText} menu-icon`} />, label: 'Process Settings' },
     { key: 'report', icon: <FaFileAlt className={`${customDarkText} menu-icon`} />, label: 'Report' },
   ];
@@ -134,13 +128,9 @@ const Sidebar = () => {
           {selectedMenu === 'RolePage' && <RolesAndDepartments />}
           {selectedMenu === 'addUser' && <AddUsers />}
           {selectedMenu === 'allUsers' && <AllUsers />}
-
           {selectedMenu === 'group' && <GroupManager />}
           {selectedMenu === 'type' && <Type />}
-
           {selectedMenu === 'securityQuestions' && <SecurityQ />}
-          {/* {selectedMenu === 'group' && <GroupManager />} */}
-
           {selectedMenu === 'project' && <ProjectManager />}
           {selectedMenu === 'zone' && <ZoneManager />}
           {selectedMenu === 'camera' && <CameraList />}
@@ -148,8 +138,8 @@ const Sidebar = () => {
           {selectedMenu === 'systemSettings' && <SystemSettings />}
           {selectedMenu === 'machine' && <Machine />}
           {selectedMenu === 'alarm' && <AlarmMaster />}
-          {selectedMenu === 'envelope' && <EnvelopeConfiguration />}
-          {selectedMenu === 'report' && <Report />}
+
+
         </Col>
       </Row>
     </Container>
