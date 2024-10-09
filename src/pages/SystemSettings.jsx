@@ -285,8 +285,8 @@ const SystemSettings = () => {
       key: process.name,
       render: (text, record) => (
         <Switch
-          checked={record.installedFeatures.includes(process.name)}
-          disabled
+          checked={featureConfigurationColumns.process}
+          
         />
       ),
     })),
