@@ -15,6 +15,8 @@ import {
   FaPlusCircle,
   FaCaretDown,
   FaCaretLeft,
+  FaFileAlt,
+  FaCogs
 } from 'react-icons/fa';
 import GroupManager from './Group'
 import ProjectManager from './Project';
@@ -32,6 +34,7 @@ import Team from './team';
 import SystemSettings from './SystemSettings';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
+import Report from './Report.jsx';
 
 const Sidebar = () => {
   // Theme Change Section
@@ -77,10 +80,11 @@ const Sidebar = () => {
     { key: 'project', icon: <FaProjectDiagram className={`${customDarkText} menu-icon`} />, label: 'Project' },
     { key: 'zone', icon: <FaGlobeAmericas className={`${customDarkText} menu-icon`} />, label: 'Zone' },
     { key: 'camera', icon: <FaCamera className={`${customDarkText} menu-icon`} />, label: 'Camera' },
-    {key: 'machine',icon: <FaListUl className={`${customDarkText} menu-icon`} />, label: 'Machines'},
+    {key: 'machine',icon: <FaCogs  className={`${customDarkText} menu-icon`} />, label: 'Machines'},
     { key: 'alarm', icon: <FaBell className={`${customDarkText} menu-icon`} />, label: 'Alarm' },
     //{ key: 'team', icon: <FaUsers className={`${customDarkText} menu-icon`} />, label: 'Team' },
     { key: 'systemSettings', icon: <FaCog className={`${customDarkText} menu-icon`} />, label: 'Process Settings' },
+    { key: 'report', icon: <FaFileAlt className={`${customDarkText} menu-icon`} />, label: 'Report' },
   ];
 
   return (
@@ -134,6 +138,8 @@ const Sidebar = () => {
           {selectedMenu === 'systemSettings' && <SystemSettings />}
           {selectedMenu === 'machine' && <Machine />}
           {selectedMenu === 'alarm' && <AlarmMaster />}
+
+
         </Col>
       </Row>
     </Container>
