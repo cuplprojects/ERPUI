@@ -20,29 +20,36 @@ i18n
     backend: {
       loadPath: `${apiUrl}/TextLabels/translations/{{lng}}`,
       parse: (data) => {
-        const parsedData = JSON.parse(data);
-        const simplifiedData = {};
-        const showLabelId = useShowLabelIdStore.getState().showLabelId;
-        for (const [key, value] of Object.entries(parsedData)) {
-          if (typeof value === 'object' && value !== null) {
-            simplifiedData[key] = showLabelId ? `(${value.id}). ${value.text}` : value.text;
-          } else {
-            simplifiedData[key] = value;
+        try {
+          const parsedData = JSON.parse(data);
+          const simplifiedData = {};
+          const showLabelId = useShowLabelIdStore.getState().showLabelId;
+          for (const [key, value] of Object.entries(parsedData)) {
+            if (typeof value === 'object' && value !== null) {
+              simplifiedData[key] = showLabelId ? `(${value.id}). ${value.text}` : value.text;
+            } else {
+              simplifiedData[key] = value;
+            }
           }
+          return simplifiedData;
+        } catch (error) {
+          console.error('Error parsing translation data:', error);
+          return {};
         }
-        return simplifiedData;
       },
     },
     interpolation: {
       escapeValue: false, // React already escapes values
     },
     parseMissingKeyHandler: (key, defaultValue) => {
-      const showLabelId = useShowLabelIdStore.getState().showLabelId;
-      if (typeof defaultValue === 'object' && defaultValue !== null) {
-        return showLabelId ? `${defaultValue.id}. ${defaultValue.text || key}` : (defaultValue.text || key);
-      }
-      return defaultValue || key;
+      return key; // Return the key if there's an error or missing translation
     },
+    react: {
+      useSuspense: false, // Disable suspense to prevent UI from not rendering
+    },
+  }).catch(error => {
+    console.error('Error initializing i18next:', error);
+    // You can add additional error handling here, such as displaying an error message to the user
   });
 
 export default i18n;
