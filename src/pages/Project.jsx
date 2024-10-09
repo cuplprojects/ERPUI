@@ -22,7 +22,7 @@ const Project = () => {
       const response = await axios.get('https://localhost:7223/api/Project');
       setProjects(response.data);
     } catch (error) {
-      message.error('Failed to fetch projects');
+      console.error('Failed to fetch projects');
     }
   };
 
