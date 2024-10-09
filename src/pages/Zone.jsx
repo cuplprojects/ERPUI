@@ -24,7 +24,7 @@ const Zone = () => {
 
   const getZone = async () => {
     try {
-      const response = await axios.get('https://localhost:7223/api/Zones');
+      const response = await axios.get('https://localhost:7212/api/Zones');
       setZones(response.data);
     } catch (error) {
       console.error("Failed to fetch zones", error);
@@ -33,7 +33,7 @@ const Zone = () => {
 
   const getCamera = async () => {
     try {
-      const response = await axios.get('https://localhost:7223/api/Cameras');
+      const response = await axios.get('https://localhost:7212/api/Cameras');
       setCamera(response.data);
     } catch (error) {
       console.error("Failed to fetch cameras", error);
@@ -42,7 +42,7 @@ const Zone = () => {
 
   const getMachine = async () => {
     try {
-      const response = await axios.get('https://localhost:7223/api/Machines');
+      const response = await axios.get('https://localhost:7212/api/Machines');
       setMachine(response.data);
     } catch (error) {
       console.error("Failed to fetch machines", error);
@@ -65,7 +65,7 @@ const Zone = () => {
     };
 
     try {
-      await axios.post('https://localhost:7223/api/Zones', newZone);
+      await axios.post('https://localhost:7212/api/Zones', newZone);
       getZone();
       form.resetFields();
       setIsModalVisible(false);
@@ -91,7 +91,7 @@ const Zone = () => {
     }
 
     try {
-      await axios.put(`https://localhost:7223/api/Zones/${originalZone.zoneId}`, updatedZone);
+      await axios.put(`https://localhost:7212/api/Zones/${originalZone.zoneId}`, updatedZone);
       const updatedZones = [...zones];
       updatedZones[index] = updatedZone;
       setZones(updatedZones);

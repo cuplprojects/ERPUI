@@ -190,9 +190,7 @@ const RolesAndDepartments = () => {
             <Permissions
               selectedPermissions={newRole.permissions}
               onChange={handlePermissionChange}
-            />
-            {/* Optional: Add an input for priorityOrder */}
-            
+            />            
           </Modal>
         </Card>
       </TabPane>
