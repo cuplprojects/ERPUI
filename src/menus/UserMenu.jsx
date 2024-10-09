@@ -19,37 +19,23 @@ const UserMenu = ({ onClose }) => {
   const cssClasses = getCssClasses();
   const customDark = cssClasses[0];
   const customMid = cssClasses[1];
-  const customLight = cssClasses[2];
   const customBtn = cssClasses[3];
-  const customDarkText = cssClasses[4];
-  const customLightText = cssClasses[5]
-  const customLightBorder = cssClasses[6]
-  const customDarkBorder = cssClasses[7]
-  
   const [showModal, setShowModal] = useState(false); // State for modal visibility
   const navigate = useNavigate(); // Hook for programmatic navigation
-  // const { setCurrentPage } = useBreadcrumbStore();
   // Function to open the logout confirmation modal
   const handleLogoutClick = () => {
     setShowModal(true);
   };
-
   const handleButtonClick = () => {
     onClose();
   }
-
   const handleProfileClick = () => {
-    setCurrentPage('Profile', '/profile');
     navigate('/profile');
   };
-
   const handleSettingsClick = () => {
-    setCurrentPage('My Settings', '/settings');
     navigate('/settings');
   };
-
   const handleChangePasswordClick = () => {
-    setCurrentPage('Change Password', '/change-password');
     navigate('/change-password');
   };
 

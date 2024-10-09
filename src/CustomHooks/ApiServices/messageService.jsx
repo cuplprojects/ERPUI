@@ -51,23 +51,3 @@ export const getMessageByLangAndType = async (lang, id) => {
     return console.log({lang, type});
   }
 };
-
-
-const getDefaultMessage = (lang, type) => {
-  const messages = {
-    en: {
-      success: "Operation completed successfully",
-      error: "An error occurred",
-      info: "Information message",
-      default: "Default message"
-    },
-    hi: {
-      success: "कार्य सफलतापूर्वक पूरा हुआ",
-      error: "एक त्रुटि उत्पन्न हुई",
-      info: "सूचना संदेश",
-      default: "डिफ़ॉल्ट संदेश"
-    }
-  };
-
-  return { description: messages[lang]?.[type] || messages[lang]?.default || messages.en.default };
-};
