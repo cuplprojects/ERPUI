@@ -19,14 +19,12 @@ import { useTranslation } from 'react-i18next';
 import { toast, ToastContainer } from 'react-toastify';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import AuthService from '../CustomHooks/ApiServices/AuthService';
-import { jwtDecode } from 'jwt-decode';
+// import AuthService from '../CustomHooks/ApiServices/AuthService';
 const Login = () => {
   const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
-  const { login } = AuthService;
   const { t } = useTranslation();
 
   // Theme Change Section
@@ -36,10 +34,6 @@ const Login = () => {
   const customMid = cssClasses[1];
   const customBtn = cssClasses[3];
   const customDarkText = cssClasses[4];
-  const customLightText = cssClasses[5];
-  const customLightBorder = cssClasses[6];
-  const customDarkBorder = cssClasses[7];
-  const customThead = cssClasses[8];
 
   const themeImages = {
     "purple-dark": PurpleTheme,

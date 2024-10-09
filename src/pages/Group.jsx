@@ -17,7 +17,8 @@ const Group = () => {
       const response = await axios.get('https://localhost:7223/api/Groups'); // Adjust the endpoint as needed
       setGroups(response.data);
     } catch (error) {
-      message.error('Failed to fetch groups!');
+      // message.error('Failed to fetch groups!');
+      console.log('Failed to fetch groups!');
     }
   };
 
