@@ -14,7 +14,7 @@ const Group = () => {
   // Fetch groups from the server
   const fetchGroups = async () => {
     try {
-      const response = await axios.get('https://localhost:7223/api/Groups'); // Adjust the endpoint as needed
+      const response = await axios.get('https://localhost:7212/api/Groups'); // Adjust the endpoint as needed
       setGroups(response.data);
     } catch (error) {
       message.error('Failed to fetch groups!');
@@ -41,7 +41,7 @@ const Group = () => {
     try {
       // Make POST request to add a new group
       const newGroup = { name, status };
-      await axios.post('https://localhost:7223/api/Groups', newGroup); // Adjust the endpoint as needed
+      await axios.post('https://localhost:7212/api/Groups', newGroup); // Adjust the endpoint as needed
       setGroups([...groups, newGroup]); // Update group list
       form.resetFields(); // Reset the form fields after submission
       setIsModalVisible(false); // Close the modal after submission
@@ -69,7 +69,7 @@ const Group = () => {
     }
 
     try {
-      await axios.put(`https://localhost:7223/api/Groups/${groupToEdit.id}`, updatedGroup);
+      await axios.put(`https://localhost:7212/api/Groups/${groupToEdit.id}`, updatedGroup);
       const updatedGroups = [...groups];
       updatedGroups[index] = updatedGroup;
       setGroups(updatedGroups);
@@ -96,7 +96,7 @@ const Group = () => {
     const updatedStatus = !groupToUpdate.status;
     
     try {
-      await axios.put(`https://localhost:7223/api/Groups/${groupToUpdate.id}`, { 
+      await axios.put(`https://localhost:7212/api/Groups/${groupToUpdate.id}`, { 
         ...groupToUpdate,
         status: updatedStatus 
       });

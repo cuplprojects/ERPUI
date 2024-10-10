@@ -5,156 +5,126 @@ import { FaLock } from "react-icons/fa";
 import { IoMdLock } from "react-icons/io";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-// Removed external validation imports
-// Removed themeStore and useStore imports for debugging purposes
-import jwtDecode from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode';
 import axios from 'axios';
-
 const ChangePassword = () => {
-  // Removed themeStore related code for simplicity
-  // Replace with static class names or default styles for testing
+  // Static class names for simplicity
   const customBtn = 'btn-primary'; // Example static class
   const customDarkText = 'text-dark';
   const customLight = 'bg-light';
   const customLightBorder = 'border-light';
 
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
+  // State object to store oldPassword and newPassword
+  const [formData, setFormData] = useState({
+    oldPassword: '',
+    newPassword: '',
+  });
+
+  // State for confirmPassword (used for future validations)
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false); // To prevent multiple submits
+
+  // State to handle password visibility
+  const [showPasswords, setShowPasswords] = useState({
+    showOldPassword: false,
+    showNewPassword: false,
+    showConfirmPassword: false,
+  });
 
   /**
-   * Validation Functions
+   * Handle input changes for formData
    */
-
-  // Validate that a password is not empty
-  const validateNotEmpty = (password, fieldName) => {
-    if (!password.trim()) {
-      toast.error(`${fieldName} cannot be empty.`, {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: true,
-        closeOnClick: true,
-        draggable: true,
-        style: { backgroundColor: '#dc3545', color: 'white' },
-      });
-      return false;
-    }
-    return true;
-  };
-
-  // Validate password complexity (e.g., minimum 8 characters, at least one letter and one number)
-  const validatePasswordComplexity = (password) => {
-    const complexityRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
-    if (!complexityRegex.test(password)) {
-      toast.error('New Password must be at least 8 characters long and include both letters and numbers.', {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: true,
-        closeOnClick: true,
-        draggable: true,
-        style: { backgroundColor: '#dc3545', color: 'white' },
-      });
-      return false;
-    }
-    return true;
-  };
-
-  // Validate that confirm password matches new password
-  const validatePasswordsMatch = (password, confirmPassword) => {
-    if (password !== confirmPassword) {
-      toast.error('New Password and Confirm Password do not match.', {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: true,
-        closeOnClick: true,
-        draggable: true,
-        style: { backgroundColor: '#dc3545', color: 'white' },
-      });
-      return false;
-    }
-    return true;
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
   };
 
   /**
-   * Handle Form Submission
+   * Handle confirmPassword change
    */
-  const handleSubmit = async (event) => {
+  const handleConfirmPasswordChange = (e) => {
+    setConfirmPassword(e.target.value);
+  };
+
+  /**
+   * Toggle password visibility
+   */
+  const togglePasswordVisibility = (field) => {
+    setShowPasswords((prevState) => ({
+      ...prevState,
+      [field]: !prevState[field],
+    }));
+  };
+  //get user id here -->
+  const userToken = localStorage.getItem('authToken');
+  const authToken = userToken; // assume you have the token stored in a variable
+  const decodedToken = jwtDecode(authToken);
+  const [firstKey, userIdApi] = Object.entries(decodedToken)[0]; // extract the userId from the decoded token
+  // console.log("user id with token -",userIdApi)//console for checking user  id with token
+
+  /**
+   * Handle form submission
+   * Currently, it only displays a success toast without any logic
+   */
+  const handleSubmit = (event) => {
     event.preventDefault();
-
-    // Client-side Validations
-    if (!validateNotEmpty(currentPassword, 'Current Password')) return;
-    if (!validateNotEmpty(newPassword, 'New Password')) return;
-    if (!validateNotEmpty(confirmPassword, 'Confirm Password')) return;
-    if (!validatePasswordComplexity(newPassword)) return;
-    if (!validatePasswordsMatch(newPassword, confirmPassword)) return;
-
-    try {
-      setIsSubmitting(true); // Disable the form submission
-
-      const userToken = localStorage.getItem('authToken');
-      if (!userToken) {
-        throw new Error('Authorization token is missing');
-      }
-
-      let decodedToken;
-      try {
-        decodedToken = jwtDecode(userToken);
-      } catch (decodeError) {
-        throw new Error('Invalid token format');
-      }
-
-      const userId = decodedToken?.userId; // Get userId from token
-      if (!userId) {
-        throw new Error('Invalid token: user ID missing');
-      }
-
-      const apiUrl = `https://localhost:7212/api/Login/ChangePassword/${userId}`;
-      const payload = {
-        oldPassword: currentPassword,
-        newPassword: newPassword,
-      };
-
-      // Make API call to change password
-      const response = await axios.put(apiUrl, payload, {
-        headers: { Authorization: `Bearer ${userToken}` }
-      });
-
-      // Handle success
-      toast.success('Password updated successfully', {
+  
+    if (formData.newPassword !== confirmPassword) {
+      toast.error('New passwords do not match!', {
         position: "top-right",
         autoClose: 3000,
         hideProgressBar: true,
         closeOnClick: true,
         draggable: true,
-        style: { backgroundColor: '#28a745', color: 'white' },
-      });
-
-      // Optionally reset the form fields
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-    } catch (error) {
-      // Handle error
-      console.error('Error changing password:', error);
-      toast.error(`Error: ${error.response?.data?.message || error.message}`, {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: true,
-        closeOnClick: true,
-        draggable: true,
         style: { backgroundColor: '#dc3545', color: 'white' },
       });
-    } finally {
-      setIsSubmitting(false); // Re-enable form submission
+      return;
     }
+  
+    const userId = userIdApi; // extracted from the decoded token
+    const apiUrl = `https://localhost:7212/api/Login/Changepassword/${userId}`;
+    const payload = {
+      oldPassword: formData.oldPassword,
+      newPassword: formData.newPassword,
+    };
+  
+    axios.put(apiUrl, payload)
+      .then((response) => {
+        toast.info('Password changed successfully!', {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: true,
+          closeOnClick: true,
+          draggable: true,
+          style: { backgroundColor: '#17a2b8', color: 'white' },
+        });
+      })
+      .catch((error) => {
+        toast.error('Error changing password: ' + error.message, {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: true,
+          closeOnClick: true,
+          draggable: true,
+          style: { backgroundColor: '#dc3545', color: 'white' },
+        });
+      });
+  
+    // Optionally reset the form fields
+    setFormData({
+      oldPassword: '',
+      newPassword: '',
+    });
+    setConfirmPassword('');
   };
-
+  
   return (
-    <Container className={`mt-5 w-100 p-4 shadow-lg rounded-5 ${customLightBorder} ${customLight}`} style={{ maxWidth: '800px' }}>
+    <Container
+      className={`mt-5 w-100 p-4 shadow-lg rounded-5 ${customLightBorder} ${customLight}`}
+      style={{ maxWidth: '800px' }}
+    >
       <Row>
         <Col lg={12}>
           <div className="d-flex align-items-center justify-content-center mb-4">
@@ -173,78 +143,81 @@ const ChangePassword = () => {
         </Col>
         <Col md={6} lg={7}>
           <Form onSubmit={handleSubmit}>
-            <Form.Group className="mb-3" controlId="formCurrentPassword">
+            {/* Old Password Field */}
+            <Form.Group className="mb-3" controlId="formOldPassword">
               <Form.Label className={`${customBtn === 'btn-dark' ? "text-white" : `${customDarkText}`}`}>
                 Current Password
               </Form.Label>
               <InputGroup>
                 <FormControl
-                  type={showCurrentPassword ? 'text' : 'password'}
+                  type={showPasswords.showOldPassword ? 'text' : 'password'}
                   placeholder="Enter current password"
-                  className='rounded-start'
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  name="oldPassword"
+                  value={formData.oldPassword}
+                  onChange={handleInputChange}
                 />
                 <InputGroup.Text
                   className={`password-eye-icon ${customBtn}`}
-                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                  onClick={() => togglePasswordVisibility('showOldPassword')}
                   style={{ cursor: 'pointer' }}
                 >
-                  {showCurrentPassword ? <AiOutlineEye /> : <AiOutlineEyeInvisible />}
+                  {showPasswords.showOldPassword ? <AiOutlineEye /> : <AiOutlineEyeInvisible />}
                 </InputGroup.Text>
               </InputGroup>
             </Form.Group>
 
+            {/* New Password Field */}
             <Form.Group className="mb-3" controlId="formNewPassword">
               <Form.Label className={`${customBtn === 'btn-dark' ? "text-white" : `${customDarkText}`}`}>
                 New Password
               </Form.Label>
               <InputGroup>
                 <FormControl
-                  type={showNewPassword ? 'text' : 'password'}
+                  type={showPasswords.showNewPassword ? 'text' : 'password'}
                   placeholder="Enter new password"
-                  className='rounded-start'
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
+                  name="newPassword"
+                  value={formData.newPassword}
+                  onChange={handleInputChange}
                 />
                 <InputGroup.Text
                   className={`password-eye-icon ${customBtn}`}
-                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  onClick={() => togglePasswordVisibility('showNewPassword')}
                   style={{ cursor: 'pointer' }}
                 >
-                  {showNewPassword ? <AiOutlineEye /> : <AiOutlineEyeInvisible />}
+                  {showPasswords.showNewPassword ? <AiOutlineEye /> : <AiOutlineEyeInvisible />}
                 </InputGroup.Text>
               </InputGroup>
             </Form.Group>
 
+            {/* Confirm New Password Field */}
             <Form.Group className="mb-3" controlId="formConfirmPassword">
               <Form.Label className={`${customBtn === 'btn-dark' ? "text-white" : `${customDarkText}`}`}>
                 Confirm New Password
               </Form.Label>
               <InputGroup>
                 <FormControl
-                  type={showConfirmPassword ? 'text' : 'password'}
+                  type={showPasswords.showConfirmPassword ? 'text' : 'password'}
                   placeholder="Confirm new password"
-                  className='rounded-start'
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  onChange={handleConfirmPasswordChange}
                 />
                 <InputGroup.Text
                   className={`password-eye-icon ${customBtn}`}
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  onClick={() => togglePasswordVisibility('showConfirmPassword')}
                   style={{ cursor: 'pointer' }}
                 >
-                  {showConfirmPassword ? <AiOutlineEye /> : <AiOutlineEyeInvisible />}
+                  {showPasswords.showConfirmPassword ? <AiOutlineEye /> : <AiOutlineEyeInvisible />}
                 </InputGroup.Text>
               </InputGroup>
             </Form.Group>
 
+            {/* Submit Button */}
             <Button
               type="submit"
-              disabled={isSubmitting}
-              className={`${customBtn} border-0 custom-zoom-btn w-100`}
+              disabled={false} // No submission logic, so always enabled
+              className={`${customBtn} ${customBtn === "btn-dark" ? "border border-white" : "border-0"} custom-zoom-btn w-100`}
             >
-              {isSubmitting ? 'Submitting...' : 'Submit'}
+              Submit
             </Button>
           </Form>
           <ToastContainer />
