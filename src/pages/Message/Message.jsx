@@ -67,6 +67,13 @@ const Message = () => {
 
   const columns = [
     {
+      title: t('messageId'),
+      dataIndex: "messageId",
+      key: "messageId",
+      sorter: (a, b) => a.messageId - b.messageId,
+      width: 120,
+    },
+    {
       title: t('type'),
       dataIndex: "type",
       key: "type",

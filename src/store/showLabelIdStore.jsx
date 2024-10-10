@@ -4,7 +4,7 @@ import { persist } from 'zustand/middleware';
 const useShowLabelIdStore = create(
   persist(
     (set, get) => ({
-      showLabelId: true, // Default value
+      showLabelId: false, // Default value
       toggleShowLabelId: () => set((state) => ({ showLabelId: !state.showLabelId })),
       setShowLabelId: (value) => set({ showLabelId: value }),
       getShowLabelId: () => get().showLabelId,
