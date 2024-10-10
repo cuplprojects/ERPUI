@@ -8,53 +8,31 @@ import SampleUser1 from "./../assets/sampleUsers/defaultUser.jpg";
 import "./../styles/Profile.css";
 import { jwtDecode } from 'jwt-decode';
 import axios from 'axios';
+import useUserDataStore from '../store/userDataStore';
 
 const UserProfile = () => {
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
   const [customDark, customMid, customLight, customBtn, customDarkText, , customLightBorder, customDarkBorder] = cssClasses;
 
-  const [userData, setUserData] = useState({
-    firstName: "",
-    middleName: "",
-    lastName: "",
-    gender: "",
-    mobileNumber: "",
-    userName: "",
-    address: "",
-    role: "",
-    profileImage: SampleUser1
-  });
+  const { userData, setUserData, fetchUserData } = useUserDataStore();
   const [isEditing, setIsEditing] = useState(false);
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
   const [isZoomed, setIsZoomed] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [profileImageKey, setProfileImageKey] = useState(Date.now());
 
-  const userToken = localStorage.getItem('authToken');
-  const [, userIdApi] = Object.entries(jwtDecode(userToken))[0];
-
-  useEffect(() => {
-    axios.get(`https://localhost:7212/api/User/${userIdApi}`)
-      .then(response => {
-        const fetchedUserData = response.data;
-        setUserData({
-          ...fetchedUserData,
-          mobileNumber: fetchedUserData.mobileNo,
-          role: fetchedUserData.roleId.toString(),
-          profileImage: `${import.meta.env.VITE_API_BASE_URL}/${fetchedUserData.profilePicturePath}`
-        });
-        console.log(fetchedUserData);
-      })
-      .catch(error => {
-        console.error(error);
-      });
-  }, [userIdApi]);
+  const APIUrlBase = import.meta.env.VITE_API_BASE_URL;
+  const APIUrl = import.meta.env.VITE_API_BASE_API;
 
   useEffect(() => {
-    setUserData(prevData => ({
-      ...prevData,
-      displayedName: `${prevData.firstName} ${prevData.middleName} ${prevData.lastName}`
-    }));
-  }, [userData.firstName, userData.middleName, userData.lastName]);
+    const loadUserData = async () => {
+      setIsLoading(true);
+      await fetchUserData();
+      setIsLoading(false);
+    };
+    loadUserData();
+  }, [fetchUserData]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -87,17 +65,18 @@ const UserProfile = () => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
-    input.onchange = (event) => {
+    input.onchange = async (event) => {
       const file = event.target.files[0];
       if (file) {
         const reader = new FileReader();
-        reader.onloadend = () => {
-          setUserData(prevData => ({...prevData, profileImage: reader.result}));
-          if (userData.profileImage === SampleUser1) {
-            uploadImage(file);
+        reader.onloadend = async () => {
+          if (userData?.profileImage === SampleUser1) {
+            await uploadImage(file);
           } else {
-            updateProfilePicture(file);
+            await updateProfilePicture(file);
           }
+          await fetchUserData();
+          setProfileImageKey(Date.now());
         };
         reader.readAsDataURL(file);
       }
@@ -105,38 +84,57 @@ const UserProfile = () => {
     input.click();
   };
 
-  const uploadImage = (file) => {
-    console.log("Uploading new image:", file);
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    axios.post(`https://localhost:7212/api/User/upload/${userIdApi}`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    })
-      .then(response => console.log('Upload successful', response))
-      .catch(error => console.error('Upload failed', error));
+  const uploadImage = async (file) => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      await axios.post(`${APIUrl}/User/upload`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      await fetchUserData();
+      window.location.reload();
+      console.log('Upload successful');
+    } catch (error) {
+      console.error('Upload failed', error);
+    }
   };
 
-  const updateProfilePicture = (file) => {
-    console.log("Updating profile picture:", file);
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    axios.put(`https://localhost:7212/api/User/updateProfilePicture/${userIdApi}`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    })
-      .then(response => console.log('Update successful', response))
-      .catch(error => console.error('Update failed', error));
+  const updateProfilePicture = async (file) => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      await axios.put(`${APIUrl}/User/updateProfilePicture/${userData.userId}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      await fetchUserData();
+      window.location.reload();
+      console.log('Update successful');
+    } catch (error) {
+      console.error('Update failed', error);
+    }
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setUserData(prevData => ({...prevData, [name]: value}));
   };
+
+  const getProfileImageUrl = (imagePath) => {
+    if (!imagePath) return SampleUser1;
+    return imagePath.startsWith('http') ? imagePath : `${APIUrlBase}/${imagePath}?${profileImageKey}`;
+  };
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!userData) {
+    return <div>Error: Unable to load user data</div>;
+  }
 
   return (
     <Container className="my-4">
@@ -162,7 +160,7 @@ const UserProfile = () => {
         <Row className="align-items-center mb-4">
           <Col xs={12} sm={3} md={2} className="text-center position-relative">
             <img
-              src={userData.profileImage}
+              src={getProfileImageUrl(userData.profilePicturePath)}
               alt=""
               width="100px"
               className={`rounded-circle ${customDarkBorder}`}
@@ -191,13 +189,13 @@ const UserProfile = () => {
             </sub>
             {isZoomed && (
               <div className={`zoomed-image rounded-circle ${isZoomed ? 'show' : 'hide'}`} onClick={handleZoomedImageClick}>
-                <img src={userData.profileImage} alt="" width="200px" className="rounded-circle" />
+                <img src={getProfileImageUrl(userData.profilePicturePath)} alt="" width="200px" className="rounded-circle" />
               </div>
             )}
           </Col>
           <Col xs={12} sm={12} md={8} className="mt-3">
             <h4 className={`${customDarkText}`}>{userData.userName}</h4>
-            <p className={`text-muted mb-0 ${customDarkText}`}>{userData.displayedName}</p>
+            <p className={`text-muted mb-0 ${customDarkText}`}>{`${userData.firstName} ${userData.middleName} ${userData.lastName}`}</p>
           </Col>
         </Row>
         <Form>
