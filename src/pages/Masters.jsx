@@ -37,10 +37,11 @@ import AllUsers from '../sub-Components/allUsers';
 import CameraList from './CameraList';
 import RolesAndDepartments from './Roles/RolePage';
 import Team from './team';
-import SystemSettings from './SystemSettings';
+
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import Report from './Report.jsx';
+import SystemSettings from './Configurtaion/SystemSettings.jsx';
 
 const Sidebar = () => {
   // Theme Change Section
