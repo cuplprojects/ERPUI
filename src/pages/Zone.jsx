@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Input, Button, Select, Table, Form, message, Modal } from 'antd';
 const { Option } = Select;
 import axios from 'axios';
+import API from '../CustomHooks/MasterApiHooks/api';
 
 const Zone = () => {
   const [zones, setZones] = useState([]);
@@ -24,7 +25,7 @@ const Zone = () => {
 
   const getZone = async () => {
     try {
-      const response = await axios.get('https://localhost:7212/api/Zones');
+      const response = await API.get('/Zones');
       setZones(response.data);
     } catch (error) {
       console.error("Failed to fetch zones", error);
@@ -33,7 +34,7 @@ const Zone = () => {
 
   const getCamera = async () => {
     try {
-      const response = await axios.get('https://localhost:7212/api/Cameras');
+      const response = await API.get('/Cameras');
       setCamera(response.data);
     } catch (error) {
       console.error("Failed to fetch cameras", error);
@@ -42,7 +43,7 @@ const Zone = () => {
 
   const getMachine = async () => {
     try {
-      const response = await axios.get('https://localhost:7212/api/Machines');
+      const response = await API.get('/Machines');
       setMachine(response.data);
     } catch (error) {
       console.error("Failed to fetch machines", error);
@@ -65,7 +66,7 @@ const Zone = () => {
     };
 
     try {
-      await axios.post('https://localhost:7212/api/Zones', newZone);
+      await API.post('/Zones', newZone);
       getZone();
       form.resetFields();
       setIsModalVisible(false);
@@ -91,7 +92,7 @@ const Zone = () => {
     }
 
     try {
-      await axios.put(`https://localhost:7212/api/Zones/${originalZone.zoneId}`, updatedZone);
+      await API.put(`/Zones/${originalZone.zoneId}`, updatedZone);
       const updatedZones = [...zones];
       updatedZones[index] = updatedZone;
       setZones(updatedZones);

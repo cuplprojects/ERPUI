@@ -3,6 +3,7 @@ import { Table, Select, Input, Space, Modal, Button, Typography, Row, Col, Card,
 import { EyeOutlined, EditOutlined } from '@ant-design/icons';
 import 'antd/dist/reset.css'; // Import AntD styles
 import { fetchUsers } from '../CustomHooks/ApiServices/userService';
+const BaseAPIUrl = import.meta.env.VITE_API_BASE_API;
 
 const { Option } = Select;
 const { Title } = Typography;
@@ -85,7 +86,7 @@ const AllUsers = () => {
       title: 'Profile Picture',
       dataIndex: 'profilePicturePath',
       key: 'profilePicturePath',
-      render: (path) => path ? <img src={path} alt="Profile" width={50} /> : 'No Picture',
+      render: (path) => path ? <img src={`${BaseAPIUrl}/${path}`} alt="Profile" width={50} /> : 'No Picture',
     },
     visibleColumns.address && {
       title: 'Address',

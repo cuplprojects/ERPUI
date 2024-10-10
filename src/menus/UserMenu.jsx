@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaUserCircle, FaPowerOff } from 'react-icons/fa';
 import { ImProfile } from "react-icons/im";
 import { IoSettingsSharp } from "react-icons/io5";
@@ -11,6 +11,7 @@ import "./../styles/userMenu.css"
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import SampleUser1 from "./../assets/sampleUsers/sampleUser1.jpg";
+import useUserDataStore from '../store/userDataStore';
 
 const UserMenu = ({ onClose }) => {
 
@@ -22,6 +23,12 @@ const UserMenu = ({ onClose }) => {
   const customBtn = cssClasses[3];
   const [showModal, setShowModal] = useState(false); // State for modal visibility
   const navigate = useNavigate(); // Hook for programmatic navigation
+  const { userData, fetchUserData } = useUserDataStore();
+
+  useEffect(() => {
+    fetchUserData();
+  }, [fetchUserData]);
+
   // Function to open the logout confirmation modal
   const handleLogoutClick = () => {
     setShowModal(true);
@@ -63,9 +70,9 @@ const UserMenu = ({ onClose }) => {
     >
       {/* User picture */}
       <div className="text-center mb-2 custom-zoom-btn">
-        {SampleUser1 ? (
+        {userData?.profilePicturePath ? (
           <img
-            src={SampleUser1}
+            src={`${import.meta.env.VITE_API_BASE_URL}/${userData.profilePicturePath}`}
             alt=""
             width="80px"
             className='rounded-circle'
@@ -129,4 +136,3 @@ const UserMenu = ({ onClose }) => {
 }
 
 export default UserMenu;
-
