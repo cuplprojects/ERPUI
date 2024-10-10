@@ -4,47 +4,61 @@ import { Container, Row, Col } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import NavigationBar from '../menus/NavigationBar';
 import UserMenu from '../menus/UserMenu';
-import Notification from '../menus/Notification'; // Import the Notification component
+import Notification from '../menus/Notification';
 import "./../styles/navbar.css";
 import { RiNotification2Fill } from "react-icons/ri";
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
+import { Link } from 'react-router-dom';
+import useUserDataStore from '../store/userDataStore';
 import SampleUser1 from "./../assets/sampleUsers/sampleUser1.jpg";
+const apiUrl = import.meta.env.VITE_API_BASE_URL;
+
 const Navbar = () => {
 
-  //Theme Changer Section
+  //Theme Change Section
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
-  const customDark = cssClasses[0]; 
-  const customMid= cssClasses[1]; 
-  const customLight= cssClasses[2]; 
-  const customBtn= cssClasses[3]; 
+  const customDark = cssClasses[0];
+  const customMid = cssClasses[1];
+  const customLight = cssClasses[2];
+  const customBtn = cssClasses[3];
+  const customDarkText = cssClasses[4];
+  const customLightText = cssClasses[5]
+  const customLightBorder = cssClasses[6]
+  const customDarkBorder = cssClasses[7]
 
   const [showNav, setShowNav] = useState(false);
   const [userMenu, setUserMenu] = useState(false);
-  const [showNotification, setShowNotification] = useState(false); // State for the notification menu
+  const [showNotification, setShowNotification] = useState(false);
 
   const navRef = useRef(null);
   const userMenuRef = useRef(null);
   const notificationRef = useRef(null);
-  const containerRef = useRef(null); // Reference for the container
+  const containerRef = useRef(null);
+
+  const { userData, fetchUserData } = useUserDataStore();
+
+  useEffect(() => {
+    fetchUserData();
+  }, [fetchUserData]);
 
   const toggleNav = () => {
     setShowNav(prev => !prev);
-    setUserMenu(false); // Hide user menu when nav menu is toggled
-    setShowNotification(false); // Hide notification menu when nav menu is toggled
+    setUserMenu(false);
+    setShowNotification(false);
   };
 
   const toggleUserMenu = () => {
     setUserMenu(prev => !prev);
-    setShowNav(false); // Hide nav menu when user menu is toggled
-    setShowNotification(false); // Hide notification menu when user menu is toggled
+    setShowNav(false);
+    setShowNotification(false);
   };
 
   const toggleNotificationMenu = () => {
     setShowNotification(prev => !prev);
-    setShowNav(false); // Hide nav menu when notification menu is toggled
-    setUserMenu(false); // Hide user menu when notification menu is toggled
+    setShowNav(false);
+    setUserMenu(false);
   };
 
   const handleClickOutside = (event) => {
@@ -86,7 +100,6 @@ const Navbar = () => {
     }
   }, [showNotification]);
 
-  // Function to close the navigation bar
   const closeNav = () => {
     setShowNav(false);
   };
@@ -114,7 +127,7 @@ const Navbar = () => {
             </button>
           </Col>
           <Col xs={9} md={10} lg={10} className="d-flex align-items-center justify-content-center">
-            <div className="ms-2 fw-bold fs-4">CUPL | ApexERP</div>
+            <Link to="/dashboard" className="ms-2 fw-bold fs-4 text-light " style={{textDecoration:"none"}}>CUPL | ApexERP</Link>
           </Col>
           <Col xs={2} md={1} lg={1} className="d-flex align-items-center justify-content-end">
             <button
@@ -132,26 +145,22 @@ const Navbar = () => {
               style={{ cursor: 'pointer' }}
             >
               <img
-              src={SampleUser1}
-              alt=""
-              width="40px"
-              className='rounded-circle'
-            />
-              {/* <FaUserCircle className="fs-2 text-light custom-zoom-btn" /> */}
+                src={userData?.profilePicturePath ? `${apiUrl}/${userData.profilePicturePath}` : SampleUser1}
+                alt={`${userData?.firstName} ${userData?.lastName}`}
+                width="40px"
+                className='rounded-circle'
+              />
             </button>
           </Col>
         </Row>
       </Container>
 
-      {/* NavigationBar with smooth expand/collapse */}
       <div
         ref={navRef}
         className='m-1 border rounded-bottom-5'
         style={{
           position: 'absolute',
-          // top: '53px',
           left: 0,
-          // right: 0,
           overflow: 'hidden',
           transition: '600ms ease-in-out, opacity 600ms ease-in-out',
           opacity: showNav ? 1 : 0,
@@ -161,7 +170,6 @@ const Navbar = () => {
         <NavigationBar onLinkClick={closeNav} />
       </div>
 
-      {/* UserMenu with smooth expand/collapse */}
       <div
         ref={userMenuRef}
         className='m-1'
@@ -179,7 +187,6 @@ const Navbar = () => {
         <UserMenu onClose={closeUserMenu} />
       </div>
 
-      {/* Notification Menu with smooth expand/collapse */}
       <div
         ref={notificationRef}
         className='m-1'
@@ -187,7 +194,7 @@ const Navbar = () => {
           width: 'auto',
           position: 'absolute',
           top: '53px',
-          right: '40px', // Adjust position if needed
+          right: '40px',
           overflow: 'hidden',
           transition: '500ms ease-in-out, opacity 500ms ease-in-out',
           opacity: showNotification ? 1 : 0,
@@ -201,5 +208,3 @@ const Navbar = () => {
 };
 
 export default Navbar;
-
-

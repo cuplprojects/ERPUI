@@ -15,8 +15,9 @@ import {
   FaPlusCircle,
   FaCaretDown,
   FaCaretLeft,
+  FaFileAlt,
+  FaCogs
 } from 'react-icons/fa';
-import {BsQuestionSquareFill} from  'react-icons/bs';
 
 import GroupManager from './Group'
 import ProjectManager from './Project';
@@ -34,6 +35,10 @@ import Team from './team';
 import SystemSettings from './SystemSettings';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
+
+import Report from './Report.jsx';
+import {BsQuestionSquareFill} from 'react-icons/bs'
+
 
 const Sidebar = () => {
   // Theme Change Section
@@ -83,6 +88,7 @@ const Sidebar = () => {
         { key: 'securityQuestions', icon: <BsQuestionSquareFill className={`${customDarkText} menu-icon`} />, label: 'Add Questions', permission: '2.1' },
       ],
     },
+
     { key: 'group', icon: <FaUsers className={`${customDarkText} menu-icon`} />, label: 'Group', permission: '2.2' },
     { key: 'type', icon: <FaUsers className={`${customDarkText} menu-icon`} />, label: 'Type', permission: '2.3' },
     { key: 'project', icon: <FaProjectDiagram className={`${customDarkText} menu-icon`} />, label: 'Project', permission: '2.4' },
@@ -92,6 +98,7 @@ const Sidebar = () => {
     { key: 'alarm', icon: <FaBell className={`${customDarkText} menu-icon`} />, label: 'Alarm', permission: '2.8' },
     { key: 'team', icon: <FaUsers className={`${customDarkText} menu-icon`} />, label: 'Team', permission: '2.9' },
     { key: 'systemSettings', icon: <FaCog className={`${customDarkText} menu-icon`} />, label: 'Process Settings', permission: '2.10' },
+
   ];
 
   // Filter the menu items based on user permissions
@@ -141,6 +148,7 @@ const Sidebar = () => {
           </Nav>
         </Col>
         <Col md={9}  className={`content-area rounded-end-4 ${customLight}`}>
+
           {userPermissions.includes('2.1') && selectedMenu === 'RolePage' && <RolesAndDepartments />}
           {userPermissions.includes('2.1') && selectedMenu === 'addUser' && <AddUsers />}
           {userPermissions.includes('2.1') && selectedMenu === 'allUsers' && <AllUsers />}
@@ -154,6 +162,7 @@ const Sidebar = () => {
           {userPermissions.includes('2.10') && selectedMenu === 'systemSettings' && <SystemSettings />}
           {userPermissions.includes('2.7') && selectedMenu === 'machine' && <Machine />}
           {userPermissions.includes('2.8') && selectedMenu === 'alarm' && <AlarmMaster />}
+
         </Col>
       </Row>
     </Container>

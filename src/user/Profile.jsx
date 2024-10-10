@@ -1,52 +1,45 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Form, Button, InputGroup } from 'react-bootstrap';
-import { FaEdit } from 'react-icons/fa';
+import { Container, Row, Col, Form, Button } from 'react-bootstrap';
+import { FaPencilAlt } from 'react-icons/fa';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { IoMdMail } from "react-icons/io";
-import { FaUser } from "react-icons/fa";
-import { BsTelephoneFill } from "react-icons/bs";
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
-import SampleUser1 from "./../assets/sampleUsers/sampleUser1.jpg";
-import ChangeMobileNumber from './../menus/ChangeMobileNumber'
-import { FaTimes } from 'react-icons/fa';
+import SampleUser1 from "./../assets/sampleUsers/defaultUser.jpg";
 import "./../styles/Profile.css";
-const UserProfile = () => {
+import { jwtDecode } from 'jwt-decode';
+import axios from 'axios';
+import useUserDataStore from '../store/userDataStore';
 
-  //Theme Change Section
+const UserProfile = () => {
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
-  const customDark = cssClasses[0];
-  const customMid = cssClasses[1];
-  const customLight = cssClasses[2];
-  const customBtn = cssClasses[3];
-  const customDarkText = cssClasses[4];
-  const customLightText = cssClasses[5]
-  const customLightBorder = cssClasses[6]
-  const customDarkBorder = cssClasses[7]
+  const [customDark, customMid, customLight, customBtn, customDarkText, , customLightBorder, customDarkBorder] = cssClasses;
 
+  const { userData, setUserData, fetchUserData } = useUserDataStore();
   const [isEditing, setIsEditing] = useState(false);
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
-  const [firstName, setFirstName] = useState("Jayant");
-  const [middleName, setMiddleName] = useState("Roy");
-  const [lastName, setLastName] = useState("");
-  const [gender, setGender] = useState("Male");
-  const [language, setLanguage] = useState("English");
-  const [mobileNumber, setMobileNumber] = useState("+91 8400019683");
-
-  const [initialValues, setInitialValues] = useState({
-    firstName: "Jayant",
-    middleName: "Roy",
-    lastName: "",
-    gender: "Male",
-    language: "English",
-  });
-  const [role] = useState("Developer");
-  const [department] = useState("Information Technology (IT)");
-  const [permissions] = useState("Edit, View, Delete");
-  const permissionArray = permissions.split(', ');
-  const [displayedName, setDisplayedName] = useState(`${firstName} ${middleName} ${lastName}`);
   const [isZoomed, setIsZoomed] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [profileImageKey, setProfileImageKey] = useState(Date.now());
+
+  const APIUrlBase = import.meta.env.VITE_API_BASE_URL;
+  const APIUrl = import.meta.env.VITE_API_BASE_API;
+
+  useEffect(() => {
+    const loadUserData = async () => {
+      setIsLoading(true);
+      await fetchUserData();
+      setIsLoading(false);
+    };
+    loadUserData();
+  }, [fetchUserData]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentDateTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const handleImageClick = (event) => {
     event.stopPropagation();
@@ -68,61 +61,87 @@ const UserProfile = () => {
     };
   }, []);
 
-  const handleEditClick = () => setIsEditing(true);
-  const handleSaveClick = () => {
-    const fields = [
-      { name: "First Name", value: firstName, initial: initialValues.firstName },
-      { name: "Middle Name", value: middleName, initial: initialValues.middleName },
-      { name: "Last Name", value: lastName, initial: initialValues.lastName },
-      { name: "Gender", value: gender, initial: initialValues.gender },
-      { name: "Language", value: language, initial: initialValues.language },
-    ];
-
-    let isUpdated = false; // Track if any field was updated
-
-    fields.forEach(field => {
-      if (field.value !== field.initial) {
-        alert(`${field.name} changed from ${field.initial} to ${field.value}`); // Use alert() instead of toast()
-        isUpdated = true; // Mark that an update occurred
+  const handleEditImageClick = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = async (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+          if (userData?.profileImage === SampleUser1) {
+            await uploadImage(file);
+          } else {
+            await updateProfilePicture(file);
+          }
+          await fetchUserData();
+          setProfileImageKey(Date.now());
+        };
+        reader.readAsDataURL(file);
       }
-    });
+    };
+    input.click();
+  };
 
-    if (isUpdated) {
-      setDisplayedName(`${firstName} ${middleName} ${lastName}`);
-      setInitialValues({ // Update the initial values
-        firstName,
-        middleName,
-        lastName,
-        gender,
-        language,
+  const uploadImage = async (file) => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      await axios.post(`${APIUrl}/User/upload`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
       });
+      await fetchUserData();
+      window.location.reload();
+      console.log('Upload successful');
+    } catch (error) {
+      console.error('Upload failed', error);
     }
-
-    setIsEditing(false); // End editing after save
   };
 
-  const handleMobileSave = (newNumber) => {
-    setMobileNumber(newNumber);  // Update the mobile number in the state
+  const updateProfilePicture = async (file) => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      await axios.put(`${APIUrl}/User/updateProfilePicture/${userData.userId}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      await fetchUserData();
+      window.location.reload();
+      console.log('Update successful');
+    } catch (error) {
+      console.error('Update failed', error);
+    }
   };
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentDateTime(new Date());
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setUserData(prevData => ({...prevData, [name]: value}));
+  };
+
+  const getProfileImageUrl = (imagePath) => {
+    if (!imagePath) return SampleUser1;
+    return imagePath.startsWith('http') ? imagePath : `${APIUrlBase}/${imagePath}?${profileImageKey}`;
+  };
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!userData) {
+    return <div>Error: Unable to load user data</div>;
+  }
 
   return (
     <Container className="my-4">
-      <div style={{ zIndex: "999999999999999999999999" }}>
-      </div>
-      <div className={` d-flex justify-content-between align-items-center ${customDark} ${customDark === 'dark-dark' ? `${customLightBorder} border-top border-start border-end border-light border-bottom-0` : ""} 
+      <div className={`d-flex justify-content-between align-items-center ${customDark} ${customDark === 'dark-dark' ? `${customLightBorder} border-top border-start border-end border-light border-bottom-0` : ""} 
       ${customBtn === 'dark-dark' ? "" : ""} text-white p-3 rounded-top`}>
         <div className="greet">
-          <h2>Welcome, Jayant</h2>
-          {/* <p className="mb-0">{currentDateTime.toLocaleString()} - {new Intl.DateTimeFormat('en-US', {
-            weekday: 'long',
-          }).format(currentDateTime)}</p> */}
+          <h2>Welcome, {userData.firstName}</h2>
           <p className="mb-0 d-none d-md-block">
             {new Intl.DateTimeFormat('en-US', {
               day: '2-digit',
@@ -136,87 +155,59 @@ const UserProfile = () => {
             }).format(currentDateTime)}
           </p>
         </div>
-        <div className="button d-lg-none d-md-none">
-          {isEditing ? (
-            <Button
-              className={`${customDark === 'dark-dark' ? `${customBtn} border-white` : `${customMid} ${customDarkBorder} ${customDarkText}`}`}
-              onClick={handleSaveClick}
-            >
-              Save
-            </Button>
-          ) : (
-            <Button
-              className={` ${customDark === 'dark-dark' ? `${customBtn} border-white` : `${customMid} ${customDarkBorder} ${customDarkText}`}`}
-              onClick={handleEditClick}
-            >
-              Edit
-            </Button>
-          )}
-        </div>
       </div>
-      {/* ----------------------------------------------------------------------------------------------------------------------- */}
-      <div className={` p-4  rounded-bottom shadow-lg ${customLight} ${customDark === 'dark-dark' ? `${customDarkBorder} border-1` : "border-light"} `}>
+      <div className={`p-4 rounded-bottom shadow-lg ${customLight} ${customDark === 'dark-dark' ? `${customDarkBorder} border-1` : "border-light"}`}>
         <Row className="align-items-center mb-4">
-          <Col xs={12} sm={3} md={2} className="text-center position-relative ">
+          <Col xs={12} sm={3} md={2} className="text-center position-relative">
             <img
-              src={SampleUser1}
+              src={getProfileImageUrl(userData.profilePicturePath)}
               alt=""
               width="100px"
-              className='rounded-circle'
+              className={`rounded-circle ${customDarkBorder}`}
               onClick={handleImageClick}
             />
+            <sub>
+              <Button
+                variant="link"
+                className={`position-absolute p-0 rounded-circle ${customDark === "dark-dark" ? `${customMid} ${customDarkText} ${customDarkBorder} border-2` : `${customDarkText} ${customMid} ${customDarkBorder}`}`}
+                style={{
+                  bottom: '0',
+                  right: '0',
+                  transform: 'translate(50%, 50%)',
+                  width: '30px',
+                  height: '30px',
+                  padding: '0',
+                }}
+                onClick={handleEditImageClick}
+              >
+                <FaPencilAlt
+                  size="sm"
+                  className="p-1"
+                  style={{ width: '100%', height: '100%' }}
+                />
+              </Button>
+            </sub>
             {isZoomed && (
               <div className={`zoomed-image rounded-circle ${isZoomed ? 'show' : 'hide'}`} onClick={handleZoomedImageClick}>
-                <img src={SampleUser1} alt="" width="200px" className='rounded-circle' />
+                <img src={getProfileImageUrl(userData.profilePicturePath)} alt="" width="200px" className="rounded-circle" />
               </div>
             )}
-
-            {/* <FaUser className="rounded-circle border border-dark border-2 " size={100} /> */}
-            <Button
-              variant="link"
-              className="position-absolute top-0 end-0 p-0"
-              style={{ transform: 'translate(25%, -25%)' }}
-            >
-              <FaEdit size={20} className="custom-theme-dark-text" />
-            </Button>
           </Col>
-
           <Col xs={12} sm={12} md={8} className="mt-3">
-            <h4 className={`${customDarkText}`}>Mr. {displayedName}</h4>
-            <p className={`text-muted mb-0 ${customDarkText}`}>jayanta@chandrakala.co.in</p>
+            <h4 className={`${customDarkText}`}>{userData.userName}</h4>
+            <p className={`text-muted mb-0 ${customDarkText}`}>{`${userData.firstName} ${userData.middleName} ${userData.lastName}`}</p>
           </Col>
-
-          <Col xs={12} sm={2} className="text-sm-end mt-2 mt-sm-0 d-none d-lg-block d-md-block">
-            {isEditing ? (
-              <Button
-                variant=""
-                className={`${customBtn} custom-zoom-btn text-light ${customBtn === 'dark-dark' ? "" : "border border-white"}`}
-                onClick={handleSaveClick}
-              >
-                Save
-              </Button>
-            ) : (
-              <Button
-                variant=""
-                className={`${customBtn} custom-zoom-btn text-light ${customBtn === 'dark-dark' ? "border border-white" : "border border-white"}`}
-                onClick={handleEditClick}
-              >
-                Edit
-              </Button>
-            )}
-          </Col>
-
         </Row>
-        {/* ----------------------------------------------------------------------------------------------------------------- */}
         <Form>
           <Row className="mb-3">
             <Col xs={12} sm={6} md={4} className="mb-3">
               <Form.Group controlId="formFirstName">
                 <Form.Label className={`${customDarkText}`}>First Name</Form.Label>
                 <Form.Control
+                  name="firstName"
                   placeholder="Your First Name"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
+                  value={userData.firstName}
+                  onChange={handleChange}
                   disabled={!isEditing}
                   className='rounded'
                 />
@@ -226,9 +217,10 @@ const UserProfile = () => {
               <Form.Group controlId="formMiddleName">
                 <Form.Label className={`${customDarkText}`}>Middle Name</Form.Label>
                 <Form.Control
+                  name="middleName"
                   placeholder="Your Middle Name"
-                  value={middleName}
-                  onChange={(e) => setMiddleName(e.target.value)}
+                  value={userData.middleName}
+                  onChange={handleChange}
                   disabled={!isEditing}
                   className='rounded'
                 />
@@ -238,10 +230,11 @@ const UserProfile = () => {
               <Form.Group controlId="formLastName">
                 <Form.Label className={`${customDarkText}`}>Last Name</Form.Label>
                 <Form.Control
+                  name="lastName"
                   placeholder="Your Last Name"
-                  value={lastName}
+                  value={userData.lastName}
                   className='rounded'
-                  onChange={(e) => setLastName(e.target.value)}
+                  onChange={handleChange}
                   disabled={!isEditing}
                 />
               </Form.Group>
@@ -253,12 +246,13 @@ const UserProfile = () => {
               <Form.Group controlId="formGender">
                 <Form.Label className={`${customDarkText}`}>Gender</Form.Label>
                 <Form.Select
-                  value={gender}
-                  onChange={(e) => setGender(e.target.value)}
+                  name="gender"
+                  value={userData.gender}
+                  onChange={handleChange}
                   disabled={!isEditing}
                 >
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
                 </Form.Select>
               </Form.Group>
             </Col>
@@ -266,109 +260,44 @@ const UserProfile = () => {
               <Form.Group controlId="formRole">
                 <Form.Label className={`${customDarkText}`}>Role</Form.Label>
                 <Form.Control
-                  value={role}
+                  name="role"
+                  placeholder="Your Role"
+                  value={userData.role}
                   className='rounded'
                   disabled
                 />
               </Form.Group>
             </Col>
             <Col xs={12} sm={6} md={4}>
-              <Form.Group controlId="formDepartment">
-                <Form.Label className={`${customDarkText}`}>Department</Form.Label>
+              <Form.Group controlId="formMobile">
+                <Form.Label className={`${customDarkText}`}>Mobile Number</Form.Label>
                 <Form.Control
-                  placeholder="Your Department"
-                  disabled
+                  name="mobileNumber"
+                  placeholder="Your Mobile Number"
+                  value={userData.mobileNumber}
                   className='rounded'
-                  value={department}
+                  onChange={handleChange}
+                  disabled={!isEditing}
                 />
               </Form.Group>
             </Col>
           </Row>
-
           <Row className="mb-3">
-            <Col xs={12} sm={6} md={4} className="mb-3">
-              <Form.Group controlId="formLanguage">
-                <Form.Label className={`${customDarkText}`}>Language</Form.Label>
-                <Form.Select
-                  value={language}
-                  onChange={(e) => setLanguage(e.target.value)}
+            <Col xs={12}>
+              <Form.Group controlId="formAddress">
+                <Form.Label className={`${customDarkText}`}>Address</Form.Label>
+                <Form.Control
+                  name="address"
+                  placeholder="Your Address"
+                  value={userData.address}
+                  className='rounded'
+                  onChange={handleChange}
                   disabled={!isEditing}
-                >
-                  <option value="English">English</option>
-                  <option value="Hindi">Hindi</option>
-                </Form.Select>
-              </Form.Group>
-            </Col>
-            <Col xs={12} sm={6} md={8}>
-              <Form.Group controlId="formPermissions">
-                <Form.Label className={`${customDarkText}`}>Permissions</Form.Label>
-                <div className="d-flex flex-wrap">
-                  {permissionArray.map((permission, index) => (
-                    <div key={index} className={` ${customBtn} ${customDarkBorder} rounded me-2 mb-2 p-1 fs-6 `}>
-                      {permission}
-                      <span className="ms-2" style={{ cursor: 'not-allowed' }}>
-                        <FaTimes className="text-white" />
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                />
               </Form.Group>
             </Col>
           </Row>
         </Form>
-
-        <Row className='d-flex justify-content-between '>
-          <Col xs={12} md={6} lg={5}>
-            <div className="mt-2">
-              <h5 className={`${customDarkText} fw-bold`}>My Email Address</h5>
-              <Row className="align-items-center d-flex align-items-center justify-content-between">
-                <Col xs={12} sm={3} md={1} lg={6}>
-                  <IoMdMail className={`custom-theme-dark-text ${customDarkText}`} size={50} />
-                </Col>
-                <Col xs={12} sm={9} md={11} lg={6} className='text-end '>
-                  <div className={`mb-0 ${customDarkText} fw-bold text-wrap`}>jayanta@chandrakala.co.in</div>
-                  <small className={`mb-0 ${customDarkText}  text-muted`}>1 month ago</small>
-                </Col>
-              </Row>
-              <div className='d-flex justify-content-center'>
-                <Button
-                  variant="dark"
-                  className={`mt-3  custom-zoom-btn text-light disabled w-100  ${customBtn} ${customDarkBorder} d-none d-md-block d-lg-block`}
-                >
-                  Change Email Address
-                </Button>
-                <Button
-                  variant="dark"
-                  className={`mt-3  custom-zoom-btn text-light disabled w-100 d-md-none d-lg-none  ${customBtn} ${customDarkBorder}`}
-                >
-                  Change Email Address
-                </Button>
-              </div>
-            </div>
-          </Col>
-          <Col xs={12} md={6} lg={5}>
-            <div className="mt-2">
-              <h5 className={`${customDarkText} fw-bold`}>My Mobile Number</h5>
-              <Row className="align-items-center">
-                <Col xs={3} sm={2} md={1}>
-                  <BsTelephoneFill className={`custom-theme-dark-text ${customDarkText}`} size={50} />
-                </Col>
-                <Col xs={9} sm={10} md={11} className='text-end'>
-                  <p className={`mb-0 ${customDarkText} fw-bold`}>{mobileNumber}</p>
-                  <small className={`mb-0 ${customDarkText} text-muted`}>Last updated 2 weeks ago</small>
-                </Col>
-              </Row>
-            </div>
-            <div className='d-flex justify-content-center'>
-              <ChangeMobileNumber
-                currentMobileNumber={mobileNumber}
-                onSave={handleMobileSave}  // Pass the function to handle saving the new number
-              />
-            </div>
-          </Col>
-
-        </Row>
-
       </div>
     </Container>
   );

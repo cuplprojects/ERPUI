@@ -10,8 +10,8 @@ import API from '../MasterApiHooks/api';
 const AuthService = {
   login: async (username, password) => {
     try {
-      const response = await API.post('/api/login', { username, password });
-      return response.data;
+      const response = await API.post('/login', { username, password });
+      return response;
     } catch (error) {
       throw error;
     }

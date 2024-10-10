@@ -15,22 +15,19 @@ import LockOverlay from './../components/LockOverlay';
 import ProcessTable from './../sub-Components/processTable';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
-import WavyDiv from './WavyDiv';
+// import WavyDiv from './WavyDiv'; // not used 
 import QtySheetUpload from '../pages/QtySheetUpload';
 import Message from '../pages/Message/Message';
+import Labels from '../pages/Message/Labels';
+import AddProjectProcess from '../pages/AddProjectProcess';
 const Userlayout = () => {
-  
-    //Theme Change Section
-    const { getCssClasses } = useStore(themeStore);
-    const cssClasses = getCssClasses();
-    const customDark = cssClasses[0];
-    const customMid = cssClasses[1];
-    const customLight = cssClasses[2];
-    const customBtn = cssClasses[3];
-    const customDarkText = cssClasses[4];
-    const customLightText = cssClasses[5]
-    const customLightBorder = cssClasses[6]
-    const customDarkBorder = cssClasses[7]
+
+  //Theme Change Section
+  const { getCssClasses } = useStore(themeStore);
+  const cssClasses = getCssClasses();
+  const customDark = cssClasses[0];
+  const customMid = cssClasses[1];
+  const customLight = cssClasses[2];
   return (
     <div className={`container-fluid p-0 vh-100  ${customLight}`}>
       <LockOverlay className="lock-button" />
@@ -45,6 +42,7 @@ const Userlayout = () => {
             <Routes>
               <Route path="/dashboard" element={<MainDashboard />} />
               <Route path="/master" element={<Masters />} />
+              <Route path="/AddProjectProcess/:projectId" element={<AddProjectProcess />} />
               <Route path="/features" element={<Features />} />
               {/* --------------- User Menu Routes -------------- */}
               <Route path="/profile" element={<Profile />} />
@@ -53,11 +51,12 @@ const Userlayout = () => {
               <Route path="/quantity-sheet-uploads" element={<QtySheetUpload />} />
               <Route path="/project-details/:id" element={<ProcessTable />} />
               <Route path="/message" element={<Message />} />
+              <Route path="/labels" element={<Labels />} />
               <Route path="/*" element={<PageNotFound />} />
             </Routes>
           </div>
-          <div className={`${customDark==='dark-dark'?"d-none":""} fixed-bottom w-100 border ${customMid}`} style={{ zIndex: "1", height: "150px", borderRadius: "20%  ",borderStyle:"wavy" }}></div>
-          <Footer className="sticky-bottom " style={{zIndex:"1"}}/>
+          <div className={`${customDark === 'dark-dark' ? "d-none" : ""} fixed-bottom w-100 border ${customMid}`} style={{ zIndex: "1", height: "150px", borderRadius: "20%  ", borderStyle: "wavy" }}></div>
+          <Footer className="sticky-bottom " style={{ zIndex: "1" }} />
         </Col>
       </Row>
 

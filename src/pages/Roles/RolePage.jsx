@@ -3,6 +3,7 @@ import { Button, Card, Table, Modal, Input, Switch, message, Tabs } from 'antd';
 import { IdcardOutlined,EditOutlined } from '@ant-design/icons';
 import axios from 'axios'; // Import axios for API calls
 import Permissions from './Permissions';
+import API from '../../CustomHooks/MasterApiHooks/api';
 
 const { TabPane } = Tabs;
 
@@ -15,10 +16,10 @@ const RolesAndDepartments = () => {
   useEffect(() => {
     const fetchRoles = async () => {
       try {
-        const response = await axios.get('https://localhost:7212/api/Roles'); // Update with your API endpoint
+        const response = await API.get('/Roles'); // Update with your API endpoint
         setRoles(response.data);
       } catch (error) {
-        message.error('Failed to fetch roles');
+        console.error('Failed to fetch roles');
       }
     };
 
@@ -62,7 +63,14 @@ const payload = {
 }
     try {
       // Sending the payload with the new structure
-      const response = await axios.post('https://localhost:7212/api/Roles', payload);
+
+      const response = await API.post('/Roles', {
+        roleName: trimmedRoleName,
+        priorityOrder: newRole.priorityOrder,
+        status: newRole.status,
+        permissions: newRole.permissions,
+      });
+
       
       // Assuming your API returns the created role
       setRoles([...roles, { ...response.data }]);
@@ -84,7 +92,7 @@ const payload = {
 
   const handleRoleStatusChange = async (checked, roleId) => {
     try {
-      await axios.patch(`https://localhost:7212/api/Roles/${roleId}`, { status: checked }); // Update role status in the API
+      await API.patch(`/Roles/${roleId}`, { status: checked }); // Update role status in the API
       const updatedRoles = roles.map(role =>
         role.roleId === roleId ? { ...role, status: checked } : role
       );
@@ -212,7 +220,9 @@ const payload = {
             <Permissions
               selectedPermissions={newRole.permissions}
               onChange={handlePermissionChange}
+
             />
+
           </Modal>
         </Card>
       </TabPane>

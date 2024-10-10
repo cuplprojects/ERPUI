@@ -8,15 +8,16 @@ import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import axios from 'axios';
 import SuccessModal from './../menus/addedUserModal.jsx';
+import API from '../CustomHooks/MasterApiHooks/api.jsx';
 
 const AddUsers = () => {
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
   const customDarkText = cssClasses[4];
-
+  const customBtn = cssClasses[3];
+  const [displayName,setDisplayName] = useState("");
   // Initial state for the form data
   const initialState = {
-
     username: '',
     firstName: '',
     middleName: '',
@@ -24,13 +25,15 @@ const AddUsers = () => {
     gender: '',
     mobileNo: '',
     roleId: '',
-
+    status: true, 
+    address: '',
+    profilePicturePath:"" ,
   };
-
   const [usernameError, setUsernameError] = useState('');
   const [formData, setFormData] = useState(initialState);
   const [userDetails, setUserDetails] = useState({ userName: '', password: '' });
   const [showModal, setShowModal] = useState(false);
+
   const[roles,setRoles] = useState([]);
 
 
@@ -38,37 +41,36 @@ const AddUsers = () => {
   const handleCloseModal = () => setShowModal(false);
 
 
+n
   // Function to handle form submission
   const handleSubmit = async (event) => {
     event.preventDefault();
-
+    
     // Validation logic for required fields
     const requiredFields = [
       { name: 'firstName', value: formData.firstName },
-      { name: 'lastName', value: formData.lastName },
+      // { name: 'lastName', value: formData.lastName },//last name not required
       { name: 'gender', value: formData.gender },
-
+      
       { name: 'mobileNo', value: formData.mobileNo },
       { name: 'roleId', value: formData.roleId },
-
-    ];
-
-    const errors = requiredFields
+      { name: 'address', value: formData.address },
+      ];
+      setDisplayName(`${formData.firstName} ${formData.middleName} ${formData.lastName}`);
+      const errors = requiredFields
       .filter(field => !field.value)
       .map(field => `${field.name.charAt(0).toUpperCase() + field.name.slice(1)} is required`);
-
     // Clear previous notifications
     toast.dismiss();
-
     if (errors.length > 0) {
       errors.forEach((error) => toast.error(error)); // Display errors using toast
     } else {
       const { success } = validateFormData(formData); // Validate the form data
       if (success) {
         try {
-          const response = await axios.post('https://localhost:7212/api/User/create', formData); // API call to add user
+          const response = await API.post('/User/create', formData); // API call to add user
           const { userName, password } = response.data;
-
+          console.log(formData)//check the payload data
           // Set user details for modal
           setUserDetails({ userName, password });
           setShowModal(true);
@@ -79,12 +81,12 @@ const AddUsers = () => {
       }
     }
   };
-
   // Function to handle input changes
   const handleInputChange = (event) => {
     const { name, value } = event.target;
     setFormData({ ...formData, [name]: value });
   };
+
   useEffect(() => {
     const fetchRoles = async () => {
         try {
@@ -97,6 +99,7 @@ const AddUsers = () => {
 
     fetchRoles();
 }, []);
+
   // Generate username suggestion based on input
   useEffect(() => {
     const { firstName, middleName, lastName } = formData;
@@ -183,7 +186,6 @@ const AddUsers = () => {
                 placeholder="Enter last name"
                 value={formData.lastName}
                 onChange={handleInputChange}
-                required
                 autoComplete='off'
               />
             </Form.Group>
@@ -268,15 +270,26 @@ const AddUsers = () => {
               </Form.Select>
             </Form.Group>
           </Col>
-
+          <Col lg={12} md={12} sm={12} xs={12} className='mt-3'>
+            <Form.Group controlId="formBasicAddress">
+              <Form.Label  className={customDarkText}>Address</Form.Label>
+              <Form.Control
+                type="text"
+                name="address"
+                value={formData.address}
+                onChange={handleInputChange}
+                placeholder="Address"
+              />
+            </Form.Group>
+          </Col>
         </Row>
 
         {/* Add and Reset Buttons */}
         <div style={{ textAlign: 'right' }}>
-          <Button variant="secondary" onClick={handleReset}>
+          <Button variant="secondary" onClick={handleReset} className='custom-zoom-btn'>
             Reset
           </Button>
-          <Button type="submit" className="custom-theme-dark-btn ms-2" disabled={!isUsernameValid}>
+          <Button type="submit" className={`custom-theme-dark-btn ms-2 ${customBtn==="dark-dark" ? `${customBtn} border-light custom-zoom-btn`: `${customBtn} border-0 custom-zoom-btn`}`} disabled={!isUsernameValid}>
             Add
           </Button>
         </div>
@@ -286,7 +299,7 @@ const AddUsers = () => {
       </div>
       <SuccessModal
 
-        show={showModal} username={userDetails.userName} password={userDetails.password} onClose={handleCloseModal}
+        show={showModal} username={userDetails.userName} password={userDetails.password} onClose={handleCloseModal} fullName={displayName}
 
       />
     </div>

@@ -7,7 +7,7 @@
 import axios from 'axios';
 
 // Set the base URL for the API
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; // Base URL from Vite env or fallback
+const API_BASE_URL = import.meta.env.VITE_API_BASE_API; // Base URL from Vite env or fallback
 
 // Create an Axios instance
 const API = axios.create({
@@ -20,7 +20,7 @@ const API = axios.create({
 // Add a request interceptor to attach the token to all requests
 API.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token'); // Use localStorage instead of sessionStorage
+    const token = localStorage.getItem('authToken'); // Use localStorage instead of sessionStorage
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Input, Button, Table, message } from 'antd';
 import axios from 'axios';
+import API from '../CustomHooks/MasterApiHooks/api';
 
 const SecurityQuestions = () => {
   const [questions, setQuestions] = useState([]);
@@ -17,7 +18,7 @@ const SecurityQuestions = () => {
 
     try {
       // Post the new question to the backend API
-      const response = await axios.post('https://localhost:7212/api/SecurityQuestions', { question: newQuestion });
+      const response = await API.post('/SecurityQuestions', { question: newQuestion });
 
       if (response.status === 200) {
         const newEntry = {

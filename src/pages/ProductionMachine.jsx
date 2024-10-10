@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Table, Button, Input, Select, Switch, message, Modal, Spin } from 'antd';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid'; // Importing uuid for unique IDs
+import API from '../CustomHooks/MasterApiHooks/api';
 
-const API_URL = 'https://localhost:7223/api/Machines'; // API URL variable
 
 const Machine = () => {
   const [machines, setMachines] = useState([]);
@@ -21,11 +21,10 @@ const Machine = () => {
   const fetchMachines = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(API_URL);
+      const response = await API.get('/Machines');
       setMachines(response.data);
     } catch (error) {
       console.error("Failed to fetch machines", error);
-      message.error('Failed to fetch machines');
     } finally {
       setLoading(false);
     }
@@ -34,11 +33,10 @@ const Machine = () => {
   const fetchProcesses = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('https://localhost:7223/api/Processes');
+      const response = await API.get('/Processes');
       setProcesses(response.data);
     } catch (error) {
       console.error("Failed to fetch processes", error);
-      message.error('Failed to fetch processes');
     } finally {
       setLoading(false);
     }

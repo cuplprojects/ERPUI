@@ -33,7 +33,7 @@ To use the API in this project, follow these steps:
    ```javascript
    const fetchData = async () => {
      try {
-       const response = await API.get('/endpoint');
+       const response = await API.get('/endpoint'); //if api us http://192.168.1.24:85/api/login then keep endpoint only /login
        // Handle the response
      } catch (error) {
        // Handle any errors
@@ -108,3 +108,33 @@ To successfully build and deploy the ApexERP project using Vite, please follow t
    - Enter the following URL: `http://192.168.1.24:85`
 
 If you encounter any issues during this process, please refer to the project documentation or contact the development team for assistance.
+
+## Translation Function Usage
+
+To use the translation function in your components, follow these steps:
+
+1. Import the `useTranslation` hook at the top of your component file:
+   ```javascript
+   import { useTranslation } from 'react-i18next';
+   ```
+
+2. Inside your component, destructure the `t` function from the `useTranslation` hook:
+   ```javascript
+   const { t } = useTranslation();
+   ```
+
+3. Use the `t` function to render translated labels:
+   ```javascript
+   <h1>{t('welcomeMessage')}</h1>
+   <p>{t('description')}</p>
+   ```
+
+4. To add new labels:
+   - Navigate to the `/labels` route in the application.
+   - Click on the "Add Message" button.
+   - Enter the label key (e.g., 'welcomeMessage') and provide translations for supported languages.
+   - Save the new label.
+
+5. After adding a new label, you can immediately use it in your components with the `t` function.
+
+Remember to use descriptive keys for your labels to maintain clarity in your code.

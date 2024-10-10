@@ -1,7 +1,7 @@
 /**
  * Message Component: Handles message management operations
  * Created by Shivom on 2023-10-05
- * Updated by Assistant on 2023-10-07
+ * Updated by Shivom on 2023-10-07
  * 
  * This component uses the messageService for API requests
  */
@@ -13,6 +13,7 @@ import themeStore from "./../../store/themeStore";
 import { useStore } from "zustand";
 import { fetchMessages as fetchMessagesApi, updateMessage, addMessage } from "../../CustomHooks/ApiServices/messageService";
 import useAlertMessage from "../../CustomHooks/Services/AlertMessage";
+import { useTranslation } from 'react-i18next';
 
 const Message = () => {
   const [messages, setMessages] = useState([]);
@@ -29,10 +30,10 @@ const Message = () => {
   const pageSize = 10;
   const [showEditForm, setShowEditForm] = useState(false);
   const isDeveloper = true;
-  const [language, setLanguage] = useState('en');
   const [alertMessageProps, setAlertMessageProps] = useState({ messageId: '', type: '' });
   const [showAlert, setShowAlert] = useState(false);
   const AlertMessage = useAlertMessage(alertMessageProps.messageId, alertMessageProps.type);
+  const { t } = useTranslation();
 
   // Theme Change Section
   const { getCssClasses } = useStore(themeStore);
@@ -43,31 +44,6 @@ const Message = () => {
   const customBtn = cssClasses[3];
   const customDarkText = cssClasses[4];
   const customLightText = cssClasses[5];
-  
-
-  const languageText = {
-    messageManagement: ['Message Management', 'संदेश प्रबंधन'],
-    messageType: ['Message Type', 'संदेश प्रकार'],
-    selectType: ['Select Type', 'प्रकार चुनें'],
-    success: ['Success', 'सफलता'],
-    error: ['Error', 'त्रुटि'],
-    info: ['Info', 'जानकारी'],
-    l1Title: ['L1 Title', 'L1 शीर्षक'],
-    l1Description: ['L1 Description', 'L1 विवरण'],
-    l2Title: ['L2 Title (Hindi)', 'L2 शीर्षक (हिंदी)'],
-    l2Description: ['L2 Description (Hindi)', 'L2 विवरण (हिंदी)'],
-    updateMessage: ['Update Message', 'संदेश अपडेट करें'],
-    addMessage: ['Add Message', 'संदेश जोड़ें'],
-    cancel: ['Cancel', 'रद्द करें'],
-    searchMessages: ['Search messages', 'संदेश खोजें'],
-    id: ['ID', 'आईडी'],
-    type: ['Type', 'प्रकार'],
-    actions: ['Actions', 'कार्रवाई'],
-    edit: ['Edit', 'संपादित करें'],
-    status: ['Status', 'स्थिति'],
-  };
-
-  const getText = (key) => languageText[key][language === 'en' ? 0 : 1];
 
   useEffect(() => {
     // Fetch messages from API or database
@@ -77,6 +53,11 @@ const Message = () => {
   const fetchMessages = async () => {
     try {
       const data = await fetchMessagesApi();
+      // const data = await axios.get("apiurl}{/message", {
+      //   headers: {
+      //     Authorization: `Bearer ${token}`,
+      //   }
+      // });
       setMessages(data);
     } catch (error) {
       console.error('Error fetching messages:', error);
@@ -86,14 +67,21 @@ const Message = () => {
 
   const columns = [
     {
-      title: getText('type'),
+      title: t('messageId'),
+      dataIndex: "messageId",
+      key: "messageId",
+      sorter: (a, b) => a.messageId - b.messageId,
+      width: 120,
+    },
+    {
+      title: t('type'),
       dataIndex: "type",
       key: "type",
       sorter: (a, b) => a.type.localeCompare(b.type),
       width: 120,
     },
     {
-      title: getText('status'),
+      title: t('status'),
       dataIndex: "status",
       key: "status",
       render: (status, record) => (
@@ -106,35 +94,36 @@ const Message = () => {
       align: "center",
     },
     {
-      title: getText('l1Title'),
+      title: t('l1Title'),
       dataIndex: "l1Title",
       key: "l1Title",
       sorter: (a, b) => a.l1Title.localeCompare(b.l1Title),
     },
+    
     {
-      title: getText('l2Title'),
-      dataIndex: "l2Title",
-      key: "l2Title",
-      sorter: (a, b) => a.l2Title.localeCompare(b.l2Title),
-    },
-    {
-      title: getText('l1Description'),
+      title: t('l1Description'),
       dataIndex: "l1Desc",
       key: "l1Desc",
       sorter: (a, b) => a.l1Desc.localeCompare(b.l1Desc),
     },
     {
-      title: getText('l2Description'),
+      title: t('l2Title'),
+      dataIndex: "l2Title",
+      key: "l2Title",
+      sorter: (a, b) => a.l2Title.localeCompare(b.l2Title),
+    },
+    {
+      title: t('l2Description'),
       dataIndex: "l2Desc",
       key: "l2Desc",
       sorter: (a, b) => a.l2Desc.localeCompare(b.l2Desc),
     },
     {
-      title: getText('actions'),
+      title: t('actions'),
       key: "actions",
       render: (_, record) => (
-        <Button variant="primary" onClick={() => handleEdit(record)}>
-          {getText('edit')}
+        <Button variant="primary" size="sm" onClick={() => handleEdit(record)}>
+          {t('edit')}
         </Button>
       ),
       width: 100,
@@ -216,9 +205,9 @@ const Message = () => {
   );
 
   return (
-    <div className={`container ${customLight} rounded py-2`}>
+    <div className={`container ${customLight} rounded py-2 shadow-lg`}>
       <h2 className={`text-center mt-2 ${customDarkText}`}>
-        {getText('messageManagement')}
+        {t('messageManagement')}
       </h2>
       {showAlert && <AlertMessage onClose={() => setShowAlert(false)} />}
       <div className="row justify-content-center ">
@@ -229,7 +218,7 @@ const Message = () => {
                 <Col md={6}>
                   <Form.Group className="mb-3" controlId="type">
                     <Form.Label className={`${customDarkText}`}>
-                      {getText('messageType')}
+                      {t('messageType')}
                     </Form.Label>
                     <Form.Control
                       as="select"
@@ -238,17 +227,17 @@ const Message = () => {
                       onChange={handleInputChange}
                       required
                     >
-                      <option value="">{getText('selectType')}</option>
-                      <option value="success">{getText('success')}</option>
-                      <option value="error">{getText('error')}</option>
-                      <option value="info">{getText('info')}</option>
+                      <option value="">{t('selectType')}</option>
+                      <option value="success">{t('success')}</option>
+                      <option value="error">{t('error')}</option>
+                      <option value="info">{t('info')}</option>
                     </Form.Control>
                   </Form.Group>
                 </Col>
                 <Col md={6}>
                   <Form.Group className="mb-3" controlId="status">
                     <Form.Label className={`${customDarkText}`}>
-                      {getText('status')}
+                      {t('status')}
                     </Form.Label>
                     <Form.Check
                       type="switch"
@@ -266,7 +255,7 @@ const Message = () => {
                 <Col md={6}>
                   <Form.Group className="mb-3" controlId="l1Title">
                     <Form.Label className={`${customDarkText}`}>
-                      {getText('l1Title')}
+                      {t('l1Title')}
                     </Form.Label>
                     <Form.Control
                       type="text"
@@ -274,14 +263,14 @@ const Message = () => {
                       value={formData.l1Title}
                       onChange={handleInputChange}
                       required
-                      placeholder={getText('l1Title')}
+                      placeholder={t('l1Title')}
                     />
                   </Form.Group>
                 </Col>
                 <Col md={6}>
                   <Form.Group className="mb-3" controlId="l2Title">
                     <Form.Label className={`${customDarkText}`}>
-                      {getText('l2Title')}
+                      {t('l2Title')}
                     </Form.Label>
                     <Form.Control
                       type="text"
@@ -289,7 +278,7 @@ const Message = () => {
                       value={formData.l2Title}
                       onChange={handleInputChange}
                       required
-                      placeholder={getText('l2Title')}
+                      placeholder={t('l2Title')}
                     />
                   </Form.Group>
                 </Col>
@@ -298,7 +287,7 @@ const Message = () => {
                 <Col md={6}>
                   <Form.Group className="mb-3" controlId="l1Desc">
                     <Form.Label className={`${customDarkText}`}>
-                      {getText('l1Description')}
+                      {t('l1Description')}
                     </Form.Label>
                     <Form.Control
                       as="textarea"
@@ -306,14 +295,14 @@ const Message = () => {
                       value={formData.l1Desc}
                       onChange={handleInputChange}
                       required
-                      placeholder={getText('l1Description')}
+                      placeholder={t('l1Description')}
                     />
                   </Form.Group>
                 </Col>
                 <Col md={6}>
                   <Form.Group className="mb-3" controlId="l2Desc">
                     <Form.Label className={`${customDarkText}`}>
-                      {getText('l2Description')}
+                      {t('l2Description')}
                     </Form.Label>
                     <Form.Control
                       as="textarea"
@@ -321,14 +310,14 @@ const Message = () => {
                       value={formData.l2Desc}
                       onChange={handleInputChange}
                       required
-                      placeholder={getText('l2Description')}
+                      placeholder={t('l2Description')}
                     />
                   </Form.Group>
                 </Col>
               </Row>
               <div className="d-flex justify-content-center">
                 <Button variant="primary" type="submit" className="me-2">
-                  {formData.messageId ? getText('updateMessage') : getText('addMessage')}
+                  {formData.messageId ? t('updateMessage') : t('addMessage')}
                 </Button>
                 {!isDeveloper && (
                   <Button
@@ -339,7 +328,7 @@ const Message = () => {
                     }}
                     className="ms-2"
                   >
-                    {getText('cancel')}
+                    {t('cancel')}
                   </Button>
                 )}
               </div>
@@ -348,7 +337,7 @@ const Message = () => {
           <div className="mt-4">
             <div className="d-flex justify-content-end mb-3">
               <Input.Search
-                placeholder={getText('searchMessages')}
+                placeholder={t('searchMessages')}
                 onChange={(e) => handleSearch(e.target.value)}
                 style={{ width: 200 }}
               />

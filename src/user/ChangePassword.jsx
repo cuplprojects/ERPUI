@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useId, useState } from 'react';
 import { Container, Row, Col, Form, Button, InputGroup, FormControl } from 'react-bootstrap';
 import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
 import { FaLock } from "react-icons/fa";
@@ -7,12 +7,25 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { jwtDecode } from 'jwt-decode';
 import axios from 'axios';
+
+import themeStore from './../store/themeStore';
+import { useStore } from 'zustand';
+import API from '../CustomHooks/MasterApiHooks/api';
 const ChangePassword = () => {
   // Static class names for simplicity
-  const customBtn = 'btn-primary'; // Example static class
-  const customDarkText = 'text-dark';
-  const customLight = 'bg-light';
-  const customLightBorder = 'border-light';
+  //Theme Change Section
+  const { getCssClasses } = useStore(themeStore);
+  const cssClasses = getCssClasses();
+  const customDark = cssClasses[0];
+  const customMid = cssClasses[1];
+  const customLight = cssClasses[2];
+  const customBtn = cssClasses[3];
+  const customDarkText = cssClasses[4];
+  const customLightText = cssClasses[5]
+  const customLightBorder = cssClasses[6]
+  const customDarkBorder = cssClasses[7]
+
+
 
   // State object to store oldPassword and newPassword
   const [formData, setFormData] = useState({
@@ -84,13 +97,17 @@ const ChangePassword = () => {
     }
   
     const userId = userIdApi; // extracted from the decoded token
-    const apiUrl = `https://localhost:7212/api/Login/Changepassword/${userId}`;
+
+    const apiUrl = `/Login/Changepassword/${userId}`;
+
     const payload = {
       oldPassword: formData.oldPassword,
       newPassword: formData.newPassword,
     };
   
-    axios.put(apiUrl, payload)
+
+    API.put(apiUrl, payload)
+
       .then((response) => {
         toast.info('Password changed successfully!', {
           position: "top-right",
