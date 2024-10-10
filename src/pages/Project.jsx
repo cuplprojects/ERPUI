@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Button, Input, Switch, Form, message, Modal, Card, Row, Col, Select } from 'antd';
 import axios from 'axios';
+import API from '../CustomHooks/MasterApiHooks/api';
 
 const { Option } = Select;
 
@@ -19,7 +20,7 @@ const Project = () => {
 
   const getProjects = async () => {
     try {
-      const response = await axios.get('https://localhost:7212/api/Project');
+      const response = await API.get('/Project');
       setProjects(response.data);
     } catch (error) {
       console.error('Failed to fetch projects');
@@ -28,7 +29,7 @@ const Project = () => {
 
   const getGroups = async () => {
     try {
-      const response = await axios.get('https://localhost:7212/api/Groups');
+      const response = await API.get('/Groups');
       setGroups(response.data);
     } catch (error) {
       console.error('Failed to fetch groups');
@@ -37,7 +38,7 @@ const Project = () => {
 
   const getTypes = async () => {
     try {
-      const response = await axios.get('https://localhost:7212/api/PaperTypes');
+      const response = await API.get('/PaperTypes');
       setTypes(response.data);
     } catch (error) {
       console.error('Failed to fetch types');
@@ -62,7 +63,7 @@ const Project = () => {
     const newProject = { name, status, description };
 
     try {
-      const response = await axios.post('https://localhost:7212/api/Project', newProject, {
+      const response = await api.post('/Project', newProject, {
         headers: { 'Content-Type': 'application/json' },
       });
       setProjects([...projects, response.data]);
@@ -83,7 +84,7 @@ const Project = () => {
     };
 
     try {
-      await axios.put(`https://localhost:7212/api/Project/${updatedProject.projectId}`, updatedProject, {
+      await api.put(`/Project/${updatedProject.projectId}`, updatedProject, {
         headers: { 'Content-Type': 'application/json' },
       });
       const updatedProjects = [...projects];

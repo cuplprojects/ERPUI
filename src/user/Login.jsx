@@ -19,6 +19,7 @@ import { useTranslation } from 'react-i18next';
 import { toast, ToastContainer } from 'react-toastify';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import API from '../CustomHooks/MasterApiHooks/api';
 
 // import AuthService from '../CustomHooks/ApiServices/AuthService';
 
@@ -65,7 +66,7 @@ const Login = () => {
         toastId: "processing",
       });
 
-      const response = await axios.post('https://localhost:7212/api/Login/login', {
+      const response = await API.post('/Login/login', {
         userName,
         password
       });

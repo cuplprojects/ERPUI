@@ -302,6 +302,7 @@ import lightBrain from "./../assets/bgImages/brain/brainLight.png";
 import defaultBrain from "./../assets/bgImages/brain/brainDefault.png";
 import { AiFillEyeInvisible } from "react-icons/ai";
 import { AiFillEye } from "react-icons/ai";
+import API from '../CustomHooks/MasterApiHooks/api';
 const ForgotPassword = () => {
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
@@ -344,7 +345,7 @@ const ForgotPassword = () => {
 
     try {
       // Fetch the security question IDs
-      const response = await axios.get(`https://localhost:7212/api/Login/forgotPassword/securityQuestions/${userName}`);
+      const response = await API.get(`/Login/forgotPassword/securityQuestions/${userName}`);
       setUserQuestions(response.data)
 
       setCurrentStep(2); // Move to Step 2
@@ -373,7 +374,7 @@ const ForgotPassword = () => {
     }
     console.log(data)
     try {
-      const res = await axios.post('https://localhost:7212/api/Login/forgotPassword/verifySecurityAnswers', data)
+      const res = await API.post('/Login/forgotPassword/verifySecurityAnswers', data)
       setCurrentStep(3); // Move to Step 3
       toast.success('Security answers verified successfully');
     } catch (error) {
@@ -405,7 +406,7 @@ const ForgotPassword = () => {
         securityAnswersVerified: true // This is the new requirement
       };
 
-      const response = await axios.post('https://localhost:7212/api/Login/forgotPassword/setNewPassword', payload);
+      const response = await API.post('/Login/forgotPassword/setNewPassword', payload);
       if (response.status === 200) {
         toast.success('Password reset successfully', {
           autoClose: 1500,
