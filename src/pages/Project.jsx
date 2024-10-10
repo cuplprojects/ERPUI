@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Button, Input, Switch, Form, message, Modal, Card, Row, Col, Select } from 'antd';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import API from '../CustomHooks/MasterApiHooks/api';
+
 
 const { Option } = Select;
 
@@ -17,6 +19,8 @@ const Project = () => {
   const [editingStatus, setEditingStatus] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [selectedType, setSelectedType] = useState(null);
+  const navigate = useNavigate();
+
 
   const getProjects = async () => {
     try {
@@ -70,6 +74,7 @@ const Project = () => {
       form.resetFields();
       setIsModalVisible(false);
       message.success('Project added successfully!');
+      navigate(`/AddProjectProcess/${response.data.projectId}`);
     } catch (error) {
       message.error('Error adding project');
     }
