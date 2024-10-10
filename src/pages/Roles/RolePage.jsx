@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Card, Table, Modal, Input, Switch, message, Tabs } from 'antd';
-import { IdcardOutlined } from '@ant-design/icons';
+import { IdcardOutlined,EditOutlined } from '@ant-design/icons';
 import axios from 'axios'; // Import axios for API calls
 import Permissions from './Permissions';
 import API from '../../CustomHooks/MasterApiHooks/api';
@@ -25,6 +25,8 @@ const RolesAndDepartments = () => {
 
     fetchRoles();
   }, []);
+
+  
 
   const onCreateRole = () => {
     setNewRole({roleName: '', priorityOrder: 0, status: true,permissions:[] });
@@ -52,15 +54,23 @@ const RolesAndDepartments = () => {
       return;
     }
 
-
+const payload = {
+ roleId: 0,  // Auto-increment, set to 0 for new roles
+  roleName: trimmedRoleName,  // Role name
+  priorityOrder: newRole.priorityOrder,  // Priority order
+  status: newRole.status,  // Active status
+  permissionList: newRole.permissions.map(String)  // Convert to an array of numbers
+}
     try {
       // Sending the payload with the new structure
+
       const response = await API.post('/Roles', {
         roleName: trimmedRoleName,
         priorityOrder: newRole.priorityOrder,
         status: newRole.status,
         permissions: newRole.permissions,
       });
+
       
       // Assuming your API returns the created role
       setRoles([...roles, { ...response.data }]);
@@ -73,6 +83,11 @@ const RolesAndDepartments = () => {
 
   const handleRoleCancel = () => {
     setIsRoleModalVisible(false);
+  };
+
+  const handleEditRole = (role) => {
+    setNewRole(role); // Set the selected role data to newRole
+    setIsRoleModalVisible(true);
   };
 
   const handleRoleStatusChange = async (checked, roleId) => {
@@ -120,6 +135,19 @@ const RolesAndDepartments = () => {
         />
       ),
     },
+    {
+      title: 'Actions',
+      dataIndex: 'actions',
+      align: 'center',
+      width: 75,
+      render: (_, record) => (
+        <Button
+          type="link"
+          icon={<EditOutlined />}
+          onClick={() => handleEditRole(record)} // Handle edit role
+        />
+      ),
+    }
   ];
 
   // Pagination configuration
@@ -158,12 +186,13 @@ const RolesAndDepartments = () => {
             style={{ fontSize: '12px' }}
           />
           {/* Modal for Adding New Role */}
+          {/* Modal for Adding or Editing Role */}
           <Modal
-            title="Add New Role"
+            title={newRole.roleId === 0 ? "Add New Role" : "Edit Role"}
             open={isRoleModalVisible}
             onOk={handleRoleOk}
             onCancel={handleRoleCancel}
-            okText="Add Role"
+            okText={newRole.roleId === 0 ? "Add Role" : "Update Role"}
             okButtonProps={{ type: 'primary' }}
           >
             <Input
@@ -191,7 +220,9 @@ const RolesAndDepartments = () => {
             <Permissions
               selectedPermissions={newRole.permissions}
               onChange={handlePermissionChange}
-            />            
+
+            />
+
           </Modal>
         </Card>
       </TabPane>

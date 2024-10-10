@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Nav } from 'react-bootstrap';
 import {
   FaUsers,
@@ -18,6 +18,7 @@ import {
   FaFileAlt,
   FaCogs
 } from 'react-icons/fa';
+
 import GroupManager from './Group'
 import ProjectManager from './Project';
 import ZoneManager from './Zone';
@@ -54,7 +55,15 @@ const Sidebar = () => {
 
   const [selectedMenu, setSelectedMenu] = useState('group'); // Default to 'group'
   const [expandedMenus, setExpandedMenus] = useState({}); // State to manage expanded menus
+  const [userPermissions, setUserPermissions] = useState([]);
 
+  useEffect(() => {
+    const activeUser = JSON.parse(localStorage.getItem('activeUser'));
+    if (activeUser && activeUser.permissionList) {
+      setUserPermissions(activeUser.permissionList);
+    }
+  }, []);
+  
   const handleMenuClick = (key) => {
     setSelectedMenu(key);
   };
@@ -71,31 +80,42 @@ const Sidebar = () => {
       key: 'userManagement',
       icon: <FaUsers className={`${customDarkText} menu-icon`} />,
       label: 'User Management',
+      permission: '2.1',
       children: [
-        { key: 'RolePage', icon: <FaUserCog className={`${customDarkText} menu-icon`} />, label: 'Role' },
-        { key: 'addUser', icon: <FaUserPlus className={`${customDarkText} menu-icon`} />, label: 'Add User' },
-        { key: 'allUsers', icon: <FaListUl className={`${customDarkText} menu-icon`} />, label: 'All Users' },
-        { key: 'securityQuestions', icon: <BsQuestionSquareFill className={`${customDarkText} menu-icon`} />, label: 'Add Questions' },
+        { key: 'RolePage', icon: <FaUserCog className={`${customDarkText} menu-icon`} />, label: 'Role', permission: '2.1' },
+        { key: 'addUser', icon: <FaUserPlus className={`${customDarkText} menu-icon`} />, label: 'Add User', permission: '2.1' },
+        { key: 'allUsers', icon: <FaListUl className={`${customDarkText} menu-icon`} />, label: 'All Users', permission: '2.1' },
+        { key: 'securityQuestions', icon: <BsQuestionSquareFill className={`${customDarkText} menu-icon`} />, label: 'Add Questions', permission: '2.1' },
       ],
     },
-    { key: 'group', icon: <FaUsers className={`${customDarkText} menu-icon`} />, label: 'Group' },
-    { key: 'type', icon: <FaUsers className={`${customDarkText} menu-icon`} />, label: 'Type' },
-    { key: 'project', icon: <FaProjectDiagram className={`${customDarkText} menu-icon`} />, label: 'Project' },
-    { key: 'zone', icon: <FaGlobeAmericas className={`${customDarkText} menu-icon`} />, label: 'Zone' },
-    { key: 'camera', icon: <FaCamera className={`${customDarkText} menu-icon`} />, label: 'Camera' },
-    {key: 'machine',icon: <FaCogs  className={`${customDarkText} menu-icon`} />, label: 'Machines'},
-    { key: 'alarm', icon: <FaBell className={`${customDarkText} menu-icon`} />, label: 'Alarm' },
-    //{ key: 'team', icon: <FaUsers className={`${customDarkText} menu-icon`} />, label: 'Team' },
-    { key: 'systemSettings', icon: <FaCog className={`${customDarkText} menu-icon`} />, label: 'Process Settings' },
-    { key: 'report', icon: <FaFileAlt className={`${customDarkText} menu-icon`} />, label: 'Report' },
+
+    { key: 'group', icon: <FaUsers className={`${customDarkText} menu-icon`} />, label: 'Group', permission: '2.2' },
+    { key: 'type', icon: <FaUsers className={`${customDarkText} menu-icon`} />, label: 'Type', permission: '2.3' },
+    { key: 'project', icon: <FaProjectDiagram className={`${customDarkText} menu-icon`} />, label: 'Project', permission: '2.4' },
+    { key: 'zone', icon: <FaGlobeAmericas className={`${customDarkText} menu-icon`} />, label: 'Zone', permission: '2.5' },
+    { key: 'camera', icon: <FaCamera className={`${customDarkText} menu-icon`} />, label: 'Camera', permission: '2.6' },
+    { key: 'machine', icon: <FaListUl className={`${customDarkText} menu-icon`} />, label: 'Machines', permission: '2.7' },
+    { key: 'alarm', icon: <FaBell className={`${customDarkText} menu-icon`} />, label: 'Alarm', permission: '2.8' },
+    { key: 'team', icon: <FaUsers className={`${customDarkText} menu-icon`} />, label: 'Team', permission: '2.9' },
+    { key: 'systemSettings', icon: <FaCog className={`${customDarkText} menu-icon`} />, label: 'Process Settings', permission: '2.10' },
+
   ];
+
+  // Filter the menu items based on user permissions
+  const allowedMenuItems = menuItems.filter(menu => {
+    if (menu.children) {
+      menu.children = menu.children.filter(child => userPermissions.includes(child.permission));
+      return menu.children.length > 0; // Keep menu if it has allowed children
+    }
+    return userPermissions.includes(menu.permission);
+  });
 
   return (
     <Container fluid className='shadow-lg'>
       <Row className=''>
         <Col md={3} className={`sidebar rounded-start-4  `}>
           <Nav className="flex-column ">
-            {menuItems.map((menu) => (
+            {allowedMenuItems.map((menu) => (
               <React.Fragment key={menu.key}>
                 <Nav.Link
                   onClick={() => {
@@ -128,20 +148,20 @@ const Sidebar = () => {
           </Nav>
         </Col>
         <Col md={9}  className={`content-area rounded-end-4 ${customLight}`}>
-          {selectedMenu === 'RolePage' && <RolesAndDepartments />}
-          {selectedMenu === 'addUser' && <AddUsers />}
-          {selectedMenu === 'allUsers' && <AllUsers />}
-          {selectedMenu === 'group' && <GroupManager />}
-          {selectedMenu === 'type' && <Type />}
-          {selectedMenu === 'securityQuestions' && <SecurityQ />}
-          {selectedMenu === 'project' && <ProjectManager />}
-          {selectedMenu === 'zone' && <ZoneManager />}
-          {selectedMenu === 'camera' && <CameraList />}
-          {selectedMenu === 'team' && <Team />}
-          {selectedMenu === 'systemSettings' && <SystemSettings />}
-          {selectedMenu === 'machine' && <Machine />}
-          {selectedMenu === 'alarm' && <AlarmMaster />}
 
+          {userPermissions.includes('2.1') && selectedMenu === 'RolePage' && <RolesAndDepartments />}
+          {userPermissions.includes('2.1') && selectedMenu === 'addUser' && <AddUsers />}
+          {userPermissions.includes('2.1') && selectedMenu === 'allUsers' && <AllUsers />}
+          {userPermissions.includes('2.2') && selectedMenu === 'group' && <GroupManager />}
+          {userPermissions.includes('2.3') && selectedMenu === 'type' && <Type />}
+          {userPermissions.includes('2.1') && selectedMenu === 'securityQuestions' && <SecurityQ />}
+          {userPermissions.includes('2.4') && selectedMenu === 'project' && <ProjectManager />}
+          {userPermissions.includes('2.5') && selectedMenu === 'zone' && <ZoneManager />}
+          {userPermissions.includes('2.6') && selectedMenu === 'camera' && <CameraList />}
+          {userPermissions.includes('2.9') && selectedMenu === 'team' && <Team />}
+          {userPermissions.includes('2.10') && selectedMenu === 'systemSettings' && <SystemSettings />}
+          {userPermissions.includes('2.7') && selectedMenu === 'machine' && <Machine />}
+          {userPermissions.includes('2.8') && selectedMenu === 'alarm' && <AlarmMaster />}
 
         </Col>
       </Row>

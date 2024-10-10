@@ -14,7 +14,9 @@ const Group = () => {
 
   const fetchGroups = async () => {
     try {
+
       const response = await API.get('/Groups');
+
       setGroups(response.data);
     } catch (error) {
 
@@ -39,10 +41,12 @@ const Group = () => {
 
     try {
       const newGroup = { name, status };
+
       await API.post('/Groups', newGroup);
       setGroups([...groups, newGroup]);
       form.resetFields();
       setIsModalVisible(false);
+
       message.success('Group added successfully!');
     } catch (error) {
       message.error('Failed to add group!');
@@ -63,7 +67,9 @@ const Group = () => {
     }
 
     try {
+
       await API.put(`/Groups/${groupToEdit.id}`, updatedGroup);
+
       const updatedGroups = [...groups];
       updatedGroups[index] = updatedGroup;
       setGroups(updatedGroups);
@@ -77,6 +83,7 @@ const Group = () => {
       setEditingStatus(true);
     }
   };
+
 
   const handleCancelEdit = () => {
     setEditingIndex(null);

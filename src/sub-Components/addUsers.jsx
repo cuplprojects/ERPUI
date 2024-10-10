@@ -33,6 +33,15 @@ const AddUsers = () => {
   const [formData, setFormData] = useState(initialState);
   const [userDetails, setUserDetails] = useState({ userName: '', password: '' });
   const [showModal, setShowModal] = useState(false);
+
+  const[roles,setRoles] = useState([]);
+
+
+
+  const handleCloseModal = () => setShowModal(false);
+
+
+n
   // Function to handle form submission
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -77,10 +86,20 @@ const AddUsers = () => {
     const { name, value } = event.target;
     setFormData({ ...formData, [name]: value });
   };
-  const handleCloseModal = () =>{
-    setShowModal(false);
-    handleReset();
-  } 
+
+  useEffect(() => {
+    const fetchRoles = async () => {
+        try {
+            const response = await axios.get('https://localhost:7212/api/Roles');
+            setRoles(response.data);
+        } catch (error) {
+            console.error('Failed to fetch roles:', error);
+        }
+    };
+
+    fetchRoles();
+}, []);
+
   // Generate username suggestion based on input
   useEffect(() => {
     const { firstName, middleName, lastName } = formData;
@@ -242,11 +261,11 @@ const AddUsers = () => {
                 required
               >
                 <option value="">Select a Role</option>
-                <option value={1}>Admin</option>
-                <option value={2}>Head</option>
-                <option value={3}>Manager</option>
-                <option value={4}>Supervisor</option>
-                <option value={5}>Operator</option>
+                {roles.map(role => (
+                        <option key={role.roleId} value={role.roleId}>
+                            {role.roleName}
+                        </option>
+                    ))}
 
               </Form.Select>
             </Form.Group>
@@ -279,7 +298,9 @@ const AddUsers = () => {
         <ToastContainer />
       </div>
       <SuccessModal
+
         show={showModal} username={userDetails.userName} password={userDetails.password} onClose={handleCloseModal} fullName={displayName}
+
       />
     </div>
   );

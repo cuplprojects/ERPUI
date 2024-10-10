@@ -75,10 +75,28 @@ const Login = () => {
         toast.dismiss("processing");
         toast.success("Successfully logged in!");
 
-        const { token, autogenPass } = response.data;
 
-        if (token) {
+        console.log(response.data)
+        // Extract the token and autogenPass from response.data
+        const { token, autogenPass, role } = response.data;
+        console.log(token)
+        if (token) {     
+          let roleId = '', roleName = '', permissionList = [];
+          if (role) {
+            ({ roleId, roleName, permissionList } = role);
+          }
+    
+          console.log(roleId, roleName, permissionList)
+          // Store only the token in localStorage
           localStorage.setItem('authToken', token);
+          localStorage.setItem('activeUser', JSON.stringify({
+            roleId,
+            roleName,
+            permissionList, // Parse the permissions array
+          }));
+          console.log('Active User:', localStorage.getItem('activeUser')); // For debugging
+
+          // Navigate based on autogenPass value
 
           if (autogenPass) {
             setTimeout(() => {
