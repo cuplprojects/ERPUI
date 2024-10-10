@@ -3,6 +3,8 @@ import { Tabs, Table, Button, Modal, Input, Select, notification, Switch } from 
 import { AppstoreAddOutlined, BuildOutlined, EditOutlined } from '@ant-design/icons';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import axios from 'axios';
+import API from '../CustomHooks/MasterApiHooks/api';
 
 const ItemType = 'FEATURE';
 
@@ -63,25 +65,33 @@ const SystemSettings = () => {
 
   useEffect(() => {
     const fetchFeatures = async () => {
-      const response = await fetch('https://localhost:7212/api/Features');
-      const data = await response.json();
-      setFeatures(data.map(feature => ({
-        key: feature.featureId,
-        name: feature.features,
-      })));
+      try {
+        const response = await API.get('/Features');
+        setFeatures(response.data.map(feature => ({
+          key: feature.featureId,
+          name: feature.features,
+        })));
+      } catch (error) {
+        console.error('Error fetching features:', error);
+        notification.error({ message: 'Failed to fetch features' });
+      }
     };
 
     const fetchProcesses = async () => {
-      const response = await fetch('https://localhost:7212/api/Processes');
-      const data = await response.json();
-      setProcesses(data.map(process => ({
-        key: process.id.toString(),
-        id: process.id,
-        name: process.name,
-        status: process.status,
-        weightage: process.weightage,
-        installedFeatures: process.installedFeatures,
-      })));
+      try {
+        const response = await API.get('/Processes');
+        setProcesses(response.data.map(process => ({
+          key: process.id.toString(),
+          id: process.id,
+          name: process.name,
+          status: process.status,
+          weightage: process.weightage,
+          installedFeatures: process.installedFeatures,
+        })));
+      } catch (error) {
+        console.error('Error fetching processes:', error);
+        notification.error({ message: 'Failed to fetch processes' });
+      }
     };
 
     fetchFeatures();
@@ -150,16 +160,14 @@ const SystemSettings = () => {
 
     if (isEditingFeature) {
       try {
-        const response = await fetch(`https://localhost:7212/api/Features/${editingFeatureId}`, {
-          method: 'PUT',
+        const response = await API.put(`/Features/${editingFeatureId}`, featurePayload, {
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'text/plain',
           },
-          body: JSON.stringify(featurePayload),
         });
 
-        if (response.ok) {
+        if (response.status === 200) {
           setFeatures(prevFeatures =>
             prevFeatures.map(feature =>
               feature.key === editingFeatureId ? { ...feature, name: featureName } : feature
@@ -170,27 +178,27 @@ const SystemSettings = () => {
           notification.error({ message: 'Failed to update feature!' });
         }
       } catch (error) {
+        console.error('Error updating feature:', error);
         notification.error({ message: 'An error occurred while updating the feature.' });
       }
     } else {
       try {
-        const response = await fetch('https://localhost:7212/api/Features', {
-          method: 'POST',
+        const response = await API.post('/Features', featurePayload, {
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'text/plain',
           },
-          body: JSON.stringify(featurePayload),
         });
 
-        if (response.ok) {
-          const addedFeature = await response.json();
+        if (response.status === 200) {
+          const addedFeature = response.data;
           setFeatures([...features, { key: addedFeature.featureId, name: addedFeature.features }]);
           notification.success({ message: 'Feature added successfully!' });
         } else {
           notification.error({ message: 'Failed to add feature!' });
         }
       } catch (error) {
+        console.error('Error adding feature:', error);
         notification.error({ message: 'An error occurred while adding the feature.' });
       }
     }
@@ -232,16 +240,14 @@ const SystemSettings = () => {
 
     if (isEditingProcess) {
       try {
-        const response = await fetch(`https://localhost:7212/api/Processes/${editingProcessId}`, {
-          method: 'PUT',
+        const response = await API.put(`/Processes/${editingProcessId}`, newProcess, {
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'text/plain',
           },
-          body: JSON.stringify(newProcess),
         });
 
-        if (response.ok) {
+        if (response.status === 200) {
           setProcesses(prevProcesses =>
             prevProcesses.map(process =>
               process.id === editingProcessId ? { ...process, ...newProcess } : process
@@ -252,27 +258,27 @@ const SystemSettings = () => {
           notification.error({ message: 'Failed to update process!' });
         }
       } catch (error) {
+        console.error('Error updating process:', error);
         notification.error({ message: 'An error occurred while updating the process.' });
       }
     } else {
       try {
-        const response = await fetch('https://localhost:7212/api/Processes', {
-          method: 'POST',
+        const response = await API.post('/Processes', newProcess, {
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'text/plain',
           },
-          body: JSON.stringify(newProcess),
         });
 
-        if (response.ok) {
-          const addedProcess = await response.json();
+        if (response.status === 200) {
+          const addedProcess = response.data;
           setProcesses([...processes, { key: addedProcess.id.toString(), ...newProcess }]);
           notification.success({ message: 'Process added successfully!' });
         } else {
           notification.error({ message: 'Failed to add process!' });
         }
       } catch (error) {
+        console.error('Error adding process:', error);
         notification.error({ message: 'An error occurred while adding the process.' });
       }
     }

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Table, Input, Button, Switch, Form, message, Modal } from 'antd';
+import API from '../CustomHooks/MasterApiHooks/api';
 
 const Group = () => {
   const [groups, setGroups] = useState([]);
@@ -13,7 +14,7 @@ const Group = () => {
 
   const fetchGroups = async () => {
     try {
-      const response = await axios.get('https://localhost:7212/api/Groups');
+      const response = await API.get('/Groups');
       setGroups(response.data);
     } catch (error) {
 
@@ -38,7 +39,7 @@ const Group = () => {
 
     try {
       const newGroup = { name, status };
-      await axios.post('https://localhost:7212/api/Groups', newGroup);
+      await API.post('/Groups', newGroup);
       setGroups([...groups, newGroup]);
       form.resetFields();
       setIsModalVisible(false);
@@ -62,7 +63,7 @@ const Group = () => {
     }
 
     try {
-      await axios.put(`https://localhost:7212/api/Groups/${groupToEdit.id}`, updatedGroup);
+      await API.put(`/Groups/${groupToEdit.id}`, updatedGroup);
       const updatedGroups = [...groups];
       updatedGroups[index] = updatedGroup;
       setGroups(updatedGroups);

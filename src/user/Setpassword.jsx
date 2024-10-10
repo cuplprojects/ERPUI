@@ -9,6 +9,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import BackgroundImage from './../assets/bgImages/setpass/defaultSetPass.png';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
+import API from '../CustomHooks/MasterApiHooks/api';
 
 const SetPassword = () => {
   const navigate = useNavigate();
@@ -30,7 +31,7 @@ const SetPassword = () => {
   const [, userIdApi] = Object.entries(decodedToken)[0];
 
   useEffect(() => {
-    axios.get('https://localhost:7212/api/SecurityQuestions')
+    API.get('/SecurityQuestions')
       .then(response => {
         console.log('API response:', response.data);
         setSecurityQuestions(response.data);
@@ -68,7 +69,7 @@ const SetPassword = () => {
       return;
     }
 
-    axios.post('https://localhost:7212/api/Login/setSecurityAnswers', {
+    API.post('/Login/setSecurityAnswers', {
       userId: userIdApi,
       securityQuestion1Id: selectedQuestions.first.questionId,
       securityAnswer1: selectedQuestions.first.answer,
@@ -108,7 +109,7 @@ const SetPassword = () => {
       newPassword: password,
     };
 
-    axios.put('https://localhost:7212/api/Login/SetPassword', newPasswordData)
+    API.put('/Login/SetPassword', newPasswordData)
       .then((response) => {
         if (response.status === 200) {
           toast.success("Password set successfully!", {

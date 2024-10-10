@@ -8,6 +8,7 @@ import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import axios from 'axios';
 import SuccessModal from './../menus/addedUserModal.jsx';
+import API from '../CustomHooks/MasterApiHooks/api.jsx';
 
 const AddUsers = () => {
   const { getCssClasses } = useStore(themeStore);
@@ -58,7 +59,7 @@ const AddUsers = () => {
       const { success } = validateFormData(formData); // Validate the form data
       if (success) {
         try {
-          const response = await axios.post('https://localhost:7212/api/User/create', formData); // API call to add user
+          const response = await API.post('/User/create', formData); // API call to add user
           const { userName, password } = response.data;
           console.log(formData)//check the payload data
           // Set user details for modal
