@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Nav } from 'react-bootstrap';
 import {
   FaUsers,
@@ -19,7 +19,7 @@ import {
   FaCogs
 } from 'react-icons/fa';
 import { BsQuestionSquareFill } from "react-icons/bs";
-import GroupManager from './Group'
+import GroupManager from './Group';
 
 import ProjectManager from './Project';
 import ZoneManager from './Zone';
@@ -29,7 +29,6 @@ import AlarmMaster from './Alarm';
 import Machine from './ProductionMachine';
 
 import SecurityQ from './SecurityQuestions.jsx';
-
 
 import './../styles/Sidebar.css'; // Import your custom CSS
 import AddUsers from '../sub-Components/addUsers';
@@ -52,12 +51,21 @@ const Sidebar = () => {
   const customLight = cssClasses[2];
   const customBtn = cssClasses[3];
   const customDarkText = cssClasses[4];
-  const customLightText = cssClasses[5]
-  const customLightBorder = cssClasses[6]
-  const customDarkBorder = cssClasses[7]
+  const customLightText = cssClasses[5];
+  const customLightBorder = cssClasses[6];
+  const customDarkBorder = cssClasses[7];
 
-  const [selectedMenu, setSelectedMenu] = useState('group'); // Default to 'group'
+  // Retrieve selectedMenu from localStorage on initial render
+  const [selectedMenu, setSelectedMenu] = useState(() => {
+    return localStorage.getItem('selectedMenu') || 'group'; // Default to 'group' if no selection is stored
+  });
+
   const [expandedMenus, setExpandedMenus] = useState({}); // State to manage expanded menus
+
+  // Save selectedMenu to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('selectedMenu', selectedMenu);
+  }, [selectedMenu]);
 
   const handleMenuClick = (key) => {
     setSelectedMenu(key);
@@ -87,7 +95,7 @@ const Sidebar = () => {
     { key: 'project', icon: <FaProjectDiagram className={`${customDarkText} menu-icon`} />, label: 'Project' },
     { key: 'zone', icon: <FaGlobeAmericas className={`${customDarkText} menu-icon`} />, label: 'Zone' },
     { key: 'camera', icon: <FaCamera className={`${customDarkText} menu-icon`} />, label: 'Camera' },
-    {key: 'machine',icon: <FaCogs  className={`${customDarkText} menu-icon`} />, label: 'Machines'},
+    { key: 'machine', icon: <FaCogs className={`${customDarkText} menu-icon`} />, label: 'Machines' },
     { key: 'alarm', icon: <FaBell className={`${customDarkText} menu-icon`} />, label: 'Alarm' },
     { key: 'team', icon: <FaUsers className={`${customDarkText} menu-icon`} />, label: 'Team' },
     { key: 'systemSettings', icon: <FaCog className={`${customDarkText} menu-icon`} />, label: 'Process Settings' },
@@ -97,8 +105,8 @@ const Sidebar = () => {
   return (
     <Container fluid className='shadow-lg'>
       <Row className=''>
-        <Col md={3} className={`sidebar rounded-start-4  `}>
-          <Nav className="flex-column ">
+        <Col md={3} className={`sidebar rounded-start-4`}>
+          <Nav className="flex-column">
             {menuItems.map((menu) => (
               <React.Fragment key={menu.key}>
                 <Nav.Link
@@ -109,7 +117,7 @@ const Sidebar = () => {
                       handleMenuClick(menu.key); // Just handle menu click if no children
                     }
                   }}
-                  className={`d-flex align-items-center sidebar-item  ${selectedMenu === menu.key ? 'active rounded-start rounded-end-5' : 'rounded-start rounded-end-5'} ${selectedMenu === menu.key ? customLight : ''}`}
+                  className={`d-flex align-items-center sidebar-item ${selectedMenu === menu.key ? 'active rounded-start rounded-end-5' : 'rounded-start rounded-end-5'} ${selectedMenu === menu.key ? customLight : ''}`}
                 >
                   {menu.icon} <span className={`${customDarkText} ml-3 d-none d-lg-block`}>{menu.label}</span>
                   {menu.children && (
@@ -131,7 +139,7 @@ const Sidebar = () => {
             ))}
           </Nav>
         </Col>
-        <Col md={9}  className={`content-area rounded-end-4 ${customLight}`}>
+        <Col md={9} className={`content-area rounded-end-4 ${customLight}`}>
           {selectedMenu === 'RolePage' && <RolesAndDepartments />}
           {selectedMenu === 'addUser' && <AddUsers />}
           {selectedMenu === 'allUsers' && <AllUsers />}
@@ -140,7 +148,6 @@ const Sidebar = () => {
           {selectedMenu === 'type' && <Type />}
 
           {selectedMenu === 'securityQuestions' && <SecurityQ />}
-          {/* {selectedMenu === 'group' && <GroupManager />} */}
 
           {selectedMenu === 'project' && <ProjectManager />}
           {selectedMenu === 'zone' && <ZoneManager />}
@@ -149,7 +156,6 @@ const Sidebar = () => {
           {selectedMenu === 'systemSettings' && <SystemSettings />}
           {selectedMenu === 'machine' && <Machine />}
           {selectedMenu === 'alarm' && <AlarmMaster />}
-          {selectedMenu === 'envelope' && <EnvelopeConfiguration />}
           {selectedMenu === 'report' && <Report />}
         </Col>
       </Row>
