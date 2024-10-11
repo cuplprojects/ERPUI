@@ -15,7 +15,7 @@ const Team = () => {
 
   const getUsers = async () => {
     try {
-      const response = await axios.get('https://localhost:7223/api/User')
+      const response = await axios.get('https://localhost:7212/api/User')
       setUsers(response.data)
     }
     catch (error) {

@@ -1,7 +1,10 @@
 /**
  * Created by Shivom on 08/10/24
+ * Updated by Shivom on 09/10/24 to add error handler
  * Purpose: Configure i18next for internationalization with backend integration
  * and custom parsing for text labels with optional ID display.
+ * Error Handler: Implements robust error handling to manage translation failures
+ * and provide fallback mechanisms for missing or invalid translations.
  */
 
 import i18n from 'i18next';

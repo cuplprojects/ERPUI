@@ -75,379 +75,379 @@
   --theme-light-btn: #e3fdfd; /* btn */
   --theme-light-thead: #277e83; /* thead */
 
-  --btn-transition: all 800ms;
+  --btn-transition: background-color 800ms;
   --bg-custom: #f0f2f5;
 }
 
 /* Theme Classes */
 /*<---------------- Default ----------------> */
 .default-dark {
-  transition: all 800ms;
+  transition: background-color 800ms;
   background-color: var(--theme-default-dark) !important;
 }
 .default-mid {
-  transition: all 800ms;
+  transition: background-color 800ms;
   background-color: var(--theme-default-mid) !important;
 }
 .default-light {
-  transition: all 800ms;
+  transition: background-color 800ms;
   background-color: var(--theme-default-light) !important;
 }
 .default-btn {
-  transition: all 800ms;
+  transition: background-color 800ms;
   color: var(--theme-default-btn) !important;
   background-color: var(--theme-default-dark) !important;
 }
 .default-dark-text {
-  transition: all 800ms;
+  transition: background-color 800ms;
   color: var(--theme-default-dark) !important;
 }
 .default-light-text {
-  transition: all 800ms;
+  transition: background-color 800ms;
   color: var(--theme-default-light) !important;
 }
 .default-light-border {
-  transition: all 800ms;
+  transition: background-color 800ms;
   border: 2px solid;
   border-color: var(--theme-default-light) !important;
 }
 .default-dark-border {
-  transition: all 800ms;
+  transition: background-color 800ms;
   border: 2px solid;
   border-color: var(--theme-default-dark) !important;
 }
 .thead-default .ant-table-thead > tr > th {
-  transition: all 800ms;
+  transition: background-color 800ms;
   background: var(--theme-default-thead) !important;
   color: var(--theme-light-light) !important;
 }
 
 /*<---------------- Brown ----------------> */
 .brown-dark {
-  transition: all 800ms;
+  transition: background-color 800ms;
   background-color: var(--theme-brown-dark) !important;
 }
 .brown-mid {
-  transition: all 800ms;
+  transition: background-color 800ms;
   background-color: var(--theme-brown-mid) !important;
 }
 .brown-light {
-  transition: all 800ms;
+  transition: background-color 800ms;
   background-color: var(--theme-brown-light) !important;
 }
 .brown-btn {
-  transition: all 800ms;
+  transition: background-color 800ms;
   color: var(--theme-brown-btn) !important;
   background-color: var(--theme-brown-dark) !important;
 }
 .brown-dark-text {
-  transition: all 800ms;
+  transition: background-color 800ms;
   color: var(--theme-brown-dark) !important;
 }
 .brown-light-text {
-  transition: all 800ms;
+  transition: background-color 800ms;
   color: var(--theme-brown-light) !important;
 }
 .brown-light-border {
-  transition: all 800ms;
+  transition: background-color 800ms;
   border: 2px solid;
   border-color: var(--theme-brown-light) !important;
 }
 .brown-dark-border {
-  transition: all 800ms;
+  transition: background-color 800ms;
   border: 2px solid;
   border-color: var(--theme-brown-dark) !important;
 }
 .thead-brown .ant-table-thead > tr > th {
-  transition: all 800ms;
+  transition: background-color 800ms;
   background: var(--theme-brown-thead) !important;
   color: var(--theme-light-light) !important;
 }
 /*<---------------- Light ----------------> */
 .light-dark {
-  transition: all 800ms;
+  transition: background-color 800ms;
   background-color: var(--theme-light-dark) !important;
 }
 .light-mid {
-  transition: all 800ms;
+  transition: background-color 800ms;
   background-color: var(--theme-light-mid) !important;
 }
 .light-light {
-  transition: all 800ms;
+  transition: background-color 800ms;
   background-color: var(--theme-light-light) !important;
 }
 .light-btn {
-  transition: all 800ms;
+  transition: background-color 800ms;
   color: var(--theme-light-btn) !important;
   background-color: var(--theme-light-dark) !important;
 }
 .light-dark-text {
-  transition: all 800ms;
+  transition: background-color 800ms;
   color: var(--theme-light-dark) !important;
 }
 .light-light-text {
-  transition: all 800ms;
+  transition: background-color 800ms;
   color: var(--theme-light-light) !important;
 }
 .light-light-border {
-  transition: all 800ms;
+  transition: background-color 800ms;
   border: 2px solid;
   border-color: var(--theme-light-light) !important;
 }
 .light-dark-border {
-  transition: all 800ms;
+  transition: background-color 800ms;
   border: 2px solid;
   border-color: var(--theme-light-dark) !important;
 }
 .thead-light .ant-table-thead > tr > th {
-  transition: all 800ms;
+  transition: background-color 800ms;
   background: var(--theme-light-thead) !important;
   color: var(--theme-light-light) !important;
 }
 /*<---------------- Pink ----------------> */
 .pink-dark {
-  transition: all 800ms;
+  transition: background-color 800ms;
   background-color: var(--theme-pink-dark) !important;
 }
 .pink-mid {
-  transition: all 800ms;
+  transition: background-color 800ms;
   background-color: var(--theme-pink-mid) !important;
 }
 .pink-light {
-  transition: all 800ms;
+  transition: background-color 800ms;
   background-color: var(--theme-pink-light) !important;
 }
 .pink-btn {
-  transition: all 800ms;
+  transition: background-color 800ms;
   color: var(--theme-pink-btn) !important;
   background-color: var(--theme-pink-dark) !important;
 }
 .pink-dark-text {
-  transition: all 800ms;
+  transition: background-color 800ms;
   color: var(--theme-pink-dark) !important;
 }
 .pink-light-text {
-  transition: all 800ms;
+  transition: background-color 800ms;
   color: var(--theme-pink-light) !important;
 }
 .pink-light-border {
-  transition: all 800ms;
+  transition: background-color 800ms;
   border: 2px solid;
   border-color: var(--theme-pink-light) !important;
 }
 .pink-dark-border {
-  transition: all 800ms;
+  transition: background-color 800ms;
   border: 2px solid;
   border-color: var(--theme-pink-dark) !important;
 }
 .thead-pink .ant-table-thead > tr > th {
-  transition: all 800ms;
+  transition: background-color 800ms;
   background: var(--theme-pink-thead) !important;
   color: var(--theme-light-light) !important;
 }
 /*<---------------- Purple ----------------> */
 .purple-dark {
-  transition: all 800ms;
+  transition: background-color 800ms;
   background-color: var(--theme-purple-dark) !important;
 }
 .purple-mid {
-  transition: all 800ms;
+  transition: background-color 800ms;
   background-color: var(--theme-purple-mid) !important;
 }
 .purple-light {
-  transition: all 800ms;
+  transition: background-color 800ms;
   background-color: var(--theme-purple-light) !important;
 }
 .purple-btn {
-  transition: all 800ms;
+  transition: background-color 800ms;
   color: var(--theme-purple-btn) !important;
   background-color: var(--theme-purple-dark) !important;
 }
 .purple-dark-text {
-  transition: all 800ms;
+  transition: background-color 800ms;
   color: var(--theme-purple-dark) !important;
 }
 .purple-light-text {
-  transition: all 800ms;
+  transition: background-color 800ms;
   color: var(--theme-purple-light) !important;
 }
 .purple-light-border {
-  transition: all 800ms;
+  transition: background-color 800ms;
   border: 2px solid;
   border-color: var(--theme-purple-light) !important;
 }
 
 .purple-dark-border {
-  transition: all 800ms;
+  transition: background-color 800ms;
   border: 2px solid;
   border-color: var(--theme-purple-dark) !important;
 }
 .thead-purple .ant-table-thead > tr > th {
-  transition: all 800ms;
+  transition: background-color 800ms;
   background: var(--theme-purple-thead) !important;
   color: var(--theme-light-light) !important;
 }
 /*<---------------- Red ----------------> */
 .red-dark {
-  transition: all 800ms;
+  transition: background-color 800ms;
   background-color: var(--theme-red-dark) !important;
 }
 .red-mid {
-  transition: all 800ms;
+  transition: background-color 800ms;
   background-color: var(--theme-red-mid) !important;
 }
 .red-light {
-  transition: all 800ms;
+  transition: background-color 800ms;
   background-color: var(--theme-red-light) !important;
 }
 .red-btn {
-  transition: all 800ms;
+  transition: background-color 800ms;
   color: var(--theme-red-btn) !important;
   background-color: var(--theme-red-dark) !important;
 }
 .red-dark-text {
-  transition: all 800ms;
+  transition: background-color 800ms;
   color: var(--theme-red-dark) !important;
 }
 .red-light-text {
-  transition: all 800ms;
+  transition: background-color 800ms;
   color: var(--theme-red-light) !important;
 }
 .red-light-border {
-  transition: all 800ms;
+  transition: background-color 800ms;
   border: 2px solid;
   border-color: var(--theme-red-light) !important;
 }
 .red-dark-border {
-  transition: all 800ms;
+  transition: background-color 800ms;
   border: 2px solid;
   border-color: var(--theme-red-dark) !important;
 }
 .thead-red .ant-table-thead > tr > th {
-  transition: all 800ms;
+  transition: background-color 800ms;
   background: var(--theme-red-thead) !important;
   color: var(--theme-light-light) !important;
 }
 /*<---------------- Blue ----------------> */
 .blue-dark {
-  transition: all 800ms;
+  transition: background-color 800ms;
   background-color: var(--theme-blue-dark) !important;
 }
 .blue-mid {
-  transition: all 800ms;
+  transition: background-color 800ms;
   background-color: var(--theme-blue-mid) !important;
 }
 .blue-light {
-  transition: all 800ms;
+  transition: background-color 800ms;
   background-color: var(--theme-blue-light) !important;
 }
 .blue-btn {
-  transition: all 800ms;
+  transition: background-color 800ms;
   color: var(--theme-blue-btn) !important;
   background-color: var(--theme-blue-dark) !important;
 }
 .blue-dark-text {
-  transition: all 800ms;
+  transition: background-color 800ms;
   color: var(--theme-blue-dark) !important;
 }
 .blue-light-text {
-  transition: all 800ms;
+  transition: background-color 800ms;
   color: var(--theme-blue-light) !important;
 }
 .blue-light-border {
-  transition: all 800ms;
+  transition: background-color 800ms;
   border: 2px solid;
   border-color: var(--theme-blue-light) !important;
 }
 .blue-dark-border {
-  transition: all 800ms;
+  transition: background-color 800ms;
   border: 2px solid;
   border-color: var(--theme-blue-dark) !important;
 }
 .thead-blue .ant-table-thead > tr > th {
-  transition: all 800ms;
+  transition: background-color 800ms;
   background: var(--theme-blue-thead) !important;
   color: var(--theme-light-light) !important;
 }
 /*<---------------- Green ----------------> */
 .green-dark {
-  transition: all 800ms;
+  transition: background-color 800ms;
   background-color: var(--theme-green-dark) !important;
 }
 .green-mid {
-  transition: all 800ms;
+  transition: background-color 800ms;
   background-color: var(--theme-green-mid) !important;
 }
 .green-light {
-  transition: all 800ms;
+  transition: background-color 800ms;
   background-color: var(--theme-green-light) !important;
 }
 .green-btn {
-  transition: all 800ms;
+  transition: background-color 800ms;
   color: var(--theme-green-btn) !important;
   background-color: var(--theme-green-dark) !important;
 }
 .green-dark-text {
-  transition: all 800ms;
+  transition: background-color 800ms;
   color: var(--theme-green-dark) !important;
 }
 .green-light-text {
-  transition: all 800ms;
+  transition: background-color 800ms;
   color: var(--theme-green-light) !important;
 }
 .green-light-border {
-  transition: all 800ms;
+  transition: background-color 800ms;
   border: 2px solid;
   border-color: var(--theme-green-light) !important;
 }
 .green-dark-border {
-  transition: all 800ms;
+  transition: background-color 800ms;
   border: 2px solid;
   border-color: var(--theme-green-dark) !important;
 }
 .thead-green .ant-table-thead > tr > th {
-  transition: all 800ms;
+  transition: background-color 800ms;
   background: var(--theme-green-thead) !important;
   color: var(--theme-light-light) !important;
 }
 /*<---------------- Dark ----------------> */
 .dark-dark {
-  transition: all 800ms;
+  transition: background-color 800ms;
   background-color: var(--theme-dark-dark) !important;
 }
 .dark-mid {
-  transition: all 800ms;
+  transition: background-color 800ms;
   background-color: var(--theme-dark-mid) !important;
 }
 .dark-light {
-  transition: all 800ms;
+  transition: background-color 800ms;
   background-color: var(--theme-dark-light) !important;
 }
 .dark-btn {
-  transition: all 800ms;
+  transition: background-color 800ms;
   color: var(--theme-dark-btn) !important;
   background-color: var(--theme-dark-dark) !important;
 }
 .dark-dark-text {
-  transition: all 800ms;
+  transition: background-color 800ms;
   color: var(--theme-dark-btn) !important;
 }
 .dark-light-text {
-  transition: all 800ms;
+  transition: background-color 800ms;
   color: var(--theme-light-btn) !important;
 }
 .dark-light-border {
-  transition: all 800ms;
+  transition: background-color 800ms;
   border: 2px solid;
   border-color: var(--theme-light-btn) !important;
 }
 .dark-dark-border {
-  transition: all 800ms;
+  transition: background-color 800ms;
   border: 2px solid;
   border-color: var(--theme-dark-btn) !important;
 }
 .thead-dark .ant-table-thead > tr > th {
-  transition: all 800ms;
+  transition: background-color 800ms;
   background: var(--theme-dark-thead) !important;
   color: var(--theme-light-light) !important;
 }

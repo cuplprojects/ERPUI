@@ -1,15 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Form, Button, InputGroup } from 'react-bootstrap';
-import { FaEdit } from 'react-icons/fa';
+import { Container, Row, Col, Form, Button } from 'react-bootstrap';
+import { FaPencilAlt } from 'react-icons/fa';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { IoMdMail } from "react-icons/io";
-import { FaUser } from "react-icons/fa";
-import { BsTelephoneFill } from "react-icons/bs";
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
-import SampleUser1 from "./../assets/sampleUsers/sampleUser1.jpg";
-import ChangeMobileNumber from './../menus/ChangeMobileNumber'
-import { FaTimes } from 'react-icons/fa';
+import SampleUser1 from "./../assets/sampleUsers/defaultUser.jpg";
 import "./../styles/Profile.css";
 import { jwtDecode } from 'jwt-decode';
 import axios from 'axios';
@@ -23,24 +18,23 @@ const UserProfile = () => {
   const customLight = cssClasses[2];
   const customBtn = cssClasses[3];
   const customDarkText = cssClasses[4];
-  const customLightText = cssClasses[5]
   const customLightBorder = cssClasses[6]
   const customDarkBorder = cssClasses[7]
-  
+
   const [displayedName, setDisplayedName] = useState("");
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);//
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
   const [firstName, setFirstName] = useState("");
   const [middleName, setMiddleName] = useState("");
   const [lastName, setLastName] = useState("");
   const [gender, setGender] = useState("");
-  const [language, setLanguage] = useState("");
   const [mobileNumber, setMobileNumber] = useState("");
   const [userName, setUserName] = useState("");
+  const [address, setAddress] = useState("")
   const userToken = localStorage.getItem('authToken');
   const decodedToken = jwtDecode(userToken);
   const [, userIdApi] = Object.entries(decodedToken)[0];
-  // console.log(userIdApi)//loop issue
+
   useEffect(() => {
     axios.get(`https://localhost:7212/api/User/${userIdApi}`)
       .then(response => {
@@ -48,13 +42,9 @@ const UserProfile = () => {
         setFirstName(userData.firstName);
         setMiddleName(userData.middleName);
         setLastName(userData.lastName);
-        // setDisplayedName(`${firstName} ${middleName} ${lastName}`);
         setMobileNumber(userData.mobileNo);
         setUserName(userData.userName);
-        // Note: The API response does not contain 'gender' and 'language' fields.
-        // You may need to add these fields to the API response or handle them differently.
-        // For now, I'll leave them as they are in the initialValues state variable.
-        console.log(userData)
+        console.log(userData)//console the api response data
       })
       .catch(error => {
         console.error(error);
@@ -63,18 +53,7 @@ const UserProfile = () => {
   useEffect(() => {
     setDisplayedName(`${firstName} ${middleName} ${lastName}`);
   }, [firstName, middleName, lastName]);
-  const [initialValues, setInitialValues] = useState({
-    firstName: "",
-    middleName: "",
-    lastName: "",
-    gender: "",
-    language: "",
-  });
-  
   const [role] = useState("");
-  const [department] = useState("");
-  const [permissions] = useState("");
-  const permissionArray = permissions.split(', ');
   const [isZoomed, setIsZoomed] = useState(false);
 
   const handleImageClick = (event) => {
@@ -96,50 +75,13 @@ const UserProfile = () => {
       document.removeEventListener('click', handleDocumentClick);
     };
   }, []);
-
-  const handleEditClick = () => setIsEditing(true);
-  const handleSaveClick = () => {
-    const fields = [
-      { name: "First Name", value: firstName, initial: initialValues.firstName },
-      { name: "Middle Name", value: middleName, initial: initialValues.middleName },
-      { name: "Last Name", value: lastName, initial: initialValues.lastName },
-      { name: "Gender", value: gender, initial: initialValues.gender },
-      { name: "Language", value: language, initial: initialValues.language },
-    ];
-
-    let isUpdated = false; // Track if any field was updated
-
-    fields.forEach(field => {
-      if (field.value !== field.initial) {
-        alert(`${field.name} changed from ${field.initial} to ${field.value}`); // Use alert() instead of toast()
-        isUpdated = true; // Mark that an update occurred
-      }
-    });
-
-    if (isUpdated) {
-      setInitialValues({ // Update the initial values
-        firstName,
-        middleName,
-        lastName,
-        gender,
-        language,
-      });
-    }
-
-    setIsEditing(false); // End editing after save
-  };
-
-  const handleMobileSave = (newNumber) => {
-    setMobileNumber(newNumber);  // Update the mobile number in the state
-  };
-
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentDateTime(new Date());
     }, 1000);
     return () => clearInterval(timer);
   }, []);
-
+  // console.log(userIdApi)//loop issue
   return (
     <Container className="my-4">
       <div style={{ zIndex: "999999999999999999999999" }}>
@@ -161,76 +103,49 @@ const UserProfile = () => {
             }).format(currentDateTime)}
           </p>
         </div>
-        <div className="button d-lg-none d-md-none">
-          {isEditing ? (
-            <Button
-              className={`${customDark === 'dark-dark' ? `${customBtn} border-white` : `${customMid} ${customDarkBorder} ${customDarkText}`}`}
-              onClick={handleSaveClick}
-            >
-              Save
-            </Button>
-          ) : (
-            <Button
-              className={` ${customDark === 'dark-dark' ? `${customBtn} border-white` : `${customMid} ${customDarkBorder} ${customDarkText}`}`}
-              onClick={handleEditClick}
-            >
-              Edit
-            </Button>
-          )}
-        </div>
       </div>
       {/* ----------------------------------------------------------------------------------------------------------------------- */}
       <div className={` p-4  rounded-bottom shadow-lg ${customLight} ${customDark === 'dark-dark' ? `${customDarkBorder} border-1` : "border-light"} `}>
         <Row className="align-items-center mb-4">
-          <Col xs={12} sm={3} md={2} className="text-center position-relative ">
+          <Col xs={12} sm={3} md={2} className="text-center position-relative">
             <img
               src={SampleUser1}
               alt=""
               width="100px"
-              className='rounded-circle'
+              className={`rounded-circle ${customDarkBorder}`}
               onClick={handleImageClick}
             />
+            <sub>
+              {/* Edit  image button */}
+              <Button
+                variant="link"
+                className={`position-absolute p-0 rounded-circle ${customDark === "dark-dark" ? `${customMid} ${customDarkText} ${customDarkBorder} border-2` : `${customDarkText} ${customMid} ${customDarkBorder}`}`}
+                style={{
+                  bottom: '0',
+                  right: '0',
+                  transform: 'translate(50%, 50%)',  // Fine-tuned the positioning
+                  width: '30px',
+                  height: '30px',
+                  padding: '0',
+                }}
+              >
+                <FaPencilAlt
+                  size="sm"
+                  className="p-1"
+                  style={{ width: '100%', height: '100%' }}
+                />
+              </Button>
+            </sub>
             {isZoomed && (
               <div className={`zoomed-image rounded-circle ${isZoomed ? 'show' : 'hide'}`} onClick={handleZoomedImageClick}>
-                <img src={SampleUser1} alt="" width="200px" className='rounded-circle' />
+                <img src={SampleUser1} alt="" width="200px" className="rounded-circle" />
               </div>
             )}
-
-            {/* <FaUser className="rounded-circle border border-dark border-2 " size={100} /> */}
-            <Button
-              variant="link"
-              className="position-absolute top-0 end-0 p-0"
-              style={{ transform: 'translate(25%, -25%)' }}
-            >
-              <FaEdit size={20} className="custom-theme-dark-text" />
-            </Button>
           </Col>
-
           <Col xs={12} sm={12} md={8} className="mt-3">
             <h4 className={`${customDarkText}`}>{userName}</h4>
             <p className={`text-muted mb-0 ${customDarkText}`}>{displayedName}</p>
           </Col>
-
-          <Col xs={12} sm={2} className="text-sm-end mt-2 mt-sm-0 d-none d-lg-block d-md-block">
-            {isEditing ? (
-              <Button
-                variant=""
-                className={`${customBtn} custom-zoom-btn text-light ${customBtn === 'dark-dark' ? "" : "border border-white"}`}
-                onClick={handleSaveClick}
-              >
-                Save
-              </Button>
-            ) : (
-              <Button
-                variant=""
-                className={`${customBtn} custom-zoom-btn text-light ${customBtn === 'dark-dark' ? "border border-white" : "border border-white"}`}
-                onClick={handleEditClick}
-              >
-                Edit
-              </Button>
-            )}
-          </Col>
-
         </Row>
         {/* ----------------------------------------------------------------------------------------------------------------- */}
         <Form>
@@ -291,7 +206,7 @@ const UserProfile = () => {
               <Form.Group controlId="formRole">
                 <Form.Label className={`${customDarkText}`}>Role</Form.Label>
                 <Form.Control
-                placeholder="Your Role"
+                  placeholder="Your Role"
                   value={role}
                   className='rounded'
                   disabled
@@ -299,102 +214,33 @@ const UserProfile = () => {
               </Form.Group>
             </Col>
             <Col xs={12} sm={6} md={4}>
-              <Form.Group controlId="formDepartment">
-                <Form.Label className={`${customDarkText}`}>Department</Form.Label>
+              <Form.Group controlId="formMobile">
+                <Form.Label className={`${customDarkText}`}>Mobile Number</Form.Label>
                 <Form.Control
-                  placeholder="Your Department"
-                  disabled
+                  placeholder="Your Mobile Number"
+                  value={mobileNumber}
                   className='rounded'
-                  value={department}
+                  onChange={(e) => setMobileNumber(e.target.value)}
+                  disabled={!isEditing}
                 />
               </Form.Group>
             </Col>
           </Row>
-
           <Row className="mb-3">
-            <Col xs={12} sm={6} md={4} className="mb-3">
-              <Form.Group controlId="formLanguage">
-                <Form.Label className={`${customDarkText}`}>Language</Form.Label>
-                <Form.Select
-                  value={language}
-                  onChange={(e) => setLanguage(e.target.value)}
+            <Col xs={12}>
+              <Form.Group controlId="formAddress">
+                <Form.Label className={`${customDarkText}`}>Address</Form.Label>
+                <Form.Control
+                  placeholder="Your Address"
+                  value={address}
+                  className='rounded'
+                  onChange={(e) => setAddress(e.target.value)}
                   disabled={!isEditing}
-                >
-                  <option value="English">English</option>
-                  <option value="Hindi">Hindi</option>
-                </Form.Select>
+                />
               </Form.Group>
             </Col>
-            {/* <Col xs={12} sm={6} md={8}>
-              <Form.Group controlId="formPermissions">
-                <Form.Label className={`${customDarkText}`}>Permissions</Form.Label>
-                <div className="d-flex flex-wrap">
-                  {permissionArray.map((permission, index) => (
-                    <div key={index} className={` ${customBtn} ${customDarkBorder} rounded me-2 mb-2 p-1 fs-6 `}>
-                      {permission}
-                      <span className="ms-2" style={{ cursor: 'not-allowed' }}>
-                        <FaTimes className="text-white" />
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </Form.Group>
-            </Col> */}
           </Row>
         </Form>
-
-        <Row className='d-flex justify-content-between '>
-          {/* <Col xs={12} md={6} lg={5}>
-            <div className="mt-2">
-              <h5 className={`${customDarkText} fw-bold`}>My Email Address</h5>
-              <Row className="align-items-center d-flex align-items-center justify-content-between">
-                <Col xs={12} sm={3} md={1} lg={6}>
-                  <IoMdMail className={`custom-theme-dark-text ${customDarkText}`} size={50} />
-                </Col>
-                <Col xs={12} sm={9} md={11} lg={6} className='text-end '>
-                  <div className={`mb-0 ${customDarkText} fw-bold text-wrap`}>jayanta@chandrakala.co.in</div>
-                  <small className={`mb-0 ${customDarkText}  text-muted`}>1 month ago</small>
-                </Col>
-              </Row>
-              <div className='d-flex justify-content-center'>
-                <Button
-                  variant="dark"
-                  className={`mt-3  custom-zoom-btn text-light disabled w-100  ${customBtn} ${customDarkBorder} d-none d-md-block d-lg-block`}
-                >
-                  Change Email Address
-                </Button>
-                <Button
-                  variant="dark"
-                  className={`mt-3  custom-zoom-btn text-light disabled w-100 d-md-none d-lg-none  ${customBtn} ${customDarkBorder}`}
-                >
-                  Change Email Address
-                </Button>
-              </div>
-            </div>
-          </Col> */}
-          <Col xs={12} md={12} lg={12}>
-            <div className="mt-2">
-              <h5 className={`${customDarkText} fw-bold`}>My Mobile Number</h5>
-              <Row className="align-items-center">
-                <Col xs={3} sm={2} md={1}>
-                  <BsTelephoneFill className={`custom-theme-dark-text ${customDarkText}`} size={50} />
-                </Col>
-                <Col xs={9} sm={10} md={11} className='text-end'>
-                  <p className={`mb-0 ${customDarkText} fw-bold`}>{mobileNumber}</p>
-                  <small className={`mb-0 ${customDarkText} text-muted`}>Last updated 2 weeks ago</small>
-                </Col>
-              </Row>
-            </div>
-            <div className='d-flex justify-content-center'>
-              <ChangeMobileNumber
-                currentMobileNumber={mobileNumber}
-                onSave={handleMobileSave}  // Pass the function to handle saving the new number
-              />
-            </div>
-          </Col>
-
-        </Row>
-
       </div>
     </Container>
   );

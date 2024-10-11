@@ -18,7 +18,7 @@ const RolesAndDepartments = () => {
         const response = await axios.get('https://localhost:7212/api/Roles'); // Update with your API endpoint
         setRoles(response.data);
       } catch (error) {
-        message.error('Failed to fetch roles');
+        console.error('Failed to fetch roles');
       }
     };
 
@@ -190,9 +190,7 @@ const RolesAndDepartments = () => {
             <Permissions
               selectedPermissions={newRole.permissions}
               onChange={handlePermissionChange}
-            />
-            {/* Optional: Add an input for priorityOrder */}
-            
+            />            
           </Modal>
         </Card>
       </TabPane>
