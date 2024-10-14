@@ -1,393 +1,441 @@
 import React, { useState, useEffect } from 'react';
-import { Tabs, Table, Button, Modal, Input, Switch, Select, notification } from 'antd';
-import { 
-  AppstoreAddOutlined, 
-  BuildOutlined, 
-  SettingOutlined 
-} from '@ant-design/icons';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import './../styles/SystemSettings.css';
+import { Tabs, Table, Button, Modal, Input, Select, notification, Switch } from 'antd';
+import { AppstoreAddOutlined, BuildOutlined, EditOutlined } from '@ant-design/icons';
+import { DndProvider, useDrag, useDrop } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
+import axios from 'axios';
+import API from '../CustomHooks/MasterApiHooks/api';
 
-const { TabPane } = Tabs;
+const ItemType = 'FEATURE';
+
+// DraggableRow component remains unchanged
+const DraggableRow = ({ index, moveRow, className, style, ...restProps }) => {
+  const ref = React.useRef();
+  const [, drop] = useDrop({
+    accept: ItemType,
+    hover(item, monitor) {
+      if (!ref.current) return;
+      const dragIndex = item.index;
+      const hoverIndex = index;
+
+      if (dragIndex === hoverIndex) return;
+
+      const hoverBoundingRect = ref.current.getBoundingClientRect();
+      const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+      const clientOffset = monitor.getClientOffset();
+      const hoverClientY = clientOffset.y - hoverBoundingRect.top;
+
+      if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) return;
+      if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) return;
+
+      moveRow(dragIndex, hoverIndex);
+      item.index = hoverIndex;
+    },
+  });
+
+  const [{ isDragging }, drag] = useDrag({
+    type: ItemType,
+    item: { index },
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
+  });
+
+  drag(drop(ref));
+
+  return (
+    <tr ref={ref} style={{ ...style, opacity: isDragging ? 0.5 : 1 }} {...restProps} />
+  );
+};
 
 const SystemSettings = () => {
   const [featureModalVisible, setFeatureModalVisible] = useState(false);
   const [processModalVisible, setProcessModalVisible] = useState(false);
   const [features, setFeatures] = useState([]);
   const [processes, setProcesses] = useState([]);
-  const [featureConfigData, setFeatureConfigData] = useState([]);
-
+  const [isEditingFeature, setIsEditingFeature] = useState(false);
+  const [isEditingProcess, setIsEditingProcess] = useState(false);
+  const [editingFeatureId, setEditingFeatureId] = useState(null);
+  const [editingProcessId, setEditingProcessId] = useState(null);
   const [featureName, setFeatureName] = useState('');
-  const [processId, setProcessId] = useState('');
   const [processName, setProcessName] = useState('');
-  const [processStatus, setProcessStatus] = useState(false);
+  const [processStatus, setProcessStatus] = useState(true);
   const [processWeightage, setProcessWeightage] = useState('');
   const [processInstalledFeatures, setProcessInstalledFeatures] = useState([]);
 
-  // Validation states
-  const [processNameError, setProcessNameError] = useState('');
-  const [processWeightageError, setProcessWeightageError] = useState('');
-
   useEffect(() => {
-    // Example: Fetch data for features and processes from the server
     const fetchFeatures = async () => {
-      // Fetch the features from your backend
-      // Example: const data = await fetch('/api/features');
-      const data = []; // Replace with actual API response
-      setFeatures(data);
+      try {
+        const response = await API.get('/Features');
+        setFeatures(response.data.map(feature => ({
+          key: feature.featureId,
+          name: feature.features,
+        })));
+      } catch (error) {
+        console.error('Error fetching features:', error);
+        notification.error({ message: 'Failed to fetch features' });
+      }
     };
 
     const fetchProcesses = async () => {
-      // Fetch the processes from your backend
-      // Example: const data = await fetch('/api/processes');
-      const data = []; // Replace with actual API response
-      setProcesses(data);
+      try {
+        const response = await API.get('/Processes');
+        setProcesses(response.data.map(process => ({
+          key: process.id.toString(),
+          id: process.id,
+          name: process.name,
+          status: process.status,
+          weightage: process.weightage,
+          installedFeatures: process.installedFeatures,
+        })));
+      } catch (error) {
+        console.error('Error fetching processes:', error);
+        notification.error({ message: 'Failed to fetch processes' });
+      }
     };
 
     fetchFeatures();
     fetchProcesses();
   }, []);
 
-  const showAddFeatureModal = () => {
+  const moveFeatureRow = (dragIndex, hoverIndex) => {
+    const updatedFeatures = [...features];
+    const draggedRow = updatedFeatures.splice(dragIndex, 1)[0];
+    updatedFeatures.splice(hoverIndex, 0, draggedRow);
+    setFeatures(updatedFeatures);
+  };
+
+  const components = {
+    body: {
+      row: DraggableRow,
+    },
+  };
+
+  const showAddFeatureModal = (feature = null) => {
+    if (feature) {
+      setFeatureName(feature.name);
+      setIsEditingFeature(true);
+      setEditingFeatureId(feature.key);
+    } else {
+      setFeatureName('');
+      setIsEditingFeature(false);
+      setEditingFeatureId(null);
+    }
     setFeatureModalVisible(true);
   };
 
-  const handleAddFeature = () => {
-    const isValidName = /^[A-Za-z\s]+$/.test(featureName);
+  const showAddProcessModal = (process = null) => {
+    if (process) {
+      setProcessName(process.name);
+      setProcessStatus(process.status);
+      setProcessWeightage(process.weightage.toString());
+      setProcessInstalledFeatures(process.installedFeatures.map(featureId => {
+        const feature = features.find(f => f.key === featureId);
+        return feature ? feature.name : null;
+      }).filter(Boolean));
+      setIsEditingProcess(true);
+      setEditingProcessId(process.id);
+    } else {
+      setProcessName('');
+      setProcessStatus(true);
+      setProcessWeightage('');
+      setProcessInstalledFeatures([]);
+      setIsEditingProcess(false);
+      setEditingProcessId(null);
+    }
+    setProcessModalVisible(true);
+  };
 
+  const handleAddFeature = async () => {
     if (!featureName) {
       notification.error({ message: 'Feature name cannot be empty!' });
       return;
     }
 
-    if (!isValidName) {
-      notification.error({ message: 'Feature name must contain only letters and spaces!' });
-      return;
-    }
-
-    const isDuplicate = features.some(
-      feature => feature.name.toLowerCase() === featureName.toLowerCase()
-    );
-
-    if (isDuplicate) {
-      notification.error({ message: 'Feature name already exists' });
-      return;
-    }
-
-    const newFeature = {
-      key: (features.length + 1).toString(),
-      name: featureName,
+    const featurePayload = {
+      featureId: editingFeatureId || 0,
+      features: featureName,
+      status: false,
     };
 
-    // Add the new feature to the features list
-    const updatedFeatures = [...features, newFeature];
-    setFeatures(updatedFeatures);
-
-    // Add new feature to featureConfigData
-    const newConfigEntry = {
-      key: newFeature.key, // Use the same key as the feature
-      Module_ID: newFeature.key,
-      Configurations: {},
-    };
-
-    // Initialize configurations for all existing processes
-    processes.forEach(process => {
-      newConfigEntry.Configurations[process.id] = false; // Default value
-    });
-
-    setFeatureConfigData([...featureConfigData, newConfigEntry]);
-
-    // Reset the modal and show a success message
-    setFeatureName('');
-    setFeatureModalVisible(false);
-    notification.success({ message: 'Feature added successfully!' });
-  };
-
-  const showAddProcessModal = () => {
-    setProcessId('');
-    setProcessName('');
-    setProcessStatus(false);
-    setProcessWeightage('');
-    setProcessInstalledFeatures([]);
-    setProcessNameError('');
-    setProcessWeightageError('');
-    setProcessModalVisible(true);
-  };
-
-  const handleAddProcess = () => {
-    let valid = true;
-    setProcessNameError('');
-    setProcessWeightageError('');
-
-    if (!/^[A-Za-z\s]+$/.test(processName)) {
-      setProcessNameError('Process name must contain only letters.');
-      valid = false;
-    }
-
-    if (processes.some(process => process.name.toLowerCase() === processName.toLowerCase())) {
-      setProcessNameError('Process name must be unique.');
-      valid = false;
-    }
-
-    if (!/^\d*\.?\d+$/.test(processWeightage)) {
-      setProcessWeightageError('Weightage must be a numeric value.');
-      valid = false;
-    }
-
-    if (valid) {
-      const newProcess = {
-        key: (processes.length + 1).toString(),
-        id: `${processes.length + 1}`,
-        name: processName,
-        status: processStatus,
-        weightage: processWeightage,
-        installedFeatures: processInstalledFeatures.join(', '),
-      };
-      setProcesses([...processes, newProcess]);
-      setProcessModalVisible(false);
-      notification.success({ message: 'Process added successfully!' });
-    } else {
-      notification.error({ message: 'Please fix the validation errors.' });
-    }
-  };
-
-  const handleToggleConfigurable = (moduleKey, processId) => {
-    const updatedData = featureConfigData.map((item) => {
-      if (item.key === moduleKey) {
-        return {
-          ...item,
-          Configurations: {
-            ...item.Configurations,
-            [processId]: !item.Configurations[processId],
+    if (isEditingFeature) {
+      try {
+        const response = await API.put(`/Features/${editingFeatureId}`, featurePayload, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'text/plain',
           },
-        };
+        });
+
+        if (response.status === 200) {
+          setFeatures(prevFeatures =>
+            prevFeatures.map(feature =>
+              feature.key === editingFeatureId ? { ...feature, name: featureName } : feature
+            )
+          );
+          notification.success({ message: 'Feature updated successfully!' });
+        } else {
+          notification.error({ message: 'Failed to update feature!' });
+        }
+      } catch (error) {
+        console.error('Error updating feature:', error);
+        notification.error({ message: 'An error occurred while updating the feature.' });
       }
-      return item;
-    });
-    setFeatureConfigData(updatedData);
+    } else {
+      try {
+        const response = await API.post('/Features', featurePayload, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'text/plain',
+          },
+        });
+
+        if (response.status === 200) {
+          const addedFeature = response.data;
+          setFeatures([...features, { key: addedFeature.featureId, name: addedFeature.features }]);
+          notification.success({ message: 'Feature added successfully!' });
+        } else {
+          notification.error({ message: 'Failed to add feature!' });
+        }
+      } catch (error) {
+        console.error('Error adding feature:', error);
+        notification.error({ message: 'An error occurred while adding the feature.' });
+      }
+    }
+
+    setFeatureModalVisible(false);
   };
 
-  const handleToggleStatus = (processId) => {
-    const updatedProcesses = processes.map((process) => {
-      if (process.id === processId) {
-        return { ...process, status: !process.status };
-      }
-      return process;
-    });
-    setProcesses(updatedProcesses);
-    notification.success({ message: 'Process status updated successfully!' });
-  };
-
-  const featureConfigColumns = [
-    {
-      title: 'Feature Name',
-      dataIndex: 'Module_ID',
-      key: 'Module_ID',
-      render: (moduleId) => {
-        const module = features.find((f) => f.key === moduleId);
-        return module ? module.name : 'Unknown';
-      },
-    },
+  const featureConfigurationColumns = [
+    { title: 'Feature Name', dataIndex: 'name', key: 'name' },
     ...processes.map((process) => ({
       title: process.name,
-      dataIndex: 'Configurations',
-      key: process.id,
-      render: (configurations, record) => (
+      dataIndex: process.name,
+      key: process.name,
+      render: (text, record) => (
         <Switch
-          checked={configurations[process.id]}
-          onChange={() => handleToggleConfigurable(record.key, process.id)}
+          checked={featureConfigurationColumns.process}
+          
         />
       ),
     })),
   ];
 
-  const onDragEnd = (result) => {
-    const { source, destination } = result;
-
-    if (!destination || source.index === destination.index) {
+  const handleAddProcess = async () => {
+    if (!processName) {
+      notification.error({ message: 'Process name cannot be empty!' });
       return;
     }
 
-    const updatedFeatures = Array.from(features);
-    const [movedFeature] = updatedFeatures.splice(source.index, 1);
-    updatedFeatures.splice(destination.index, 0, movedFeature);
+    const newProcess = {
+      id: editingProcessId || 0,
+      name: processName,
+      weightage: parseFloat(processWeightage),
+      status: processStatus,
+      installedFeatures: processInstalledFeatures.map(name => {
+        const feature = features.find(f => f.name === name);
+        return feature ? feature.key : null;
+      }).filter(Boolean),
+    };
 
-    setFeatures(updatedFeatures);
+    if (isEditingProcess) {
+      try {
+        const response = await API.put(`/Processes/${editingProcessId}`, newProcess, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'text/plain',
+          },
+        });
+
+        if (response.status === 200) {
+          setProcesses(prevProcesses =>
+            prevProcesses.map(process =>
+              process.id === editingProcessId ? { ...process, ...newProcess } : process
+            )
+          );
+          notification.success({ message: 'Process updated successfully!' });
+        } else {
+          notification.error({ message: 'Failed to update process!' });
+        }
+      } catch (error) {
+        console.error('Error updating process:', error);
+        notification.error({ message: 'An error occurred while updating the process.' });
+      }
+    } else {
+      try {
+        const response = await API.post('/Processes', newProcess, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'text/plain',
+          },
+        });
+
+        if (response.status === 200) {
+          const addedProcess = response.data;
+          setProcesses([...processes, { key: addedProcess.id.toString(), ...newProcess }]);
+          notification.success({ message: 'Process added successfully!' });
+        } else {
+          notification.error({ message: 'Failed to add process!' });
+        }
+      } catch (error) {
+        console.error('Error adding process:', error);
+        notification.error({ message: 'An error occurred while adding the process.' });
+      }
+    }
+
+    setProcessModalVisible(false);
   };
+
+  const featureColumns = [
+    { title: 'ID', dataIndex: 'key', key: 'key' },
+    { title: 'Feature Name', dataIndex: 'name', key: 'name' },
+    {
+      title: 'Action',
+      key: 'action',
+      render: (_, feature) => (
+        <Button
+          icon={<EditOutlined />}
+          onClick={() => showAddFeatureModal(feature)}
+        />
+      ),
+    },
+  ];
+
+  const processColumns = [
+    { title: 'ID', dataIndex: 'key', key: 'key' },
+    { title: 'Process Name', dataIndex: 'name', key: 'name' },
+    { title: 'Status', dataIndex: 'status', key: 'status', render: (status) => (status ? 'Active' : 'Inactive') },
+    {
+      title: 'Action',
+      key: 'action',
+      render: (_, process) => (
+        <Button
+          icon={<EditOutlined />}
+          onClick={() => showAddProcessModal(process)}
+        />
+      ),
+    },
+  ];
+
+  const items = [
+    {
+      key: "1",
+      label: (
+        <span>
+          <AppstoreAddOutlined style={{ fontSize: '25px', marginRight: '8px' }} /> Feature
+        </span>
+      ),
+      children: (
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3>Feature List</h3>
+            <Button type="primary" onClick={() => showAddFeatureModal()}>Add New Feature</Button>
+          </div>
+          <Table
+            dataSource={features}
+            columns={featureColumns}
+            components={components}
+            onRow={(record, index) => ({
+              index,
+              moveRow: moveFeatureRow,
+            })}
+            rowKey="key"
+          />
+        </div>
+      ),
+    },
+    {
+      key: "2",
+      label: (
+        <span>
+          <BuildOutlined style={{ fontSize: '25px', marginRight: '8px' }} /> Processes
+        </span>
+      ),
+      children: (
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3>Process List</h3>
+            <Button type="primary" onClick={() => showAddProcessModal()}>Add New Process</Button>
+          </div>
+          <Table dataSource={processes} columns={processColumns} />
+        </div>
+      ),
+    },
+    {
+      key: "3",
+      label: <span>Feature Configuration</span>,
+      children: (
+        <Table
+          dataSource={features.map(feature => ({
+            key: feature.key,
+            name: feature.name,
+            installedFeatures: feature.installedFeatures || [],
+          }))}
+          columns={featureConfigurationColumns} // Add your configuration columns here
+        />
+      ),
+    },
+  ];
 
   return (
     <div style={{ padding: '20px' }}>
-      <Tabs defaultActiveKey="1">
-        <TabPane 
-          tab={
-            <span>
-              <AppstoreAddOutlined style={{ fontSize: '25px', marginRight: '8px' }} /> 
-              Feature
-            </span>
-          } 
-          key="1"
+      <DndProvider backend={HTML5Backend}>
+        <Tabs defaultActiveKey="1" items={items} />
+        
+        <Modal
+          title={isEditingFeature ? 'Edit Feature' : 'Add Feature'}
+          open={featureModalVisible}
+          onOk={handleAddFeature}
+          onCancel={() => setFeatureModalVisible(false)}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3>Feature List</h3>
-            <Button type="primary" onClick={showAddFeatureModal}>
-              Add New Feature
-            </Button>
-          </div>
-          <DragDropContext onDragEnd={onDragEnd}>
-            <Droppable droppableId="droppable">
-              {(provided) => (
-                <div ref={provided.innerRef} {...provided.droppableProps}>
-                  <Table
-                    dataSource={features}
-                    columns={[
-                      {
-                        title: 'ID',
-                        dataIndex: 'key',
-                        key: 'key',
-                      },
-                      {
-                        title: 'Feature Name',
-                        dataIndex: 'name',
-                        key: 'name',
-                        render: (text, record, index) => (
-                          <Draggable key={record.key} draggableId={record.key} index={index}>
-                            {(provided) => (
-                              <div 
-                                ref={provided.innerRef} 
-                                {...provided.draggableProps} 
-                                {...provided.dragHandleProps}
-                              >
-                                {text}
-                              </div>
-                            )}
-                          </Draggable>
-                        ),
-                      },
-                    ]}
-                    pagination={false}
-                  />
-                  {provided.placeholder}
-                </div>
-              )}
-            </Droppable>
-          </DragDropContext>
-          <Modal
-            title="Add New Feature"
-            visible={featureModalVisible}
-            onOk={handleAddFeature}
-            onCancel={() => setFeatureModalVisible(false)}
-          >
-            <Input
-              placeholder="Enter feature name"
-              value={featureName}
-              onChange={(e) => setFeatureName(e.target.value)}
-            />
-          </Modal>
-        </TabPane>
-
-        <TabPane
-          tab={
-            <span>
-              <BuildOutlined style={{ fontSize: '25px', marginRight: '8px' }} /> 
-              Process
-            </span>
-          } 
-          key="2"
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3>Process List</h3>
-            <Button type="primary" onClick={showAddProcessModal}>
-              Add New Process
-            </Button>
-          </div>
-          <Table
-            dataSource={processes}
-            columns={[
-              {
-                title: 'ID',
-                dataIndex: 'key',
-                key: 'key',
-              },
-              {
-                title: 'Process Name',
-                dataIndex: 'name',
-                key: 'name',
-              },
-              {
-                title: 'Status',
-                dataIndex: 'status',
-                key: 'status',
-                render: (status, record) => (
-                  <Switch
-                    checked={status}
-                    onChange={() => handleToggleStatus(record.id)}
-                  />
-                ),
-              },
-              {
-                title: 'Weightage',
-                dataIndex: 'weightage',
-                key: 'weightage',
-              },
-              {
-                title: 'Installed Features',
-                dataIndex: 'installedFeatures',
-                key: 'installedFeatures',
-              },
-            ]}
-            pagination={false}
+          <Input
+            placeholder="Feature Name"
+            value={featureName}
+            onChange={e => setFeatureName(e.target.value)}
           />
-          <Modal
-            title="Add New Process"
-            visible={processModalVisible}
-            onOk={handleAddProcess}
-            onCancel={() => setProcessModalVisible(false)}
-          >
-            <Input
-              placeholder="Enter process name"
-              value={processName}
-              onChange={(e) => setProcessName(e.target.value)}
-            />
-            {processNameError && <div style={{ color: 'red' }}>{processNameError}</div>}
-            <Input
-              placeholder="Enter weightage"
-              value={processWeightage}
-              onChange={(e) => setProcessWeightage(e.target.value)}
-              style={{ width: '100%', marginTop: '10px' }}
-            />
-            {processWeightageError && <div style={{ color: 'red' }}>{processWeightageError}</div>}
-            <Select
-              mode="multiple"
-              placeholder="Select installed features"
-              value={processInstalledFeatures}
-              onChange={setProcessInstalledFeatures}
-              style={{ width: '100%', marginTop: '10px' }}
-            >
-              {features.map(feature => (
-                <Select.Option key={feature.key} value={feature.name}>
-                  {feature.name}
-                </Select.Option>
-              ))}
-            </Select>
-          </Modal>
-        </TabPane>
+        </Modal>
 
-        <TabPane
-          tab={
-            <span>
-              <SettingOutlined style={{ fontSize: '25px', marginRight: '8px' }} /> 
-              Feature Configurations
-            </span>
-          } 
-          key="3"
+        <Modal
+          title={isEditingProcess ? 'Edit Process' : 'Add Process'}
+          open={processModalVisible}
+          onOk={handleAddProcess}
+          onCancel={() => setProcessModalVisible(false)}
         >
-          <Table
-            dataSource={featureConfigData}
-            columns={featureConfigColumns}
-            pagination={false}
+          <Input
+            placeholder="Process Name"
+            value={processName}
+            onChange={e => setProcessName(e.target.value)}
           />
-        </TabPane>
-      </Tabs>
+          <Select
+            placeholder="Select Status"
+            value={processStatus}
+            onChange={setProcessStatus}
+            style={{ width: '100%', marginTop: '10px' }}
+          >
+            <Select.Option value={true}>Active</Select.Option>
+            <Select.Option value={false}>Inactive</Select.Option>
+          </Select>
+          <Input
+            placeholder="Weightage"
+            value={processWeightage}
+            onChange={e => setProcessWeightage(e.target.value)}
+            style={{ marginTop: '10px' }}
+          />
+          <Select
+            mode="multiple"
+            placeholder="Select Installed Features"
+            value={processInstalledFeatures}
+            onChange={setProcessInstalledFeatures}
+            style={{ width: '100%', marginTop: '10px' }}
+          >
+            {features.map(feature => (
+              <Select.Option key={feature.key} value={feature.name}>
+                {feature.name}
+              </Select.Option>
+            ))}
+          </Select>
+        </Modal>
+      </DndProvider>
     </div>
   );
 };

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Form, Button } from 'react-bootstrap';
+
 import { AiFillEye, AiFillEyeInvisible } from 'react-icons/ai';
 import Logo1 from './../assets/Logos/CUPLLogoTheme.png';
 import { useMediaQuery } from 'react-responsive';
@@ -9,6 +10,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import BackgroundImage from './../assets/bgImages/setpass/defaultSetPass.png';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
+import API from '../CustomHooks/MasterApiHooks/api';
+
 
 const SetPassword = () => {
   const navigate = useNavigate();
@@ -30,7 +33,7 @@ const SetPassword = () => {
   const [, userIdApi] = Object.entries(decodedToken)[0];
 
   useEffect(() => {
-    axios.get('https://localhost:7212/api/SecurityQuestions')
+    API.get('/SecurityQuestions')
       .then(response => {
         console.log('API response:', response.data);
         setSecurityQuestions(response.data);
@@ -39,6 +42,7 @@ const SetPassword = () => {
         console.error(error);
       });
   }, []);
+
 
   const handleQuestionSelect = (key, questionId) => {
     setSelectedQuestions({
@@ -68,7 +72,7 @@ const SetPassword = () => {
       return;
     }
 
-    axios.post('https://localhost:7212/api/Login/setSecurityAnswers', {
+    API.post('/Login/setSecurityAnswers', {
       userId: userIdApi,
       securityQuestion1Id: selectedQuestions.first.questionId,
       securityAnswer1: selectedQuestions.first.answer,
@@ -89,6 +93,7 @@ const SetPassword = () => {
         toast.error("An error occurred while setting security questions.");
       });
 
+
     setSelectedQuestions({
       first: { questionId: '', question: '', answer: '' },
       second: { questionId: '', question: '', answer: '' },
@@ -108,12 +113,14 @@ const SetPassword = () => {
       newPassword: password,
     };
 
-    axios.put('https://localhost:7212/api/Login/SetPassword', newPasswordData)
+    API.put('/Login/SetPassword', newPasswordData)
       .then((response) => {
         if (response.status === 200) {
           toast.success("Password set successfully!", {
-            onClose: () => navigate('/dashboard'), // Wait for toast to close before navigating
-            autoClose: 1500,
+
+            onClose: () => navigate('/'), // Redirect to dashboard
+            autoClose: 3000,
+
           });
         } else {
           toast.error("Failed to set password.");
@@ -123,11 +130,15 @@ const SetPassword = () => {
         toast.error("An error occurred while setting password.");
       });
 
+
     setPassword('');
     setConfirmPassword('');
   };
 
+
+
   const availableQuestionsForSecond = securityQuestions.filter(q => q.questionId !== parseInt(selectedQuestions.first.questionId));
+
 
   return (
     <Container
@@ -215,9 +226,11 @@ const SetPassword = () => {
                     required
                   >
                     <option value="">Select a question</option>
+
                     {availableQuestionsForSecond.map(q => (
                       <option key={q.questionId} value={q.questionId}>{q.securityQuestions}</option>
                     ))}
+
                   </Form.Control>
                   <Form.Control
                     type="text"
@@ -228,7 +241,6 @@ const SetPassword = () => {
                     className="mt-2"
                   />
                 </Form.Group>
-
                 <Button
                   className="mt-3 w-100 border-0 custom-zoom-btn"
                   style={{ background: "#37474f", padding: '10px 0', fontSize: '16px' }}
@@ -238,7 +250,6 @@ const SetPassword = () => {
                 </Button>
               </Form>
             )}
-
             {currentStep === 'setPassword' && (
               <Form onSubmit={handleSetPassword} className=''>
                 <h2 className="text-center mb-4">Set Password</h2>

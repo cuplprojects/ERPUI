@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Table, Input, Button, message, Modal, Spin } from 'antd';
 import { v4 as uuidv4 } from 'uuid'; 
 import axios from 'axios';
+import API from '../CustomHooks/MasterApiHooks/api';
 
 const AlarmMaster = () => {
   const [alarms, setAlarms] = useState([]);
@@ -15,10 +16,10 @@ const AlarmMaster = () => {
   const fetchAlarms = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('https://localhost:7223/api/Alarms');
+      const response = await API.get('/Alarms');
       setAlarms(response.data);
     } catch (error) {
-      message.error('Failed to fetch alarms');
+      console.error('Failed to fetch alarms');
     } finally {
       setLoading(false);
     }
@@ -53,7 +54,7 @@ const AlarmMaster = () => {
     message.success('Alarm added successfully!');
 
     try {
-      await axios.post('https://localhost:7223/api/Alarms', newAlarm);
+      await API.post('/Alarms', newAlarm);
     } catch (error) {
       message.error('Failed to add alarm');
       setAlarms(prev => prev.filter(alarm => alarm.alarmId !== newAlarm.alarmId)); // Revert optimistic update
@@ -85,7 +86,7 @@ const AlarmMaster = () => {
     setEditingValue('');
 
     try {
-      await axios.put(`https://localhost:7223/api/Alarms/${alarms[index].alarmId}`, updatedAlarm);
+      await API.put(`/Alarms/${alarms[index].alarmId}`, updatedAlarm);
     } catch (error) {
       message.error('Failed to update alarm');
       fetchAlarms(); // Refresh alarms to get the latest data

@@ -41,7 +41,7 @@ const UserProfile = () => {
   const [, userIdApi] = Object.entries(decodedToken)[0];
   // console.log(userIdApi)//loop issue
   useEffect(() => {
-    axios.get(`https://localhost:7212/api/User/${userIdApi}`)
+    .get(`https://localhost:7212/api/User/${userIdApi}`)
       .then(response => {
         const userData = response.data;
         setFirstName(userData.firstName);

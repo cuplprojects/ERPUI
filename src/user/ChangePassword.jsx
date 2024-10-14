@@ -7,6 +7,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { jwtDecode } from 'jwt-decode';
 import axios from 'axios';
+
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import API from '../CustomHooks/MasterApiHooks/api';
@@ -23,6 +24,7 @@ const ChangePassword = () => {
   const customLightText = cssClasses[5]
   const customLightBorder = cssClasses[6]
   const customDarkBorder = cssClasses[7]
+
 
 
   // State object to store oldPassword and newPassword
@@ -95,13 +97,17 @@ const ChangePassword = () => {
     }
   
     const userId = userIdApi; // extracted from the decoded token
+
     const apiUrl = `/Login/Changepassword/${userId}`;
+
     const payload = {
       oldPassword: formData.oldPassword,
       newPassword: formData.newPassword,
     };
   
+
     API.put(apiUrl, payload)
+
       .then((response) => {
         toast.info('Password changed successfully!', {
           position: "top-right",

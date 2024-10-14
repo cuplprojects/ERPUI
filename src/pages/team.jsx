@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Button, Modal, Form, Input, Select, Table, Card, Typography, Divider } from 'antd';
 import { PlusOutlined, TeamOutlined } from '@ant-design/icons';
 import axios from 'axios';
+import API from '../CustomHooks/MasterApiHooks/api';
 
 const { Option } = Select;
 const { Title, Text } = Typography;
@@ -15,7 +16,7 @@ const Team = () => {
 
   const getUsers = async () => {
     try {
-      const response = await axios.get('https://localhost:7223/api/User')
+      const response = await API.get('/User')
       setUsers(response.data)
     }
     catch (error) {

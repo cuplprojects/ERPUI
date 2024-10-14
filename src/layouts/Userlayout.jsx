@@ -19,6 +19,7 @@ import { useStore } from 'zustand';
 import QtySheetUpload from '../pages/QtySheetUpload';
 import Message from '../pages/Message/Message';
 import Labels from '../pages/Message/Labels';
+import AddProjectProcess from '../pages/AddProjectProcess';
 const Userlayout = () => {
 
   //Theme Change Section
@@ -41,6 +42,7 @@ const Userlayout = () => {
             <Routes>
               <Route path="/dashboard" element={<MainDashboard />} />
               <Route path="/master" element={<Masters />} />
+              <Route path="/AddProjectProcess/:projectId" element={<AddProjectProcess />} />
               <Route path="/features" element={<Features />} />
               {/* --------------- User Menu Routes -------------- */}
               <Route path="/profile" element={<Profile />} />

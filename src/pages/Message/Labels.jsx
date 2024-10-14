@@ -6,8 +6,8 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Table, Input, Pagination, Button, message } from 'antd';
-import { Form, Row, Col } from 'react-bootstrap';
+import { Table, Input, Pagination, Button } from 'antd';
+import { Form, Row, Col, Alert } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 import useLanguageStore from '../../store/languageStore';
 import themeStore from '../../store/themeStore';
@@ -27,9 +27,8 @@ const Labels = () => {
   const pageSize = 10;
   const [showEditForm, setShowEditForm] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [alertMessageProps, setAlertMessageProps] = useState({ messageId: '', type: '' });
+  const [alertMessage, setAlertMessage] = useState({ text: '', type: '' });
   const [showAlert, setShowAlert] = useState(false);
-  const AlertMessage = useAlertMessage(alertMessageProps.messageId, alertMessageProps.type);
   const { t } = useTranslation();
   const { language } = useLanguageStore();
 
@@ -51,7 +50,8 @@ const Labels = () => {
       setLabels(response);
     } catch (error) {
       console.error('Error fetching labels:', error);
-      message.error('Failed to fetch labels');
+      setAlertMessage({ text: 'Failed to fetch labels', type: 'danger' });
+      setShowAlert(true);
     }
   };
 
@@ -101,19 +101,19 @@ const Labels = () => {
       if (showAddForm) {
         const { labelKey, englishLabel, hindiLabel } = formData;
         await addTextLabel({ labelKey, englishLabel, hindiLabel });
-        message.success('Label added successfully');
+        setAlertMessage({ text: 'labeladdedsuccess', type: 'success' });
         setShowAddForm(false);
       } else {
         await updateTextLabel(formData.textLabelId, formData);
-        message.success('Label updated successfully');
+        setAlertMessage({ text: 'labelUpdatedSuccess', type: 'success' });
         setShowEditForm(false);
       }
       fetchLabels();
-      setAlertMessageProps({ messageId: '2', type: 'success' });
       setShowAlert(true);
     } catch (error) {
       console.error('Error submitting form:', error);
-      message.error('Failed to submit form');
+      setAlertMessage({ text: 'failedToSubmitLabel', type: 'danger' });
+      setShowAlert(true);
     }
   };
 
@@ -150,7 +150,11 @@ const Labels = () => {
       <h2 className={`text-center mt-2 ${customDarkText}`}>
         {t('messageManagement')}
       </h2>
-      {showAlert && <AlertMessage onClose={() => setShowAlert(false)} />}
+      {showAlert && (
+        <Alert variant={alertMessage.type} onClose={() => setShowAlert(false)} dismissible>
+          {t(alertMessage.text)}
+        </Alert>
+      )}
       {(showEditForm || showAddForm) && (
         <Form onSubmit={handleSubmit}>
           <Row>
