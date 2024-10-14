@@ -3,6 +3,7 @@ import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'antd/es/form/Form';
 import API from '../CustomHooks/MasterApiHooks/api';
+import { useMediaQuery } from 'react-responsive';
 
 const { Option } = Select;
 
@@ -18,6 +19,9 @@ const Type = () => {
     const [editingStatus, setEditingStatus] = useState(true);
     const [originalData, setOriginalData] = useState({});
     const [form] = useForm();
+
+    const isMobile = useMediaQuery({ maxWidth: 767 });
+    const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1023 });
 
     const fetchTypes = async () => {
         setLoading(true);
@@ -172,16 +176,28 @@ const Type = () => {
                         setEditingType(record.types);
                         setEditingProcessIds(record.associatedProcessId);
                         setEditingStatus(record.status);
-                        setOriginalData(record); // Store the original data
+                        setOriginalData(record);
                     }}>Edit</Button>
                 )
             ),
         },
     ];
 
+    const responsiveColumns = isMobile ? columns.filter(col => col.key !== 'status') : columns;
+
     return (
-        <div style={{ padding: '20px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)' }}>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
+        <div style={{ 
+            padding: isMobile ? '10px' : '20px', 
+            background: '#fff', 
+            borderRadius: '8px', 
+            boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
+            overflow: 'auto'
+        }}>
+            <div style={{ 
+                display: 'flex', 
+                justifyContent: 'flex-end', 
+                marginBottom: isMobile ? '10px' : '20px'
+            }}>
                 <Button type="primary" onClick={() => setIsModalVisible(true)}>
                     Add Type
                 </Button>
@@ -192,10 +208,11 @@ const Type = () => {
             ) : (
                 <Table
                     dataSource={types.map((item, index) => ({ ...item, serial: index + 1 }))}
-                    columns={columns}
+                    columns={responsiveColumns}
                     rowKey="typeId"
                     pagination={false}
                     bordered
+                    scroll={{ x: 'max-content' }}
                 />
             )}
 
@@ -204,6 +221,7 @@ const Type = () => {
                 visible={isModalVisible}
                 onCancel={() => setIsModalVisible(false)}
                 footer={null}
+                width={isMobile ? '90%' : '520px'}
             >
                 <Form
                     form={form}

@@ -6,8 +6,10 @@ import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import SampleUser1 from "./../assets/sampleUsers/defaultUser.jpg";
 import "./../styles/Profile.css";
+import { jwtDecode } from 'jwt-decode';
 import axios from 'axios';
 import useUserDataStore from '../store/userDataStore';
+import SampleUser from "./../assets/sampleUsers/defaultUser.jpg";
 
 const UserProfile = () => {
   const { getCssClasses } = useStore(themeStore);
@@ -119,7 +121,7 @@ const UserProfile = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setUserData(prevData => ({...prevData, [name]: value}));
+    setUserData(prevData => ({ ...prevData, [name]: value }));
   };
 
   const getProfileImageUrl = (imagePath) => {
@@ -159,9 +161,12 @@ const UserProfile = () => {
         <Row className="align-items-center mb-4">
           <Col xs={12} sm={3} md={2} className="text-center position-relative">
             <img
-              src={getProfileImageUrl(userData.profilePicturePath)}
-              alt=""
+              src={userData.profilePicturePath
+                ? getProfileImageUrl(userData.profilePicturePath)
+                : "/path/to/SampleUser.png"}
+              alt="Profile Picture"
               width="100px"
+              height="100px"
               className={`rounded-circle ${customDarkBorder}`}
               onClick={handleImageClick}
             />
@@ -273,7 +278,7 @@ const UserProfile = () => {
                 <Form.Control
                   name="mobileNumber"
                   placeholder="Your Mobile Number"
-                  value={userData.mobileNumber}
+                  value={userData.mobileNo}
                   className='rounded'
                   onChange={handleChange}
                   disabled={!isEditing}
