@@ -6,7 +6,6 @@ import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import SampleUser1 from "./../assets/sampleUsers/defaultUser.jpg";
 import "./../styles/Profile.css";
-import { jwtDecode } from 'jwt-decode';
 import axios from 'axios';
 import useUserDataStore from '../store/userDataStore';
 
