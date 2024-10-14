@@ -1,16 +1,19 @@
 .sidebar {
   background-color: #f8f9fa;
-  height: 100vh;
+  height: 90vh;
   padding: 20px;
 }
 
-.sidebar-item {
+.sidebar-item ,.sidebar-item-dark {
   padding: 10px;
   transition: background-color 0.3s;
 }
 
 .sidebar-item:hover {
   background-color: #e9ecef; /* Change background on hover */
+}
+.sidebar-item-dark:hover {
+  background-color: #345675 !important;
 }
 
 .active {

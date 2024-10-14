@@ -15,7 +15,7 @@ const AddUsers = () => {
   const cssClasses = getCssClasses();
   const customDarkText = cssClasses[4];
   const customBtn = cssClasses[3];
-  const [displayName,setDisplayName] = useState("");
+  const [displayName, setDisplayName] = useState("");
   // Initial state for the form data
   const initialState = {
     username: '',
@@ -25,39 +25,39 @@ const AddUsers = () => {
     gender: '',
     mobileNo: '',
     roleId: '',
-    status: true, 
+    status: true,
     address: '',
-    profilePicturePath:"" ,
+    profilePicturePath: "",
   };
   const [usernameError, setUsernameError] = useState('');
   const [formData, setFormData] = useState(initialState);
   const [userDetails, setUserDetails] = useState({ userName: '', password: '' });
   const [showModal, setShowModal] = useState(false);
 
-  const[roles,setRoles] = useState([]);
+  const [roles, setRoles] = useState([]);
 
 
 
   const handleCloseModal = () => setShowModal(false);
 
 
-n
+
   // Function to handle form submission
   const handleSubmit = async (event) => {
     event.preventDefault();
-    
+
     // Validation logic for required fields
     const requiredFields = [
       { name: 'firstName', value: formData.firstName },
       // { name: 'lastName', value: formData.lastName },//last name not required
       { name: 'gender', value: formData.gender },
-      
+
       { name: 'mobileNo', value: formData.mobileNo },
       { name: 'roleId', value: formData.roleId },
       { name: 'address', value: formData.address },
-      ];
-      setDisplayName(`${formData.firstName} ${formData.middleName} ${formData.lastName}`);
-      const errors = requiredFields
+    ];
+    setDisplayName(`${formData.firstName} ${formData.middleName} ${formData.lastName}`);
+    const errors = requiredFields
       .filter(field => !field.value)
       .map(field => `${field.name.charAt(0).toUpperCase() + field.name.slice(1)} is required`);
     // Clear previous notifications
@@ -89,16 +89,16 @@ n
 
   useEffect(() => {
     const fetchRoles = async () => {
-        try {
-            const response = await axios.get('https://localhost:7212/api/Roles');
-            setRoles(response.data);
-        } catch (error) {
-            console.error('Failed to fetch roles:', error);
-        }
+      try {
+        const response = await axios.get('https://localhost:7212/api/Roles');
+        setRoles(response.data);
+      } catch (error) {
+        console.error('Failed to fetch roles:', error);
+      }
     };
 
     fetchRoles();
-}, []);
+  }, []);
 
   // Generate username suggestion based on input
   useEffect(() => {
@@ -139,8 +139,7 @@ n
   };
 
   return (
-    <div style={{ padding: '20px', border: '1px solid #ddd', borderRadius: '8px' }}>
-
+    <div style={{ padding: '20px', borderRadius: '8px' }}>
       <h4 className={`${customDarkText}`}>Add Users</h4>
       <Form onSubmit={handleSubmit}>
         {/* First Row: First Name, Middle Name, Last Name */}
@@ -262,17 +261,17 @@ n
               >
                 <option value="">Select a Role</option>
                 {roles.map(role => (
-                        <option key={role.roleId} value={role.roleId}>
-                            {role.roleName}
-                        </option>
-                    ))}
+                  <option key={role.roleId} value={role.roleId}>
+                    {role.roleName}
+                  </option>
+                ))}
 
               </Form.Select>
             </Form.Group>
           </Col>
           <Col lg={12} md={12} sm={12} xs={12} className='mt-3'>
             <Form.Group controlId="formBasicAddress">
-              <Form.Label  className={customDarkText}>Address</Form.Label>
+              <Form.Label className={customDarkText}>Address</Form.Label>
               <Form.Control
                 type="text"
                 name="address"
@@ -289,7 +288,7 @@ n
           <Button variant="secondary" onClick={handleReset} className='custom-zoom-btn'>
             Reset
           </Button>
-          <Button type="submit" className={`custom-theme-dark-btn ms-2 ${customBtn==="dark-dark" ? `${customBtn} border-light custom-zoom-btn`: `${customBtn} border-0 custom-zoom-btn`}`} disabled={!isUsernameValid}>
+          <Button type="submit" className={`custom-theme-dark-btn ms-2 ${customBtn === "dark-dark" ? `${customBtn} border-light custom-zoom-btn` : `${customBtn} border-0 custom-zoom-btn`}`} disabled={!isUsernameValid}>
             Add
           </Button>
         </div>

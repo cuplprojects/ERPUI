@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Input, Button, Select, Table, Form, message, Modal } from 'antd';
-const { Option } = Select;
-import axios from 'axios';
 import API from '../CustomHooks/MasterApiHooks/api';
+import { useMediaQuery } from 'react-responsive';
+const { Option } = Select;
 
 const Zone = () => {
   const [zones, setZones] = useState([]);
@@ -13,6 +13,9 @@ const Zone = () => {
   const [editingIndex, setEditingIndex] = useState(null);
   const [editingZone, setEditingZone] = useState({});
   const [originalZone, setOriginalZone] = useState({});
+
+  const isMobile = useMediaQuery({ maxWidth: 767 });
+  const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1023 });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -250,9 +253,11 @@ const Zone = () => {
     setIsModalVisible(false);
   };
 
+  const responsiveColumns = isMobile ? columns.slice(0, 2) : isTablet ? columns.slice(0, 4) : columns;
+
   return (
-    <div style={{ padding: '20px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)' }}>
-      <h2 style={{ marginBottom: '20px' }}>Zone</h2>
+    <div style={{ padding: '20px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)', maxWidth: '100%', overflowX: 'auto' }}>
+      <h2 style={{ marginBottom: '20px', fontSize: isMobile ? '1.5rem' : '2rem' }}>Zone</h2>
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
         <Button type="primary" onClick={showModal}>
@@ -262,10 +267,11 @@ const Zone = () => {
 
       <Table
         dataSource={zones.map((zone, index) => ({ ...zone, key: index }))}
-        columns={columns}
-        pagination={false}
+        columns={responsiveColumns}
+        pagination={{ responsive: true, pageSize: isMobile ? 5 : 10 }}
         bordered
         style={{ marginTop: '20px' }}
+        scroll={{ x: 'max-content' }}
       />
 
       <Modal
@@ -273,6 +279,7 @@ const Zone = () => {
         open={isModalVisible}
         onCancel={handleCancel}
         footer={null}
+        width={isMobile ? '90%' : '50%'}
       >
         <Form form={form} onFinish={handleAddZone} layout="vertical">
           <Form.Item name="zoneNo" label="Zone Name" rules={[{ required: true, message: 'Please input Zone Name!' }]}>
