@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { useParams } from 'react-router-dom';
-import { Select, Button, message, Table } from 'antd';
+import { Select, Button, message, Table, Popconfirm } from 'antd';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import API from '../CustomHooks/MasterApiHooks/api';
 
 const { Option } = Select;
 
 // Draggable Table Row
-const DraggableRow = ({ process, index, moveProcess, features, checkedFeatures, setCheckedFeatures }) => {
+const DraggableRow = ({ process, index, moveProcess, features, checkedFeatures, setCheckedFeatures, handleRemoveProcess }) => {
     const [, ref] = useDrag({
         type: 'PROCESS',
         item: { index },
@@ -50,6 +50,16 @@ const DraggableRow = ({ process, index, moveProcess, features, checkedFeatures, 
                     </td>
                 );
             })}
+            <td>
+                <Popconfirm
+                    title="Are you sure to delete this process?"
+                    onConfirm={() => handleRemoveProcess(process.id)}
+                    okText="Yes"
+                    cancelText="No"
+                >
+                    <Button type="danger">Remove</Button>
+                </Popconfirm>
+            </td>
         </tr>
     );
 };
@@ -64,7 +74,7 @@ const AddProjectProcess = () => {
 
     const fetchProcesses = async () => {
         try {
-            const response = await axios.get('https://localhost:7212/api/Processes');
+            const response = await API.get('/Processes');
             setProcesses(response.data);
             console.log('Fetched processes:', response.data);
         } catch (error) {
@@ -74,7 +84,7 @@ const AddProjectProcess = () => {
 
     const fetchFeatures = async () => {
         try {
-            const response = await axios.get('https://localhost:7212/api/Features');
+            const response = await API.get('/Features');
             setFeatures(response.data);
             console.log('Fetched features:', response.data);
         } catch (error) {
@@ -101,17 +111,24 @@ const AddProjectProcess = () => {
         setIsSequencing(true);
     };
 
+    const handleRemoveProcess = (processId) => {
+        const updatedSelectedProcesses = selectedProcesses.filter(proc => proc.id !== processId);
+        setSelectedProcesses(updatedSelectedProcesses);
+        const updatedCheckedFeatures = { ...checkedFeatures };
+        delete updatedCheckedFeatures[processId];
+        setCheckedFeatures(updatedCheckedFeatures);
+    };
+
     const moveProcess = (fromIndex, toIndex) => {
         const updatedProcesses = [...selectedProcesses];
         const [movedProcess] = updatedProcesses.splice(fromIndex, 1);
         updatedProcesses.splice(toIndex, 0, movedProcess);
         const updatedProcessesWithSequence = updatedProcesses.map((proc, index) => ({
             ...proc,
-            sequence: index + 1, // Update the sequence here
+            sequence: index + 1,
         }));
         setSelectedProcesses(updatedProcessesWithSequence);
     };
-    
 
     const handleSubmit = async () => {
         const projectProcesses = selectedProcesses.map((proc, index) => {
@@ -120,18 +137,18 @@ const AddProjectProcess = () => {
                 projectId: parseInt(projectId),
                 processId: proc.id,
                 weightage: 0,
-                sequence: index + 1, // Ensure the sequence is correct here
+                sequence: index + 1,
                 featuresList: featuresList,
             };
         });
 
         try {
-            await axios.post('https://localhost:7212/api/Project/AddProcessesToProject', { projectProcesses }, {
+            await API.post('/Project/AddProcessesToProject', { projectProcesses }, {
                 headers: { 'Content-Type': 'application/json' },
             });
             message.success('Processes added successfully!');
             setSelectedProcesses([]);
-            setCheckedFeatures({}); // Reset checked features after submission
+            setCheckedFeatures({});
             setIsSequencing(false);
         } catch (error) {
             message.error('Error adding processes');
@@ -149,36 +166,45 @@ const AddProjectProcess = () => {
             title: feature.features,
             dataIndex: feature.featureId,
             key: feature.featureId,
-            render: (_, process) => null, // Render will happen in DraggableRow
+            render: (_, process) => null,
         })),
+        {
+            title: 'Action',
+            key: 'action',
+            render: (_, process) => (
+                <Button type="danger" onClick={() => handleRemoveProcess(process.id)}>
+                    Remove
+                </Button>
+            ),
+        },
     ];
 
     return (
         <DndProvider backend={HTML5Backend}>
             <div>
-                <h2>Add Project Process</h2>
-                {!isSequencing ? (
-                    <>
-                        <Select
-                            mode="multiple"
-                            placeholder="Select Processes"
-                            onChange={handleSelectProcess}
-                            style={{ width: '100%', marginBottom: '16px' }}
-                        >
-                            {processes.map(proc => (
-                                <Option key={proc.id} value={proc.id}>{proc.name}</Option>
-                            ))}
-                        </Select>
-                        <Button type="primary" onClick={handleAddProcesses} disabled={selectedProcesses.length === 0}>
-                            Confirm Selection
-                        </Button>
-                    </>
-                ) : (
+                <div className="d-flex justify-content-around">
+                    <h2>Add Project Process</h2>
+                    <h2>Project {projectId}</h2>
+                </div>
+                <Select
+                    mode="multiple"
+                    placeholder="Select Processes"
+                    onChange={handleSelectProcess}
+                    style={{ width: '100%', marginBottom: '16px' }}
+                >
+                    {processes.map(proc => (
+                        <Option key={proc.id} value={proc.id}>{proc.name}</Option>
+                    ))}
+                </Select>
+                <Button type="primary" onClick={handleAddProcesses} disabled={selectedProcesses.length === 0} style={{ marginBottom: '16px' }}>
+                    Confirm Selection
+                </Button>
+                {isSequencing && (
                     <div>
                         <Table
                             components={{
                                 body: {
-                                    row: (props) => <DraggableRow {...props} features={features} checkedFeatures={checkedFeatures} setCheckedFeatures={setCheckedFeatures} />, 
+                                    row: (props) => <DraggableRow {...props} features={features} checkedFeatures={checkedFeatures} setCheckedFeatures={setCheckedFeatures} handleRemoveProcess={handleRemoveProcess} />, 
                                 },
                             }}
                             rowKey="id"

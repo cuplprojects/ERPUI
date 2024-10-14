@@ -52,6 +52,7 @@ const Sidebar = () => {
   const customLightText = cssClasses[5]
   const customLightBorder = cssClasses[6]
   const customDarkBorder = cssClasses[7]
+  const isDevelopmentMode= import.meta.env.VITE_APP_MODE === 'development'
 
   const [selectedMenu, setSelectedMenu] = useState('group'); // Default to 'group'
   const [expandedMenus, setExpandedMenus] = useState({}); // State to manage expanded menus
@@ -101,8 +102,8 @@ const Sidebar = () => {
 
   ];
 
-  // Filter the menu items based on user permissions
-  const allowedMenuItems = menuItems.filter(menu => {
+  // Filter the menu items based on user permissions or enable all in development mode
+  const allowedMenuItems = isDevelopmentMode || userPermissions.includes('2.1') ? menuItems : menuItems.filter(menu => {
     if (menu.children) {
       menu.children = menu.children.filter(child => userPermissions.includes(child.permission));
       return menu.children.length > 0; // Keep menu if it has allowed children
@@ -140,7 +141,7 @@ const Sidebar = () => {
                     onClick={() => handleMenuClick(child.key)}
                     className={`ml-4 d-flex align-items-center sidebar-item ${selectedMenu === child.key ? 'active rounded-start rounded-end-5' : 'rounded-start rounded-end-5'} ${selectedMenu === child.key ? customLight : ''}`}
                   >
-                    {child.icon} <span className={`${customDarkText} ml-3`}>{child.label}</span>
+                    {child.icon} < span className = { `${customDarkText} ml-3` } > {child.label}</span >
                   </Nav.Link>
                 ))}
               </React.Fragment>
@@ -149,19 +150,19 @@ const Sidebar = () => {
         </Col>
         <Col md={9}  className={`content-area rounded-end-4 ${customLight}`}>
 
-          {userPermissions.includes('2.1') && selectedMenu === 'RolePage' && <RolesAndDepartments />}
-          {userPermissions.includes('2.1') && selectedMenu === 'addUser' && <AddUsers />}
-          {userPermissions.includes('2.1') && selectedMenu === 'allUsers' && <AllUsers />}
-          {userPermissions.includes('2.2') && selectedMenu === 'group' && <GroupManager />}
-          {userPermissions.includes('2.3') && selectedMenu === 'type' && <Type />}
-          {userPermissions.includes('2.1') && selectedMenu === 'securityQuestions' && <SecurityQ />}
-          {userPermissions.includes('2.4') && selectedMenu === 'project' && <ProjectManager />}
-          {userPermissions.includes('2.5') && selectedMenu === 'zone' && <ZoneManager />}
-          {userPermissions.includes('2.6') && selectedMenu === 'camera' && <CameraList />}
-          {userPermissions.includes('2.9') && selectedMenu === 'team' && <Team />}
-          {userPermissions.includes('2.10') && selectedMenu === 'systemSettings' && <SystemSettings />}
-          {userPermissions.includes('2.7') && selectedMenu === 'machine' && <Machine />}
-          {userPermissions.includes('2.8') && selectedMenu === 'alarm' && <AlarmMaster />}
+          {(userPermissions.includes('2.1') || isDevelopmentMode) && selectedMenu === 'RolePage' &&  <RolesAndDepartments />}
+          {(userPermissions.includes('2.1') || isDevelopmentMode) && selectedMenu === 'addUser' && <AddUsers />}
+          {(userPermissions.includes('2.1') || isDevelopmentMode) && selectedMenu === 'allUsers' && <AllUsers />}
+          {(userPermissions.includes('2.2') || isDevelopmentMode) && selectedMenu === 'group' && <GroupManager />}
+          {(userPermissions.includes('2.3') || isDevelopmentMode) && selectedMenu === 'type' && <Type />}
+          {(userPermissions.includes('2.1') || isDevelopmentMode) && selectedMenu === 'securityQuestions' && <SecurityQ />}
+          {(userPermissions.includes('2.4') || isDevelopmentMode) && selectedMenu === 'project' && <ProjectManager />}
+          {(userPermissions.includes('2.5') || isDevelopmentMode) && selectedMenu === 'zone' && <ZoneManager />}
+          {(userPermissions.includes('2.6') || isDevelopmentMode) && selectedMenu === 'camera' && <CameraList />}
+          {(userPermissions.includes('2.9') || isDevelopmentMode) && selectedMenu === 'team' && <Team />}
+          {(userPermissions.includes('2.10') || isDevelopmentMode) && selectedMenu === 'systemSettings' && <SystemSettings />}
+          {(userPermissions.includes('2.7') || isDevelopmentMode) && selectedMenu === 'machine' && <Machine />}
+          {(userPermissions.includes('2.8') || isDevelopmentMode) && selectedMenu === 'alarm' && <AlarmMaster />}
 
         </Col>
       </Row>
