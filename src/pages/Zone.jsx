@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Input, Button, Select, Table, Form, message, Modal } from 'antd';
 const { Option } = Select;
-import axios from 'axios';
 import API from '../CustomHooks/MasterApiHooks/api';
 
 const Zone = () => {
