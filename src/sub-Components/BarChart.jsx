@@ -18,12 +18,12 @@ const BarChart = ({ lots = [] }) => {
           {
             label: 'Completion %',
             data: lots.map(lot => lot.completion),
-            backgroundColor: '#47ff02',
+            backgroundColor: '#29ce6a',
           },
           {
             label: 'Remaining %',
             data: lots.map(lot => lot.remaining),
-            backgroundColor: 'red',
+            backgroundColor: '#ff6384',
           },
         ],
       },

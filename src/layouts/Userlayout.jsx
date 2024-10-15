@@ -47,7 +47,11 @@ const Userlayout = () => {
           </div>
           <div className={`flex-grow-1 d-fle m-2 p-3 `} style={{ zIndex: "3" }}>
             <Routes>
-              <Route path="/dashboard" element={<MainDashboard />} /> 
+
+            <Route path="/cudashboard" element={<CuDashboard />} />
+              <Route path="/dashboard" element={<MainDashboard />} />
+              <Route path="/cudashboard" element={<CuDashboard />} />
+
               <Route path="/master" element={<Masters />} />
               <Route path="/AddProjectProcess/:projectId" element={<AddProjectProcess />} />
               <Route path="/features" element={<Features />} />
