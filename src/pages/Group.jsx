@@ -251,7 +251,8 @@ const Group = () => {
       boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
       overflowX: 'auto'
     }}
-      className={`rounded-2 ${customDark === "dark-dark" ? `${customDark} border` : ``}`}>
+      className={`rounded-2 ${customDark === "dark-dark" ? `${customDark} border text-white` : `${customDarkText}`}`}>
+      <h2 style={{ marginBottom: '20px', fontSize: 'clamp(1.5rem, 4vw, 2rem)' }} className=''>Groups</h2>
       <div style={{
         display: 'flex',
         flexWrap: 'wrap',
@@ -299,24 +300,29 @@ const Group = () => {
                     ${customDark === "light-dark" ? "thead-light" : ""}
                     ${customDark === "brown-dark" ? "thead-brown" : ""} `}
       />
-      <div style={{ display: 'flex', justifyContent: 'end', alignItems: 'center', marginTop: '20px' }}>
-        <Pagination
-          current={currentPage}
-          pageSize={pageSize}
-          total={filteredGroups.length}
-          onChange={handlePageChange}
-          showSizeChanger
-          pageSizeOptions={['5', '10']}
-          defaultPageSize={5}
-          showQuickJumper={false}
-          showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
-          className={`${customDark === "dark-dark" ? `bg-white` : ``} p-3 rounded`}
-        />
-        <div style={{ display: 'flex', alignItems: 'center', marginLeft: '10px' }} className={`${customDark === "dark-dark" ? `bg-white` : ``} p-3 rounded-2`}>
-          <label htmlFor="goToPage" style={{ marginRight: '5px' }}>Go To Page:</label>
+      <div className="d-flex flex-wrap justify-content-end align-items-center mt-4">
+        <div className="mb-3 mb-md-0 me-md-3">
+          <Pagination
+            current={currentPage}
+            pageSize={pageSize}
+            total={filteredGroups.length}
+            onChange={handlePageChange}
+            showSizeChanger
+            pageSizeOptions={['5', '10']}
+            defaultPageSize={5}
+            showQuickJumper={false}
+            showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
+            className={`${customDark === "dark-dark" ? `bg-white` : ``} p-2 p-md-3 rounded`}
+            responsive
+            size="small"
+          />
+        </div>
+        <div className={`d-flex align-items-center ${customDark === "dark-dark" ? `bg-white` : ``} p-2 p-md-3 rounded-2`}>
+          <label htmlFor="goToPage" className="me-2 d-none d-sm-inline">Go To Page:</label>
           <Input
             id="goToPage"
-            style={{ width: 70, height: 30 }}
+            className="w-100"
+            style={{ maxWidth: '70px', height: '30px' }}
             placeholder="Page"
             value={jumpToPage}
             onChange={(e) => {
