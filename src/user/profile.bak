@@ -7,7 +7,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { BsTelephoneFill } from "react-icons/bs";
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
-import SampleUser1 from "./../assets/sampleUsers/sampleUser1.jpg";
+import SampleUser1 from "./../assets/sampleUsers/defaultUser.jpg";
 import ChangeMobileNumber from './../menus/ChangeMobileNumber'
 // import { FaTimes } from 'react-icons/fa'; //cross icon for permission 
 import "./../styles/Profile.css";

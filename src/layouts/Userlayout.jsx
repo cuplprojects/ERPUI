@@ -19,6 +19,7 @@ import { useStore } from 'zustand';
 import QtySheetUpload from '../pages/QtySheetUpload';
 import Message from '../pages/Message/Message';
 import Labels from '../pages/Message/Labels';
+import CuDashboard from '../pages/CuDashboard';
 const Userlayout = () => {
 
   //Theme Change Section
@@ -39,6 +40,7 @@ const Userlayout = () => {
           </div>
           <div className={`flex-grow-1 d-fle m-2 p-3 `} style={{ zIndex: "2" }}>
             <Routes>
+            <Route path="/cudashboard" element={<CuDashboard />} />
               <Route path="/dashboard" element={<MainDashboard />} />
               <Route path="/master" element={<Masters />} />
               <Route path="/features" element={<Features />} />

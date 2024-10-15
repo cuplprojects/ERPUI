@@ -11,7 +11,7 @@ import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import { Link } from 'react-router-dom';
 import useUserDataStore from '../store/userDataStore';
-import SampleUser1 from "./../assets/sampleUsers/sampleUser1.jpg";
+import SampleUser1 from "./../assets/sampleUsers/defaultUser.jpg";
 const apiUrl = import.meta.env.VITE_API_BASE_URL;
 
 const Navbar = () => {
