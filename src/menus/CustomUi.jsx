@@ -19,24 +19,14 @@ import { AiFillCloseSquare } from "react-icons/ai";
 import useShowLabelIdStore from './../store/showLabelIdStore';
 
 const CustomUi = () => {
-
-  //Theme Change Section
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
-  const customDark = cssClasses[0];
-  const customMid = cssClasses[1];
-  const customLight = cssClasses[2];
-  const customBtn = cssClasses[3];
-  const customDarkText = cssClasses[4];
-  const customLightText = cssClasses[5]
-  const customLightBorder = cssClasses[6]
-  const customDarkBorder = cssClasses[7]
+  const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
 
   const { showLabelId, toggleShowLabelId } = useShowLabelIdStore();
 
   const [show, setShow] = useState(false);
   const [fontSize, setFontSize] = useState(() => {
-    // Retrieve font size from local storage or default to 16 if not set
     const savedFontSize = localStorage.getItem('fontSize');
     return savedFontSize ? parseInt(savedFontSize) : 16;
   });
@@ -47,41 +37,34 @@ const CustomUi = () => {
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
 
-
-  // Update the font size of the whole application and save to local storage
   useEffect(() => {
     document.documentElement.style.fontSize = `${fontSize}px`;
-    localStorage.setItem('fontSize', fontSize); // Save font size to local storage
+    localStorage.setItem('fontSize', fontSize);
   }, [fontSize]);
 
-  // Handle reset to default font size
-  const handleReset = () => {
-    setFontSize(16); // Reset to default font size
-  };
+  const handleReset = () => setFontSize(16);
 
-  // Full screen toggle functionality
   const toggleFullScreen = () => {
     if (!isFullScreen) {
       if (document.documentElement.requestFullscreen) {
         document.documentElement.requestFullscreen();
-      } else if (document.documentElement.webkitRequestFullscreen) { // Safari
+      } else if (document.documentElement.webkitRequestFullscreen) {
         document.documentElement.webkitRequestFullscreen();
-      } else if (document.documentElement.msRequestFullscreen) { // IE11
+      } else if (document.documentElement.msRequestFullscreen) {
         document.documentElement.msRequestFullscreen();
       }
     } else {
       if (document.exitFullscreen) {
         document.exitFullscreen();
-      } else if (document.webkitExitFullscreen) { // Safari
+      } else if (document.webkitExitFullscreen) {
         document.webkitExitFullscreen();
-      } else if (document.msExitFullscreen) { // IE11
+      } else if (document.msExitFullscreen) {
         document.msExitFullscreen();
       }
     }
     setIsFullScreen(!isFullScreen);
   };
 
-  // Sync full-screen state when user toggles full-screen outside the app
   useEffect(() => {
     const handleFullScreenChange = () => {
       setIsFullScreen(document.fullscreenElement != null);
@@ -94,7 +77,6 @@ const CustomUi = () => {
     };
   }, []);
 
-  // Drag functionality
   useEffect(() => {
     const handleStart = (e) => {
       e.preventDefault();
@@ -104,7 +86,6 @@ const CustomUi = () => {
       const offsetY = clientY - rect.top;
 
       const handleMove = (e) => {
-        // e.preventDefault(); // Prevent scrolling while dragging
         const clientY = e.touches ? e.touches[0].clientY : e.clientY;
         const newY = Math.max(0, Math.min(window.innerHeight - rect.height, clientY - offsetY));
         elem.style.top = `${newY}px`;
@@ -137,21 +118,24 @@ const CustomUi = () => {
     };
   }, []);
 
+  const themeIcons = {
+    "purple-dark": UiIconPurple,
+    "blue-dark": UiIconBlue,
+    "green-dark": UiIconGreen,
+    "brown-dark": UiIconBrown,
+    "light-dark": UiIconLight,
+    "pink-dark": UiIconPink,
+    "red-dark": UiIconRed,
+    "dark-dark": UiIconDark,
+    "default": UiIconDefault
+  };
+
   return (
     <>
-      {/* Custom button to open the sidebar */}
       <div className="user-interface-container" ref={dragRef} style={{ zIndex: "99999" }} onClick={handleShow}>
-        <div className="user-interface-icon" >
+        <div className="user-interface-icon">
           <IoSettings className={`settings-icon-ui ${customDark === 'dark-dark' ? "text-dark border-dark" : ''}`} />
-          {customDark === "purple-dark" ? (<img src={UiIconPurple} alt="Purple Theme" className='ui-icon-img' />)
-            : customDark === "blue-dark" ? (<img src={UiIconBlue} alt="Blue Theme" className='ui-icon-img' />)
-              : customDark === "green-dark" ? (<img src={UiIconGreen} alt="Blue Theme" className='ui-icon-img' />)
-                : customDark === "brown-dark" ? (<img src={UiIconBrown} alt="Blue Theme" className='ui-icon-img' />)
-                  : customDark === "light-dark" ? (<img src={UiIconLight} alt="Blue Theme" className='ui-icon-img' />)
-                    : customDark === "pink-dark" ? (<img src={UiIconPink} alt="Blue Theme" className='ui-icon-img' />)
-                      : customDark === "red-dark" ? (<img src={UiIconRed} alt="Red Theme" className='ui-icon-img' />)
-                        : customDark === "dark-dark" ? (<img src={UiIconDark} alt="Red Theme" className='ui-icon-img' />)
-                          : (<img src={UiIconDefault} alt="Default Theme" className='ui-icon-img' />)}
+          <img src={themeIcons[customDark] || themeIcons["default"]} alt="Theme Icon" className='ui-icon-img' />
         </div>
       </div>
 
@@ -160,7 +144,7 @@ const CustomUi = () => {
           <Offcanvas.Title>Custom UI Menu</Offcanvas.Title>
           <Button
             variant="link"
-            className={`close-button ${customDark} ${customLightText} `}
+            className={`close-button ${customDark} ${customLightText}`}
             style={{ padding: 0, fontSize: 18 }}
             onClick={handleClose}
           >
