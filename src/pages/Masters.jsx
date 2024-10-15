@@ -115,7 +115,7 @@ const Sidebar = () => {
     },
 
     { key: 'group', icon: <FaUsers className={`${customDark === "dark-dark" ? `text-white` : `${customDarkText}`} menu-icon`} />, label: 'Group', permission: '2.2' },
-    { key: 'type', icon: <FaBookOpenReader className={`${customDark === "dark-dark" ? `text-white` : `${customDarkText}`} menu-icon`} />, label: 'Type', permission: '2.3' },
+    { key: 'type', icon: <FaBookOpenReader className={`${customDark === "dark-dark" ? `text-white` : `${customDarkText}`} menu-icon`} />, label: 'Project Type', permission: '2.3' },
     { key: 'project', icon: <FaProjectDiagram className={`${customDark === "dark-dark" ? `text-white` : `${customDarkText}`} menu-icon`} />, label: 'Project', permission: '2.4' },
     { key: 'zone', icon: <FaGlobeAmericas className={`${customDark === "dark-dark" ? `text-white` : `${customDarkText}`} menu-icon`} />, label: 'Zone', permission: '2.5' },
     { key: 'camera', icon: <FaCamera className={`${customDark === "dark-dark" ? `text-white` : `${customDarkText}`} menu-icon`} />, label: 'Camera', permission: '2.6' },

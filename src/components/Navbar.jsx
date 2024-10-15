@@ -11,22 +11,23 @@ import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import { Link } from 'react-router-dom';
 import useUserDataStore from '../store/userDataStore';
-import SampleUser1 from "./../assets/sampleUsers/sampleUser1.jpg";
+import SampleUser1 from "./../assets/sampleUsers/defaultUser.jpg";
 const apiUrl = import.meta.env.VITE_API_BASE_URL;
 
 const Navbar = () => {
 
   //Theme Change Section
   const { getCssClasses } = useStore(themeStore);
-  const cssClasses = getCssClasses();
-  const customDark = cssClasses[0];
-  const customMid = cssClasses[1];
-  const customLight = cssClasses[2];
-  const customBtn = cssClasses[3];
-  const customDarkText = cssClasses[4];
-  const customLightText = cssClasses[5]
-  const customLightBorder = cssClasses[6]
-  const customDarkBorder = cssClasses[7]
+  const [
+    customDark,
+    customMid,
+    customLight,
+    customBtn,
+    customDarkText,
+    customLightText,
+    customLightBorder,
+    customDarkBorder
+  ] = getCssClasses();
 
   const [showNav, setShowNav] = useState(false);
   const [userMenu, setUserMenu] = useState(false);
