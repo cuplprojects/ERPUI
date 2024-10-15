@@ -36,11 +36,7 @@ const AddUsers = () => {
 
   const [roles, setRoles] = useState([]);
 
-
-
   const handleCloseModal = () => setShowModal(false);
-
-
 
   // Function to handle form submission
   const handleSubmit = async (event) => {
@@ -49,9 +45,7 @@ const AddUsers = () => {
     // Validation logic for required fields
     const requiredFields = [
       { name: 'firstName', value: formData.firstName },
-      // { name: 'lastName', value: formData.lastName },//last name not required
       { name: 'gender', value: formData.gender },
-
       { name: 'mobileNo', value: formData.mobileNo },
       { name: 'roleId', value: formData.roleId },
       { name: 'address', value: formData.address },
@@ -105,32 +99,48 @@ const AddUsers = () => {
     const { firstName, middleName, lastName } = formData;
     let usernameBase = '';
 
-    if (firstName && middleName && lastName) {
-      usernameBase = `${firstName.charAt(0)}${middleName.charAt(0)}${lastName}`;
-    } else if (firstName && lastName) {
-      usernameBase = `${firstName.charAt(0)}${lastName}`;
-    } else if (firstName) {
-      usernameBase = firstName;
+    const getRandomChars = (str, count) => {
+      const chars = str.replace(/\s/g, '').split('');
+      return Array.from({ length: count }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+    };
+
+    const getRandomDigits = (count) => {
+      return Math.floor(Math.random() * Math.pow(10, count)).toString().padStart(count, '0');
+    };
+
+    if (firstName) {
+      usernameBase = firstName.slice(0, 3).toLowerCase(); // Get first 3 characters of firstName
+      if (middleName && lastName) {
+        usernameBase += getRandomChars(middleName, 1) + getRandomChars(lastName, 1);
+      } else if (lastName) {
+        usernameBase += getRandomChars(lastName, 2);
+      }
     }
 
-    const randomNum = Math.floor(Math.random() * 100);
-    const usernameSuggestion = `${usernameBase}${randomNum}`;
+    let usernameSuggestion = usernameBase + getRandomDigits(2);
 
-    // Check username suggestion length
-    if (usernameSuggestion.length >= 6 && usernameSuggestion.length <= 10) {
+    // Ensure username length is between 6 and 8 characters
+    if (usernameSuggestion.length > 8) {
+      usernameSuggestion = usernameSuggestion.slice(0, 8);
+    } else if (usernameSuggestion.length < 6) {
+      usernameSuggestion += getRandomDigits(6 - usernameSuggestion.length);
+    }
 
+    if (usernameSuggestion.length >= 6 && usernameSuggestion.length <= 8) {
       setFormData((prev) => ({ ...prev, username: usernameSuggestion }));
-
       setUsernameError('');
     } else {
-      setUsernameError('Username must be between 6 and 10 characters.');
+      setUsernameError('Username must be between 6 and 8 characters.');
     }
   }, [formData.firstName, formData.middleName, formData.lastName]);
 
-  // Validate username length
-
-  const isUsernameValid = formData.username.length >= 6 && formData.username.length <= 10;
-
+  // Validate username length and content
+  const isUsernameValid = (username) => {
+    const hasAtLeastTwoNumbers = (username.match(/\d/g) || []).length >= 2;
+    const isCorrectLength = username.length >= 6 && username.length <= 8;
+    const isNotAllAlphabets = /[^a-zA-Z]/.test(username);
+    return hasAtLeastTwoNumbers && isCorrectLength && isNotAllAlphabets;
+  };
 
   // Function to handle reset
   const handleReset = () => {
@@ -142,15 +152,14 @@ const AddUsers = () => {
     <div style={{ padding: '20px', borderRadius: '8px' }}>
       <h4 className={`${customDarkText}`}>Add Users</h4>
       <Form onSubmit={handleSubmit}>
-        {/* First Row: First Name, Middle Name, Last Name */}
+        {/* First Row: First Name, Middle Name, Last Name */} 
         <Row className="mb-3">
           <Col xs={12} md={4}>
             <Form.Group>
-              <Form.Label className={customDarkText}>First Name:</Form.Label>
+              <Form.Label className={customDarkText}>First Name: <span style={{ color: 'red' }}>*</span></Form.Label>
               <Form.Control
                 type="text"
                 name="firstName"
-
                 placeholder="Enter first name"
                 value={formData.firstName}
                 onChange={handleInputChange}
@@ -166,7 +175,6 @@ const AddUsers = () => {
               <Form.Control
                 type="text"
                 name="middleName"
-
                 placeholder="Enter middle name"
                 value={formData.middleName}
                 onChange={handleInputChange}
@@ -181,7 +189,6 @@ const AddUsers = () => {
               <Form.Control
                 type="text"
                 name="lastName"
-
                 placeholder="Enter last name"
                 value={formData.lastName}
                 onChange={handleInputChange}
@@ -191,31 +198,27 @@ const AddUsers = () => {
           </Col>
         </Row>
 
-
         {/* Username Suggestion */}
         <Row className="mb-3">
           <Col lg={6} md={12} sm={12} xs={12}>
             <Form.Group>
-              <Form.Label className={customDarkText}>Username Suggestion:</Form.Label>
+              <Form.Label className={customDarkText}>Username :<span style={{ color: 'red' }}>*</span></Form.Label>
               <Form.Control
                 type="text"
                 name="username"
-
                 value={formData.username}
                 onChange={handleInputChange} // Allow manual editing
-                isInvalid={usernameError !== '' && formData.username.length > 0} // Conditional error styling
-
-
+                isInvalid={!isUsernameValid(formData.username) && formData.username.length > 0} // Conditional error styling
               />
-              <Form.Control.Feedback type="invalid">{usernameError}</Form.Control.Feedback>
+              <Form.Control.Feedback type="invalid">
+                Username must be 6-8 characters long, contain at least 2 numbers, and not be entirely alphabetic.
+              </Form.Control.Feedback>
             </Form.Group>
           </Col>
 
-
-
           <Col lg={6} md={12} sm={12} xs={12}>
             <Form.Group>
-              <Form.Label className={customDarkText}>Gender:</Form.Label>
+              <Form.Label className={customDarkText}>Gender: <span style={{ color: 'red' }}>*</span></Form.Label>
               <Form.Select
                 name="gender"
                 value={formData.gender}
@@ -233,12 +236,10 @@ const AddUsers = () => {
         <Row className="mb-3">
           <Col lg={6} md={12} sm={12} xs={12}>
             <Form.Group>
-              <Form.Label className={customDarkText}>Mobile Number:</Form.Label>
+              <Form.Label className={customDarkText}>Mobile Number: <span style={{ color: 'red' }}>*</span></Form.Label>
               <Form.Control
                 type="text"
-
                 name="mobileNo"
-
                 placeholder="Enter mobile number"
                 value={formData.mobileNo}
                 onChange={(event) => {
@@ -251,9 +252,8 @@ const AddUsers = () => {
           </Col>
           <Col lg={6} md={12} sm={12} xs={12}>
             <Form.Group>
-              <Form.Label className={customDarkText}>Role:</Form.Label>
+              <Form.Label className={customDarkText}>Role: <span style={{ color: 'red' }}>*</span></Form.Label>
               <Form.Select
-
                 name="roleId"
                 value={formData.roleId}
                 onChange={handleInputChange}
@@ -265,19 +265,19 @@ const AddUsers = () => {
                     {role.roleName}
                   </option>
                 ))}
-
               </Form.Select>
             </Form.Group>
           </Col>
           <Col lg={12} md={12} sm={12} xs={12} className='mt-3'>
             <Form.Group controlId="formBasicAddress">
-              <Form.Label className={customDarkText}>Address</Form.Label>
+              <Form.Label className={customDarkText}>Address: <span style={{ color: 'red' }}>*</span></Form.Label>
               <Form.Control
                 type="text"
                 name="address"
                 value={formData.address}
                 onChange={handleInputChange}
                 placeholder="Address"
+                required
               />
             </Form.Group>
           </Col>
@@ -288,7 +288,7 @@ const AddUsers = () => {
           <Button variant="secondary" onClick={handleReset} className='custom-zoom-btn'>
             Reset
           </Button>
-          <Button type="submit" className={`custom-theme-dark-btn ms-2 ${customBtn === "dark-dark" ? `${customBtn} border-light custom-zoom-btn` : `${customBtn} border-0 custom-zoom-btn`}`} disabled={!isUsernameValid}>
+          <Button type="submit" className={`custom-theme-dark-btn ms-2 ${customBtn === "dark-dark" ? `${customBtn} border-light custom-zoom-btn` : `${customBtn} border-0 custom-zoom-btn`}`} disabled={!isUsernameValid(formData.username)}>
             Add
           </Button>
         </div>
@@ -297,9 +297,7 @@ const AddUsers = () => {
         <ToastContainer />
       </div>
       <SuccessModal
-
         show={showModal} username={userDetails.userName} password={userDetails.password} onClose={handleCloseModal} fullName={displayName}
-
       />
     </div>
   );
