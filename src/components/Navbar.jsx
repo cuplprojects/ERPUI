@@ -164,7 +164,7 @@ const Navbar = () => {
           overflow: 'hidden',
           transition: '600ms ease-in-out, opacity 600ms ease-in-out',
           opacity: showNav ? 1 : 0,
-          zIndex: 999,
+          // zIndex: 1,
         }}
       >
         <NavigationBar onLinkClick={closeNav} />
@@ -181,7 +181,7 @@ const Navbar = () => {
           overflow: 'hidden',
           transition: '500ms ease-in-out, opacity 500ms ease-in-out',
           opacity: userMenu ? 1 : 0,
-          zIndex: 999,
+          // zIndex: 999,
         }}
       >
         <UserMenu onClose={closeUserMenu} />
@@ -198,7 +198,7 @@ const Navbar = () => {
           overflow: 'hidden',
           transition: '500ms ease-in-out, opacity 500ms ease-in-out',
           opacity: showNotification ? 1 : 0,
-          zIndex: 999,
+          // zIndex: 999,
         }}
       >
         <Notification onClose={closeNotification} />

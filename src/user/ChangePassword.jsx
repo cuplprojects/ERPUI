@@ -109,13 +109,13 @@ const ChangePassword = () => {
     API.put(apiUrl, payload)
 
       .then((response) => {
-        toast.info('Password changed successfully!', {
+        toast.success('Password changed successfully!', {
           position: "top-right",
           autoClose: 3000,
           hideProgressBar: true,
-          closeOnClick: true,
+          closeOnClick: false,
           draggable: true,
-          style: { backgroundColor: '#17a2b8', color: 'white' },
+          style: {  backgroundColor: 'green' , color:"white"  },
         });
       })
       .catch((error) => {
@@ -123,9 +123,9 @@ const ChangePassword = () => {
           position: "top-right",
           autoClose: 3000,
           hideProgressBar: true,
-          closeOnClick: true,
+          closeOnClick: false,
           draggable: true,
-          style: { backgroundColor: '#dc3545', color: 'white' },
+          style: { backgroundColor: '#dc3545', color: 'white'  },
         });
       });
   
@@ -140,7 +140,7 @@ const ChangePassword = () => {
   return (
     <Container
       className={`mt-5 w-100 p-4 shadow-lg rounded-5 ${customLightBorder} ${customLight}`}
-      style={{ maxWidth: '800px' }}
+      style={{ maxWidth: '800px',zIndex:"0" }}
     >
       <Row>
         <Col lg={12}>
@@ -172,6 +172,8 @@ const ChangePassword = () => {
                   name="oldPassword"
                   value={formData.oldPassword}
                   onChange={handleInputChange}
+                  required
+                  minLength={8}
                 />
                 <InputGroup.Text
                   className={`password-eye-icon ${customBtn}`}
@@ -195,6 +197,8 @@ const ChangePassword = () => {
                   name="newPassword"
                   value={formData.newPassword}
                   onChange={handleInputChange}
+                  required
+                  minLength={8}
                 />
                 <InputGroup.Text
                   className={`password-eye-icon ${customBtn}`}
@@ -217,6 +221,8 @@ const ChangePassword = () => {
                   placeholder="Confirm new password"
                   value={confirmPassword}
                   onChange={handleConfirmPasswordChange}
+                  required
+                  minLength={8}
                 />
                 <InputGroup.Text
                   className={`password-eye-icon ${customBtn}`}
@@ -237,7 +243,7 @@ const ChangePassword = () => {
               Submit
             </Button>
           </Form>
-          <ToastContainer />
+          <ToastContainer style={{marginTop:"50px"}} />
         </Col>
       </Row>
     </Container>
