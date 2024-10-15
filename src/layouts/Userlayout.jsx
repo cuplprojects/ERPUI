@@ -18,6 +18,9 @@ import { useStore } from 'zustand';
 import QtySheetUpload from '../pages/QtySheetUpload';
 import Message from '../pages/Message/Message';
 import Labels from '../pages/Message/Labels';
+
+import CuDashboard from '../pages/CuDashboard';
+
 import AddProjectProcess from '../pages/AddProjectProcess';
 import { hasPermission } from '../CustomHooks/Services/permissionUtils';
 

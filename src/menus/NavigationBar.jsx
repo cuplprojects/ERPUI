@@ -53,7 +53,7 @@ console.log(permissions.includes("2") || isDevelopmentMode)
         )}
         {(permissions.includes("3") || isDevelopmentMode) && (
           <Col xs={6} sm={4} md={3} className="text-center mb-4">
-            <Link to="/message" className="text-white text-decoration-none custom-zoom-btn" onClick={onLinkClick}>
+            <Link to="/labels" className="text-white text-decoration-none custom-zoom-btn" onClick={onLinkClick}>
               <MdFeaturedPlayList style={{ width: "40%", height: "40%" }} />
               <div>Message Management</div>
             </Link>

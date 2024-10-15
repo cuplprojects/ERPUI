@@ -1,13 +1,19 @@
-import { message, Table, Input, Button, Switch, Form, Select, Spin, Modal } from 'antd';
+import { message, Table, Input, Button, Switch, Form, Select, Spin } from 'antd';
+import { Modal } from 'react-bootstrap';
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'antd/es/form/Form';
 import API from '../CustomHooks/MasterApiHooks/api';
 import { useMediaQuery } from 'react-responsive';
-
+import themeStore from './../store/themeStore';
+import { useStore } from 'zustand';
+import { AiFillCloseSquare } from "react-icons/ai";
 const { Option } = Select;
 
 const Type = () => {
+    const { getCssClasses } = useStore(themeStore);
+    const cssClasses = getCssClasses();
+    const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
     const [types, setTypes] = useState([]);
     const [processes, setProcesses] = useState([]);
     const [processMap, setProcessMap] = useState({});
@@ -185,17 +191,22 @@ const Type = () => {
 
     const responsiveColumns = isMobile ? columns.filter(col => col.key !== 'status') : columns;
 
+    const handleClose = () => {
+        setIsModalVisible(false);
+        form.resetFields();
+    };
+
     return (
-        <div style={{ 
-            padding: isMobile ? '10px' : '20px', 
-            background: '#fff', 
-            borderRadius: '8px', 
+        <div style={{
+            padding: isMobile ? '10px' : '20px',
+            background: '#fff',
+            borderRadius: '8px',
             boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
             overflow: 'auto'
         }}>
-            <div style={{ 
-                display: 'flex', 
-                justifyContent: 'flex-end', 
+            <div style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
                 marginBottom: isMobile ? '10px' : '20px'
             }}>
                 <Button type="primary" onClick={() => setIsModalVisible(true)}>
@@ -217,59 +228,74 @@ const Type = () => {
             )}
 
             <Modal
-                title="Add Type"
-                visible={isModalVisible}
-                onCancel={() => setIsModalVisible(false)}
-                footer={null}
-                width={isMobile ? '90%' : '520px'}
+                show={isModalVisible}
+                onHide={handleClose}
+                centered
+                size={isMobile ? 'sm' : 'lg'}
             >
-                <Form
-                    form={form}
-                    onFinish={handleAddType}
-                    layout="vertical"
-                >
-                    <Form.Item
-                        name="types"
-                        label="Type"
-                        rules={[
-                            { required: true, message: 'Please input type!' },
-                            {
-                                validator: (_, value) => {
-                                    const isNumeric = /^\d+$/;
-                                    if (value && isNumeric.test(value)) {
-                                        return Promise.reject(new Error('Type cannot contain only numbers!'));
+                <Modal.Header closeButton={false} className={`rounded-top-2 ${customDark} ${customLightText} ${customDark === "dark-dark" ? `border ` : `border-0`} border d-flex justify-content-between `}>
+                    <Modal.Title>Add Type</Modal.Title>
+                    <AiFillCloseSquare
+                        size={35}
+                        onClick={handleClose}
+                        className={`rounded-2 ${customDark === "dark-dark" ? "text-dark bg-white " : `${customDark} custom-zoom-btn text-white  ${customDarkBorder}`}`}
+                        aria-label="Close"
+                        style={{ cursor: 'pointer', fontSize: '1.5rem' }}
+                    />
+                </Modal.Header>
+                <Modal.Body className={`rounded-bottom-2 ${customMid} ${customDark === "dark-dark" ? `border border-top-0` : `border-0`}`}>
+                    <Form
+                        form={form}
+                        onFinish={handleAddType}
+                        layout="vertical"
+                    >
+                        <Form.Item
+                            name="types"
+                            label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-5 `}>{"Type"}</span>}
+                            rules={[
+                                { required: true, message: 'Please input type!' },
+                                {
+                                    validator: (_, value) => {
+                                        const isNumeric = /^\d+$/;
+                                        if (value && isNumeric.test(value)) {
+                                            return Promise.reject(new Error('Type cannot contain only numbers!'));
+                                        }
+                                        return Promise.resolve();
                                     }
-                                    return Promise.resolve();
                                 }
-                            }
-                        ]}
-                    >
-                        <Input placeholder="Type" />
-                    </Form.Item>
-                    <Form.Item
-                        name="associatedProcessId"
-                        label="Associated Process"
-                        rules={[{ required: true, message: 'Please select a process!' }]}
-                    >
-                        <Select mode="multiple" placeholder="Select Process">
-                            {processes.map(proc => (
-                                <Option key={proc.id} value={proc.id}>
-                                    {proc.name}
-                                </Option>
-                            ))}
-                        </Select>
-                    </Form.Item>
+                            ]}
+                        >
+                            <Input placeholder="Type" />
+                        </Form.Item>
+                        <Form.Item
+                            name="associatedProcessId"
+                            label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-5 `}>{"Associated Process"}</span>}
+                            rules={[{ required: true, message: 'Please select a process!' }]}
+                        >
+                            <Select mode="multiple" placeholder="Select Process">
+                                {processes.map(proc => (
+                                    <Option key={proc.id} value={proc.id}>
+                                        {proc.name}
+                                    </Option>
+                                ))}
+                            </Select>
+                        </Form.Item>
 
-                    <Form.Item name="status" label="Status" valuePropName="checked" initialValue={true}>
-                        <Switch />
-                    </Form.Item>
+                        <Form.Item name="status" label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-5 `}>{"Status"}</span>} valuePropName="checked" initialValue={true}>
+                            <Switch
+                                checkedChildren="Active"
+                                unCheckedChildren="Inactive"
+                                defaultChecked
+                            />
+                        </Form.Item>
 
-                    <Form.Item>
-                        <Button type="primary" htmlType="submit">
-                            Submit
-                        </Button>
-                    </Form.Item>
-                </Form>
+                        <Form.Item>
+                            <Button type="" htmlType="submit" className={`rounded-2 ${customBtn} ${customDark === "dark-dark" ? `` : `border-0`} custom-zoom-btn`}>
+                                Submit
+                            </Button>
+                        </Form.Item>
+                    </Form>
+                </Modal.Body>
             </Modal>
         </div>
     );
