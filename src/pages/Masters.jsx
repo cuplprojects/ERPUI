@@ -38,6 +38,8 @@ import { useStore } from 'zustand';
 import { RiMenuFold4Fill } from "react-icons/ri";
 import Report from './Report.jsx';
 import { AiFillCloseSquare } from "react-icons/ai";
+import { RiUserSettingsFill } from "react-icons/ri";
+import { FaBookOpenReader } from "react-icons/fa6";
 // import {BsQuestionSquareFill} from 'react-icons/bs'//not  integrated
 
 
@@ -101,7 +103,7 @@ const Sidebar = () => {
   const menuItems = [
     {
       key: 'userManagement',
-      icon: <FaUsers className={`${customDark === "dark-dark" ? `text-white` : `${customDarkText}`} menu-icon`} />,
+      icon: <RiUserSettingsFill  className={`${customDark === "dark-dark" ? `text-white` : `${customDarkText}`} menu-icon`} />,
       label: 'User Management',
       permission: '2.1',
       children: [
@@ -113,7 +115,7 @@ const Sidebar = () => {
     },
 
     { key: 'group', icon: <FaUsers className={`${customDark === "dark-dark" ? `text-white` : `${customDarkText}`} menu-icon`} />, label: 'Group', permission: '2.2' },
-    { key: 'type', icon: <FaUsers className={`${customDark === "dark-dark" ? `text-white` : `${customDarkText}`} menu-icon`} />, label: 'Type', permission: '2.3' },
+    { key: 'type', icon: <FaBookOpenReader className={`${customDark === "dark-dark" ? `text-white` : `${customDarkText}`} menu-icon`} />, label: 'Type', permission: '2.3' },
     { key: 'project', icon: <FaProjectDiagram className={`${customDark === "dark-dark" ? `text-white` : `${customDarkText}`} menu-icon`} />, label: 'Project', permission: '2.4' },
     { key: 'zone', icon: <FaGlobeAmericas className={`${customDark === "dark-dark" ? `text-white` : `${customDarkText}`} menu-icon`} />, label: 'Zone', permission: '2.5' },
     { key: 'camera', icon: <FaCamera className={`${customDark === "dark-dark" ? `text-white` : `${customDarkText}`} menu-icon`} />, label: 'Camera', permission: '2.6' },
@@ -146,7 +148,7 @@ const Sidebar = () => {
           }}
           className={`d-flex align-items-center ${customDark === "dark-dark" ? `sidebar-item-dark` : `sidebar-item`}  ${selectedMenu === menu.key ? `active rounded-start rounded-end-5 ` : `rounded-start rounded-end-5 text-dark `} ${selectedMenu === menu.key ? ` ${customMid} ` : ``} hover:bg-my-hover-bg hover:text-my-hover-text`}
         >
-          {menu.icon} <span className={`${customDark === "dark-dark" ? `text-white` : `${customDarkText}`} ml-3 ${isOffcanvas ? '' : 'd-none d-md-block d-lg-block'}`}>{menu.label}</span>
+          {menu.icon} <span className={`${customDark === "dark-dark"  ? `text-white` : `${customDarkText}`} ml-3 ${isOffcanvas ? '' : 'd-none d-md-block d-lg-block'}`}>{menu.label}</span>
           {menu.children && (
             <span className="ml-auto">
               {expandedMenus[menu.key] ? <FaCaretDown className={`${customDark === `dark-dark` ? `text-white ` : `${customDarkText}`}`} size={25} /> : <FaCaretLeft className={`${customDark === "dark-dark" ? `${customDarkText}` : ``}`} size={25} />}
@@ -167,24 +169,24 @@ const Sidebar = () => {
   };
 
   return (
-    <Container fluid className={`rounded-4 border border`}>
+    <Container fluid className={`rounded-4 ${customDark === "dark-dark" ? `border`:`shadow-lg`} `}>
       <Row className=''>
         <Col lg={3} className={`sidebar rounded-start-4 d-none d-lg-block ${customDark === "dark-dark" ? `${customDark}` : ``}`}>
           <Nav className="flex-column">
             {renderNavItems(allowedMenuItems)}
           </Nav>
         </Col>
-        <div className="small-sidebar d-lg-none">
+        <div className={`small-sidebar d-lg-none `}>
           <button className={`mt-2 ${customDark === "dark-dark" ? `${customDark} ${customLightText}  ${customLightBorder}` : `${customDark} ${customLightText} border-0`}  p-1 rounded`} onClick={handleShow}>
             <RiMenuFold4Fill size={25} className='' />
           </button>
-          <Offcanvas show={show} onHide={handleClose} placement="start" className={`${customDark === "dark-dark" ? customDark : ''}`} style={{ width: '80%' , zIndex:"9999" }}>
-            <Offcanvas.Header className="d-flex justify-content-between align-items-center">
+          <Offcanvas show={show} onHide={handleClose} placement="start" className={`${customDark === "dark-dark" ? customDark : `${customLight}`}`} style={{ width: '80%' , zIndex:"9999" }}>
+            <Offcanvas.Header closeButton={false} className={`${customDark} ${customLightText} d-flex justify-content-between`}>
               <Offcanvas.Title className={`${customDark==='dark-dark' ? `text-white` : ``}`}>Menu</Offcanvas.Title>
               <AiFillCloseSquare 
-              size={35}
+                size={35}
                 onClick={handleClose} 
-                className={`${customDark === "dark-dark" ? "text-white" : "text-dark"}`}
+                className={`${customDark === "dark-dark" ? "text-dark bg-white " : `${customDark} custom-zoom-btn text-white  ${customDarkBorder}`} rounded-2`}
                 aria-label="Close"
                 style={{ cursor: 'pointer', fontSize: '1.5rem' }}
               />
