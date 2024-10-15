@@ -23,6 +23,7 @@ const NavigationBar = ({ onLinkClick }) => {
    const permissions = Array.isArray(activeUser?.permissionList) ? activeUser.permissionList : [];
    // Assuming permissions are stored in activeUser
 console.log(permissions)
+console.log(permissions.includes("2") || isDevelopmentMode)
   return (
     
     <Container
@@ -34,7 +35,7 @@ console.log(permissions)
       }}
     >
       <Row className="justify-content-center">
-        {permissions.includes("1") || isDevelopmentMode && (
+        {(permissions.includes("1") || isDevelopmentMode) && (
           <Col xs={6} sm={4} md={3} className="text-center mb-4">
             <Link to="/dashboard" className="text-white text-decoration-none custom-zoom-btn" onClick={onLinkClick}>
               <RiDashboard2Line style={{ width: "40%", height: "40%" }} />
@@ -42,7 +43,7 @@ console.log(permissions)
             </Link>
           </Col>
         )}
-        {permissions.includes("2") || isDevelopmentMode && (
+        {(permissions.includes("2") || isDevelopmentMode) && (
           <Col xs={6} sm={4} md={3} className="text-center mb-4">
             <Link to="/master" className="text-white text-decoration-none custom-zoom-btn" onClick={onLinkClick}>
               <SiMastercard style={{ width: "40%", height: "40%" }} />
@@ -50,7 +51,7 @@ console.log(permissions)
             </Link>
           </Col>
         )}
-        {permissions.includes("3") || isDevelopmentMode && (
+        {(permissions.includes("3") || isDevelopmentMode) && (
           <Col xs={6} sm={4} md={3} className="text-center mb-4">
             <Link to="/labels" className="text-white text-decoration-none custom-zoom-btn" onClick={onLinkClick}>
               <MdFeaturedPlayList style={{ width: "40%", height: "40%" }} />
@@ -58,7 +59,7 @@ console.log(permissions)
             </Link>
           </Col>
         )}
-        {permissions.includes("4") || isDevelopmentMode && (
+        {(permissions.includes("4") || isDevelopmentMode) && (
           <Col xs={6} sm={4} md={3} className="text-center mb-4">
             <Link to="/ctp" className="text-white text-decoration-none custom-zoom-btn" onClick={onLinkClick}>
               <CgTemplate style={{ width: "40%", height: "40%" }} />

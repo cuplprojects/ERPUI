@@ -1,230 +1,275 @@
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { Select, Button, message, Table, Popconfirm } from 'antd';
-import { DndProvider, useDrag, useDrop } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
-import API from '../CustomHooks/MasterApiHooks/api';
-
-const { Option } = Select;
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { Button, message, Checkbox, Drawer } from "antd";
+import { DndProvider, useDrag, useDrop } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
+import { getProjectById } from "../CustomHooks/ApiServices/projectService";
+import API from "../CustomHooks/MasterApiHooks/api";
+import { MenuOutlined } from "@ant-design/icons";
+import Table from "react-bootstrap/Table";
+import { Container, Card } from "react-bootstrap";
+import { useStore } from "zustand";
+import themeStore from "../store/themeStore";
 
 // Draggable Table Row
-const DraggableRow = ({ process, index, moveProcess, features, checkedFeatures, setCheckedFeatures, handleRemoveProcess }) => {
-    const [, ref] = useDrag({
-        type: 'PROCESS',
-        item: { index },
-    });
+const DraggableRow = ({
+  process,
+  index,
+  moveProcess,
+  features,
+  checkedFeatures,
+  setCheckedFeatures,
+}) => {
+  if (!process) return null;
 
-    const [, drop] = useDrop({
-        accept: 'PROCESS',
-        hover(item) {
-            if (item.index !== index) {
-                moveProcess(item.index, index);
-                item.index = index; // Update the index of the dragged item
-            }
-        },
-    });
+  const [, ref] = useDrag({
+    type: "PROCESS",
+    item: { index },
+  });
 
-    const handleCheckboxChange = (featureId) => {
-        const updatedCheckedFeatures = checkedFeatures[process.id] || [];
-        if (updatedCheckedFeatures.includes(featureId)) {
-            updatedCheckedFeatures.splice(updatedCheckedFeatures.indexOf(featureId), 1);
-        } else {
-            updatedCheckedFeatures.push(featureId);
-        }
-        setCheckedFeatures(prev => ({ ...prev, [process.id]: updatedCheckedFeatures }));
-    };
+  const [, drop] = useDrop({
+    accept: "PROCESS",
+    hover(item) {
+      if (item.index !== index) {
+        moveProcess(item.index, index);
+        item.index = index;
+      }
+    },
+  });
 
-    return (
-        <tr ref={node => ref(drop(node))}>
-            <td>{process.name || 'Unnamed Process'}</td>
-            {features.map(feature => {
-                const isChecked = (checkedFeatures[process.id] || []).includes(feature.featureId) || 
-                                  (process.installedFeatures && process.installedFeatures.includes(feature.featureId));
-                return (
-                    <td key={feature.featureId}>
-                        <input
-                            type="checkbox"
-                            checked={isChecked}
-                            onChange={() => handleCheckboxChange(feature.featureId)} 
-                        />
-                    </td>
-                );
-            })}
-            <td>
-                <Popconfirm
-                    title="Are you sure to delete this process?"
-                    onConfirm={() => handleRemoveProcess(process.id)}
-                    okText="Yes"
-                    cancelText="No"
-                >
-                    <Button type="danger">Remove</Button>
-                </Popconfirm>
-            </td>
-        </tr>
-    );
+  const handleCheckboxChange = (featureId) => {
+    const updatedCheckedFeatures = checkedFeatures[process.id] || [];
+    if (updatedCheckedFeatures.includes(featureId)) {
+      updatedCheckedFeatures.splice(
+        updatedCheckedFeatures.indexOf(featureId),
+        1
+      );
+    } else {
+      updatedCheckedFeatures.push(featureId);
+    }
+    setCheckedFeatures((prev) => ({
+      ...prev,
+      [process.id]: updatedCheckedFeatures,
+    }));
+  };
+
+  return (
+    <tr ref={(node) => ref(drop(node))}>
+      <td style={{ textAlign: "center", width: "5%" }}>{index + 1}</td>
+      <td style={{ textAlign: "center", width: "20%" }}>
+        {process.name || "Unnamed Process"}
+      </td>
+      {features.map((feature) => {
+        const isChecked =
+          (checkedFeatures[process.id] || []).includes(feature.featureId) ||
+          (process.installedFeatures &&
+            process.installedFeatures.includes(feature.featureId));
+        return (
+          <td
+            key={feature.featureId}
+            style={{
+              textAlign: "center",
+              width: `${(75 / features.length).toFixed(2)}%`,
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={isChecked}
+              onChange={() => handleCheckboxChange(feature.featureId)}
+            />
+          </td>
+        );
+      })}
+    </tr>
+  );
 };
 
 const AddProjectProcess = () => {
-    const { projectId } = useParams();
-    const [processes, setProcesses] = useState([]);
-    const [selectedProcesses, setSelectedProcesses] = useState([]);
-    const [features, setFeatures] = useState([]);
-    const [isSequencing, setIsSequencing] = useState(false);
-    const [checkedFeatures, setCheckedFeatures] = useState({});
+  const { projectId } = useParams();
+  const [processes, setProcesses] = useState([]);
+  const [selectedProcesses, setSelectedProcesses] = useState([]);
+  const [features, setFeatures] = useState([]);
+  const [checkedFeatures, setCheckedFeatures] = useState({});
+  const [project, setProject] = useState("");
+  const [isDrawerVisible, setIsDrawerVisible] = useState(false);
+  const { getCssClasses } = useStore(themeStore);
+  const cssClasses = getCssClasses();
+  const [customDark, customMid, customLight, customBtn, customDarkText, , customLightBorder, customDarkBorder] = cssClasses;
 
-    const fetchProcesses = async () => {
-        try {
-            const response = await API.get('/Processes');
-            setProcesses(response.data);
-            console.log('Fetched processes:', response.data);
-        } catch (error) {
-            console.error("Failed to fetch processes", error);
-        }
-    };
+  useEffect(() => {
+    fetchProjectData();
+  }, []);
 
-    const fetchFeatures = async () => {
-        try {
-            const response = await API.get('/Features');
-            setFeatures(response.data);
-            console.log('Fetched features:', response.data);
-        } catch (error) {
-            console.error("Failed to fetch features", error);
-        }
-    };
+  const fetchProjectData = async () => {
+    try {
+      const project = await getProjectById(projectId);
+      setProject(project);
+      const processesResponse = await API.get(
+        `/PaperTypes/${project.typeId}/Processes`
+      );
+      const fetchedProcesses = processesResponse.data;
+      setProcesses(fetchedProcesses);
+      setSelectedProcesses(fetchedProcesses); // Set all processes as selected by default
 
-    useEffect(() => {
-        fetchProcesses();
-        fetchFeatures();
-    }, []);
-    
-    const handleSelectProcess = (value) => {
-        const selectedProcess = processes.filter(proc => value.includes(proc.id));
-        setSelectedProcesses(selectedProcess);
-        const initialCheckedFeatures = {};
-        selectedProcess.forEach(proc => {
-            initialCheckedFeatures[proc.id] = proc.installedFeatures || [];
-        });
-        setCheckedFeatures(initialCheckedFeatures);
-    };
+      const featuresResponse = await API.get("/Features");
+      const fetchedFeatures = featuresResponse.data;
+      setFeatures(fetchedFeatures);
 
-    const handleAddProcesses = () => {
-        setIsSequencing(true);
-    };
+      // Initialize checkedFeatures with all features selected for each process
+      const defaultCheckedFeatures = {};
+      fetchedProcesses.forEach((proc) => {
+        defaultCheckedFeatures[proc.id] = fetchedFeatures.map(
+          (feature) => feature.featureId
+        );
+      });
+      setCheckedFeatures(defaultCheckedFeatures);
+    } catch (error) {
+      console.error("Failed to fetch project data", error);
+      message.error("Failed to fetch project data");
+    }
+  };
 
-    const handleRemoveProcess = (processId) => {
-        const updatedSelectedProcesses = selectedProcesses.filter(proc => proc.id !== processId);
-        setSelectedProcesses(updatedSelectedProcesses);
-        const updatedCheckedFeatures = { ...checkedFeatures };
-        delete updatedCheckedFeatures[processId];
-        setCheckedFeatures(updatedCheckedFeatures);
-    };
-
-    const moveProcess = (fromIndex, toIndex) => {
-        const updatedProcesses = [...selectedProcesses];
-        const [movedProcess] = updatedProcesses.splice(fromIndex, 1);
-        updatedProcesses.splice(toIndex, 0, movedProcess);
-        const updatedProcessesWithSequence = updatedProcesses.map((proc, index) => ({
-            ...proc,
-            sequence: index + 1,
-        }));
-        setSelectedProcesses(updatedProcessesWithSequence);
-    };
-
-    const handleSubmit = async () => {
-        const projectProcesses = selectedProcesses.map((proc, index) => {
-            const featuresList = checkedFeatures[proc.id] || [];
-            return {
-                projectId: parseInt(projectId),
-                processId: proc.id,
-                weightage: 0,
-                sequence: index + 1,
-                featuresList: featuresList,
-            };
-        });
-
-        try {
-            await API.post('/Project/AddProcessesToProject', { projectProcesses }, {
-                headers: { 'Content-Type': 'application/json' },
-            });
-            message.success('Processes added successfully!');
-            setSelectedProcesses([]);
-            setCheckedFeatures({});
-            setIsSequencing(false);
-        } catch (error) {
-            message.error('Error adding processes');
-        }
-    };
-
-    const columns = [
-        {
-            title: 'Process Name',
-            dataIndex: 'name',
-            key: 'name',
-            render: (text) => text || 'Unnamed Process',
-        },
-        ...features.map(feature => ({
-            title: feature.features,
-            dataIndex: feature.featureId,
-            key: feature.featureId,
-            render: (_, process) => null,
-        })),
-        {
-            title: 'Action',
-            key: 'action',
-            render: (_, process) => (
-                <Button type="danger" onClick={() => handleRemoveProcess(process.id)}>
-                    Remove
-                </Button>
-            ),
-        },
-    ];
-
-    return (
-        <DndProvider backend={HTML5Backend}>
-            <div>
-                <div className="d-flex justify-content-around">
-                    <h2>Add Project Process</h2>
-                    <h2>Project {projectId}</h2>
-                </div>
-                <Select
-                    mode="multiple"
-                    placeholder="Select Processes"
-                    onChange={handleSelectProcess}
-                    style={{ width: '100%', marginBottom: '16px' }}
-                >
-                    {processes.map(proc => (
-                        <Option key={proc.id} value={proc.id}>{proc.name}</Option>
-                    ))}
-                </Select>
-                <Button type="primary" onClick={handleAddProcesses} disabled={selectedProcesses.length === 0} style={{ marginBottom: '16px' }}>
-                    Confirm Selection
-                </Button>
-                {isSequencing && (
-                    <div>
-                        <Table
-                            components={{
-                                body: {
-                                    row: (props) => <DraggableRow {...props} features={features} checkedFeatures={checkedFeatures} setCheckedFeatures={setCheckedFeatures} handleRemoveProcess={handleRemoveProcess} />, 
-                                },
-                            }}
-                            rowKey="id"
-                            dataSource={selectedProcesses}
-                            columns={columns}
-                            pagination={false}
-                            onRow={(record, index) => ({
-                                index,
-                                moveProcess,
-                                process: record,
-                            })}
-                        />
-                        <Button type="primary" onClick={handleSubmit} disabled={selectedProcesses.length === 0} style={{ marginTop: '16px' }}>
-                            Submit Processes
-                        </Button>
-                    </div>
-                )}
-            </div>
-        </DndProvider>
+  const handleCheckboxChange = (proc) => {
+    const isChecked = selectedProcesses.some(
+      (selectedProc) => selectedProc.id === proc.id
     );
+    if (isChecked) {
+      const updatedSelectedProcesses = selectedProcesses.filter(
+        (selectedProc) => selectedProc.id !== proc.id
+      );
+      setSelectedProcesses(updatedSelectedProcesses);
+      const updatedCheckedFeatures = { ...checkedFeatures };
+      delete updatedCheckedFeatures[proc.id];
+      setCheckedFeatures(updatedCheckedFeatures);
+    } else {
+      setSelectedProcesses([...selectedProcesses, proc]);
+      setCheckedFeatures((prev) => ({
+        ...prev,
+        [proc.id]: features.map((feature) => feature.featureId),
+      }));
+    }
+  };
+
+  const moveProcess = (fromIndex, toIndex) => {
+    const updatedProcesses = [...selectedProcesses];
+    const [movedProcess] = updatedProcesses.splice(fromIndex, 1);
+    updatedProcesses.splice(toIndex, 0, movedProcess);
+    setSelectedProcesses(updatedProcesses);
+  };
+
+  const handleSubmit = async () => {
+    const projectProcesses = selectedProcesses.map((proc, index) => {
+      const featuresList = checkedFeatures[proc.id] || [];
+      return {
+        projectId: parseInt(projectId),
+        processId: proc.id,
+        weightage: 0,
+        sequence: index + 1,
+        featuresList: featuresList,
+      };
+    });
+
+    try {
+      await API.post(
+        "/Project/AddProcessesToProject",
+        { projectProcesses },
+        { headers: { "Content-Type": "application/json" } }
+      );
+      message.success("Processes added successfully!");
+      setSelectedProcesses([]);
+      setCheckedFeatures({});
+    } catch (error) {
+      message.error("Error adding processes");
+    }
+  };
+
+  return (
+    <Container>
+      <DndProvider backend={HTML5Backend}>
+        <Card className={`mb-4 shadow-lg p-0 border-0 ${customDark === "dark-dark" ?  `${customLightBorder}` : "border-0"}`}>
+          <Card.Header className={`d-flex justify-content-between align-items-center ${customDark === "dark-dark" ? `${customDark} text-white ${customLightBorder}` : `text-white ${customDark}`}`}>
+            <Button
+              icon={<MenuOutlined />}
+              onClick={() => setIsDrawerVisible(!isDrawerVisible)}
+              className="responsive-button"
+            />
+            <h5 className="text-center">Project: {project.name}</h5>
+          </Card.Header>
+
+          <Card.Body className={`${customDark === "dark-dark" ? `${customLightBorder}` : ""}`}>
+            <Drawer
+              title=""
+              placement="left"
+              closable
+              onClose={() => setIsDrawerVisible(false)}
+              open={isDrawerVisible}
+              width={250}
+            >
+              <p>Select The Process</p>
+              {processes.map((proc) => (
+                <p key={proc.id}>
+                  <Checkbox
+                    checked={selectedProcesses.some(
+                      (selectedProc) => selectedProc.id === proc.id
+                    )}
+                    onChange={() => handleCheckboxChange(proc)}
+                  >
+                    {proc.name}
+                  </Checkbox>
+                </p>
+              ))}
+            </Drawer>
+
+            <div className={`table-responsive ${customLight} ${customDark === 'dark-dark' ? `${customDarkBorder} border-1` : "border-light"}`}>
+              <Table striped bordered hover>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: "center", width: "5%" }}>SN</th>
+                    <th style={{ textAlign: "center", width: "25%" }}>Process Name</th>
+                    {features.map((feature) => (
+                      <th
+                        key={feature.featureId}
+                        style={{
+                          textAlign: "center",
+                          width: `${(70 / features.length).toFixed(2)}%`,
+                        }}
+                      >
+                        {feature.features}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {selectedProcesses.map((process, index) => (
+                    <DraggableRow
+                      key={process.id}
+                      process={process}
+                      index={index}
+                      moveProcess={moveProcess}
+                      features={features}
+                      checkedFeatures={checkedFeatures}
+                      setCheckedFeatures={setCheckedFeatures}
+                    />
+                  ))}
+                </tbody>
+              </Table>
+            </div>
+            <div className="d-flex justify-content-end">
+              <Button
+                type="primary"
+                onClick={handleSubmit}
+                disabled={selectedProcesses.length === 0}
+                style={{ marginTop: "20px", width: "25%" }}
+                className="responsive-submit-button"
+              >
+                Submit
+              </Button>
+            </div>
+          </Card.Body>
+        </Card>
+      </DndProvider>
+    </Container>
+  );
 };
 
 export default AddProjectProcess;

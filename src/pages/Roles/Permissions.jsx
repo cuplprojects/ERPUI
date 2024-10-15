@@ -1,118 +1,236 @@
-// import React from 'react'
-// import { Checkbox } from 'antd'
-
-
-
-
-// const permissionOptions = [
-//     {label: 'Dashboard', value:1},
-//     {label: 'Master Management', value:2},
-//     {label: 'Message Management', value:3},
-//     {label: 'Reports', value:4},
-// ];
-// const Permissions = ({selectedPermissions, onChange}) => {
-//   return (
-//     <div style={{marginTop: 10}}>
-//       <span>Permissions: </span>
-//       <Checkbox.Group
-//       options={permissionOptions}
-//       value={selectedPermissions}
-//       onChange={onChange}
-//       />
-//     </div>
-//   )
-// }
-
-// export default Permissions
-
-
 import React from 'react';
-import { Checkbox } from 'antd';
+import { Tree } from 'antd';
 
+const { TreeNode } = Tree;
 
 const permissionOptions = [
-  { label: 'Dashboard', value: 1 },
+  { title: 'Dashboard', key: '1' },
   {
-      label: 'Master Management',
-      value: 2,
-      children: [
-          { label: 'User Management', 
-          value: 2.1 ,
-          children:[
-            {label:'RolePage', value: '2.1.1'},
-            {label:'addUser', value: '2.1.2'},
-            {label:'allUsers', value: '2.1.3'},
-            {label:'securityQuestions', value:'2.1.4'}
-          ]
-        },
-          { label: 'Group', value: 2.2 },
-          { label: 'Type', value: 2.3 },
-          { label: 'Project', value: 2.4 },
-          { label: 'Zone', value: 2.5 },
-          { label: 'Camera', value: 2.6 },
-          { label: 'Machines', value: 2.7 },
-          { label: 'Alarm', value: 2.8 },
-          { label: 'Team', value: 2.9 },
-          { label: 'Process Settings', value: 2.10 },
-      ],
+    title: 'Master Management',
+    key: '2',
+    children: [
+      {
+        title: 'User Management',
+        key: '2.1',
+        children: [
+          {
+            title: 'RolePage',
+            key: '2.1.1',
+            children: [
+              {
+                title: 'CRUD',
+                key: '2.1.1.0', // Unique key for CRUD
+                children: [
+                  { title: 'create', key: '2.1.1.1' },
+                  { title: 'read', key: '2.1.1.2' },
+                  { title: 'update', key: '2.1.1.3' },
+                  { title: 'delete', key: '2.1.1.4' },
+                  { title: 'download', key: '2.1.1.5' },
+                  { title: 'report', key: '2.1.1.6' },
+                ],
+              },
+            ],
+          },
+          {
+            title: 'addUser',
+            key: '2.1.2',
+            children: [
+              {
+                title: 'CRUD',
+                key: '2.1.2.0', // Unique key for CRUD
+                children: [
+                  { title: 'create', key: '2.1.2.1' },
+                  { title: 'read', key: '2.1.2.2' },
+                  { title: 'update', key: '2.1.2.3' },
+                  { title: 'delete', key: '2.1.2.4' },
+                  { title: 'download', key: '2.1.2.5' },
+                  { title: 'report', key: '2.1.2.6' },
+                ],
+              },
+            ],
+          },
+          {
+            title: 'allUsers',
+            key: '2.1.3',
+            children: [
+              {
+                title: 'CRUD',
+                key: '2.1.3.0', // Unique key for CRUD
+                children: [
+                  { title: 'create', key: '2.1.3.1' },
+                  { title: 'read', key: '2.1.3.2' },
+                  { title: 'update', key: '2.1.3.3' },
+                  { title: 'delete', key: '2.1.3.4' },
+                  { title: 'download', key: '2.1.3.5' },
+                  { title: 'report', key: '2.1.3.6' },
+                ],
+              },
+            ],
+          },
+          {
+            title: 'securityQuestions',
+            key: '2.1.4',
+            children: [
+              {
+                title: 'CRUD',
+                key: '2.1.4.0', // Unique key for CRUD
+                children: [
+                  { title: 'create', key: '2.1.4.1' },
+                  { title: 'read', key: '2.1.4.2' },
+                  { title: 'update', key: '2.1.4.3' },
+                  { title: 'delete', key: '2.1.4.4' },
+                  { title: 'download', key: '2.1.4.5' },
+                  { title: 'report', key: '2.1.4.6' },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        title: 'Group',
+        key: '2.2',
+        children: [
+          {
+            title: 'CRUD',
+            key: '2.2.0', // Unique key for CRUD
+            children: [
+              { title: 'create', key: '2.2.1' },
+              { title: 'read', key: '2.2.2' },
+              { title: 'update', key: '2.2.3' },
+              { title: 'delete', key: '2.2.4' },
+              { title: 'download', key: '2.2.5' },
+              { title: 'report', key: '2.2.6' },
+            ],
+          },
+        ],
+      },
+      {
+        title: 'Type',
+        key: '2.3',
+        children: [
+          {
+            title: 'CRUD',
+            key: '2.3.0', // Unique key for CRUD
+            children: [
+              { title: 'create', key: '2.3.1' },
+              { title: 'read', key: '2.3.2' },
+              { title: 'update', key: '2.3.3' },
+              { title: 'delete', key: '2.3.4' },
+              { title: 'download', key: '2.3.5' },
+              { title: 'report', key: '2.3.6' },
+            ],
+          },
+        ],
+      },
+      {
+        title: 'Project',
+        key: '2.4',
+        children: [
+          {
+            title: 'CRUD',
+            key: '2.4.0', // Unique key for CRUD
+            children: [
+              { title: 'create', key: '2.4.1' },
+              { title: 'read', key: '2.4.2' },
+              { title: 'update', key: '2.4.3' },
+              { title: 'delete', key: '2.4.4' },
+              { title: 'download', key: '2.4.5' },
+              { title: 'report', key: '2.4.6' },
+            ],
+          },
+        ],
+      },
+      {
+        title: 'Zone',
+        key: '2.5',
+        children: [
+          {
+            title: 'CRUD',
+            key: '2.5.0', // Unique key for CRUD
+            children: [
+              { title: 'create', key: '2.5.1' },
+              { title: 'read', key: '2.5.2' },
+              { title: 'update', key: '2.5.3' },
+              { title: 'delete', key: '2.5.4' },
+              { title: 'download', key: '2.5.5' },
+              { title: 'report', key: '2.5.6' },
+            ],
+          },
+        ],
+      },
+      {
+        title: 'Camera',
+        key: '2.6',
+        children: [
+          {
+            title: 'CRUD',
+            key: '2.6.0', // Unique key for CRUD
+            children: [
+              { title: 'create', key: '2.6.1' },
+              { title: 'read', key: '2.6.2' },
+              { title: 'update', key: '2.6.3' },
+              { title: 'delete', key: '2.6.4' },
+              { title: 'download', key: '2.6.5' },
+              { title: 'report', key: '2.6.6' },
+            ],
+          },
+        ],
+      },
+      {
+        title: 'Machines',
+        key: '2.7',
+        children: [
+          {
+            title: 'CRUD',
+            key: '2.7.0', // Unique key for CRUD
+            children: [
+              { title: 'create', key: '2.7.1' },
+              { title: 'read', key: '2.7.2' },
+              { title: 'update', key: '2.7.3' },
+              { title: 'delete', key: '2.7.4' },
+              { title: 'download', key: '2.7.5' },
+              { title: 'report', key: '2.7.6' },
+            ],
+          },
+        ],
+      },
+      { title: 'Alarm', key: '2.8' },
+      { title: 'Team', key: '2.9' },
+      { title: 'Process Settings', key: '2.10' },
+    ],
   },
-  { label: 'Message Management', value: 3 },
-  { label: 'Reports', value: 4 },
+  { title: 'Message Management', key: '3' },
+  { title: 'Reports', key: '4' },
 ];
 
 const Permissions = ({ selectedPermissions = [], onChange }) => {
-    const handleParentChange = (value) => {
-        const isChecked = selectedPermissions.includes(value);
-        const newPermissions = isChecked
-            ? selectedPermissions.filter(item => item !== value && !item.toString().startsWith(value))
-            : [...selectedPermissions, value];
+  const onCheck = (checkedKeys) => {
+    onChange(checkedKeys);
+  };
 
-        onChange(newPermissions);
-    };
+  const renderTreeNodes = (data) =>
+    data.map((item) => {
+      if (item.children) {
+        return (
+          <TreeNode title={item.title} key={item.key}>
+            {renderTreeNodes(item.children)}
+          </TreeNode>
+        );
+      }
+      return <TreeNode title={item.title} key={item.key} />;
+    });
 
-    const handleChildChange = (value, isChecked) => {
-        const newPermissions = isChecked
-            ? [...selectedPermissions, value]
-            : selectedPermissions.filter(item => item !== value);
-        onChange(newPermissions);
-    };
-
-    const renderOptions = (options) => {
-        return options.map(option => (
-            <div key={option.value}>
-                <Checkbox
-                    value={option.value}
-                    checked={selectedPermissions.includes(option.value)}
-                    onChange={() => handleParentChange(option.value)}
-                >
-                    {option.label}
-                </Checkbox>
-                {option.children && (
-                    <div style={{ marginLeft: 20 }}>
-                        {option.children.map(child => (
-                            <Checkbox
-                                key={child.value}
-                                value={child.value}
-                                checked={selectedPermissions.includes(child.value)}
-                                onChange={(e) => handleChildChange(child.value, e.target.checked)}
-                            >
-                                {child.label}
-                            </Checkbox>
-                        ))}
-                    </div>
-                )}
-            </div>
-        ));
-    };
-
-    return (
-        <div style={{ marginTop: 10 }}>
-            <span>Permissions: </span>
-            <Checkbox.Group value={selectedPermissions} onChange={onChange}>
-                {renderOptions(permissionOptions)}
-            </Checkbox.Group>
-        </div>
-    );
+  return (
+    <Tree
+      checkable
+      checkedKeys={selectedPermissions}
+      onCheck={onCheck}
+      selectable={false}
+      defaultExpandAll={false} // Set to false to keep all nodes collapsed
+      treeData={permissionOptions}
+    />
+  );
 };
 
 export default Permissions;
