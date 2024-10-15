@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Card, Table, Modal, Input, Switch, message, Tabs } from 'antd';
-import { IdcardOutlined,EditOutlined } from '@ant-design/icons';
+import { IdcardOutlined, EditOutlined } from '@ant-design/icons';
 import axios from 'axios'; // Import axios for API calls
 import Permissions from './Permissions';
 import API from '../../CustomHooks/MasterApiHooks/api';
@@ -9,27 +9,25 @@ const { TabPane } = Tabs;
 
 const RolesAndDepartments = () => {
   const [roles, setRoles] = useState([]);
-  const [newRole, setNewRole] = useState({ roleId: 0, roleName: '', priorityOrder: 0, status: true, permissions:[] });
+  const [newRole, setNewRole] = useState({ roleId: 0, roleName: '', priorityOrder: 0, status: true, permissions: [] });
   const [isRoleModalVisible, setIsRoleModalVisible] = useState(false);
-
   // Fetch roles from the API on component mount
-  useEffect(() => {
-    const fetchRoles = async () => {
-      try {
-        const response = await API.get('/Roles'); // Update with your API endpoint
-        setRoles(response.data);
-      } catch (error) {
-        console.error('Failed to fetch roles');
-      }
-    };
+  const fetchRoles = async () => {
+    try {
+      const response = await API.get('/Roles'); // Update with your API endpoint
+      setRoles(response.data);
+      console.log(response.data); 
+    } catch (error) {
+      console.error('Failed to fetch roles');
+    }
+  };
 
+  useEffect(() => {
     fetchRoles();
   }, []);
 
-  
-
   const onCreateRole = () => {
-    setNewRole({roleName: '', priorityOrder: 0, status: true,permissions:[] });
+    setNewRole({ roleId: 0, roleName: '', priorityOrder: 0, status: true, permissions: [] });
     setIsRoleModalVisible(true);
   };
 
@@ -43,41 +41,45 @@ const RolesAndDepartments = () => {
       message.error('Role name should contain only alphabetic characters');
       return;
     }
-    const isRoleExists = roles.some(role => role.roleName.toLowerCase() === trimmedRoleName.toLowerCase());
-    if (isRoleExists) {
-      message.error('Role name already exists');
-      return;
-    }
-    const isPriorityOrderExists = roles.some(role => role.priorityOrder === newRole.priorityOrder);
+  
+    // Skipping duplicate role name validation for update
+    const isPriorityOrderExists = roles.some(role => role.priorityOrder === newRole.priorityOrder && role.roleId !== newRole.roleId);
     if (isPriorityOrderExists) {
       message.error('Priority order must be unique');
       return;
     }
-
-const payload = {
- roleId: 0,  // Auto-increment, set to 0 for new roles
-  roleName: trimmedRoleName,  // Role name
-  priorityOrder: newRole.priorityOrder,  // Priority order
-  status: newRole.status,  // Active status
-  permissionList: newRole.permissions.map(String)  // Convert to an array of numbers
-}
+  
     try {
-      // Sending the payload with the new structure
-
-      const response = await API.post('/Roles', {
-        roleName: trimmedRoleName,
-        priorityOrder: newRole.priorityOrder,
-        status: newRole.status,
-        permissions: newRole.permissions,
-      });
-
-      
-      // Assuming your API returns the created role
-      setRoles([...roles, { ...response.data }]);
+      let response;
+      if (newRole.roleId === 0) {
+        // Sending the payload for creating a new role
+        response = await API.post('/Roles', {
+          roleName: trimmedRoleName,
+          priorityOrder: newRole.priorityOrder,
+          status: newRole.status,
+          permissionList: newRole.permissions.map(permission => permission.toString()),
+        });
+        setRoles([...roles, { ...response.data }]);
+        message.success('Role added successfully');
+      } else {
+        // Sending the payload for updating an existing role
+        response = await API.put(`/Roles/${newRole.roleId}`, {
+          roleId: newRole.roleId,
+          roleName: trimmedRoleName,
+          priorityOrder: newRole.priorityOrder,
+          status: newRole.status,
+          permission:'',
+          permissionList: newRole.permissions.map(permission => permission.toString()),
+        });
+        const updatedRoles = roles.map(role => (role.roleId === newRole.roleId ? response.data : role));
+        setRoles(updatedRoles);
+        message.success('Role updated successfully');
+      }
+  
       setIsRoleModalVisible(false);
-      message.success('Role added successfully');
+      fetchRoles(); // Fetch roles after successful operation to update the state with the latest data
     } catch (error) {
-      message.error('Failed to add role');
+      message.error('Failed to process the role');
     }
   };
 
@@ -86,7 +88,9 @@ const payload = {
   };
 
   const handleEditRole = (role) => {
-    setNewRole(role); // Set the selected role data to newRole
+    // Set the selected role data to newRole and ensure permissions are default checked in the modal
+    const defaultCheckedPermissions = role.permissionList || []; // Use permissionList directly
+    setNewRole({ ...role, permissions: defaultCheckedPermissions });
     setIsRoleModalVisible(true);
   };
 
@@ -103,8 +107,8 @@ const payload = {
     }
   };
 
-  const handlePermissionChange = (checkedValues) => {
-    setNewRole({ ...newRole, permissions: checkedValues });
+  const handlePermissionChange = (checkedKeys) => {
+    setNewRole({ ...newRole, permissions: checkedKeys });
   };
 
   const roleColumns = [
@@ -185,7 +189,6 @@ const payload = {
             dataSource={roles}
             style={{ fontSize: '12px' }}
           />
-          {/* Modal for Adding New Role */}
           {/* Modal for Adding or Editing Role */}
           <Modal
             title={newRole.roleId === 0 ? "Add New Role" : "Edit Role"}
@@ -217,12 +220,7 @@ const payload = {
               />
             </div>
             {/* Include Permissions Component */}
-            <Permissions
-              selectedPermissions={newRole.permissions}
-              onChange={handlePermissionChange}
-
-            />
-
+            <Permissions selectedPermissions={newRole.permissions} onChange={handlePermissionChange} />
           </Modal>
         </Card>
       </TabPane>
