@@ -24,10 +24,6 @@ import { IoMdArrowDropleftCircle } from "react-icons/io";
 Chart.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip);
 
 const ProjectChart = ({ title, chartKey, chartdata, onClick, tCatch, type }) => (
-
-
-
-
   <Col xs={12} sm={6} md={4} lg={3} xl={2}>
     <div className="text-center p-3 chart-container c-pointer custom-zoom-btn">
       <Card className="text-center p-1 shadow-lg" onClick={onClick}>
@@ -47,6 +43,9 @@ const ProjectChart = ({ title, chartKey, chartdata, onClick, tCatch, type }) => 
             options={{
               responsive: true,
               plugins: {
+                legend: {
+                  display: false, // This line removes the legend
+                },
                 tooltip: {
                   enabled: true,
                   callbacks: {
@@ -64,7 +63,6 @@ const ProjectChart = ({ title, chartKey, chartdata, onClick, tCatch, type }) => 
     </div>
   </Col>
 );
-
 const AllProjects = () => {
 
   //Theme Change Section
@@ -248,53 +246,56 @@ const AllProjects = () => {
                 </h4>
               </div>
               <div style={{ width: "100%", height: "90%" }}>
-                <Bar
-                  className="mt-2"
-                  data={{
-                    labels: BarGraphData.map((data) => data.label),
-                    datasets: [
-                      {
-                        data: BarGraphData.map((data) => data.value),
-                        backgroundColor: [
-                          "rgba(255, 99, 132, 0.6)",
-                          "rgba(255, 159, 64, 0.6)",
-                          "rgba(255, 205, 86, 0.6)",
-                          "rgba(75, 192, 192, 0.6)",
-                          "rgba(54, 162, 235, 0.6)",
-                          "rgba(153, 102, 255, 0.6)",
-                          "rgba(201, 203, 207, 0.6)",
-                        ],
-                        borderColor: [
-                          "rgb(255, 125, 132)",
-                          "rgb(255, 159, 64)",
-                          "rgb(255, 205, 86)",
-                          "rgb(75, 192, 192)",
-                          "rgb(54, 162, 235)",
-                          "rgb(153, 102, 255)",
-                          "rgb(201, 203, 207)",
-                        ],
-                        borderWidth: 1,
-                        borderRadius: 5,
-                      },
-                    ],
-                  }}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    onClick: (event, elements) => handleBarClick(elements),
-                    plugins: {
-                      tooltip: {
-                        enabled: true,
-                        callbacks: {
-                          label: (tooltipItem) => {
-                            return `${tooltipItem.label}: ${tooltipItem.raw}%`;
-                          },
-                        },
-                      },
-                    },
-                  }}
-                  height={300}
-                />
+              <Bar
+  className="mt-2"
+  data={{
+    labels: BarGraphData.map((data) => data.label),
+    datasets: [
+      {
+        data: BarGraphData.map((data) => data.value),
+        backgroundColor: [
+          "rgba(255, 99, 132, 0.6)",
+          "rgba(255, 159, 64, 0.6)",
+          "rgba(255, 205, 86, 0.6)",
+          "rgba(75, 192, 192, 0.6)",
+          "rgba(54, 162, 235, 0.6)",
+          "rgba(153, 102, 255, 0.6)",
+          "rgba(201, 203, 207, 0.6)",
+        ],
+        borderColor: [
+          "rgb(255, 125, 132)",
+          "rgb(255, 159, 64)",
+          "rgb(255, 205, 86)",
+          "rgb(75, 192, 192)",
+          "rgb(54, 162, 235)",
+          "rgb(153, 102, 255)",
+          "rgb(201, 203, 207)",
+        ],
+        borderWidth: 1,
+        borderRadius: 5,
+      },
+    ],
+  }}
+  options={{
+    responsive: true,
+    maintainAspectRatio: false,
+    onClick: (event, elements) => handleBarClick(elements),
+    plugins: {
+      legend: {
+        display: false, // This line removes the legend
+      },
+      tooltip: {
+        enabled: true,
+        callbacks: {
+          label: (tooltipItem) => {
+            return `${tooltipItem.label}: ${tooltipItem.raw}%`;
+          },
+        },
+      },
+    },
+  }}
+  height={300}
+/>
               </div>
             </Card.Body>
           </Card>
