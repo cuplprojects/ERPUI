@@ -50,6 +50,7 @@ const UserMenu = ({ onClose }) => {
   const handleLogoutConfirm = () => {
     // localStorage.clear();
     localStorage.setItem('loggedOut', 'true');
+    localStorage.setItem('authToken',null);
     navigate('/');
     setShowModal(false);
   };
