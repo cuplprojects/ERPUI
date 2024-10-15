@@ -10,7 +10,11 @@ import { ToastContainer, toast } from 'react-toastify';
 import "./../styles/userMenu.css"
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
-import SampleUser1 from "./../assets/sampleUsers/sampleUser1.jpg";
+
+import SampleUser1 from "./../assets/sampleUsers/defaultUser.jpg";
+
+import SampleUser from "./../assets/sampleUsers/sampleUser1.jpg";
+
 import useUserDataStore from '../store/userDataStore';
 
 const UserMenu = ({ onClose }) => {
@@ -50,6 +54,7 @@ const UserMenu = ({ onClose }) => {
   const handleLogoutConfirm = () => {
     // localStorage.clear();
     localStorage.setItem('loggedOut', 'true');
+    localStorage.setItem('authToken',null);
     navigate('/');
     setShowModal(false);
   };
@@ -89,10 +94,10 @@ const UserMenu = ({ onClose }) => {
           <ImProfile className="me-2 text-light " />
           <Link to="/profile" className="text-decoration-none text-light d-block" onClick={handleProfileClick}>Profile</Link>
         </li>
-        <li className="p-2 border-bottom d-flex align-items-center custom-zoom-btn">
+        {/* <li className="p-2 border-bottom d-flex align-items-center custom-zoom-btn">
           <IoSettingsSharp className="me-2 text-light settings-icon" />
           <Link to="/settings" className="text-decoration-none text-light d-block" onClick={handleSettingsClick}>My Settings</Link>
-        </li>
+        </li> */}
         <li className="p-2 border-bottom d-flex align-items-center custom-zoom-btn">
           <RiLockPasswordFill className="me-2 text-light" />
           <Link to="/change-password" className="text-decoration-none text-light d-block" onClick={handleChangePasswordClick}>Change Password</Link>

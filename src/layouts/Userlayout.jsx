@@ -15,11 +15,13 @@ import LockOverlay from './../components/LockOverlay';
 import ProcessTable from './../sub-Components/processTable';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
-// import WavyDiv from './WavyDiv'; // not used 
 import QtySheetUpload from '../pages/QtySheetUpload';
 import Message from '../pages/Message/Message';
 import Labels from '../pages/Message/Labels';
+
 import CuDashboard from '../pages/CuDashboard';
+
+import AddProjectProcess from '../pages/AddProjectProcess';
 
 const Userlayout = () => {
 
@@ -39,11 +41,13 @@ const Userlayout = () => {
           <div className="top-nav sticky-to" style={{ zIndex: "9" }}>
             <Navbar />
           </div>
-          <div className={`flex-grow-1 d-fle m-2 p-3 `} style={{ zIndex: "2" }}>
+          <div className={`flex-grow-1 d-fle m-2 p-3 `} style={{ zIndex: "3" }}>
             <Routes>
+            <Route path="/cudashboard" element={<CuDashboard />} />
               <Route path="/dashboard" element={<MainDashboard />} />
               <Route path="/cudashboard" element={<CuDashboard />} />
               <Route path="/master" element={<Masters />} />
+              <Route path="/AddProjectProcess/:projectId" element={<AddProjectProcess />} />
               <Route path="/features" element={<Features />} />
               {/* --------------- User Menu Routes -------------- */}
               <Route path="/profile" element={<Profile />} />
