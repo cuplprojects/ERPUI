@@ -10,7 +10,11 @@ import { ToastContainer, toast } from 'react-toastify';
 import "./../styles/userMenu.css"
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
+
+import SampleUser1 from "./../assets/sampleUsers/defaultUser.jpg";
+
 import SampleUser from "./../assets/sampleUsers/sampleUser1.jpg";
+
 import useUserDataStore from '../store/userDataStore';
 
 const UserMenu = ({ onClose }) => {
