@@ -15,6 +15,7 @@ import "react-toastify/dist/ReactToastify.css";
 import "./index.css";
 import useLanguageStore from "./store/languageStore";
 import ErrorPage from "./pages/ErrorPage";
+import "./styles/AgGrid.css"
 
 function App() {
   const { initializeLanguage } = useLanguageStore();

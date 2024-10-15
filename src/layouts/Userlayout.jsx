@@ -45,6 +45,7 @@ const Userlayout = () => {
             <Routes>
             <Route path="/cudashboard" element={<CuDashboard />} />
               <Route path="/dashboard" element={<MainDashboard />} />
+              <Route path="/cudashboard" element={<CuDashboard />} />
               <Route path="/master" element={<Masters />} />
               <Route path="/AddProjectProcess/:projectId" element={<AddProjectProcess />} />
               <Route path="/features" element={<Features />} />
