@@ -34,7 +34,7 @@ const Userlayout = () => {
   const customLight = cssClasses[2];
   const userpermissions = localStorage.getItem('activeuser');
   const permissions = JSON.parse(userpermissions);
-  console.log(permissions);
+  // console.log(permissions);//to see permissions on console
   return (
     <div className={`container-fluid p-0 vh-100  ${customLight}`}>
       <LockOverlay className="lock-button" />
@@ -47,11 +47,8 @@ const Userlayout = () => {
           </div>
           <div className={`flex-grow-1 d-fle m-2 p-3 `} style={{ zIndex: "3" }}>
             <Routes>
-
-            <Route path="/cudashboard" element={<CuDashboard />} />
               <Route path="/dashboard" element={<MainDashboard />} />
               <Route path="/cudashboard" element={<CuDashboard />} />
-
               <Route path="/master" element={<Masters />} />
               <Route path="/AddProjectProcess/:projectId" element={<AddProjectProcess />} />
               <Route path="/features" element={<Features />} />
