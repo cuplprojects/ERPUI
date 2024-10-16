@@ -243,7 +243,7 @@ const ChangePassword = () => {
               Submit
             </Button>
           </Form>
-          <ToastContainer style={{marginTop:"50px"}} />
+          <ToastContainer style={{marginTop:"50px"}} autoClose={1500}/>
         </Col>
       </Row>
     </Container>
