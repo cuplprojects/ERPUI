@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { Table, Select, Input, Space, Button, Typography, Row, Col, Checkbox, Form, Dropdown, Menu } from 'antd';
+import { Table, Select, Input, Space, Button, Typography, Row, Col, Checkbox, Form, Dropdown, Menu, message } from 'antd';
 import { Card, Modal } from 'react-bootstrap';
 import { EyeOutlined, EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
 import 'antd/dist/reset.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { fetchUsers } from '../CustomHooks/ApiServices/userService';
+import API from '../CustomHooks/MasterApiHooks/api';
 import SampleUser from "./../assets/sampleUsers/defaultUser.jpg";
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
@@ -82,13 +83,38 @@ const AllUsers = () => {
     setCurrentUserData({ ...record });
   }, []);
 
-  const handleSave = useCallback((record) => {
-    const newData = [...users];
-    const index = newData.findIndex(item => record.userId === item.userId);
-    const item = newData[index];
-    newData.splice(index, 1, { ...item, ...currentUserData });
-    setUsers(newData);
-    setEditingUserId(null);
+  const handleSave = useCallback(async (record) => {
+    try {
+      const updatedUser = {
+        userId: record.userId,
+        userName: currentUserData.userName,
+        firstName: currentUserData.firstName,
+        middleName: currentUserData.middleName,
+        lastName: currentUserData.lastName,
+        roleId: currentUserData.roleId,
+        mobileNo: currentUserData.mobileNo,
+        status: currentUserData.status,
+        gender: currentUserData.gender,
+        address: currentUserData.address,
+        profilePicturePath: currentUserData.profilePicturePath
+      };
+
+      const response = await API.put(`/User/edit/${record.userId}`, updatedUser);
+      
+      if (response.status === 200) {
+        const newData = users.map(item => 
+          item.userId === record.userId ? { ...item, ...updatedUser } : item
+        );
+        setUsers(newData);
+        setEditingUserId(null);
+        message.success('User updated successfully');
+      } else {
+        message.error('Failed to update user');
+      }
+    } catch (error) {
+      console.error("Error updating user:", error);
+      message.error('An error occurred while updating user');
+    }
   }, [users, currentUserData]);
 
   const handleCancel = useCallback(() => {
@@ -245,9 +271,7 @@ const AllUsers = () => {
   return (
     <div style={{ padding: '20px' }}>
       <h2 className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`}  text-start`}>View All Users</h2>
-      {/* <div className="dflex justify-content-between"> */}
       <Row className="mb-2">
-        {/* Left side (Dropdown) */}
         <Col md={1} xs={12} className="mb-3 mb-md-0">
           <div className="d-flex align-items-center h-100">
             <Dropdown overlay={menu} trigger={['click']} className="border-0">
@@ -256,7 +280,6 @@ const AllUsers = () => {
             </Dropdown>
           </div>
         </Col>
-        {/* Middle (Search) */}
         <Col md={7} xs={12} className="mb-3 mb-md-0">
           <div className="d-flex justify-content-start align-items-center h-100">
             {filterType === 'name' && (
@@ -269,7 +292,6 @@ const AllUsers = () => {
             )}
           </div>
         </Col>
-        {/* Right side (Checkboxes) */}
         <Col md={12} xs={12}>
           <div className="d-flex flex-wrap justify-content-md-end justify-content-end align-items-center h-100">
             {['profilePicture', 'address', 'mobileNo'].map((column) => (
@@ -285,7 +307,6 @@ const AllUsers = () => {
           </div>
         </Col>
       </Row>
-      {/* </div> */}
 
       <Table
         columns={columns}
@@ -311,14 +332,12 @@ const AllUsers = () => {
                     ${customDark === "purple-dark" ? "thead-purple" : ""}
                     ${customDark === "light-dark" ? "thead-light" : ""}
                     ${customDark === "brown-dark" ? "thead-brown" : ""} `}
-        rowClassName={(record, index) => index % 2 === 0 ? 'table-row-light' : 'table-row-dark'}
       />
       <Modal
         show={modalOpen}
         onHide={() => setModalOpen(false)}
         size={isMobile ? "sm" : "lg"}
         centered
-        
       >
         <Modal.Header className={`${customDark} d-flex justify-content-between align-items-center`}>
           <Modal.Title className={`${customLightText}`}>User's Details</Modal.Title>
