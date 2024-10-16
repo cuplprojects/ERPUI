@@ -1,15 +1,16 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { Table, Select, Input, Space, Button, Typography, Row, Col, Checkbox } from 'antd';
+import { Table, Select, Input, Space, Button, Typography, Row, Col, Checkbox, Form, Dropdown, Menu } from 'antd';
 import { Card, Modal } from 'react-bootstrap';
-import { EyeOutlined, EditOutlined } from '@ant-design/icons';
+import { EyeOutlined, EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
 import 'antd/dist/reset.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { fetchUsers } from '../CustomHooks/ApiServices/userService';
 import SampleUser from "./../assets/sampleUsers/defaultUser.jpg";
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
-import { FaSearch } from "react-icons/fa";
 import { useMediaQuery } from 'react-responsive';
+import { AiFillCloseSquare } from 'react-icons/ai';
+import { BsFunnelFill } from "react-icons/bs";
 const BaseUrl = import.meta.env.VITE_API_BASE_URL;
 
 const { Option } = Select;
@@ -18,7 +19,7 @@ const { Title } = Typography;
 const AllUsers = () => {
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
-  const [customDark, customMid, customLight, customBtn, customDarkText, , customLightBorder, customDarkBorder] = cssClasses;
+  const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
 
   const [users, setUsers] = useState([]);
   const [filterType, setFilterType] = useState('none');
@@ -56,7 +57,7 @@ const AllUsers = () => {
 
   const filteredData = useMemo(() => {
     if (filterType === 'name' && filterValue) {
-      return users.filter(user => 
+      return users.filter(user =>
         user.firstName.toLowerCase().includes(filterValue.toLowerCase()) ||
         user.lastName.toLowerCase().includes(filterValue.toLowerCase())
       );
@@ -76,6 +77,24 @@ const AllUsers = () => {
     return url && url.match(/\.(jpeg|jpg|gif|png)$/) != null;
   }, []);
 
+  const handleEdit = useCallback((record) => {
+    setEditingUserId(record.userId);
+    setCurrentUserData({ ...record });
+  }, []);
+
+  const handleSave = useCallback((record) => {
+    const newData = [...users];
+    const index = newData.findIndex(item => record.userId === item.userId);
+    const item = newData[index];
+    newData.splice(index, 1, { ...item, ...currentUserData });
+    setUsers(newData);
+    setEditingUserId(null);
+  }, [users, currentUserData]);
+
+  const handleCancel = useCallback(() => {
+    setEditingUserId(null);
+  }, []);
+
   const columns = useMemo(() => [
     {
       align: "center",
@@ -91,14 +110,29 @@ const AllUsers = () => {
       render: (record) => `${record.firstName} ${record.middleName} ${record.lastName}`,
       fixed: 'left',
       width: 150,
+      sorter: (a, b) => `${a.firstName} ${a.middleName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.middleName} ${b.lastName}`),
     },
     {
       title: 'Role',
       dataIndex: 'roleId',
       key: 'roleId',
-      render: (text) => (text === 1 ? 'Admin' : 'User'),
+      render: (text, record) => {
+        const editable = record.userId === editingUserId;
+        return editable ? (
+          <Select
+            value={currentUserData.roleId}
+            onChange={(value) => setCurrentUserData(prev => ({ ...prev, roleId: value }))}
+          >
+            <Option value={1}>Admin</Option>
+            <Option value={2}>User</Option>
+          </Select>
+        ) : (
+          text === 1 ? 'Admin' : 'User'
+        );
+      },
       fixed: 'left',
       width: 100,
+      sorter: (a, b) => a.roleId - b.roleId,
     },
     visibleColumns.profilePicture && {
       align: "center",
@@ -119,12 +153,34 @@ const AllUsers = () => {
       title: 'Address',
       dataIndex: 'address',
       key: 'address',
+      render: (text, record) => {
+        const editable = record.userId === editingUserId;
+        return editable ? (
+          <Input
+            value={currentUserData.address}
+            onChange={(e) => setCurrentUserData(prev => ({ ...prev, address: e.target.value }))}
+          />
+        ) : (
+          text
+        );
+      },
       width: 200,
     },
     visibleColumns.mobileNo && {
       title: 'Mobile No',
       dataIndex: 'mobileNo',
       key: 'mobileNo',
+      render: (text, record) => {
+        const editable = record.userId === editingUserId;
+        return editable ? (
+          <Input
+            value={currentUserData.mobileNo}
+            onChange={(e) => setCurrentUserData(prev => ({ ...prev, mobileNo: e.target.value }))}
+          />
+        ) : (
+          text
+        );
+      },
       width: 120,
     },
     {
@@ -132,146 +188,192 @@ const AllUsers = () => {
       key: 'actions',
       fixed: 'right',
       width: 150,
-      render: (text, record) => (
-        <Space size="middle" wrap>
-          <Button
-            icon={<EyeOutlined />}
-            onClick={() => showUserDetails(record)}
-            type="default"
-          >
-            View
-          </Button>
-          <Button
-            icon={<EditOutlined />}
-            onClick={() => editUser(record)}
-            type="primary"
-          >
-            Edit
-          </Button>
-        </Space>
-      ),
+      render: (text, record) => {
+        const editable = record.userId === editingUserId;
+        return editable ? (
+          <Space>
+            <Button
+              icon={<SaveOutlined />}
+              onClick={() => handleSave(record)}
+              type="primary"
+              className={customBtn}
+            >
+              Save
+            </Button>
+            <Button
+              icon={<CloseOutlined />}
+              onClick={handleCancel}
+            >
+              Cancel
+            </Button>
+          </Space>
+        ) : (
+          <Space size="middle" wrap>
+            <Button
+              icon={<EyeOutlined />}
+              onClick={() => showUserDetails(record)}
+              type="default"
+            >
+              View
+            </Button>
+            <Button
+              icon={<EditOutlined />}
+              onClick={() => handleEdit(record)}
+              type="primary"
+              className={customBtn}
+            >
+              Edit
+            </Button>
+          </Space>
+        );
+      },
     },
-  ].filter(Boolean), [visibleColumns, isValidImageUrl]);
-
-  const editUser = useCallback((user) => {
-    setEditingUserId(user.userId);
-    setCurrentUserData({ ...user });
-  }, []);
+  ].filter(Boolean), [visibleColumns, isValidImageUrl, editingUserId, currentUserData, handleSave, handleCancel, customBtn]);
 
   const showUserDetails = useCallback((user) => {
     setCurrentUser(user);
     setModalOpen(true);
   }, []);
 
+  const menu = (
+    <Menu onClick={({ key }) => handleFilterChange(key)}>
+      <Menu.Item key="none">No Filter</Menu.Item>
+      <Menu.Item key="name">Filter by Name</Menu.Item>
+    </Menu>
+  );
+
   return (
     <div style={{ padding: '20px' }}>
-      <Card
-        className={`${customDark === "dark-dark" ? `${customDark} border` : ``} mb-3`}
-      >
-        <Card.Body>
-          <Card.Title>
-            <h2 className={`${customDark === "dark-dark" ? `${customDark} ${customDarkText}` : `${customDarkText}`} m-2 text-center`}>View All Users</h2>
-          </Card.Title>
-          <hr className={`${customDark === "dark-dark" ? `${customLightBorder}` : `${customDarkBorder}`} rounded-5`} />
-          <Space direction="vertical" style={{ width: '100%' }} size="large" className={`${customDark === "dark-dark" ? `${customMid}`: ""} p-3 rounded-3`}>
-            <Row gutter={[16, 16]} justify="space-between" align="middle">
-              <Col xs={24}>
-                <Space direction="vertical" style={{ width: '100%' }}>
-                  <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center">
-                    <label htmlFor="filterSelect" className={`${customDarkText} me-md-2 mb-1 mb-md-0`} style={{ whiteSpace: 'nowrap' }}>Apply Filters: </label>
-                    <div className="d-flex flex-column flex-md-row w-100">
-                      <Select
-                        id="filterSelect"
-                        style={{ width: '100%', maxWidth: '150px', marginRight: '10px' }}
-                        defaultValue="none"
-                        onChange={handleFilterChange}
-                      >
-                        <Option value="none">No Filter</Option>
-                        <Option value="name">Filter by Name</Option>
-                      </Select>
-                      {filterType === 'name' && (
-                        <Input.Group compact className="mt-2 mt-md-0" style={{ width: '100%', maxWidth: '300px' }}>
-                          <Input
-                            placeholder="Search by Name"
-                            value={filterValue}
-                            onChange={(e) => setFilterValue(e.target.value)}
-                            style={{ width: 'calc(100% - 40px)' }}
-                          />
-                          <Button type="primary" icon={<FaSearch size={20}/>} style={{ width: '40px' }} />
-                        </Input.Group>
-                      )}
-                    </div>
-                  </div>
-                </Space>
-              </Col>
-            </Row>
-
-            <Row gutter={[16, 16]}>
-              <Col span={24}>
-                <Space wrap>
-                  {['profilePicture', 'address', 'mobileNo'].map((column) => (
-                    <Checkbox
-                      key={column}
-                      checked={visibleColumns[column]}
-                      onChange={(e) => handleColumnVisibilityChange(e, column)}
-                    >
-                      {column.charAt(0).toUpperCase() + column.slice(1)}
-                    </Checkbox>
-                  ))}
-                </Space>
-              </Col>
-            </Row>
-          </Space>
-        </Card.Body>
-      </Card>
+      <h2 className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`}  text-start`}>View All Users</h2>
+      {/* <div className="dflex justify-content-between"> */}
+      <Row className="mb-2">
+        {/* Left side (Dropdown) */}
+        <Col md={1} xs={12} className="mb-3 mb-md-0">
+          <div className="d-flex align-items-center h-100">
+            <Dropdown overlay={menu} trigger={['click']} className="border-0">
+              <Button icon={<BsFunnelFill size={20} className={`${customDark === "dark-dark" ? "text-dark" : customDarkText} border-0`} />}>
+              </Button>
+            </Dropdown>
+          </div>
+        </Col>
+        {/* Middle (Search) */}
+        <Col md={7} xs={12} className="mb-3 mb-md-0">
+          <div className="d-flex justify-content-start align-items-center h-100">
+            {filterType === 'name' && (
+              <Input.Search
+                placeholder="Search by Name"
+                value={filterValue}
+                onChange={(e) => setFilterValue(e.target.value)}
+                style={{ width: '100%' }}
+              />
+            )}
+          </div>
+        </Col>
+        {/* Right side (Checkboxes) */}
+        <Col md={12} xs={12}>
+          <div className="d-flex flex-wrap justify-content-md-end justify-content-end align-items-center h-100">
+            {['profilePicture', 'address', 'mobileNo'].map((column) => (
+              <Checkbox
+                key={column}
+                checked={visibleColumns[column]}
+                onChange={(e) => handleColumnVisibilityChange(e, column)}
+                className={`${customDark === "dark-dark" ? customDarkText : customDarkText} text-start me-2`}
+              >
+                {column.charAt(0).toUpperCase() + column.slice(1)}
+              </Checkbox>
+            ))}
+          </div>
+        </Col>
+      </Row>
+      {/* </div> */}
 
       <Table
         columns={columns}
         dataSource={filteredData}
-        pagination={{ pageSize }}
+        pagination={{
+          pageSize: pageSize,
+          showSizeChanger: true,
+          pageSizeOptions: ['10', '20'],
+          showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
+          style: { backgroundColor: 'white' },
+          className: 'custom-pagination p-2 rounded-3 rounded-top-0'
+        }}
         bordered
         rowKey="userId"
         scroll={{ x: 'max-content' }}
         size={isMobile ? "small" : "middle"}
+        className={`${customDark === "default-dark" ? "thead-default" : ""}
+                    ${customDark === "red-dark" ? "thead-red" : ""}
+                    ${customDark === "green-dark" ? "thead-green" : ""}
+                    ${customDark === "blue-dark" ? "thead-blue" : ""}
+                    ${customDark === "dark-dark" ? "thead-dark" : ""}
+                    ${customDark === "pink-dark" ? "thead-pink" : ""}
+                    ${customDark === "purple-dark" ? "thead-purple" : ""}
+                    ${customDark === "light-dark" ? "thead-light" : ""}
+                    ${customDark === "brown-dark" ? "thead-brown" : ""} `}
+        rowClassName={(record, index) => index % 2 === 0 ? 'table-row-light' : 'table-row-dark'}
       />
       <Modal
         show={modalOpen}
         onHide={() => setModalOpen(false)}
         size={isMobile ? "sm" : "lg"}
+        centered
+        
       >
-        <Modal.Header closeButton>
-          <Modal.Title>User Details</Modal.Title>
+        <Modal.Header className={`${customDark} d-flex justify-content-between align-items-center`}>
+          <Modal.Title className={`${customLightText}`}>User's Details</Modal.Title>
+          <AiFillCloseSquare
+            size={35}
+            onClick={() => setModalOpen(false)}
+            className={`rounded-2 ${customDark === "dark-dark" ? "text-dark bg-white " : `${customDark} custom-zoom-btn text-white  ${customDarkBorder}`}`}
+            aria-label="Close"
+            style={{ cursor: 'pointer', fontSize: '1.5rem' }}
+          />
         </Modal.Header>
         <Modal.Body>
           {currentUser && (
-            <>
-              <Row gutter={[16, 16]}>
-                {['userId', 'fullName', 'mobileNo', 'address'].map((field) => (
-                  <Col xs={24} sm={12} key={field}>
-                    <strong className={customDark === "dark-dark" ? "" : ""}>
-                      {field.charAt(0).toUpperCase() + field.slice(1)}:
-                    </strong>{' '}
-                    {field === 'fullName'
-                      ? `${currentUser.firstName} ${currentUser.middleName} ${currentUser.lastName}`
-                      : currentUser[field]}
-                  </Col>
-                ))}
-              </Row>
-              <Row className='d-flex justify-content-center mt-3'>
-                <Col xs={24} sm={12}>
-                  <img
-                    src={
-                      currentUser.profilePicturePath && isValidImageUrl(`${BaseUrl}/${currentUser.profilePicturePath}`)
-                        ? `${BaseUrl}/${currentUser.profilePicturePath}`
-                        : SampleUser
+            <Row className="g-3">
+              <Col xs={12} md={12} className="d-flex justify-content-center align-items-center mb-3">
+                <img
+                  src={
+                    currentUser.profilePicturePath && isValidImageUrl(`${BaseUrl}/${currentUser.profilePicturePath}`)
+                      ? `${BaseUrl}/${currentUser.profilePicturePath}`
+                      : SampleUser
+                  }
+                  alt={currentUser.profilePicturePath ? "Profile" : "Sample User"}
+                  style={{ width: '100%', maxWidth: '200px', height: 'auto', objectFit: 'cover' }}
+                  className="rounded-circle"
+                />
+              </Col>
+              <Col xs={12} md={12}>
+                {isMobile ? (
+                  Object.entries(currentUser).map(([key, value]) => {
+                    if (key !== 'profilePicturePath' && key !== 'userId' && value !== null && value !== undefined && value !== '') {
+                      return (
+                        <div key={key} className="mb-2">
+                          <strong>{key.charAt(0).toUpperCase() + key.slice(1)}:</strong> {value}
+                        </div>
+                      );
                     }
-                    alt={currentUser.profilePicturePath ? "Profile" : "Sample User"}
-                    style={{ width: '100%', maxWidth: '210px', height: 'auto' }}
-                    className="rounded-circle"
-                  />
-                </Col>
-              </Row>
-            </>
+                    return null;
+                  })
+                ) : (
+                  <dl className="row g-2">
+                    {Object.entries(currentUser).map(([key, value]) => {
+                      if (key !== 'profilePicturePath' && key !== 'userId' && value !== null && value !== undefined && value !== '') {
+                        return (
+                          <React.Fragment key={key}>
+                            <dt className="col-sm-5">{key.charAt(0).toUpperCase() + key.slice(1)}</dt>
+                            <dd className="col-sm-7">{value}</dd>
+                          </React.Fragment>
+                        );
+                      }
+                      return null;
+                    })}
+                  </dl>
+                )}
+              </Col>
+            </Row>
           )}
         </Modal.Body>
       </Modal>
