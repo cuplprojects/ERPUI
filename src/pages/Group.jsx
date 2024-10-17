@@ -29,7 +29,6 @@ const Group = () => {
   const [sortField, setSortField] = useState('name');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
-  const [jumpToPage, setJumpToPage] = useState('');
 
   const isMobile = useMediaQuery({ maxWidth: 767 });
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1023 });
@@ -236,14 +235,6 @@ const Group = () => {
     setPageSize(pageSize);
   };
 
-  const handleJumpToPage = (value) => {
-    const pageNumber = parseInt(value, 10);
-    if (!isNaN(pageNumber) && pageNumber > 0 && pageNumber <= Math.ceil(filteredGroups.length / pageSize)) {
-      setCurrentPage(pageNumber);
-    }
-    setJumpToPage(value);
-  };
-
   return (
     <div style={{
       padding: isMobile ? '10px' : '20px',
@@ -317,26 +308,12 @@ const Group = () => {
             size="small"
           />
         </div>
-        <div className={`d-flex align-items-center ${customDark === "dark-dark" ? `bg-white` : ``} p-2 p-md-3 rounded-2`}>
-          <label htmlFor="goToPage" className="me-2 d-none d-sm-inline">Go To Page:</label>
-          <Input
-            id="goToPage"
-            className="w-100"
-            style={{ maxWidth: '70px', height: '30px' }}
-            placeholder="Page"
-            value={jumpToPage}
-            onChange={(e) => {
-              const value = e.target.value.replace(/[^0-9]/g, '');
-              handleJumpToPage(value);
-            }}
-          />
-        </div>
       </div>
       <Modal
         show={isModalVisible}
         onHide={handleCancel}
         centered
-        size={isMobile ? 'sm' : 'lg'}
+        size={isMobile ? 'sm' : 'md'}
         className={`rounded-2 ${customDark === "" ? `${customDark}` : ''}  `}
       >
         <Modal.Header closeButton={false} className={`rounded-top-2 ${customDark} ${customLightText} ${customDark === "dark-dark" ? `border ` : `border-0`} border d-flex justify-content-between `}>

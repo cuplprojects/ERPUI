@@ -18,14 +18,14 @@ const LineChart = ({ data, onProjectClick }) => {
           {
             label: 'Completed',
             data: data.map(item => item.completed),
-            borderColor: 'green',
+            borderColor: '#29ce6a',
             fill: true,
             tension: 0.4,
           },
           {
             label: 'Remaining',
             data: data.map(item => item.remaining),
-            borderColor: 'red',
+            borderColor: '#ff6384',
             fill: true,
             tension: 0.4,
           },

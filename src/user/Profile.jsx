@@ -4,12 +4,11 @@ import { FaPencilAlt } from 'react-icons/fa';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
-import SampleUser1 from "./../assets/sampleUsers/defaultUser.jpg";
+import SampleUser from "./../assets/sampleUsers/defaultUser.jpg";
 import "./../styles/Profile.css";
-import { jwtDecode } from 'jwt-decode';
 import axios from 'axios';
 import useUserDataStore from '../store/userDataStore';
-import SampleUser from "./../assets/sampleUsers/defaultUser.jpg";
+
 
 const UserProfile = () => {
   const { getCssClasses } = useStore(themeStore);
@@ -71,7 +70,7 @@ const UserProfile = () => {
       if (file) {
         const reader = new FileReader();
         reader.onloadend = async () => {
-          if (userData?.profileImage === SampleUser1) {
+          if (userData?.profileImage === SampleUser) {
             await uploadImage(file);
           } else {
             await updateProfilePicture(file);
@@ -125,8 +124,15 @@ const UserProfile = () => {
   };
 
   const getProfileImageUrl = (imagePath) => {
-    if (!imagePath) return SampleUser1;
+    if (!imagePath) return SampleUser;
+    if (!isValidImageFormat(imagePath)) return SampleUser;
     return imagePath.startsWith('http') ? imagePath : `${APIUrlBase}/${imagePath}?${profileImageKey}`;
+  };
+
+  const isValidImageFormat = (imagePath) => {
+    const validExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp'];
+    const extension = imagePath.split('.').pop().toLowerCase();
+    return validExtensions.includes(extension);
   };
 
   if (isLoading) {
@@ -161,9 +167,7 @@ const UserProfile = () => {
         <Row className="align-items-center mb-4">
           <Col xs={12} sm={3} md={2} className="text-center position-relative">
             <img
-              src={userData.profilePicturePath
-                ? getProfileImageUrl(userData.profilePicturePath)
-                : "/path/to/SampleUser.png"}
+              src={getProfileImageUrl(userData.profilePicturePath)}
               alt="Profile Picture"
               width="100px"
               height="100px"
@@ -266,7 +270,7 @@ const UserProfile = () => {
                 <Form.Control
                   name="role"
                   placeholder="Your Role"
-                  value={userData.role}
+                  value={userData.roleName}
                   className='rounded'
                   disabled
                 />

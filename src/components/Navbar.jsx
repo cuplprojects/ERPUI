@@ -113,6 +113,17 @@ const Navbar = () => {
     setShowNotification(false);
   };
 
+  const isValidImageUrl = (url) => {
+    return url && url.match(/\.(jpeg|jpg|gif|png)$/) != null;
+  };
+
+  const getProfileImageSrc = () => {
+    if (userData?.profilePicturePath && isValidImageUrl(`${apiUrl}/${userData.profilePicturePath}`)) {
+      return `${apiUrl}/${userData.profilePicturePath}`;
+    }
+    return SampleUser1;
+  };
+
   return (
     <div ref={containerRef} className='sticky-to'>
       <Container fluid className={`border-bottom py-2 text-white ${customDark}`}>
@@ -133,23 +144,44 @@ const Navbar = () => {
           <Col xs={2} md={1} lg={1} className="d-flex align-items-center justify-content-end">
             <button
               onClick={toggleNotificationMenu}
-              className="btn p-0 border-0 bg-transparent me-3"
+              className="btn p-0 border-0 bg-transparent me-2"
               aria-label="Toggle notification menu"
-              style={{ cursor: 'pointer' }}
+              style={{ 
+                cursor: 'pointer',
+                width: '40px',
+                height: '40px',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center'
+              }}
             >
-              <RiNotification2Fill className="fs-4 text-light custom-zoom-btn" size={30}/>
+              <RiNotification2Fill className="text-light custom-zoom-btn" style={{ fontSize: '24px' }} />
             </button>
             <button
               onClick={toggleUserMenu}
               className="btn p-0 border-0 bg-transparent"
               aria-label="Toggle user menu"
-              style={{ cursor: 'pointer' }}
+              style={{ 
+                cursor: 'pointer', 
+                width: '40px', 
+                height: '40px', 
+                overflow: 'hidden',
+                padding: 0,
+                borderRadius: '50%',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                flexShrink: 0
+              }}
             >
               <img
-                src={userData?.profilePicturePath ? `${apiUrl}/${userData.profilePicturePath}` : SampleUser1}
+                src={getProfileImageSrc()}
                 alt={`${userData?.firstName} ${userData?.lastName}`}
-                width="40px"
-                className='rounded-circle'
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover'
+                }}
               />
             </button>
           </Col>
