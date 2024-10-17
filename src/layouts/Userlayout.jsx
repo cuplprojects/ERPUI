@@ -26,8 +26,6 @@ import { hasPermission } from '../CustomHooks/Services/permissionUtils';
 
 const isdevelopment = import.meta.env.VITE_APP_MODE === 'development';
 
-const Userlayout = () => {
-
 
 const Userlayout = () => {
   const { getCssClasses } = useStore(themeStore);
