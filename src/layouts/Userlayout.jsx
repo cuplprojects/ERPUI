@@ -15,11 +15,13 @@ import LockOverlay from './../components/LockOverlay';
 import ProcessTable from './../sub-Components/processTable';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
-// import WavyDiv from './WavyDiv'; // not used 
 import QtySheetUpload from '../pages/QtySheetUpload';
 import Message from '../pages/Message/Message';
 import Labels from '../pages/Message/Labels';
 import AddProjectProcess from '../pages/AddProjectProcess';
+import ViewQuantitySheet from '../pages/ViewQuantitySheet';
+
+
 const Userlayout = () => {
 
   //Theme Change Section
@@ -49,6 +51,7 @@ const Userlayout = () => {
               <Route path="/settings" element={<UserSettings />} />
               <Route path="/change-password" element={<ChangePassword />} />
               <Route path="/quantity-sheet-uploads" element={<QtySheetUpload />} />
+              <Route path="/quantity-sheet-view" element={<ViewQuantitySheet />} />
               <Route path="/project-details/:id" element={<ProcessTable />} />
               <Route path="/message" element={<Message />} />
               <Route path="/labels" element={<Labels />} />
