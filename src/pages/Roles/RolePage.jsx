@@ -1,69 +1,92 @@
-import React, { useEffect, useState } from 'react';
-import { Button, Card, Table, Modal, Input, Switch, message, Tabs } from 'antd';
-import { IdcardOutlined, EditOutlined } from '@ant-design/icons';
-import axios from 'axios'; // Import axios for API calls
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import { Button, Card, Table, Modal, Input, Switch, message, Tabs, Form, Select, Space, Dropdown, Menu, Checkbox } from 'antd';
+import { IdcardOutlined, EditOutlined, SearchOutlined, SettingOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
 import Permissions from './Permissions';
-import API from '../../CustomHooks/MasterApiHooks/api';
+import { getRoles, createRole, updateRole } from './../../CustomHooks/ApiServices/rolesService';
+import { hasPermission } from '../../CustomHooks/Services/permissionUtils';
+import { useTranslation } from 'react-i18next';
+import themeStore from './../../store/themeStore';
+import { useStore } from 'zustand';
+import { useMediaQuery } from 'react-responsive';
+import { AiFillCloseSquare } from "react-icons/ai";
+import { BsFunnelFill } from "react-icons/bs";
+import 'antd/dist/reset.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 const { TabPane } = Tabs;
+const { Option } = Select;
 
 const RolesAndDepartments = () => {
+  const { t } = useTranslation();
+  const { getCssClasses } = useStore(themeStore);
+  const cssClasses = getCssClasses();
+  const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
+
   const [roles, setRoles] = useState([]);
   const [newRole, setNewRole] = useState({ roleId: 0, roleName: '', priorityOrder: 0, status: true, permissions: [] });
   const [isRoleModalVisible, setIsRoleModalVisible] = useState(false);
-  // Fetch roles from the API on component mount
-  const fetchRoles = async () => {
+  const [searchText, setSearchText] = useState('');
+  const [sortedInfo, setSortedInfo] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+  const [visibleColumns, setVisibleColumns] = useState({
+    status: true,
+    actions: true,
+  });
+  const [columnSettingsVisible, setColumnSettingsVisible] = useState(false);
+
+  const isMobile = useMediaQuery({ maxWidth: 767 });
+  const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1023 });
+
+  const fetchRoles = useCallback(async () => {
     try {
-      const response = await API.get('/Roles'); // Update with your API endpoint
-      setRoles(response.data);
-      console.log(response.data); 
+      const data = await getRoles();
+      setRoles(data);
+      console.log(data);
     } catch (error) {
-      console.error('Failed to fetch roles');
+      console.error(t('failedToFetchRoles'));
     }
-  };
+  }, [t]);
 
   useEffect(() => {
     fetchRoles();
-  }, []);
+  }, [fetchRoles]);
 
-  const onCreateRole = () => {
+  const onCreateRole = useCallback(() => {
     setNewRole({ roleId: 0, roleName: '', priorityOrder: 0, status: true, permissions: [] });
     setIsRoleModalVisible(true);
-  };
+  }, []);
 
-  const handleRoleOk = async () => {
+  const handleRoleOk = useCallback(async () => {
     const trimmedRoleName = newRole.roleName.trim();
     if (!trimmedRoleName) {
-      message.error('Role name cannot be empty');
+      message.error(t('roleNameCannotBeEmpty'));
       return;
     }
     if (/[^a-zA-Z\s]/.test(trimmedRoleName)) {
-      message.error('Role name should contain only alphabetic characters');
+      message.error(t('roleNameShouldContainOnlyAlphabeticCharacters'));
       return;
     }
   
-    // Skipping duplicate role name validation for update
     const isPriorityOrderExists = roles.some(role => role.priorityOrder === newRole.priorityOrder && role.roleId !== newRole.roleId);
     if (isPriorityOrderExists) {
-      message.error('Priority order must be unique');
+      message.error(t('priorityOrderMustBeUnique'));
       return;
     }
   
     try {
       let response;
       if (newRole.roleId === 0) {
-        // Sending the payload for creating a new role
-        response = await API.post('/Roles', {
+        response = await createRole({
           roleName: trimmedRoleName,
           priorityOrder: newRole.priorityOrder,
           status: newRole.status,
           permissionList: newRole.permissions.map(permission => permission.toString()),
         });
-        setRoles([...roles, { ...response.data }]);
-        message.success('Role added successfully');
+        setRoles([...roles, { ...response }]);
+        message.success(t('roleAddedSuccessfully'));
       } else {
-        // Sending the payload for updating an existing role
-        response = await API.put(`/Roles/${newRole.roleId}`, {
+        response = await updateRole(newRole.roleId, {
           roleId: newRole.roleId,
           roleName: trimmedRoleName,
           priorityOrder: newRole.priorityOrder,
@@ -71,115 +94,193 @@ const RolesAndDepartments = () => {
           permission:'',
           permissionList: newRole.permissions.map(permission => permission.toString()),
         });
-        const updatedRoles = roles.map(role => (role.roleId === newRole.roleId ? response.data : role));
+        const updatedRoles = roles.map(role => (role.roleId === newRole.roleId ? response : role));
         setRoles(updatedRoles);
-        message.success('Role updated successfully');
+        message.success(t('roleUpdatedSuccessfully'));
       }
   
       setIsRoleModalVisible(false);
-      fetchRoles(); // Fetch roles after successful operation to update the state with the latest data
+      fetchRoles();
     } catch (error) {
-      message.error('Failed to process the role');
+      message.error(t('failedToProcessTheRole'));
     }
-  };
+  }, [newRole, roles, t, fetchRoles]);
 
-  const handleRoleCancel = () => {
+  const handleRoleCancel = useCallback(() => {
     setIsRoleModalVisible(false);
-  };
+  }, []);
 
-  const handleEditRole = (role) => {
-    // Set the selected role data to newRole and ensure permissions are default checked in the modal
-    const defaultCheckedPermissions = role.permissionList || []; // Use permissionList directly
+  const handleEditRole = useCallback((role) => {
+    const defaultCheckedPermissions = role.permissionList || [];
     setNewRole({ ...role, permissions: defaultCheckedPermissions });
     setIsRoleModalVisible(true);
-  };
+  }, []);
 
-  const handleRoleStatusChange = async (checked, roleId) => {
+  const handleRoleStatusChange = useCallback(async (checked, roleId) => {
     try {
-      await API.patch(`/Roles/${roleId}`, { status: checked }); // Update role status in the API
-      const updatedRoles = roles.map(role =>
-        role.roleId === roleId ? { ...role, status: checked } : role
-      );
-      setRoles(updatedRoles);
-      message.success('Role status updated');
+      const roleToUpdate = roles.find(role => role.roleId === roleId);
+      if (roleToUpdate) {
+        await updateRole(roleId, { ...roleToUpdate, status: checked });
+        const updatedRoles = roles.map(role =>
+          role.roleId === roleId ? { ...role, status: checked } : role
+        );
+        setRoles(updatedRoles);
+        message.success(t('roleStatusUpdated'));
+      }
     } catch (error) {
-      message.error('Failed to update role status');
+      message.error(t('failedToUpdateRoleStatus'));
     }
-  };
+  }, [roles, t]);
 
-  const handlePermissionChange = (checkedKeys) => {
-    setNewRole({ ...newRole, permissions: checkedKeys });
-  };
+  const handlePermissionChange = useCallback((checkedKeys) => {
+    setNewRole(prev => ({ ...prev, permissions: checkedKeys }));
+  }, []);
 
-  const roleColumns = [
+  const handleChange = useCallback((pagination, filters, sorter) => {
+    setSortedInfo(sorter);
+    setCurrentPage(pagination.current);
+    setPageSize(pagination.pageSize);
+  }, []);
+
+  const toggleSort = useCallback((columnKey) => {
+    setSortedInfo(prev => {
+      const newSortedInfo = { ...prev };
+      if (newSortedInfo.columnKey === columnKey) {
+        newSortedInfo.order = newSortedInfo.order === 'ascend' ? 'descend' : 'ascend';
+      } else {
+        newSortedInfo.columnKey = columnKey;
+        newSortedInfo.order = 'ascend';
+      }
+      return newSortedInfo;
+    });
+  }, []);
+
+  const handleColumnVisibilityChange = useCallback((e, column) => {
+    setVisibleColumns(prev => ({ ...prev, [column]: e.target.checked }));
+  }, []);
+
+  const roleColumns = useMemo(() => [
     {
-      title: 'SN.',
+      title: t('sn'),
       dataIndex: 'roleId',
-      width: 100,
+      width: 75,
+      render: (text, record, index) => (currentPage - 1) * pageSize + index + 1,
+      align: 'center',
     },
     {
-      title: 'Name',
+      title: t('roles'),
       dataIndex: 'roleName',
-      width: 200,
+      width: 150,
+      sorter: (a, b) => a.roleName.localeCompare(b.roleName),
+      sortOrder: sortedInfo.columnKey === 'roleName' && sortedInfo.order,
+      filteredValue: [searchText],
+      onFilter: (value, record) =>
+        record.roleName?.toLowerCase().includes(value.toLowerCase()),
+      onHeaderCell: () => ({
+        onClick: () => toggleSort('roleName'),
+      }),
+      align: 'center',
     },
     {
-      title: 'Order',
+      title: t('order'),
       dataIndex: 'priorityOrder',
-      width: 200,
+      width: 75,
+      sorter: (a, b) => a.priorityOrder - b.priorityOrder,
+      sortOrder: sortedInfo.columnKey === 'priorityOrder' && sortedInfo.order,
+      onHeaderCell: () => ({
+        onClick: () => toggleSort('priorityOrder'),
+      }),
+      align: 'center',
     },
-    {
-      title: 'Status',
+    visibleColumns.status && {
+      title: t('status'),
       dataIndex: 'status',
       align: 'center',
-      width: 75,
+      width: 100,
       render: (status, record) => (
         <Switch
           checked={record.status}
           onChange={(checked) => handleRoleStatusChange(checked, record.roleId)}
+          disabled={!hasPermission('2.1.1.3')}
         />
       ),
     },
-    {
-      title: 'Actions',
+    visibleColumns.actions && {
+      title: t('actions'),
       dataIndex: 'actions',
       align: 'center',
-      width: 75,
+      width: 100,
       render: (_, record) => (
         <Button
           type="link"
           icon={<EditOutlined />}
-          onClick={() => handleEditRole(record)} // Handle edit role
+          onClick={() => handleEditRole(record)}
+          disabled={!hasPermission('2.1.1.3')}
         />
       ),
     }
-  ];
+  ].filter(Boolean), [t, currentPage, pageSize, sortedInfo, searchText, visibleColumns, handleRoleStatusChange, handleEditRole, toggleSort]);
 
-  // Pagination configuration
-  const paginationConfig = {
-    pageSize: 5,
+  const paginationConfig = useMemo(() => ({
+    current: currentPage,
+    pageSize: pageSize,
+    total: roles.length,
     showSizeChanger: true,
     pageSizeOptions: [5, 10, 20],
-  };
+    onChange: (page, pageSize) => {
+      setCurrentPage(page);
+      setPageSize(pageSize);
+    },
+  }), [currentPage, pageSize, roles.length]);
+
+  const columnSettingsMenu = (
+    <Menu>
+      {Object.entries(visibleColumns).map(([column, isVisible]) => (
+        <Menu.Item key={column}>
+          <Checkbox
+            checked={isVisible}
+            onChange={(e) => handleColumnVisibilityChange(e, column)}
+          >
+            {t(column)}
+          </Checkbox>
+        </Menu.Item>
+      ))}
+    </Menu>
+  );
 
   return (
     <Tabs defaultActiveKey="1">
       <TabPane
         tab={
           <span>
-            <IdcardOutlined style={{ fontSize: '30px', marginRight: '8px' }} /> Roles
+            <IdcardOutlined style={{ fontSize: '30px', marginRight: '8px' }} /> {t('roles')}
           </span>
         }
         key="1"
       >
         <Card
-          title="Role List"
+          title={t('roleList')}
           extra={
-            <Button type="primary" onClick={onCreateRole}>
-              New Role
-            </Button>
+            <Space>
+              <Input
+                placeholder={t('searchRoles')}
+                suffix={<SearchOutlined />}
+                style={{ width: 200}}
+                onChange={(e) => setSearchText(e.target.value)}
+              />
+              {!hasPermission('2.1.1.1') && (
+                <Button type="primary" onClick={onCreateRole} className={`ms-2 ${customBtn}`}>
+                  {t('newRole')}
+                </Button>
+              )}
+              <Dropdown overlay={columnSettingsMenu} trigger={['click']} visible={columnSettingsVisible} onVisibleChange={setColumnSettingsVisible}>
+                <Button icon={<SettingOutlined />} className={`${customDark === "dark-dark" ? "text-dark" : customDarkText} border-0`} />
+              </Dropdown>
+            </Space>
           }
-          style={{ width: '60%', margin: '0 auto', padding: '16px' }}
+          style={{ width: '80%', margin: '0 auto', padding: '16px' }}
           bodyStyle={{ padding: '12px' }}
+          className={`${customDark === "dark-dark" ? `${customDark} border text-white shadow-lg` : `${customDarkText}`}`}
         >
           <Table
             rowKey="roleId"
@@ -188,39 +289,46 @@ const RolesAndDepartments = () => {
             columns={roleColumns}
             dataSource={roles}
             style={{ fontSize: '12px' }}
+            onChange={handleChange}
+            bordered
+            className={`thead-${customDark.split('-')[0]}`}
           />
-          {/* Modal for Adding or Editing Role */}
           <Modal
-            title={newRole.roleId === 0 ? "Add New Role" : "Edit Role"}
+            title={newRole.roleId === 0 ? t('addNewRole') : t('editRole')}
             open={isRoleModalVisible}
             onOk={handleRoleOk}
             onCancel={handleRoleCancel}
-            okText={newRole.roleId === 0 ? "Add Role" : "Update Role"}
-            okButtonProps={{ type: 'primary' }}
+            okText={newRole.roleId === 0 ? t('addRole') : t('updateRole')}
+            cancelText={t('cancel')}
+            okButtonProps={{ type: 'primary', className: customBtn }}
           >
-            <Input
-              placeholder="Role Name"
-              value={newRole.roleName}
-              onChange={(e) => setNewRole({ ...newRole, roleName: e.target.value })}
-              onPressEnter={handleRoleOk}
-            />
-            <div style={{ marginTop: 10 }}>
-              <Input
-                type="number"
-                placeholder="Priority Order"
-                value={newRole.priorityOrder}
-                onChange={(e) => setNewRole({ ...newRole, priorityOrder: Number(e.target.value) })}
-              />
-            </div>
-            <div style={{ marginTop: 10 }}>
-              <span>Status: </span>
-              <Switch
-                checked={newRole.status}
-                onChange={(checked) => setNewRole({ ...newRole, status: checked })}
-              />
-            </div>
-            {/* Include Permissions Component */}
-            <Permissions selectedPermissions={newRole.permissions} onChange={handlePermissionChange} />
+            <Form layout="vertical">
+              <Form.Item label={t('roleName')}>
+                <Input
+                  value={newRole.roleName}
+                  onChange={(e) => setNewRole(prev => ({ ...prev, roleName: e.target.value }))}
+                  onPressEnter={handleRoleOk}
+                  placeholder={t('enterRoleName')}
+                />
+              </Form.Item>
+              <Form.Item label={t('priorityOrder')}>
+                <Input
+                  type="number"
+                  value={newRole.priorityOrder}
+                  onChange={(e) => setNewRole(prev => ({ ...prev, priorityOrder: Number(e.target.value) }))}
+                  placeholder={t('enterPriorityOrder')}
+                />
+              </Form.Item>
+              <Form.Item label={t('status')}>
+                <Switch
+                  checked={newRole.status}
+                  onChange={(checked) => setNewRole(prev => ({ ...prev, status: checked }))}
+                />
+              </Form.Item>
+              <Form.Item label={t('permissions')}>
+                <Permissions selectedPermissions={newRole.permissions} onChange={handlePermissionChange} />
+              </Form.Item>
+            </Form>
           </Modal>
         </Card>
       </TabPane>

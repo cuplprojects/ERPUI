@@ -190,7 +190,7 @@ const SystemSettings = () => {
           },
         });
 
-        if (response.status === 200) {
+        if (response.status === 201 || response.status === 200) {
           const addedFeature = response.data;
           setFeatures([...features, { key: addedFeature.featureId, name: addedFeature.features }]);
           notification.success({ message: 'Feature added successfully!' });
