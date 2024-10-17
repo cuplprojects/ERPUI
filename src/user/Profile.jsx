@@ -4,11 +4,11 @@ import { FaPencilAlt } from 'react-icons/fa';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
-import SampleUser1 from "./../assets/sampleUsers/defaultUser.jpg";
+import SampleUser from "./../assets/sampleUsers/defaultUser.jpg";
 import "./../styles/Profile.css";
-import { jwtDecode } from 'jwt-decode';
 import axios from 'axios';
 import useUserDataStore from '../store/userDataStore';
+
 
 const UserProfile = () => {
   const { getCssClasses } = useStore(themeStore);
@@ -70,7 +70,7 @@ const UserProfile = () => {
       if (file) {
         const reader = new FileReader();
         reader.onloadend = async () => {
-          if (userData?.profileImage === SampleUser1) {
+          if (userData?.profileImage === SampleUser) {
             await uploadImage(file);
           } else {
             await updateProfilePicture(file);
@@ -120,12 +120,19 @@ const UserProfile = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setUserData(prevData => ({...prevData, [name]: value}));
+    setUserData(prevData => ({ ...prevData, [name]: value }));
   };
 
   const getProfileImageUrl = (imagePath) => {
-    if (!imagePath) return SampleUser1;
+    if (!imagePath) return SampleUser;
+    if (!isValidImageFormat(imagePath)) return SampleUser;
     return imagePath.startsWith('http') ? imagePath : `${APIUrlBase}/${imagePath}?${profileImageKey}`;
+  };
+
+  const isValidImageFormat = (imagePath) => {
+    const validExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp'];
+    const extension = imagePath.split('.').pop().toLowerCase();
+    return validExtensions.includes(extension);
   };
 
   if (isLoading) {
@@ -161,8 +168,9 @@ const UserProfile = () => {
           <Col xs={12} sm={3} md={2} className="text-center position-relative">
             <img
               src={getProfileImageUrl(userData.profilePicturePath)}
-              alt=""
+              alt="Profile Picture"
               width="100px"
+              height="100px"
               className={`rounded-circle ${customDarkBorder}`}
               onClick={handleImageClick}
             />
@@ -262,7 +270,7 @@ const UserProfile = () => {
                 <Form.Control
                   name="role"
                   placeholder="Your Role"
-                  value={userData.role}
+                  value={userData.roleName}
                   className='rounded'
                   disabled
                 />
@@ -274,7 +282,7 @@ const UserProfile = () => {
                 <Form.Control
                   name="mobileNumber"
                   placeholder="Your Mobile Number"
-                  value={userData.mobileNumber}
+                  value={userData.mobileNo}
                   className='rounded'
                   onChange={handleChange}
                   disabled={!isEditing}
