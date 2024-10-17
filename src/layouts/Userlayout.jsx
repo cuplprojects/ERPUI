@@ -22,7 +22,11 @@ import Labels from '../pages/Message/Labels';
 import CuDashboard from '../pages/CuDashboard';
 
 import AddProjectProcess from '../pages/AddProjectProcess';
+
+import ViewQuantitySheet from '../pages/ViewQuantitySheet';
+
 import { hasPermission } from '../CustomHooks/Services/permissionUtils';
+
 
 const Userlayout = () => {
 
@@ -57,6 +61,7 @@ const Userlayout = () => {
               <Route path="/settings" element={<UserSettings />} />
               <Route path="/change-password" element={<ChangePassword />} />
               <Route path="/quantity-sheet-uploads" element={<QtySheetUpload />} />
+              <Route path="/quantity-sheet-view" element={<ViewQuantitySheet />} />
               <Route path="/project-details/:id" element={<ProcessTable />} />
               <Route path="/message" element={<Message />} />
               <Route path="/labels" element={<Labels />} />

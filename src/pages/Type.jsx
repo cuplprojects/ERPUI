@@ -72,6 +72,7 @@ const Type = () => {
             form.resetFields();
         } catch (error) {
             console.error(error);
+            message.error('Failed to add Type')
         }
     };
 
