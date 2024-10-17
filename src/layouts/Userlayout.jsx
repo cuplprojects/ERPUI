@@ -19,10 +19,15 @@ import QtySheetUpload from '../pages/QtySheetUpload';
 import Message from '../pages/Message/Message';
 import Labels from '../pages/Message/Labels';
 import AddProjectProcess from '../pages/AddProjectProcess';
+
+import ViewQuantitySheet from '../pages/ViewQuantitySheet';
+
 import { hasPermission } from '../CustomHooks/Services/permissionUtils';
 
 const isdevelopment = import.meta.env.VITE_APP_MODE === 'development';
-console.log(import.meta.env.VITE_APP_MODE);
+
+const Userlayout = () => {
+
 
 const Userlayout = () => {
   const { getCssClasses } = useStore(themeStore);
@@ -49,10 +54,12 @@ const Userlayout = () => {
               <Route path="/profile" element={<Profile />} />
               <Route path="/settings" element={<UserSettings />} />
               <Route path="/change-password" element={<ChangePassword />} />
+
               {(hasPermission('2.4') || isdevelopment) && <Route path="/quantity-sheet-uploads" element={<QtySheetUpload />} />}
               {(hasPermission('2.4') || isdevelopment) && <Route path="/project-details/:id" element={<ProcessTable />} />}
               {(hasPermission('3') || isdevelopment) && <Route path="/message" element={<Message />} />}
               {(hasPermission('3') || isdevelopment) && <Route path="/labels" element={<Labels />} />}
+
               <Route path="/*" element={<PageNotFound />} />
             </Routes>
           </div>
