@@ -9,11 +9,12 @@ import {
   FaCamera,
   FaCog,
   FaCaretDown,
-  FaCaretLeft,
+  FaCaretRight,
+  FaBookOpen,
 } from 'react-icons/fa';
-import { RiUserSettingsFill, RiMenuFold4Fill } from "react-icons/ri";
+import { RiUserSettingsFill, RiMenuFoldLine } from "react-icons/ri";
 import { AiFillCloseSquare } from "react-icons/ai";
-import { FaBookOpenReader } from "react-icons/fa6";
+import { useTranslation } from 'react-i18next';
 
 import GroupManager from './Group'
 import ProjectManager from './Project';
@@ -33,6 +34,7 @@ import { useStore } from 'zustand';
 import { hasPermission } from '../CustomHooks/Services/permissionUtils';
 
 const Sidebar = () => {
+  const { t } = useTranslation();
   const { getCssClasses } = useStore(themeStore);
   const [customDark, customMid, customLight, , customDarkText, customLightText, customLightBorder] = getCssClasses();
   const isDevelopmentMode = import.meta.env.VITE_APP_MODE === 'development'
@@ -73,23 +75,23 @@ const Sidebar = () => {
     {
       key: 'userManagement',
       icon: <RiUserSettingsFill className={`${customDark === "dark-dark" ? `text-white` : customDarkText} menu-icon`} />,
-      label: 'User Management',
+      label: t('userManagement'),
       permission: '2.1',
       children: [
-        { key: 'RolePage', icon: <FaUsers className={`${customDark === "dark-dark" ? `text-white` : customDarkText} menu-icon`} />, label: 'Role', permission: '2.1.1' },
-        { key: 'addUser', icon: <FaUsers className={`${customDark === "dark-dark" ? `text-white` : customDarkText} menu-icon`} />, label: 'Add User', permission: '2.1.2' },
-        { key: 'allUsers', icon: <FaListUl className={`${customDark === "dark-dark" ? `text-white` : customDarkText} menu-icon`} />, label: 'All Users', permission: '2.1.3' },
+        { key: 'rolePage', icon: <FaUsers className={`${customDark === "dark-dark" ? `text-white` : customDarkText} menu-icon`} />, label: t('roles'), permission: '2.1.1' },
+        { key: 'addUser', icon: <FaUsers className={`${customDark === "dark-dark" ? `text-white` : customDarkText} menu-icon`} />, label: t('addUser'), permission: '2.1.2' },
+        { key: 'allUsers', icon: <FaListUl className={`${customDark === "dark-dark" ? `text-white` : customDarkText} menu-icon`} />, label: t('allUsers'), permission: '2.1.3' },
       ],
     },
-    { key: 'group', icon: <FaUsers className={`${customDark === "dark-dark" ? `text-white` : customDarkText} menu-icon`} />, label: 'Group', permission: '2.2' },
-    { key: 'type', icon: <FaBookOpenReader className={`${customDark === "dark-dark" ? `text-white` : customDarkText} menu-icon`} />, label: 'Project Type', permission: '2.3' },
-    { key: 'project', icon: <FaProjectDiagram className={`${customDark === "dark-dark" ? `text-white` : customDarkText} menu-icon`} />, label: 'Project', permission: '2.4' },
-    { key: 'zone', icon: <FaGlobeAmericas className={`${customDark === "dark-dark" ? `text-white` : customDarkText} menu-icon`} />, label: 'Zone', permission: '2.5' },
-    { key: 'camera', icon: <FaCamera className={`${customDark === "dark-dark" ? `text-white` : customDarkText} menu-icon`} />, label: 'Camera', permission: '2.6' },
-    { key: 'machine', icon: <FaListUl className={`${customDark === "dark-dark" ? `text-white` : customDarkText} menu-icon`} />, label: 'Production Machines', permission: '2.7' },
-    { key: 'alarm', icon: <FaBell className={`${customDark === "dark-dark" ? `text-white` : customDarkText} menu-icon`} />, label: 'Alarm', permission: '2.8' },
-    { key: 'team', icon: <FaUsers className={`${customDark === "dark-dark" ? `text-white` : customDarkText} menu-icon`} />, label: 'Team', permission: '2.9' },
-    { key: 'systemSettings', icon: <FaCog className={`${customDark === "dark-dark" ? `text-white` : customDarkText} menu-icon`} />, label: 'Process Settings', permission: '2.10' },
+    { key: 'group', icon: <FaUsers className={`${customDark === "dark-dark" ? `text-white` : customDarkText} menu-icon`} />, label: t('group'), permission: '2.2' },
+    { key: 'type', icon: <FaBookOpen className={`${customDark === "dark-dark" ? `text-white` : customDarkText} menu-icon`} />, label: t('projectType'), permission: '2.3' },
+    { key: 'project', icon: <FaProjectDiagram className={`${customDark === "dark-dark" ? `text-white` : customDarkText} menu-icon`} />, label: t('project'), permission: '2.4' },
+    { key: 'zone', icon: <FaGlobeAmericas className={`${customDark === "dark-dark" ? `text-white` : customDarkText} menu-icon`} />, label: t('zone'), permission: '2.5' },
+    { key: 'camera', icon: <FaCamera className={`${customDark === "dark-dark" ? `text-white` : customDarkText} menu-icon`} />, label: t('camera'), permission: '2.6' },
+    { key: 'machine', icon: <FaListUl className={`${customDark === "dark-dark" ? `text-white` : customDarkText} menu-icon`} />, label: t('productionMachines'), permission: '2.7' },
+    { key: 'alarm', icon: <FaBell className={`${customDark === "dark-dark" ? `text-white` : customDarkText} menu-icon`} />, label: t('alarm'), permission: '2.8' },
+    { key: 'team', icon: <FaUsers className={`${customDark === "dark-dark" ? `text-white` : customDarkText} menu-icon`} />, label: t('team'), permission: '2.9' },
+    { key: 'systemSettings', icon: <FaCog className={`${customDark === "dark-dark" ? `text-white` : customDarkText} menu-icon`} />, label: t('processSettings'), permission: '2.10' },
   ];
 
   const allowedMenuItems = isDevelopmentMode ? menuItems : menuItems.filter(menu => {
@@ -111,24 +113,30 @@ const Sidebar = () => {
               handleMenuClick(menu.key);
             }
           }}
-          className={`d-flex align-items-center ${customDark === "dark-dark" ? `sidebar-item-dark` : `sidebar-item`} ${selectedMenu === menu.key ? `active rounded-start rounded-end-5 ${customMid}` : `rounded-start rounded-end-5 text-dark`} hover:bg-my-hover-bg hover:text-my-hover-text`}
+          className={`d-flex align-items-center justify-content-between ${customDark === "dark-dark" ? `sidebar-item-dark` : `sidebar-item`} ${selectedMenu === menu.key ? `active rounded-start rounded-end-5 ${customMid}` : `rounded-start rounded-end-5 text-dark`} hover:bg-my-hover-bg hover:text-my-hover-text`}
         >
-          {menu.icon} <span className={`${customDark === "dark-dark" ? `text-white` : customDarkText} ml-3 ${isOffcanvas ? '' : 'd-none d-md-block d-lg-block'}`}>{menu.label}</span>
+          <div className="d-flex align-items-center">
+            {menu.icon} <span className={`${customDark === "dark-dark" ? `text-white` : customDarkText} ml-3 ${isOffcanvas ? '' : 'd-none d-md-block d-lg-block'}`}>{menu.label}</span>
+          </div>
           {menu.children && (
-            <span className="ml-auto">
-              {expandedMenus[menu.key] ? <FaCaretDown className={`${customDark === `dark-dark` ? `text-white` : customDarkText}`} size={25} /> : <FaCaretLeft className={customDarkText} size={25} />}
+            <span>
+              {expandedMenus[menu.key] ? <FaCaretDown className={`${customDark === `dark-dark` ? `text-white` : customDarkText}`} size={25} /> : <FaCaretRight className={customDarkText} size={25} />}
             </span>
           )}
         </Nav.Link>
-        {menu.children && expandedMenus[menu.key] && menu.children.map((child) => (
-          <Nav.Link
-            key={child.key}
-            onClick={() => handleMenuClick(child.key)}
-            className={`ml-4 d-flex align-items-center ${customDark === "dark-dark" ? `sidebar-item-dark` : `sidebar-item`} ${selectedMenu === child.key ? `active rounded-start rounded-end-5 ${customMid}` : 'rounded-start rounded-end-5'} hover:bg-my-hover-bg hover:text-my-hover-text`}
-          >
-            {child.icon} <span className={`${customDark === "dark-dark" ? `text-white` : customDarkText} ml-3`}>{child.label}</span>
-          </Nav.Link>
-        ))}
+        {menu.children && expandedMenus[menu.key] && (
+          <div className="ml-4">
+            {menu.children.map((child) => (
+              <Nav.Link
+                key={child.key}
+                onClick={() => handleMenuClick(child.key)}
+                className={`d-flex align-items-center ${customDark === "dark-dark" ? `sidebar-item-dark` : `sidebar-item`} ${selectedMenu === child.key ? `active rounded-start rounded-end-5 ${customMid}` : 'rounded-start rounded-end-5'} hover:bg-my-hover-bg hover:text-my-hover-text`}
+              >
+                {child.icon} <span className={`${customDark === "dark-dark" ? `text-white` : customDarkText} ml-3`}>{child.label}</span>
+              </Nav.Link>
+            ))}
+          </div>
+        )}
       </React.Fragment>
     ));
   };
@@ -143,16 +151,16 @@ const Sidebar = () => {
         </Col>
         <div className={`small-sidebar d-lg-none`}>
           <button className={`mt-2 ${customDark === "dark-dark" ? `${customDark} ${customLightText} ${customLightBorder}` : `${customDark} ${customLightText} border-0`} p-1 rounded`} onClick={handleShow}>
-            <RiMenuFold4Fill size={25} />
+            <RiMenuFoldLine size={25} />
           </button>
           <Offcanvas show={show} onHide={handleClose} placement="start" className={customDark === "dark-dark" ? customDark : customLight} style={{ width: '80%', zIndex: "9999" }}>
             <Offcanvas.Header closeButton={false} className={`${customDark} ${customLightText} d-flex justify-content-between`}>
-              <Offcanvas.Title className={customDark === 'dark-dark' ? `text-white` : ``}>Menu</Offcanvas.Title>
+              <Offcanvas.Title className={customDark === 'dark-dark' ? `text-white` : ``}>{t('menu')}</Offcanvas.Title>
               <AiFillCloseSquare 
                 size={35}
                 onClick={handleClose} 
                 className={`${customDark === "dark-dark" ? "text-dark bg-white" : `${customDark} custom-zoom-btn text-white ${customLightBorder}`} rounded-2`}
-                aria-label="Close"
+                aria-label={t('close')}
                 style={{ cursor: 'pointer', fontSize: '1.5rem' }}
               />
             </Offcanvas.Header>
@@ -164,7 +172,7 @@ const Sidebar = () => {
           </Offcanvas>
         </div>
         <Col lg={9} md={12} sm={12} xm={12} className={`content-area rounded-end-4 ${customMid} shadow-`}>
-          {(hasPermission('2.1.1') || isDevelopmentMode) && selectedMenu === 'RolePage' && <RolesAndDepartments />}
+          {(hasPermission('2.1.1') || isDevelopmentMode) && selectedMenu === 'rolePage' && <RolesAndDepartments />}
           {(hasPermission('2.1.2') || isDevelopmentMode) && selectedMenu === 'addUser' && <AddUsers />}
           {(hasPermission('2.1.3') || isDevelopmentMode) && selectedMenu === 'allUsers' && <AllUsers />}
           {(hasPermission('2.2') || isDevelopmentMode) && selectedMenu === 'group' && <GroupManager />}
