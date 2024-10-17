@@ -1,128 +1,89 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Switch, message } from 'antd';
+import { Table, Button, Popconfirm, Select, Switch } from 'antd';
+import './FeatureConfiguration.css';
+import axios from 'axios';
 
 const FeatureConfiguration = () => {
     const [features, setFeatures] = useState([]);
     const [processes, setProcesses] = useState([]);
-    const [featureProcessStatus, setFeatureProcessStatus] = useState({}); // Track status of each feature-process pair
+    const [checkedFeatures, setCheckedFeatures] = useState({});
 
-    useEffect(() => {
-        const fetchFeatures = async () => {
-            try {
-                const response = await fetch('https://localhost:7212/api/Features');
-                const data = await response.json();
-                setFeatures(data);
-            } catch (error) {
-                console.error('Failed to fetch features:', error);
-            }
-        };
-
-        const fetchProcesses = async () => {
-            try {
-                const response = await fetch('https://localhost:7212/api/Processes');
-                const data = await response.json();
-                setProcesses(data);
-            } catch (error) {
-                console.error('Failed to fetch processes:', error);
-            }
-        };
-
-        fetchFeatures();
-        fetchProcesses();
-    }, []);
-
-    // Handle switch toggle and update process status
-    const handleToggle = async (featureId, process) => {
-        const currentStatus = featureProcessStatus[featureId]?.[process.name] || process.status;
-
-        // Toggle the status (on/off)
-        const newStatus = !currentStatus;
-
+    const fetchProcesses = async () => {
         try {
-            const response = await fetch(`https://localhost:7212/api/Processes/${process.id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    id: process.id,
-                    name: process.name,
-                    weightage: process.weightage,
-                    status: newStatus, // Update the status field
-                    installedFeatures: process.installedFeatures, // Keep the installed features unchanged
-                }),
-            });
-
-            if (response.ok) {
-                message.success(`Process ${process.name} status updated successfully!`);
-
-                // Update local state
-                setFeatureProcessStatus(prevStatus => ({
-                    ...prevStatus,
-                    [featureId]: {
-                        ...prevStatus[featureId],
-                        [process.name]: newStatus, // Update the switch status for that feature-process pair
-                    },
-                }));
-            } else {
-                message.error('Failed to update process status.');
-            }
+            const response = await axios.get('https://localhost:7212/api/Processes');
+            setProcesses(response.data);
+            console.log('Fetched processes:', response.data);
         } catch (error) {
-            console.error('Error updating process:', error);
-            message.error('An error occurred while updating process status.');
+            console.error("Failed to fetch processes", error);
         }
     };
 
-    // Define columns for the table dynamically based on processes
+    const fetchFeatures = async () => {
+        try {
+            const response = await axios.get('https://localhost:7212/api/Features');
+            setFeatures(response.data);
+            console.log('Fetched features:', response.data);
+        } catch (error) {
+            console.error("Failed to fetch features", error);
+        }
+    };
+
+    useEffect(() => {
+        fetchProcesses();
+        fetchFeatures();
+    }, []);
+
+    const handleSwitchChange = (processId, featureId, checked) => {
+        setCheckedFeatures(prev => ({
+            ...prev,
+            [processId]: {
+                ...prev[processId],
+                [featureId]: checked
+            }
+        }));
+    };
+
     const columns = [
         {
-            title: 'Feature Name',
-            dataIndex: 'featureName',
-            key: 'featureName',
-            width: 200, // Set a specific width for the feature name column
+            title: 'Process Name',
+            dataIndex: 'name',
+            key: 'name',
+            render: (text) => <span style={{ fontWeight: 'bold' }}>{text || 'Unnamed Process'}</span>,
         },
-        ...processes.map(process => ({
-            title: process.name, // Each process becomes a column
-            dataIndex: process.name,
-            key: process.name,
-            width: 150, // Set a specific width for each process column
-            render: (text, record) => (
-                <Switch
-                    checked={featureProcessStatus[record.key]?.[process.name] ?? process.status} // Checked status from API or state
-                    onChange={() => handleToggle(record.key, process)} // Handle toggle to update status
-                />
-            ),
+        ...features.map(feature => ({
+            title: feature.features,
+            dataIndex: feature.featureId,
+            key: feature.featureId,
+            render: (_, process) => {
+                const isChecked = checkedFeatures[process.id]?.[feature.featureId] ||
+                    (process.installedFeatures && process.installedFeatures.includes(feature.featureId));
+                return (
+                    <Switch
+                        checked={isChecked}
+                        onChange={(checked) => handleSwitchChange(process.id, feature.featureId, checked)}
+                        size="small"
+                    />
+                );
+            },
+            align: 'center',
         })),
     ];
 
-    // Prepare data for the table
-    const dataSource = features.map(feature => {
-        // Initialize each row with the feature name
-        const rowData = {
-            key: feature.featureId, // Unique key for each feature
-            featureName: feature.features, // Feature name
-        };
-
-        // Fill in process data for the row with toggle switch status
-        processes.forEach(process => {
-            // Check if the feature is installed in the current process
-            const isInstalled = process.installedFeatures.split(', ').includes(feature.features);
-            rowData[process.name] = isInstalled; // Store installation status
-        });
-
-        return rowData;
-    });
-
     return (
-        <div>
-            <h3>Feature Configuration</h3>
+        <div className="feature-configuration-container">
+           
             <Table
-                dataSource={dataSource}
+                rowKey="id"
+                dataSource={processes}
                 columns={columns}
-                pagination={false} // Disable pagination if you want to show all items
-                bordered // Optional: Adds borders to the table
-                size="small" // Make the table small
-                scroll={{ x: 'max-content' }} // Enable horizontal scrolling if content overflows
+                pagination={false}
+                bordered
+                style={{ 
+                    boxShadow: '0 4px 8px 0 rgba(0,0,0,0.2)',
+                    borderRadius: '8px',
+                    overflow: 'hidden',
+                    
+                }}
             />
         </div>
     );
