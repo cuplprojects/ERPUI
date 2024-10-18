@@ -27,47 +27,7 @@ const QtySheetUpload = () => {
     const [showBookletOptions, setShowBookletOptions] = React.useState(false);
     const [form] = Form.useForm();
 
-    const handleUpload = () => {
-        form.validateFields().then((values) => {
-            setUploading(true);
-            // Add your upload logic here
-            setTimeout(() => {
-                setUploading(false);
-            }, 2000);
-        });
-    };
-
-    const props = {
-        onRemove: (file) => {
-            const index = fileList.indexOf(file);
-            const newFileList = fileList.slice();
-            newFileList.splice(index, 1);
-            setFileList(newFileList);
-        },
-        beforeUpload: (file) => {
-            if (file.type !== 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' && file.type !== 'application/vnd.ms-excel' && file.type !== 'text/csv') {
-                message.error({
-                    content: 'Invalid File Type ! Upload Excel Files Only',
-                    placement: 'top',
-                });
-                return false;
-            }
-            if (fileList.length === 0) {
-                setFileList([file]);
-            } else {
-                setFileList([...fileList, file]);
-            }
-            return false;
-        },
-        fileList,
-    };
-
-    const handleDownloadTemplate = () => {
-        const link = document.createElement('a');
-        link.href = 'path_to_your_template_file.xlsx'; // local QS file 
-        link.download = 'QtySheet-Input.xlsx';
-        link.click();
-    };
+    
 
     return (
         <div className={`container ${customDarkText} ${customLight} ${customDark === "dark-dark" ? "border" : "border-0"} rounded shadow-lg`}>
@@ -82,60 +42,6 @@ const QtySheetUpload = () => {
                     <Button type="primary" onClick={handleDownloadTemplate} className={`custom-zoom-btn ${customBtn} ${customDark === "dark-dark" ? "border-white" : "border-0"}`}>
                         <IoMdCloudDownload size={25} /> Download Template
                     </Button>
-                </Col>
-                <Col lg={6} md={6} sm={12} xs={12}>
-                </Col>
-            </Row>
-            <Row className='mt-2 mb-2'>
-                <Col lg={6} md={6} sm={12} xs={12}>
-                    <Form form={form} onFinish={handleUpload} layout="vertical">
-                        <Form.Item
-                            className='d-flex align-items-center'
-                            name="file"
-                            rules={[
-                                {
-                                    validator: (_, value) => {
-                                        if (fileList.length === 0) {
-                                            return Promise.reject('Please select a file');
-                                        }
-                                        if (value && !['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel', 'application/vnd.ms-excel.sheet.macroEnabled.12', 'text/csv'].includes(value.type)) {
-                                            return Promise.reject('Only Excel files (.xls, .xlsx, .xlsm, .csv) are allowed');
-                                        }
-                                        return Promise.resolve();
-                                    },
-                                },
-                            ]}
-                        >
-                            <span className={`${customDarkText}`}>
-                                <label className='fs-5 me-2 '>Upload File</label>
-                            </span>
-                            <Upload {...props}>
-                                <Button className='fs-5 custom-zoom-btn'>
-                                    <UploadOutlined className='me-2 ' /> Select File
-                                </Button>
-                            </Upload>
-                        </Form.Item>
-                        <Form.Item className={``}>
-                            <Button
-                                className={`${customBtn} ${customDark === "dark-dark" ? "border" : "border-0"} custom-zoom-btn`}
-                                type="submit"
-                                onClick={() => {
-                                    if (fileList.length === 0) {
-                                        message.error({
-                                            content: 'Upload at least one file',
-                                            placement: 'top',
-                                        });
-                                    } else {
-                                        setUploading(true);
-                                        handleUpload();
-                                    }
-                                }}
-                                loading={uploading}
-                            >
-                                {uploading ? 'Uploading...' : 'Upload'}
-                            </Button>
-                        </Form.Item>
-                    </Form>
                 </Col>
                 <Col lg={6} md={6} sm={12} xs={12}>
                 </Col>

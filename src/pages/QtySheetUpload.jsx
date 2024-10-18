@@ -178,10 +178,21 @@ const QtySheetUpload = () => {
             console.error('Failed to fetch Lots')
         }
     }
-
+    
+    const handleDownloadTemplate = () => {
+        const link = document.createElement('a');
+        link.href = 'path_to_your_template_file.xlsx'; // local QS file 
+        link.download = 'QtySheet-Input.xlsx';
+        link.click();
+    };
 
     const handleLotClick = (lotNo) => {
-        setSelectedLotNo(lotNo);
+        if (selectedLotNo === lotNo) {
+            setShowTable(!showTable); // Toggle table visibility
+        } else {
+            setSelectedLotNo(lotNo);
+            setShowTable(true); // Show table for the selected lot
+        }
     };
 
     return (
@@ -225,6 +236,7 @@ const QtySheetUpload = () => {
                             {lots.map((lotNo, index) => (
                                 <Button
                                     key={index}
+                                   
                                     className={`${customBtn} me-2`}
                                     type="primary"
                                     onClick={() => handleLotClick(lotNo)}
@@ -232,7 +244,7 @@ const QtySheetUpload = () => {
                                     Click to view lot {lotNo}
                                 </Button>
                             ))}
-                            <ViewQuantitySheet selectedLotNo={selectedLotNo} />
+                           {showTable && <ViewQuantitySheet selectedLotNo={selectedLotNo} />}
                         </Form.Item>
                     </Form>
                 </Col>
