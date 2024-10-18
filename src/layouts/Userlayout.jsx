@@ -23,6 +23,7 @@ import AddProjectProcess from '../pages/AddProjectProcess';
 import ViewQuantitySheet from '../pages/ViewQuantitySheet';
 
 import { hasPermission } from '../CustomHooks/Services/permissionUtils';
+import CuDashboard from '../pages/CuDashboard';
 
 const isdevelopment = import.meta.env.VITE_APP_MODE === 'development';
 
@@ -44,6 +45,7 @@ const Userlayout = () => {
           </div>
           <div className="flex-grow-1 m-2 p-3" style={{ zIndex: "3" }}>
             <Routes>
+              <Route path="/cudashboard" element={<CuDashboard/>} />
               {(hasPermission(1) || isdevelopment) && <Route path="/dashboard" element={<MainDashboard />} />}
               {(hasPermission('2') || isdevelopment) && <Route path="/master" element={<Masters />} />}
               {(hasPermission('2.4') || isdevelopment) && <Route path="/AddProjectProcess/:projectId" element={<AddProjectProcess />} />}
