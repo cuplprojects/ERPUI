@@ -31,7 +31,25 @@ const BarChart = ({ lots = [] }) => {
         responsive: true,
         maintainAspectRatio: false,
         scales: {
-          y: { beginAtZero: true, max: 100 },
+          x: {
+            ticks: {
+              color: '#000000', // Set x-axis label color to dark black
+            },
+          },
+          y: {
+            beginAtZero: true,
+            max: 100,
+            ticks: {
+              color: '#000000', // Set y-axis label color to dark black
+            },
+          },
+        },
+        plugins: {
+          legend: {
+            labels: {
+              color: '#000000', // Set legend text color to dark black
+            },
+          },
         },
       },
     });
