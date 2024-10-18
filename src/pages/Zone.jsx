@@ -4,7 +4,6 @@ import { Table, Select, Input, Space, Button, Typography, Row, Col, Checkbox, Fo
 import { Card, Modal } from 'react-bootstrap';
 import { EyeOutlined, EditOutlined, SaveOutlined, CloseOutlined, SettingOutlined, SearchOutlined } from '@ant-design/icons';
 import 'antd/dist/reset.css';
-import 'bootstrap/dist/css/bootstrap.min.css';
 
 import API from '../CustomHooks/MasterApiHooks/api';
 import themeStore from './../store/themeStore';

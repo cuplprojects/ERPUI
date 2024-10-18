@@ -1,26 +1,21 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { Table, Select, Input, Space, Button, Typography, Row, Col, Checkbox, Form, Dropdown, Menu, message, Switch } from 'antd';
-import { Card, Modal } from 'react-bootstrap';
-import { EyeOutlined, EditOutlined, SaveOutlined, CloseOutlined, SettingOutlined, SearchOutlined } from '@ant-design/icons';
-import 'antd/dist/reset.css';
-import 'bootstrap/dist/css/bootstrap.min.css';
+import React, { useEffect, useState } from 'react';
+import { Table, Button, Input, Switch, Form, message, Card, Row, Col, Select, Pagination } from 'antd';
+import { Modal } from 'react-bootstrap';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import API from '../CustomHooks/MasterApiHooks/api';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
-import { useMediaQuery } from 'react-responsive';
-import { AiFillCloseSquare } from 'react-icons/ai';
-import { BsFunnelFill } from "react-icons/bs";
-import { useTranslation } from 'react-i18next';
-import { hasPermission } from '../CustomHooks/Services/permissionUtils';
-
+import { AiFillCloseSquare } from "react-icons/ai";
+import { SearchOutlined } from '@ant-design/icons';
 const { Option } = Select;
-const { Title } = Typography;
 
 const Project = () => {
-  const { t } = useTranslation();
+
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
   const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
+
 
   const [projects, setProjects] = useState([]);
   const [groups, setGroups] = useState([]);
@@ -33,65 +28,57 @@ const Project = () => {
   const [editingStatus, setEditingStatus] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [selectedType, setSelectedType] = useState(null);
+  const navigate = useNavigate();
 
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchText, setSearchText] = useState('');
   const [sortedInfo, setSortedInfo] = useState({});
-  const [visibleColumns, setVisibleColumns] = useState({
-    name: true,
-    description: true,
-    status: true,
-  });
-  const [columnSettingsVisible, setColumnSettingsVisible] = useState(false);
 
-  const isMobile = useMediaQuery({ maxWidth: 767 });
-  const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1023 });
-
-  const getProjects = useCallback(async () => {
+  const getProjects = async () => {
     try {
       const response = await API.get('/Project');
       setProjects(response.data);
     } catch (error) {
       console.error('Failed to fetch projects', error);
-      message.error(t('failedToFetchProjects'));
+      message.error('Unable to fetch projects. Please try again later.');
     }
-  }, [t]);
+  };
 
-  const getGroups = useCallback(async () => {
+  const getGroups = async () => {
     try {
       const response = await API.get('/Groups');
       setGroups(response.data);
     } catch (error) {
       console.error('Failed to fetch groups', error);
-      message.error(t('failedToFetchGroups'));
+      message.error('Unable to fetch groups. Please try again later.');
     }
-  }, [t]);
+  };
 
-  const getTypes = useCallback(async () => {
+  const getTypes = async () => {
     try {
       const response = await API.get('/PaperTypes');
       setTypes(response.data);
     } catch (error) {
       console.error('Failed to fetch types', error);
-      message.error(t('failedToFetchTypes'));
+      message.error('Unable to fetch types. Please try again later.');
     }
-  }, [t]);
+  };
 
   useEffect(() => {
     getProjects();
     getGroups();
     getTypes();
-  }, [getProjects, getGroups, getTypes]);
+  }, []);
 
-  const handleAddProject = useCallback(async (values) => {
+  const handleAddProject = async (values) => {
     const { name, status, description } = values;
 
     const existingProject = projects.find(
       (project) => project.name.toLowerCase() === name.toLowerCase()
     );
     if (existingProject) {
-      message.error(t('projectNameExists'));
+      message.error('Project name already exists!');
       return;
     }
 
@@ -110,14 +97,15 @@ const Project = () => {
       setProjects([...projects, response.data]);
       form.resetFields();
       setIsModalVisible(false);
-      message.success(t('projectAddedSuccessfully'));
+      message.success('Project added successfully!');
+      navigate(`/AddProjectProcess/${response.data.projectId}`);
     } catch (error) {
       console.error('Error adding project:', error);
-      message.error(t('errorAddingProject'));
+      message.error('Error adding project. Please try again.');
     }
-  }, [projects, selectedGroup, selectedType, form, t]);
+  };
 
-  const handleEditSave = useCallback(async (index) => {
+  const handleEditSave = async (index) => {
     const updatedProject = {
       ...projects[index],
       name: editingName,
@@ -133,31 +121,26 @@ const Project = () => {
       updatedProjects[index] = updatedProject;
       setProjects(updatedProjects);
       setEditingIndex(null);
-      message.success(t('projectUpdatedSuccessfully'));
+      message.success('Project updated successfully!');
     } catch (error) {
       console.error('Failed to update project:', error);
-      message.error(t('failedToUpdateProject'));
+      message.error('Failed to update project. Please try again.');
     }
-  }, [projects, editingName, editingDescription, editingStatus, t]);
+  };
 
   const handleTableChange = (pagination, filters, sorter) => {
     setSortedInfo(sorter);
   };
 
-  const handleColumnVisibilityChange = useCallback((e, column) => {
-    setVisibleColumns(prev => ({ ...prev, [column]: e.target.checked }));
-  }, []);
-
-  const columns = useMemo(() => [
+  const columns = [
     {
-      title: t('sn'),
+      title: 'SN.',
       dataIndex: 'serial',
       key: 'serial',
       render: (text, record, index) => (currentPage - 1) * pageSize + index + 1,
-      width: 80,
     },
-    visibleColumns.name && {
-      title: t('projectName'),
+    {
+      title: 'Project Name',
       dataIndex: 'name',
       key: 'name',
       sorter: (a, b) => a.name.localeCompare(b.name),
@@ -173,10 +156,9 @@ const Project = () => {
         ) : (
           <span>{text}</span>
         ),
-      width: 200,
     },
-    visibleColumns.description && {
-      title: t('description'),
+    {
+      title: 'Project Description',
       dataIndex: 'description',
       key: 'description',
       render: (text, record, index) =>
@@ -190,10 +172,9 @@ const Project = () => {
         ) : (
           <span>{text}</span>
         ),
-      width: 200,
     },
-    visibleColumns.status && {
-      title: t('status'),
+    {
+      title: 'Status',
       dataIndex: 'status',
       key: 'status',
       sorter: (a, b) => a.status - b.status,
@@ -203,40 +184,31 @@ const Project = () => {
           <Switch
             checked={editingStatus}
             onChange={(checked) => setEditingStatus(checked)}
-            checkedChildren={t('active')}
-            unCheckedChildren={t('inactive')}
+            checkedChildren="Active"
+            unCheckedChildren="Inactive"
           />
         ) : (
           <Switch
             checked={status}
             disabled
-            checkedChildren={t('active')}
-            unCheckedChildren={t('inactive')}
+            checkedChildren="Active"
+            unCheckedChildren="Inactive"
           />
         ),
-      width: 120,
     },
     {
-      title: t('actions'),
+      title: 'Action',
       key: 'action',
       render: (_, record, index) =>
         editingIndex === index ? (
-          <Space>
-            <Button
-              icon={<SaveOutlined />}
-              onClick={() => handleEditSave(index)}
-              type="primary"
-              className={customBtn}
-            >
-              {t('save')}
+          <>
+            <Button type="link" onClick={() => handleEditSave(index)}>
+              Save
             </Button>
-            <Button
-              icon={<CloseOutlined />}
-              onClick={() => setEditingIndex(null)}
-            >
-              {t('cancel')}
+            <Button type="link" onClick={() => setEditingIndex(null)}>
+              Cancel
             </Button>
-          </Space>
+          </>
         ) : (
           <Button
             type="link"
@@ -246,14 +218,12 @@ const Project = () => {
               setEditingDescription(record.description);
               setEditingStatus(record.status);
             }}
-            disabled={!hasPermission('2.1.3.3')}
           >
-            {t('edit')}
+            Edit
           </Button>
         ),
-      width: 150,
     },
-  ].filter(Boolean), [visibleColumns, editingIndex, editingName, editingDescription, editingStatus, handleEditSave, currentPage, pageSize, sortedInfo, customBtn, t]);
+  ];
 
   const showModal = () => {
     setIsModalVisible(true);
@@ -289,65 +259,40 @@ const Project = () => {
     )
   );
 
-  const columnSettingsMenu = (
-    <Menu>
-      {Object.entries(visibleColumns).map(([column, isVisible]) => (
-        <Menu.Item key={column}>
-          <Checkbox
-            checked={isVisible}
-            onChange={(e) => handleColumnVisibilityChange(e, column)}
-          >
-            {t(column)}
-          </Checkbox>
-        </Menu.Item>
-      ))}
-    </Menu>
-  );
-
   return (
     <Card
-      className={`${customDark === "dark-dark" ? `${customDark}` : `${customLight}`}`}
+    className={`${customDark === "dark-dark" ? `${customDark}` : `${customLight}`}`}
       bordered={true}
-      style={{ padding: '20px', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)' }}
+      style={{ padding: '20px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)' }}
     >
+      <h2 className={`${customDarkText}`}>All Projects</h2>
       <Row justify="space-between" align="middle" style={{ marginBottom: '20px' }}>
+
          <Title level={3} className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`}`}>{t('project')}</Title>
         <Col>
           <Space><Input
             placeholder={t('searchProjects')}
             suffix={<SearchOutlined />}
+
             onChange={e => setSearchText(e.target.value)}
             style={{ width: 200 }}
             allowClear
           />
-            <Dropdown overlay={columnSettingsMenu} trigger={['click']} visible={columnSettingsVisible} onVisibleChange={setColumnSettingsVisible}>
-              <Button icon={<SettingOutlined />} className={`${customDark === "dark-dark" ? "text-dark" : customDarkText} border-0`}>
-              </Button>
-            </Dropdown>
-            <Button onClick={showModal} className={`${customBtn} border-0`}>
-              {t('addNewProject')}
-            </Button>
-          </Space>
+        </Col>
+        <Col>
+          <Button onClick={showModal} className={`${customBtn} bprder-0`}>
+            Add New Project
+          </Button>
         </Col>
       </Row>
       <Table
         columns={columns}
         dataSource={filteredProjects}
-        pagination={{
-          current: currentPage,
-          pageSize: pageSize,
-          total: filteredProjects.length,
-          onChange: (page, pageSize) => {
-            setCurrentPage(page);
-            setPageSize(pageSize);
-          },
-          showSizeChanger: true,
-          showQuickJumper: true,
-          showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
-        }}
+        pagination={false}
         rowKey="projectId"
         bordered
         onChange={handleTableChange}
+        style={{ background: 'white' }}
         className={`${customDark === "default-dark" ? "thead-default" : ""}
                     ${customDark === "red-dark" ? "thead-red" : ""}
                     ${customDark === "green-dark" ? "thead-green" : ""}
@@ -358,14 +303,27 @@ const Project = () => {
                     ${customDark === "light-dark" ? "thead-light" : ""}
                     ${customDark === "brown-dark" ? "thead-brown" : ""} `}
       />
+      <Pagination
+        current={currentPage}
+        pageSize={pageSize}
+        total={filteredProjects.length}
+        onChange={(page, pageSize) => {
+          setCurrentPage(page);
+          setPageSize(pageSize);
+        }}
+        showSizeChanger
+        showQuickJumper
+        showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
+        style={{ marginTop: '20px', textAlign: 'right' }}
+      />
       <Modal
         show={isModalVisible}
         onHide={handleCancel}
         centered
         className={`rounded-2 ${customDark === "" ? `${customDark}` : ''}  `}
       >
-        <Modal.Header closeButton={false} className={`rounded-top-2 ${customDark} ${customLightText} ${customDark === "dark-dark" ? `border ` : `border-0`} border d-flex justify-content-between `}>
-          <Modal.Title>{t('addNewProject')}</Modal.Title>
+       <Modal.Header closeButton={false} className={`rounded-top-2 ${customDark} ${customLightText} ${customDark === "dark-dark" ? `border ` : `border-0`} border d-flex justify-content-between `}>
+          <Modal.Title>Add New Project</Modal.Title>
           <AiFillCloseSquare
             size={35}
             onClick={handleCancel}
@@ -378,11 +336,11 @@ const Project = () => {
           <Form form={form} onFinish={handleAddProject} layout="vertical">
             <Form.Item
               name="group"
-              label={<span className={customDarkText}>{t('group')}</span>}
-              rules={[{ required: true, message: t('pleaseSelectGroup') }]}
+              label={<span className={customDarkText}>Group</span>}
+              rules={[{ required: true, message: 'Please select a group!' }]}
               className={`${customDark === "dark-dark" ? `text-white` : ''}`}
             >
-              <Select onChange={handleGroupChange} placeholder={t('selectGroup')}>
+              <Select onChange={handleGroupChange} placeholder="Select Group">
                 {groups.map((group) => (
                   <Option key={group.id} value={group.id}>{group.name}</Option>
                 ))}
@@ -390,10 +348,10 @@ const Project = () => {
             </Form.Item>
             <Form.Item
               name="type"
-              label={<span className={customDarkText}>{t('type')}</span>}
-              rules={[{ required: true, message: t('pleaseSelectType') }]}
+              label={<span className={customDarkText}>Type</span>}
+              rules={[{ required: true, message: 'Please select a type!' }]}
             >
-              <Select onChange={handleTypeChange} placeholder={t('selectType')}>
+              <Select onChange={handleTypeChange} placeholder="Select Type">
                 {types.map((type) => (
                   <Option key={type.typeId} value={type.typeId}>{type.types}</Option>
                 ))}
@@ -401,27 +359,27 @@ const Project = () => {
             </Form.Item>
             <Form.Item
               name="name"
-              label={<span className={customDarkText}>{t('projectName')}</span>}
-              rules={[{ required: true, message: t('pleaseEnterProjectName') }]}
+              label={<span className={customDarkText}>Project Name</span>}
+              rules={[{ required: true, message: 'Please enter the project name!' }]}
             >
-              <Input placeholder={t('enterProjectName')} />
+              <Input placeholder="Enter project name" />
             </Form.Item>
             <Form.Item
               name="description"
-              label={<span className={customDarkText}>{t('description')}</span>}
-              rules={[{ required: true, message: t('pleaseEnterDescription') }]}
+              label={<span className={customDarkText}>Description</span>}
+              rules={[{ required: true, message: 'Please enter a description!' }]}
             >
-              <Input.TextArea rows={4} placeholder={t('enterDescription')} />
+              <Input.TextArea rows={4} placeholder="Enter description" />
             </Form.Item>
             <Form.Item
               name="status"
-              label={<span className={customDarkText}>{t('status')}</span>}
+              label={<span className={customDarkText}>Status</span>}
               valuePropName="checked"
               initialValue={true}
             >
               <Switch
-                checkedChildren={t('active')}
-                unCheckedChildren={t('inactive')}
+                checkedChildren="Active"
+                unCheckedChildren="Inactive"
                 defaultChecked
               />
             </Form.Item>
@@ -429,10 +387,10 @@ const Project = () => {
         </Modal.Body>
         <Modal.Footer className={` ${customDark} ${customLightText} ${customDark === "dark-dark" ? `border ` : `border-0`} border d-flex justify-content-between `}>
           <Button variant="secondary" onClick={handleCancel}>
-            {t('cancel')}
+            Cancel
           </Button>
           <Button variant="primary" onClick={form.submit}>
-            {t('save')}
+            Save
           </Button>
         </Modal.Footer>
       </Modal>
