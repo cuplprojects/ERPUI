@@ -19,7 +19,12 @@ import QtySheetUpload from '../pages/QtySheetUpload';
 import Message from '../pages/Message/Message';
 import Labels from '../pages/Message/Labels';
 
+
+import { hasPermission } from '../CustomHooks/Services/permissionUtils';
 import CuDashboard from '../pages/CuDashboard';
+
+const isdevelopment = import.meta.env.VITE_APP_MODE === 'development';
+
 
 import AddProjectProcess from '../pages/AddProjectProcess';
 // import { hasPermission } from '../CustomHooks/Services/permissionUtils';
@@ -47,11 +52,13 @@ const Userlayout = () => {
           </div>
           <div className={`flex-grow-1 d-fle m-2 p-3 `} style={{ zIndex: "3" }}>
             <Routes>
-              <Route path="/dashboard" element={<MainDashboard />} />
-              <Route path="/cudashboard" element={<CuDashboard />} />
-              <Route path="/master" element={<Masters />} />
-              <Route path="/AddProjectProcess/:projectId" element={<AddProjectProcess />} />
-              <Route path="/features" element={<Features />} />
+
+              <Route path="/cudashboard" element={<CuDashboard/>} />
+              {(hasPermission(1) || isdevelopment) && <Route path="/dashboard" element={<MainDashboard />} />}
+              {(hasPermission('2') || isdevelopment) && <Route path="/master" element={<Masters />} />}
+              {(hasPermission('2.4') || isdevelopment) && <Route path="/AddProjectProcess/:projectId" element={<AddProjectProcess />} />}
+              {(hasPermission('2') || isdevelopment) && <Route path="/features" element={<Features />} />}
+
               {/* --------------- User Menu Routes -------------- */}
               <Route path="/profile" element={<Profile />} />
               <Route path="/settings" element={<UserSettings />} />

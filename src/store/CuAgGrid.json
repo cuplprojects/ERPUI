@@ -4,6 +4,18 @@
     "type": "Magazine",
     "completionPercentage": 60,
     "remainingPercentage": 40,
+    "completed": 5000,
+    "remaining": 3000,
+    "lots": [
+        { "name": "Lot-1", "completion": 70, "remaining": 30 },
+        { "name": "Lot-2", "completion": 60, "remaining": 40 },
+        { "name": "Lot-3", "completion": 60, "remaining": 40 },
+        { "name": "Lot-4", "completion": 60, "remaining": 40 },
+        { "name": "Lot-5", "completion": 60, "remaining": 40 },
+        { "name": "Lot-6", "completion": 60, "remaining": 40 },
+        { "name": "Lot-7", "completion": 60, "remaining": 40 },
+        { "name": "Lot-8", "completion": 80, "remaining": 20 }
+      ],
     "processes": [
       {
         "processName": "Planning",
@@ -84,6 +96,12 @@
     "type": "Brochure",
     "completionPercentage": 55,
     "remainingPercentage": 45,
+    "completed": 4400,
+    "remaining": 3600,
+    "lots": [
+        { "name": "Lot-1", "completion": 50, "remaining": 50 },
+        { "name": "Lot-2", "completion": 65, "remaining": 35 }
+      ],
     "processes": [
       {
         "processName": "Planning",
@@ -164,6 +182,13 @@
     "type": "Flyer",
     "completionPercentage": 70,
     "remainingPercentage": 30,
+    "completed": 5600,
+    "remaining": 2400,
+    "lots": [
+        { "name": "Lot-1", "completion": 75, "remaining": 25 },
+        { "name": "Lot-2", "completion": 70, "remaining": 30 },
+        { "name": "Lot-3", "completion": 65, "remaining": 35 }
+      ],
     "processes": [
       {
         "processName": "Planning",
@@ -244,6 +269,99 @@
     "type": "Poster",
     "completionPercentage": 85,
     "remainingPercentage": 15,
+    "completed": 6800,
+    "remaining": 1200,
+    "lots": [
+        { "name": "Lot-1", "completion": 90, "remaining": 10 },
+        { "name": "Lot-2", "completion": 85, "remaining": 15 },
+        { "name": "Lot-3", "completion": 80, "remaining": 20 }
+      ],
+    "processes": [
+      {
+        "processName": "Planning",
+        "type": "Poster",
+        "totalCatch": 550,
+        "totalQuantity": 1100,
+        "remainingQuantity": 550,
+        "remainingCatch": 275,
+        "percentage": 53.00
+      },
+      {
+        "processName": "Design",
+        "type": "Digital",
+        "totalCatch": 750,
+        "totalQuantity": 1600,
+        "remainingQuantity": 850,
+        "remainingCatch": 425,
+        "percentage": 56.13
+      },
+      {
+        "processName": "Proofing",
+        "type": "Poster",
+        "totalCatch": 650,
+        "totalQuantity": 1300,
+        "remainingQuantity": 650,
+        "remainingCatch": 325,
+        "percentage": 54.00
+      },
+      {
+        "processName": "Printing",
+        "type": "Poster",
+        "totalCatch": 850,
+        "totalQuantity": 1700,
+        "remainingQuantity": 850,
+        "remainingCatch": 425,
+        "percentage": 55.00
+      },
+      {
+        "processName": "Quality Check",
+        "type": "Poster",
+        "totalCatch": 330,
+        "totalQuantity": 730,
+        "remainingQuantity": 400,
+        "remainingCatch": 200,
+        "percentage": 57.79
+      },
+      {
+        "processName": "Packaging",
+        "type": "Poster",
+        "totalCatch": 320,
+        "totalQuantity": 720,
+        "remainingQuantity": 400,
+        "remainingCatch": 200,
+        "percentage": 59.56
+      },
+      {
+        "processName": "Distribution",
+        "type": "Poster",
+        "totalCatch": 330,
+        "totalQuantity": 730,
+        "remainingQuantity": 400,
+        "remainingCatch": 200,
+        "percentage": 58.79
+      },
+      {
+        "processName": "Archiving",
+        "type": "Poster",
+        "totalCatch": 320,
+        "totalQuantity": 720,
+        "remainingQuantity": 400,
+        "remainingCatch": 200,
+        "percentage": 61.56
+      }
+    ]
+  },
+  {
+    "projectName": "Project Zeta",
+    "type": "Poster",
+    "completionPercentage": 85,
+    "remainingPercentage": 15,
+    "completed": 6800,
+    "remaining": 1200,
+    "lots": [
+        { "name": "Lot-1", "completion": 85, "remaining": 15 },
+        { "name": "Lot-2", "completion": 85, "remaining": 15 }
+      ],
     "processes": [
       {
         "processName": "Planning",

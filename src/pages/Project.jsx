@@ -267,10 +267,13 @@ const Project = () => {
     >
       <h2 className={`${customDarkText}`}>All Projects</h2>
       <Row justify="space-between" align="middle" style={{ marginBottom: '20px' }}>
+
+         <Title level={3} className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`}`}>{t('project')}</Title>
         <Col>
-          <Input
-            placeholder="Search projects"
-            prefix={<SearchOutlined />}
+          <Space><Input
+            placeholder={t('searchProjects')}
+            suffix={<SearchOutlined />}
+
             onChange={e => setSearchText(e.target.value)}
             style={{ width: 200 }}
             allowClear
