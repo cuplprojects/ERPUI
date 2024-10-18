@@ -268,14 +268,15 @@ const RolesAndDepartments = () => {
                 style={{ width: 200}}
                 onChange={(e) => setSearchText(e.target.value)}
               />
-              {!hasPermission('2.1.1.1') && (
+             
+              <Dropdown overlay={columnSettingsMenu} trigger={['click']} visible={columnSettingsVisible} onVisibleChange={setColumnSettingsVisible}>
+                <Button icon={<SettingOutlined />} className={`${customDark === "dark-dark" ? "text-dark" : customDarkText} border-0`} />
+              </Dropdown> 
+              {hasPermission('2.1.1.1') && (
                 <Button type="primary" onClick={onCreateRole} className={`ms-2 ${customBtn}`}>
                   {t('newRole')}
                 </Button>
               )}
-              <Dropdown overlay={columnSettingsMenu} trigger={['click']} visible={columnSettingsVisible} onVisibleChange={setColumnSettingsVisible}>
-                <Button icon={<SettingOutlined />} className={`${customDark === "dark-dark" ? "text-dark" : customDarkText} border-0`} />
-              </Dropdown>
             </Space>
           }
           style={{ width: '80%', margin: '0 auto', padding: '16px' }}
