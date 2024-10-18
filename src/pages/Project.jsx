@@ -1,26 +1,25 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { Table, Select, Input, Space, Button, Typography, Row, Col, Checkbox, Form, Dropdown, Menu, message, Switch } from 'antd';
-import { Card, Modal } from 'react-bootstrap';
-import { EyeOutlined, EditOutlined, SaveOutlined, CloseOutlined, SettingOutlined, SearchOutlined } from '@ant-design/icons';
-import 'antd/dist/reset.css';
-import 'bootstrap/dist/css/bootstrap.min.css';
+import React, { useEffect, useState } from 'react';
+import { Table, Button, Input, Switch, Form, message, Card, Row, Col, Select, Pagination, Space, Typography } from 'antd';
+import { Modal } from 'react-bootstrap';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import API from '../CustomHooks/MasterApiHooks/api';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
-import { useMediaQuery } from 'react-responsive';
-import { AiFillCloseSquare } from 'react-icons/ai';
-import { BsFunnelFill } from "react-icons/bs";
+import { AiFillCloseSquare } from "react-icons/ai";
+import { SearchOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import { hasPermission } from '../CustomHooks/Services/permissionUtils';
 
 const { Option } = Select;
 const { Title } = Typography;
 
 const Project = () => {
   const { t } = useTranslation();
+
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
   const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
+
 
   const [projects, setProjects] = useState([]);
   const [groups, setGroups] = useState([]);
@@ -33,58 +32,50 @@ const Project = () => {
   const [editingStatus, setEditingStatus] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [selectedType, setSelectedType] = useState(null);
+  const navigate = useNavigate();
 
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchText, setSearchText] = useState('');
   const [sortedInfo, setSortedInfo] = useState({});
-  const [visibleColumns, setVisibleColumns] = useState({
-    name: true,
-    description: true,
-    status: true,
-  });
-  const [columnSettingsVisible, setColumnSettingsVisible] = useState(false);
 
-  const isMobile = useMediaQuery({ maxWidth: 767 });
-  const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1023 });
-
-  const getProjects = useCallback(async () => {
+  const getProjects = async () => {
     try {
       const response = await API.get('/Project');
       setProjects(response.data);
     } catch (error) {
       console.error('Failed to fetch projects', error);
-      message.error(t('failedToFetchProjects'));
+      message.error(t('failedFetchProjects'));
     }
-  }, [t]);
+  };
 
-  const getGroups = useCallback(async () => {
+  const getGroups = async () => {
     try {
       const response = await API.get('/Groups');
       setGroups(response.data);
     } catch (error) {
       console.error('Failed to fetch groups', error);
-      message.error(t('failedToFetchGroups'));
+      message.error(t('failedFetchGroups'));
     }
-  }, [t]);
+  };
 
-  const getTypes = useCallback(async () => {
+  const getTypes = async () => {
     try {
       const response = await API.get('/PaperTypes');
       setTypes(response.data);
     } catch (error) {
       console.error('Failed to fetch types', error);
-      message.error(t('failedToFetchTypes'));
+      message.error(t('failedFetchTypes'));
     }
-  }, [t]);
+  };
 
   useEffect(() => {
     getProjects();
     getGroups();
     getTypes();
-  }, [getProjects, getGroups, getTypes]);
+  }, []);
 
-  const handleAddProject = useCallback(async (values) => {
+  const handleAddProject = async (values) => {
     const { name, status, description } = values;
 
     const existingProject = projects.find(
@@ -110,14 +101,15 @@ const Project = () => {
       setProjects([...projects, response.data]);
       form.resetFields();
       setIsModalVisible(false);
-      message.success(t('projectAddedSuccessfully'));
+      message.success(t('projectAddedSuccess'));
+      navigate(`/AddProjectProcess/${response.data.projectId}`);
     } catch (error) {
       console.error('Error adding project:', error);
       message.error(t('errorAddingProject'));
     }
-  }, [projects, selectedGroup, selectedType, form, t]);
+  };
 
-  const handleEditSave = useCallback(async (index) => {
+  const handleEditSave = async (index) => {
     const updatedProject = {
       ...projects[index],
       name: editingName,
@@ -133,30 +125,25 @@ const Project = () => {
       updatedProjects[index] = updatedProject;
       setProjects(updatedProjects);
       setEditingIndex(null);
-      message.success(t('projectUpdatedSuccessfully'));
+      message.success(t('projectUpdatedSuccess'));
     } catch (error) {
       console.error('Failed to update project:', error);
-      message.error(t('failedToUpdateProject'));
+      message.error(t('failedUpdateProject'));
     }
-  }, [projects, editingName, editingDescription, editingStatus, t]);
+  };
 
   const handleTableChange = (pagination, filters, sorter) => {
     setSortedInfo(sorter);
   };
 
-  const handleColumnVisibilityChange = useCallback((e, column) => {
-    setVisibleColumns(prev => ({ ...prev, [column]: e.target.checked }));
-  }, []);
-
-  const columns = useMemo(() => [
+  const columns = [
     {
       title: t('sn'),
       dataIndex: 'serial',
       key: 'serial',
       render: (text, record, index) => (currentPage - 1) * pageSize + index + 1,
-      width: 80,
     },
-    visibleColumns.name && {
+    {
       title: t('projectName'),
       dataIndex: 'name',
       key: 'name',
@@ -173,10 +160,9 @@ const Project = () => {
         ) : (
           <span>{text}</span>
         ),
-      width: 200,
     },
-    visibleColumns.description && {
-      title: t('description'),
+    {
+      title: t('projectDescription'),
       dataIndex: 'description',
       key: 'description',
       render: (text, record, index) =>
@@ -190,9 +176,8 @@ const Project = () => {
         ) : (
           <span>{text}</span>
         ),
-      width: 200,
     },
-    visibleColumns.status && {
+    {
       title: t('status'),
       dataIndex: 'status',
       key: 'status',
@@ -214,29 +199,20 @@ const Project = () => {
             unCheckedChildren={t('inactive')}
           />
         ),
-      width: 120,
     },
     {
-      title: t('actions'),
+      title: t('action'),
       key: 'action',
       render: (_, record, index) =>
         editingIndex === index ? (
-          <Space>
-            <Button
-              icon={<SaveOutlined />}
-              onClick={() => handleEditSave(index)}
-              type="primary"
-              className={customBtn}
-            >
+          <>
+            <Button type="link" onClick={() => handleEditSave(index)}>
               {t('save')}
             </Button>
-            <Button
-              icon={<CloseOutlined />}
-              onClick={() => setEditingIndex(null)}
-            >
+            <Button type="link" onClick={() => setEditingIndex(null)}>
               {t('cancel')}
             </Button>
-          </Space>
+          </>
         ) : (
           <Button
             type="link"
@@ -246,14 +222,12 @@ const Project = () => {
               setEditingDescription(record.description);
               setEditingStatus(record.status);
             }}
-            disabled={!hasPermission('2.1.3.3')}
           >
             {t('edit')}
           </Button>
         ),
-      width: 150,
     },
-  ].filter(Boolean), [visibleColumns, editingIndex, editingName, editingDescription, editingStatus, handleEditSave, currentPage, pageSize, sortedInfo, customBtn, t]);
+  ];
 
   const showModal = () => {
     setIsModalVisible(true);
@@ -289,65 +263,41 @@ const Project = () => {
     )
   );
 
-  const columnSettingsMenu = (
-    <Menu>
-      {Object.entries(visibleColumns).map(([column, isVisible]) => (
-        <Menu.Item key={column}>
-          <Checkbox
-            checked={isVisible}
-            onChange={(e) => handleColumnVisibilityChange(e, column)}
-          >
-            {t(column)}
-          </Checkbox>
-        </Menu.Item>
-      ))}
-    </Menu>
-  );
-
   return (
     <Card
-      className={`${customDark === "dark-dark" ? `${customDark}` : `${customLight}`}`}
+    className={`${customDark === "dark-dark" ? `${customDark}` : `${customLight}`}`}
       bordered={true}
-      style={{ padding: '20px', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)' }}
+      style={{ padding: '20px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)' }}
     >
+      {/* <h2 className={`${customDarkText}`}>{t('allProjects')}</h2> */}
       <Row justify="space-between" align="middle" style={{ marginBottom: '20px' }}>
+
          <Title level={3} className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`}`}>{t('project')}</Title>
         <Col>
           <Space><Input
             placeholder={t('searchProjects')}
             suffix={<SearchOutlined />}
+
             onChange={e => setSearchText(e.target.value)}
             style={{ width: 200 }}
             allowClear
           />
-            <Dropdown overlay={columnSettingsMenu} trigger={['click']} visible={columnSettingsVisible} onVisibleChange={setColumnSettingsVisible}>
-              <Button icon={<SettingOutlined />} className={`${customDark === "dark-dark" ? "text-dark" : customDarkText} border-0`}>
-              </Button>
-            </Dropdown>
-            <Button onClick={showModal} className={`${customBtn} border-0`}>
-              {t('addNewProject')}
-            </Button>
           </Space>
+        </Col>
+        <Col>
+          <Button onClick={showModal} className={`${customBtn} bprder-0`}>
+            {t('addNewProject')}
+          </Button>
         </Col>
       </Row>
       <Table
         columns={columns}
         dataSource={filteredProjects}
-        pagination={{
-          current: currentPage,
-          pageSize: pageSize,
-          total: filteredProjects.length,
-          onChange: (page, pageSize) => {
-            setCurrentPage(page);
-            setPageSize(pageSize);
-          },
-          showSizeChanger: true,
-          showQuickJumper: true,
-          showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
-        }}
+        pagination={false}
         rowKey="projectId"
         bordered
         onChange={handleTableChange}
+        style={{ background: 'white' }}
         className={`${customDark === "default-dark" ? "thead-default" : ""}
                     ${customDark === "red-dark" ? "thead-red" : ""}
                     ${customDark === "green-dark" ? "thead-green" : ""}
@@ -358,13 +308,26 @@ const Project = () => {
                     ${customDark === "light-dark" ? "thead-light" : ""}
                     ${customDark === "brown-dark" ? "thead-brown" : ""} `}
       />
+      <Pagination
+        current={currentPage}
+        pageSize={pageSize}
+        total={filteredProjects.length}
+        onChange={(page, pageSize) => {
+          setCurrentPage(page);
+          setPageSize(pageSize);
+        }}
+        showSizeChanger
+        showQuickJumper
+        showTotal={(total, range) => t('paginationTotal', { start: range[0], end: range[1], total })}
+        style={{ marginTop: '20px', textAlign: 'right' }}
+      />
       <Modal
         show={isModalVisible}
         onHide={handleCancel}
         centered
         className={`rounded-2 ${customDark === "" ? `${customDark}` : ''}  `}
       >
-        <Modal.Header closeButton={false} className={`rounded-top-2 ${customDark} ${customLightText} ${customDark === "dark-dark" ? `border ` : `border-0`} border d-flex justify-content-between `}>
+       <Modal.Header closeButton={false} className={`rounded-top-2 ${customDark} ${customLightText} ${customDark === "dark-dark" ? `border ` : `border-0`} border d-flex justify-content-between `}>
           <Modal.Title>{t('addNewProject')}</Modal.Title>
           <AiFillCloseSquare
             size={35}

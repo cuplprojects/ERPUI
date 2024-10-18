@@ -133,7 +133,7 @@ const CustomUi = () => {
   return (
     <>
       <div className="user-interface-container" ref={dragRef} style={{ zIndex: "99999" }} onClick={handleShow}>
-        <div className="user-interface-icon">
+        <div className="user-interface-icon" >
           <IoSettings className={`settings-icon-ui ${customDark === 'dark-dark' ? "text-dark border-dark" : ''}`} />
           <img src={themeIcons[customDark] || themeIcons["default"]} alt="Theme Icon" className='ui-icon-img' />
         </div>
