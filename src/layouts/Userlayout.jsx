@@ -18,8 +18,14 @@ import { useStore } from 'zustand';
 import QtySheetUpload from '../pages/QtySheetUpload';
 import Message from '../pages/Message/Message';
 import Labels from '../pages/Message/Labels';
+
+import CuDashboard from '../pages/CuDashboard';
+
 import AddProjectProcess from '../pages/AddProjectProcess';
+
 import ViewQuantitySheet from '../pages/ViewQuantitySheet';
+
+import { hasPermission } from '../CustomHooks/Services/permissionUtils';
 
 
 const Userlayout = () => {
@@ -30,6 +36,9 @@ const Userlayout = () => {
   const customDark = cssClasses[0];
   const customMid = cssClasses[1];
   const customLight = cssClasses[2];
+  const userpermissions = localStorage.getItem('activeuser');
+  const permissions = JSON.parse(userpermissions);
+  // console.log(permissions);//to see permissions on console
   return (
     <div className={`container-fluid p-0 vh-100  ${customLight}`}>
       <LockOverlay className="lock-button" />
@@ -40,9 +49,10 @@ const Userlayout = () => {
           <div className="top-nav sticky-to" style={{ zIndex: "9" }}>
             <Navbar />
           </div>
-          <div className={`flex-grow-1 d-fle m-2 p-3 `} style={{ zIndex: "2" }}>
+          <div className={`flex-grow-1 d-fle m-2 p-3 `} style={{ zIndex: "3" }}>
             <Routes>
               <Route path="/dashboard" element={<MainDashboard />} />
+              <Route path="/cudashboard" element={<CuDashboard />} />
               <Route path="/master" element={<Masters />} />
               <Route path="/AddProjectProcess/:projectId" element={<AddProjectProcess />} />
               <Route path="/features" element={<Features />} />

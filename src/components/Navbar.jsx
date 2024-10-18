@@ -11,22 +11,23 @@ import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import { Link } from 'react-router-dom';
 import useUserDataStore from '../store/userDataStore';
-import SampleUser1 from "./../assets/sampleUsers/sampleUser1.jpg";
+import SampleUser1 from "./../assets/sampleUsers/defaultUser.jpg";
 const apiUrl = import.meta.env.VITE_API_BASE_URL;
 
 const Navbar = () => {
 
   //Theme Change Section
   const { getCssClasses } = useStore(themeStore);
-  const cssClasses = getCssClasses();
-  const customDark = cssClasses[0];
-  const customMid = cssClasses[1];
-  const customLight = cssClasses[2];
-  const customBtn = cssClasses[3];
-  const customDarkText = cssClasses[4];
-  const customLightText = cssClasses[5]
-  const customLightBorder = cssClasses[6]
-  const customDarkBorder = cssClasses[7]
+  const [
+    customDark,
+    customMid,
+    customLight,
+    customBtn,
+    customDarkText,
+    customLightText,
+    customLightBorder,
+    customDarkBorder
+  ] = getCssClasses();
 
   const [showNav, setShowNav] = useState(false);
   const [userMenu, setUserMenu] = useState(false);
@@ -112,6 +113,17 @@ const Navbar = () => {
     setShowNotification(false);
   };
 
+  const isValidImageUrl = (url) => {
+    return url && url.match(/\.(jpeg|jpg|gif|png)$/) != null;
+  };
+
+  const getProfileImageSrc = () => {
+    if (userData?.profilePicturePath && isValidImageUrl(`${apiUrl}/${userData.profilePicturePath}`)) {
+      return `${apiUrl}/${userData.profilePicturePath}`;
+    }
+    return SampleUser1;
+  };
+
   return (
     <div ref={containerRef} className='sticky-to'>
       <Container fluid className={`border-bottom py-2 text-white ${customDark}`}>
@@ -132,23 +144,44 @@ const Navbar = () => {
           <Col xs={2} md={1} lg={1} className="d-flex align-items-center justify-content-end">
             <button
               onClick={toggleNotificationMenu}
-              className="btn p-0 border-0 bg-transparent me-3"
+              className="btn p-0 border-0 bg-transparent me-2"
               aria-label="Toggle notification menu"
-              style={{ cursor: 'pointer' }}
+              style={{ 
+                cursor: 'pointer',
+                width: '40px',
+                height: '40px',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center'
+              }}
             >
-              <RiNotification2Fill className="fs-4 text-light custom-zoom-btn" size={30}/>
+              <RiNotification2Fill className="text-light custom-zoom-btn" style={{ fontSize: '24px' }} />
             </button>
             <button
               onClick={toggleUserMenu}
               className="btn p-0 border-0 bg-transparent"
               aria-label="Toggle user menu"
-              style={{ cursor: 'pointer' }}
+              style={{ 
+                cursor: 'pointer', 
+                width: '40px', 
+                height: '40px', 
+                overflow: 'hidden',
+                padding: 0,
+                borderRadius: '50%',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                flexShrink: 0
+              }}
             >
               <img
-                src={userData?.profilePicturePath ? `${apiUrl}/${userData.profilePicturePath}` : SampleUser1}
+                src={getProfileImageSrc()}
                 alt={`${userData?.firstName} ${userData?.lastName}`}
-                width="40px"
-                className='rounded-circle'
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover'
+                }}
               />
             </button>
           </Col>
@@ -164,7 +197,7 @@ const Navbar = () => {
           overflow: 'hidden',
           transition: '600ms ease-in-out, opacity 600ms ease-in-out',
           opacity: showNav ? 1 : 0,
-          zIndex: 999,
+          // zIndex: 1,
         }}
       >
         <NavigationBar onLinkClick={closeNav} />
@@ -181,7 +214,7 @@ const Navbar = () => {
           overflow: 'hidden',
           transition: '500ms ease-in-out, opacity 500ms ease-in-out',
           opacity: userMenu ? 1 : 0,
-          zIndex: 999,
+          // zIndex: 999,
         }}
       >
         <UserMenu onClose={closeUserMenu} />
@@ -198,7 +231,7 @@ const Navbar = () => {
           overflow: 'hidden',
           transition: '500ms ease-in-out, opacity 500ms ease-in-out',
           opacity: showNotification ? 1 : 0,
-          zIndex: 999,
+          // zIndex: 999,
         }}
       >
         <Notification onClose={closeNotification} />

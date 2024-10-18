@@ -618,7 +618,6 @@ const ProjectDetailsTable = ({ tableData, setTableData }) => {
                                     onChange={(e) => setSearchText(e.target.value)}
                                     style={{ width: '180px' }} // Space for remove icon
                                     className={`custom-placeholder text-primary `}
-
                                 />
                             </div>
                         )}

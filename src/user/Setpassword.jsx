@@ -150,7 +150,7 @@ const SetPassword = () => {
         backgroundPosition: 'center',
       }}
     >
-      <ToastContainer />
+      <ToastContainer autoClose={1500}/>
 
       <Row className="h-100">
         <Col lg={6} className="d-none d-lg-flex align-items-center justify-content-center p-0" >
