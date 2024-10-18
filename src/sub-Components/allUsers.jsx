@@ -162,6 +162,7 @@ const AllUsers = () => {
           <Select
             value={currentUserData.roleId}
             onChange={(value) => setCurrentUserData(prev => ({ ...prev, roleId: value }))}
+            style={{ width: '200px' }}  // Increased width of the dropdown
           >
             {roles.map(role => (
               <Option key={role.roleId} value={role.roleId}>{role.roleName}</Option>
@@ -172,7 +173,7 @@ const AllUsers = () => {
         );
       },
       fixed: 'left',
-      width: 100,
+      width: 200,  // Increased width of the column to accommodate the wider dropdown
       sorter: (a, b) => a.roleId - b.roleId,
     },
     visibleColumns.profilePicture && {
@@ -359,6 +360,7 @@ const AllUsers = () => {
       </Row>
 
       <Table
+        striped
         columns={columns}
         dataSource={filteredData}
         pagination={{

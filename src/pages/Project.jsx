@@ -265,6 +265,7 @@ const Project = () => {
       bordered={true}
       style={{ padding: '20px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)' }}
     >
+      <h2 className={`${customDarkText}`}>All Projects</h2>
       <Row justify="space-between" align="middle" style={{ marginBottom: '20px' }}>
         <Col>
           <Input
