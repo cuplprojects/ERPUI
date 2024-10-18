@@ -22,7 +22,7 @@ import Labels from '../pages/Message/Labels';
 import CuDashboard from '../pages/CuDashboard';
 
 import AddProjectProcess from '../pages/AddProjectProcess';
-import { hasPermission } from '../CustomHooks/Services/permissionUtils';
+// import { hasPermission } from '../CustomHooks/Services/permissionUtils';
 
 const Userlayout = () => {
 
@@ -42,7 +42,7 @@ const Userlayout = () => {
       <div className={`fixed-top w-100 ${customMid}`} style={{ zIndex: "1", height: "350px", borderRadius: "0% 0% 30% 30%" }}></div>
       <Row className="g-0 h-100">
         <Col xs={12} md={12} lg={12} className={`d-flex flex-column ${customLight}`}>
-          <div className="top-nav sticky-to" style={{ zIndex: "9" }}>
+          <div className="top-nav sticky-top" style={{ zIndex: "9" }}>
             <Navbar />
           </div>
           <div className={`flex-grow-1 d-fle m-2 p-3 `} style={{ zIndex: "3" }}>

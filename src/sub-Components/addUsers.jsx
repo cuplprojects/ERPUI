@@ -86,7 +86,9 @@ const AddUsers = () => {
     const fetchRoles = async () => {
       try {
         const response = await axios.get('https://localhost:7212/api/Roles');
-        setRoles(response.data);
+        // Filter out roles with status false
+        const activeRoles = response.data.filter(role => role.status === true);
+        setRoles(activeRoles);
       } catch (error) {
         console.error('Failed to fetch roles:', error);
       }
