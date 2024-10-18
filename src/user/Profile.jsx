@@ -4,12 +4,11 @@ import { FaPencilAlt } from 'react-icons/fa';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
-import SampleUser1 from "./../assets/sampleUsers/defaultUser.jpg";
+import SampleUser from "./../assets/sampleUsers/defaultUser.jpg";
 import "./../styles/Profile.css";
-import { jwtDecode } from 'jwt-decode';
 import axios from 'axios';
 import useUserDataStore from '../store/userDataStore';
-import SampleUser from "./../assets/sampleUsers/defaultUser.jpg";
+
 
 const UserProfile = () => {
   const { getCssClasses } = useStore(themeStore);
@@ -22,6 +21,8 @@ const UserProfile = () => {
   const [isZoomed, setIsZoomed] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [profileImageKey, setProfileImageKey] = useState(Date.now());
+  const [roles, setRoles] = useState([]);
+  const [userRole, setUserRole] = useState('');
 
   const APIUrlBase = import.meta.env.VITE_API_BASE_URL;
   const APIUrl = import.meta.env.VITE_API_BASE_API;
@@ -30,6 +31,7 @@ const UserProfile = () => {
     const loadUserData = async () => {
       setIsLoading(true);
       await fetchUserData();
+      await fetchRoles();
       setIsLoading(false);
     };
     loadUserData();
@@ -41,6 +43,22 @@ const UserProfile = () => {
     }, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    if (userData && roles.length > 0) {
+      const role = roles.find(role => role.roleId === userData.roleId);
+      setUserRole(role ? role.roleName : '');
+    }
+  }, [userData, roles]);
+
+  const fetchRoles = async () => {
+    try {
+      const response = await axios.get('https://localhost:7212/api/Roles');
+      setRoles(response.data);
+    } catch (error) {
+      console.error('Error fetching roles:', error);
+    }
+  };
 
   const handleImageClick = (event) => {
     event.stopPropagation();
@@ -71,7 +89,7 @@ const UserProfile = () => {
       if (file) {
         const reader = new FileReader();
         reader.onloadend = async () => {
-          if (userData?.profileImage === SampleUser1) {
+          if (userData?.profileImage === SampleUser) {
             await uploadImage(file);
           } else {
             await updateProfilePicture(file);
@@ -125,8 +143,15 @@ const UserProfile = () => {
   };
 
   const getProfileImageUrl = (imagePath) => {
-    if (!imagePath) return SampleUser1;
+    if (!imagePath) return SampleUser;
+    if (!isValidImageFormat(imagePath)) return SampleUser;
     return imagePath.startsWith('http') ? imagePath : `${APIUrlBase}/${imagePath}?${profileImageKey}`;
+  };
+
+  const isValidImageFormat = (imagePath) => {
+    const validExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp'];
+    const extension = imagePath.split('.').pop().toLowerCase();
+    return validExtensions.includes(extension);
   };
 
   if (isLoading) {
@@ -161,9 +186,7 @@ const UserProfile = () => {
         <Row className="align-items-center mb-4">
           <Col xs={12} sm={3} md={2} className="text-center position-relative">
             <img
-              src={userData.profilePicturePath
-                ? getProfileImageUrl(userData.profilePicturePath)
-                : "/path/to/SampleUser.png"}
+              src={getProfileImageUrl(userData.profilePicturePath)}
               alt="Profile Picture"
               width="100px"
               height="100px"
@@ -266,7 +289,7 @@ const UserProfile = () => {
                 <Form.Control
                   name="role"
                   placeholder="Your Role"
-                  value={userData.role}
+                  value={userRole}
                   className='rounded'
                   disabled
                 />

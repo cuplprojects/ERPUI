@@ -238,12 +238,12 @@ const ChangePassword = () => {
             <Button
               type="submit"
               disabled={false} // No submission logic, so always enabled
-              className={`${customBtn} ${customBtn === "btn-dark" ? "border border-white" : "border-0"} custom-zoom-btn w-100`}
+              className={`${customBtn} ${customDark === "dark-dark" ? "border border-white" : "border-0"} custom-zoom-btn w-100`}
             >
               Submit
             </Button>
           </Form>
-          <ToastContainer style={{marginTop:"50px"}} />
+          <ToastContainer style={{marginTop:"50px"}} autoClose={1500}/>
         </Col>
       </Row>
     </Container>
