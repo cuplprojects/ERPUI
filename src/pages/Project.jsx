@@ -311,9 +311,7 @@ const Project = () => {
       style={{ padding: '20px', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)' }}
     >
       <Row justify="space-between" align="middle" style={{ marginBottom: '20px' }}>
-        <Col>
-          
-        </Col>
+         <Title level={3} className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`}`}>{t('project')}</Title>
         <Col>
           <Space><Input
             placeholder={t('searchProjects')}
