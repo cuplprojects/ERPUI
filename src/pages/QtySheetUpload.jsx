@@ -1,65 +1,184 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Row, Col } from 'react-bootstrap';
-import { Form, Upload, Button, Input, Select, Tag, message } from 'antd';
+import { Form, Upload, Button, Select, message } from 'antd';
+import { UploadOutlined } from '@ant-design/icons';
+import axios from 'axios';
+import * as XLSX from 'xlsx';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
-import { UploadOutlined } from '@ant-design/icons';
-import { IoMdCloudDownload } from "react-icons/io";
+import ViewQuantitySheet from './ViewQuantitySheet';
+
 const QtySheetUpload = () => {
-    //Theme Change Section
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = getCssClasses();
-    const customDark = cssClasses[0];
-    const customMid = cssClasses[1];
-    const customLight = cssClasses[2];
-    const customBtn = cssClasses[3];
     const customDarkText = cssClasses[4];
-    const customLightText = cssClasses[5];
-    const customLightBorder = cssClasses[6];
-    const customDarkBorder = cssClasses[7];
-
-    const [fileList, setFileList] = React.useState([]);
-    const [uploading, setUploading] = React.useState(false);
-    const [multipleLanguages, setMultipleLanguages] = React.useState(false);
-    const [selectedLanguages, setSelectedLanguages] = React.useState([]);
-    const [showBookletOptions, setShowBookletOptions] = React.useState(false);
+    const customBtn = cssClasses[3];
+    const [fileList, setFileList] = useState([]);
+    const [uploading, setUploading] = useState(false);
+    const [columns, setColumns] = useState([]);
     const [form] = Form.useForm();
+    const [headers, setHeaders] = useState([]);
+    const [fieldMappings, setFieldMappings] = useState({});
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [showMappingFields, setShowMappingFields] = useState(false);
+    const [showTable, setShowTable] = useState(false);
+    const [dataSource, setDataSource] = useState([]);
+    const [lots, setLots] = useState([]);
+    const [selectedLotNo, setSelectedLotNo] = useState(null);
 
-    const handleUpload = () => {
-        form.validateFields().then((values) => {
-            setUploading(true);
-            // Add your upload logic here
-            setTimeout(() => {
-                setUploading(false);
-            }, 2000);
+
+    const handleUpload = async () => {
+        setUploading(true);
+        const mappedData = await createMappedData();
+
+        if (!mappedData || !Array.isArray(mappedData) || mappedData.length === 0) {
+            console.error("Mapped data is invalid or empty.");
+            setUploading(false);
+            return;
+        }
+
+        const finalPayload = mappedData.map(item => ({
+            catchNo: item.CatchNo || "",
+            paper: item.Paper || "",
+            course: item.Course || "",
+            subject: item.Subject || "",
+            innerEnvelope: item.InnerEnvelope || "",
+            outerEnvelope: item.OuterEnvelope || "",
+            lotNo: "2",
+            quantity: Number(item.Quantity) || 0,
+            percentageCatch: Number(item.percentageCatch) || 0,
+            projectId: 1,
+            isOverridden: item.isOverridden === 'true',
+            processId: [0],
+        }));
+
+        console.log("Final payload:", JSON.stringify(finalPayload, null, 2));
+
+        try {
+            const response = await axios.post('https://localhost:7212/api/QuantitySheet', finalPayload, {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+            console.log('Upload successful:', response.data);
+            setDataSource(finalPayload);
+            message.success('Quantity Sheet uploaded successfully')
+            resetState();
+        } catch (error) {
+            console.error('Upload failed', error.response?.data || error.message);
+            message.error('Failed to upload quantity sheet')
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    const createMappedData = async () => {
+        const reader = new FileReader();
+        return new Promise((resolve) => {
+            reader.onload = async (e) => {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                const rows = jsonData.slice(1);
+                const mappedData = rows.map((row) => {
+                    const rowData = {};
+                    for (let property in fieldMappings) {
+                        const header = fieldMappings[property];
+                        const index = jsonData[0].indexOf(header);
+                        rowData[property] = index !== -1 ?
+                            (property === 'quantity' ? parseFloat(row[index]) || 0 : String(row[index])) : '';
+                    }
+                    console.log("Row Data Mapped:", rowData);
+                    rowData['projectId'] = 1;
+                    rowData['isOverridden'] = 'false';
+                    rowData['percentageCatch'] = '0';
+                    return rowData;
+                });
+                resolve(mappedData);
+            };
+            reader.readAsArrayBuffer(selectedFile);
         });
     };
 
-    const props = {
-        onRemove: (file) => {
-            const index = fileList.indexOf(file);
-            const newFileList = fileList.slice();
-            newFileList.splice(index, 1);
-            setFileList(newFileList);
-        },
-        beforeUpload: (file) => {
-            if (file.type !== 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' && file.type !== 'application/vnd.ms-excel' && file.type !== 'text/csv') {
-                message.error({
-                    content: 'Invalid File Type ! Upload Excel Files Only',
-                    placement: 'top',
-                });
-                return false;
-            }
-            if (fileList.length === 0) {
-                setFileList([file]);
-            } else {
-                setFileList([...fileList, file]);
-            }
-            return false;
-        },
-        fileList,
+    const getColumns = async () => {
+        try {
+            const response = await axios.get('https://localhost:7212/api/QuantitySheet/Columns');
+            setColumns(response.data);
+        } catch (error) {
+            console.error('Failed to fetch columns', error);
+        }
     };
 
+    useEffect(() => {
+        getColumns();
+        fetchLots();
+    }, []);
+
+    const handleFileUpload = (file) => {
+        setFileList([file]);
+        setSelectedFile(file);
+        processFile(file);
+        return false;
+    };
+
+    const processFile = async (file) => {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+            const excelHeaders = jsonData[0];
+            setHeaders(excelHeaders);
+            setShowMappingFields(true);
+
+            const autoMappings = {};
+            columns.forEach((col) => {
+                const matchingHeader = excelHeaders.find(header => header.toLowerCase() === col.toLowerCase());
+                autoMappings[col] = matchingHeader || '';
+            });
+
+            setFieldMappings(autoMappings);
+        };
+        reader.readAsArrayBuffer(file);
+    };
+
+    const handleMappingChange = (property, value) => {
+        setFieldMappings(prev => ({ ...prev, [property]: value }));
+    };
+
+    const getAvailableOptions = (property) => {
+        const selectedValues = Object.values(fieldMappings);
+        return headers
+            .filter(header => !selectedValues.includes(header))
+            .map(header => ({ label: header, value: header }));
+    };
+
+    const resetState = () => {
+        setFieldMappings({});
+        setHeaders([]);
+        setShowMappingFields(false);
+        setSelectedFile(null);
+        setFileList([]);
+        setShowTable(false);
+
+    };
+
+    const fetchLots = async () => {
+        try {
+            const response = await axios.get('https://localhost:7212/api/QuantitySheet/Lots?ProjectId=1')
+            setLots(response.data)
+        }
+        catch (error) {
+            console.error('Failed to fetch Lots')
+        }
+    }
+    
     const handleDownloadTemplate = () => {
         const link = document.createElement('a');
         link.href = 'path_to_your_template_file.xlsx'; // local QS file 
@@ -67,282 +186,99 @@ const QtySheetUpload = () => {
         link.click();
     };
 
-    return (
-        <div className={`container ${customDarkText} ${customLight} ${customDark === "dark-dark" ? "border" : "border-0"} rounded shadow-lg`}>
-            <Row className='mt-2 mb-2'>
-                <Col lg={12} md={12} sm={12} xs={12} className='d-flex  justify-content-center'>
+    const handleLotClick = (lotNo) => {
+        if (selectedLotNo === lotNo) {
+            setShowTable(!showTable); // Toggle table visibility
+        } else {
+            setSelectedLotNo(lotNo);
+            setShowTable(true); // Show table for the selected lot
+        }
+    };
 
-                    <h1 className={`text-center p-2 mt-3 rounded w-50  ${customDarkText} ${customDarkText} `}>Upload Quantity Sheet</h1>
-                </Col>
-            </Row>
-            <Row>
-                <Col lg={6} md={6} sm={12} xs={12}>
-                    <Button type="primary" onClick={handleDownloadTemplate} className={`custom-zoom-btn ${customBtn} ${customDark === "dark-dark" ? "border-white" : "border-0"}`}>
-                        <IoMdCloudDownload size={25} /> Download Template
-                    </Button>
-                </Col>
-                <Col lg={6} md={6} sm={12} xs={12}>
-                </Col>
-            </Row>
+    return (
+        <div className={`container ${customDarkText} rounded shadow-lg`}>
             <Row className='mt-2 mb-2'>
-                <Col lg={6} md={6} sm={12} xs={12}>
-                    <Form form={form} onFinish={handleUpload} layout="vertical">
-                        <Form.Item
-                            className='d-flex align-items-center'
-                            name="file"
-                            rules={[
-                                {
-                                    validator: (_, value) => {
-                                        if (fileList.length === 0) {
-                                            return Promise.reject('Please select a file');
-                                        }
-                                        if (value && !['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel', 'application/vnd.ms-excel.sheet.macroEnabled.12', 'text/csv'].includes(value.type)) {
-                                            return Promise.reject('Only Excel files (.xls, .xlsx, .xlsm, .csv) are allowed');
-                                        }
-                                        return Promise.resolve();
-                                    },
-                                },
-                            ]}
-                        >
-                            <span className={`${customDarkText}`}>
-                                <label className='fs-5 me-2 '>Upload File</label>
-                            </span>
-                            <Upload {...props}>
+                <Col lg={12} className='d-flex justify-content-center'>
+                    <h1 className={`text-center p-2 mt-3 rounded w-50 ${customDarkText}`}>Upload Quantity Sheet</h1>
+                </Col>
+            </Row>
+
+            <Row className='mt-2 mb-2'>
+                <Col lg={12}>
+                    <Form layout="vertical" form={form}>
+                        <Form.Item name="file" rules={[{ required: true, message: 'Please select a file' }]}>
+                            <Upload
+                                onRemove={(file) => {
+                                    const index = fileList.indexOf(file);
+                                    const newFileList = fileList.slice();
+                                    newFileList.splice(index, 1);
+                                    setFileList(newFileList);
+                                }}
+                                beforeUpload={handleFileUpload}
+                                fileList={fileList}
+                            >
                                 <Button className='fs-5 custom-zoom-btn'>
-                                    <UploadOutlined className='me-2 ' /> Select File
+                                    <UploadOutlined className='me-2' /> Select File
                                 </Button>
                             </Upload>
                         </Form.Item>
-                        <Form.Item className={``}>
+                        <Form.Item>
                             <Button
-                                className={`${customBtn} ${customDark === "dark-dark" ? "border" : "border-0"} custom-zoom-btn`}
-                                type="submit"
-                                onClick={() => {
-                                    if (fileList.length === 0) {
-                                        message.error({
-                                            content: 'Upload at least one file',
-                                            placement: 'top',
-                                        });
-                                    } else {
-                                        setUploading(true);
-                                        handleUpload();
-                                    }
-                                }}
+                                className={`${customBtn}`}
+                                type="primary"
+                                onClick={handleUpload}
                                 loading={uploading}
                             >
                                 {uploading ? 'Uploading...' : 'Upload'}
                             </Button>
                         </Form.Item>
-                    </Form>
-                </Col>
-                <Col lg={6} md={6} sm={12} xs={12}>
-                </Col>
-            </Row>
-            <Row className='mt- mb-2'>
-                <Col lg={12} md={12} sm={12} xs={12} className='mb-3'>
-                    <h4 className={`text-start p-2 ${customDarkText} ${customMid} rounded w-`}>Basic Details</h4>
-                </Col>
-                <Col lg={6} md={6} sm={12} xs={12}>
-                    <Form layout="vertical">
-                        <Form.Item label={<span className={`text-capitalize ${customDarkText} fs-5`}>Multiple Languages</span>}>
-                            <Select
-                                style={{ height: 40 }}
-                                placeholder="Multi Language?"
-                                onChange={(value) => {
-                                    if (value === 'yes') {
-                                        setMultipleLanguages(true);
-                                    } else {
-                                        setMultipleLanguages(false);
-                                        setSelectedLanguages([]);
-                                    }
-                                }}
-                            >
-                                <Select.Option value="yes">Yes</Select.Option>
-                                <Select.Option value="no">No</Select.Option>
-                            </Select>
-                        </Form.Item>
-                    </Form>
-                </Col>
-                <Col lg={6} md={6} sm={12} xs={12}>
-                    {multipleLanguages ? (
-                        <Form layout="vertical">
-                            <Form.Item label={<span className={`text-capitalize ${customDarkText} fs-5`}>Select Languages</span>}>
-                                <Select
-                                    mode="multiple"
-                                    style={{ height: 40 }}
-                                    value={selectedLanguages}
-                                    onChange={(value) => setSelectedLanguages(value)}
-                                    options={[
-                                        { value: 'Hindi', label: 'Hindi' },
-                                        { value: 'English', label: 'English' },
-                                    ]}
-                                />
-                            </Form.Item>
-                        </Form>
-                    ) : (
-                        <Form layout="vertical">
-                            <Form.Item label={<span className={`text-capitalize ${customDarkText} fs-5`}>Default Languages</span>}>
-                                <div style={{ height: 40, display: 'flex', alignItems: 'center' }}>
-                                    <div className="selected-languages">
-                                        <Tag className='fs-5 p-2 custom-zoom-btn'>English</Tag>
-                                    </div>
-                                </div>
-                            </Form.Item>
-                        </Form>
-                    )}
-                </Col>
-            </Row>
-            <Row>
-                <Col lg={6} md={6} sm={12} xs={12}>
-                    <Form layout="vertical">
-                        <Form.Item label={<span className={`text-capitalize ${customDarkText} fs-5`}>No. Of Questions</span>}>
-                            <Select
-                                style={{ height: 40 }}
-                                placeholder="Select No. Of Questions"
-                                onChange={(value) => {
-                                }}
-                            >
-                                <Select.Option value="50">50</Select.Option>
-                                <Select.Option value="75">75</Select.Option>
-                                <Select.Option value="100">100</Select.Option>
-                                <Select.Option value="150">150</Select.Option>
-                            </Select>
-                        </Form.Item>
-                    </Form>
-                </Col>
-                <Col lg={6} md={6} sm={12} xs={12}>
-                    <Form layout="vertical">
-                        <Form.Item label={<span className={`text-capitalize ${customDarkText} fs-5`}>Select Type</span>}>
-                            <Select
-                                style={{ height: 40 }}
-                                placeholder="Select Type"
-                                onChange={(value) => {
-                                    if (value === 'Booklet') {
-                                        setShowBookletOptions(true);
-                                    } else {
-                                        setShowBookletOptions(false);
-                                    }
-                                }}
-                            >
-                                <Select.Option value="Paper">Paper</Select.Option>
-                                <Select.Option value="Booklet">Booklet</Select.Option>
-                                <Select.Option value="Books">Books</Select.Option>
-                            </Select>
+                        <Form.Item>
+                            {lots.map((lotNo, index) => (
+                                <Button
+                                    key={index}
+                                   
+                                    className={`${customBtn} me-2`}
+                                    type="primary"
+                                    onClick={() => handleLotClick(lotNo)}
+                                >
+                                    Click to view lot {lotNo}
+                                </Button>
+                            ))}
+                           {showTable && <ViewQuantitySheet selectedLotNo={selectedLotNo} />}
                         </Form.Item>
                     </Form>
                 </Col>
             </Row>
-            <Row>
-                <Col lg={6} md={6} sm={12} xs={12}>
-                    <Form layout="vertical">
-                        <Form.Item label={<span className={`text-capitalize ${customDarkText} fs-5`}>Key Provided</span>}>
-                            <Select
-                                style={{ height: 40 }}
-                                placeholder="Select Key Provided"
-                                onChange={(value) => {
-                                }}
-                                disabled={!showBookletOptions}
-                            >
-                                <Select.Option value="yes" disabled={!showBookletOptions}>Yes</Select.Option>
-                                <Select.Option value="no" disabled={!showBookletOptions}>No</Select.Option>
-                            </Select>
-                        </Form.Item>
-                    </Form>
-                </Col>
-                <Col lg={6} md={6} sm={12} xs={12}>
-                    <Form layout="vertical">
-                        <Form.Item label={<span className={`text-capitalize ${customDarkText} fs-5`}>No of series to be printed</span>}>
-                            <Select
-                                style={{ height: 40 }}
-                                placeholder="Select No of series to be printed"
-                                onChange={(value) => {
-                                }}
-                                disabled={!showBookletOptions}
-                            >
-                                <Select.Option value="1" disabled={!showBookletOptions}>1</Select.Option>
-                                <Select.Option value="2" disabled={!showBookletOptions}>2</Select.Option>
-                                <Select.Option value="3" disabled={!showBookletOptions}>3</Select.Option>
-                                <Select.Option value="4" disabled={!showBookletOptions}>4</Select.Option>
-                            </Select>
-                        </Form.Item>
-                    </Form>
-                </Col>
-            </Row>
-            <Row>
-                <Col lg={4} md={4} sm={12} xs={12}>
-                    <Form layout="vertical">
-                        <Form.Item label={<span className={`text-capitalize ${customDarkText} fs-5`}>Duration of Exam</span>}>
-                            <Row>
-                                <Col lg={6} md={6} sm={12} xs={12}>
-                                    <Form.Item>
-                                        <Input
-                                            type="number"
-                                            placeholder="Hours"
-                                            style={{ width: '100%', height: 40 }}
-                                        />
-                                    </Form.Item>
-                                </Col>
-                                <Col lg={6} md={6} sm={12} xs={12}>
-                                    <Form.Item>
-                                        <Input
-                                            type="number"
-                                            placeholder="Minutes"
-                                            style={{ width: '100%', height: 40 }}
-                                        />
-                                    </Form.Item>
-                                </Col>
-                            </Row>
-                        </Form.Item>
-                    </Form>
-                </Col>
-                <Col lg={4} md={4} sm={12} xs={12}>
-                    <Form layout="vertical">
-                        <Form.Item label={<span className={`text-capitalize ${customDarkText} fs-5`}>Maximum Marks</span>}>
-                            <Input
-                                type="number"
-                                placeholder="Maximum Marks"
-                                style={{ width: '100%', height: 40 }}
-                            />
-                        </Form.Item>
-                    </Form>
-                </Col>
-                <Col lg={4} md={4} sm={12} xs={12}>
-                    <Form layout="vertical">
-                        <Form.Item label={<span className={`text-capitalize ${customDarkText} fs-5`}>Select Course</span>}>
-                            <Select
-                                style={{ width: '100%', height: 40 }}
-                                placeholder="Select Course"
-                                onChange={(value) => {
-                                    // handle change logic here
-                                }}
-                            >
-                                <Select.Option value="Course 1">Course 1</Select.Option>
-                                <Select.Option value="Course 2">Course 2</Select.Option>
-                                <Select.Option value="Course 3">Course 3</Select.Option>
-                                {/* add more options here */}
-                            </Select>
-                        </Form.Item>
-                    </Form>
-                </Col>
-            </Row>
-            {/* row 7 */}
-            <Row>
-                <Col lg={12} md={12} sm={12} xs={12} className='d-flex justify-content-center'>
-                    <Form.Item>
-                        <Button
-                            type="primary"
-                            htmlType="submit"
-                            className={`custom-zoom-btn ${customBtn} ${customDark === "dark-dark" ? "border" : "border-0"}`}
-                            onClick={() => {
-                                // for now, route to /dashboard
-                                window.location.href = '/dashboard';
-                            }}
-                        >
-                            Submit
-                        </Button>
-                    </Form.Item>
-                </Col>
-            </Row>
+
+            {showMappingFields && headers.length > 0 && (
+                <Row className='mt-2 mb-2'>
+                    <Col lg={12}>
+                        <table className="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Fields</th>
+                                    <th>Excel Header</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {Object.keys(fieldMappings).map((property) => (
+                                    <tr key={property}>
+                                        <td>{property}</td>
+                                        <td>
+                                            <Select
+                                                value={fieldMappings[property]}
+                                                onChange={(value) => handleMappingChange(property, value)}
+                                                options={getAvailableOptions(property)}
+                                                style={{ width: '100%' }}
+                                            />
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </Col>
+                </Row>
+            )}
         </div>
     );
 };
