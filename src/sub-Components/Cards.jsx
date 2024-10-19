@@ -6,7 +6,7 @@ const Cards = ({item, onclick}) => {
   return (
     <StyledWrapper>
       <div className="card" onClick={() => onclick(item)}>
-        <h4>{item.projectName}</h4>
+        <h4>{item.name}</h4>
         
         <p>{item.completionPercentage}% Completed</p>
         <p>{item.remainingPercentage}% Remaining</p>
