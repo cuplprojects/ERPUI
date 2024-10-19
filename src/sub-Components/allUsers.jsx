@@ -249,14 +249,7 @@ const AllUsers = () => {
             >
               Cancel
             </Button>
-            <Button
-              icon={<MdDeleteForever />}
-              onClick={() => showDeleteConfirmation(record)}
-              className={`${customDark}  border-1 ${customLightText}  ${customDarkBorder}`}
 
-            >
-              Delete
-            </Button>
           </Space>
         ) : (
           <Space size="middle" wrap>

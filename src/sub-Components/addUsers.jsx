@@ -36,7 +36,10 @@ const AddUsers = () => {
 
   const [roles, setRoles] = useState([]);
 
-  const handleCloseModal = () => setShowModal(false);
+  const handleCloseModal = () => {
+    setShowModal(false);
+    handleReset();
+  };
 
 
   // Function to handle form submission

@@ -143,6 +143,7 @@ const Group = () => {
       dataIndex: 'serial',
       key: 'serial',
       render: (text, record, index) => (currentPage - 1) * pageSize + index + 1,
+      width: '10%',
     },
     {
       title: (
@@ -157,6 +158,7 @@ const Group = () => {
       ),
       dataIndex: 'name',
       key: 'name',
+      width: '40%',
       render: (text, record, index) => (
         editingIndex === index ? (
           <Input
@@ -164,6 +166,7 @@ const Group = () => {
             onChange={(e) => setEditingValue(e.target.value)}
             onPressEnter={() => handleEditSave(index)}
             onBlur={() => handleEditSave(index)}
+            style={{ width: '100%' }}
           />
         ) : (
           <span>{text}</span>
@@ -171,6 +174,7 @@ const Group = () => {
       ),
     },
     {
+      align: 'center',
       title: (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           Status
@@ -183,32 +187,35 @@ const Group = () => {
       ),
       dataIndex: 'status',
       key: 'status',
+      width: '25%',
       render: (status, record, index) => (
         editingIndex === index ? (
-          <>
-            <Switch
-              checked={editingStatus}
-              onChange={(checked) => setEditingStatus(checked)}
-            />
-            <span style={{ marginLeft: '10px' }}>{editingStatus ? 'Active' : 'Inactive'}</span>
-          </>
+          <Switch
+            checked={editingStatus}
+            onChange={(checked) => setEditingStatus(checked)}
+            checkedChildren="Active"
+            unCheckedChildren="Inactive"
+          />
         ) : (
-          <>
-            <Switch checked={status} disabled />
-            <span style={{ marginLeft: '10px' }}>{status ? 'Active' : 'Inactive'}</span>
-          </>
+          <Switch
+            checked={status}
+            disabled
+            checkedChildren="Active"
+            unCheckedChildren="Inactive"
+          />
         )
       ),
     },
     {
       title: 'Action',
       key: 'action',
+      width: '25%',
       render: (_, record, index) => (
         editingIndex === index ? (
-          <>
+          <div style={{ display: 'flex', justifyContent: 'space-around' }}>
             <Button type="link" onClick={() => handleEditSave(index)}>Save</Button>
             <Button type="link" onClick={handleCancelEdit}>Cancel</Button>
-          </>
+          </div>
         ) : (
           <Button type="link" onClick={() => {
             setEditingIndex(index);
