@@ -1,27 +1,22 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { Table, Select, Input, Space, Button, Typography, Row, Col, Checkbox, Form, Dropdown, Menu, message, Switch } from 'antd';
-import { Card, Modal } from 'react-bootstrap';
-import { EyeOutlined, EditOutlined, SaveOutlined, CloseOutlined, SettingOutlined } from '@ant-design/icons';
-import 'antd/dist/reset.css';
-import 'bootstrap/dist/css/bootstrap.min.css';
+import { message, Table, Input, Button, Switch, Form, Select, Spin } from 'antd';
+import { Modal } from 'react-bootstrap';
+import axios from 'axios';
+import React, { useEffect, useState } from 'react';
+import { useForm } from 'antd/es/form/Form';
 import API from '../CustomHooks/MasterApiHooks/api';
+import { useMediaQuery } from 'react-responsive';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
-import { useMediaQuery } from 'react-responsive';
-import { AiFillCloseSquare } from 'react-icons/ai';
-import { BsFunnelFill } from "react-icons/bs";
-import { useTranslation } from 'react-i18next';
-import { hasPermission } from '../CustomHooks/Services/permissionUtils';
-
+import { AiFillCloseSquare } from "react-icons/ai";
 const { Option } = Select;
-const { Title } = Typography;
+const { Search } = Input;
 
 const Type = () => {
-    const { t } = useTranslation();
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = getCssClasses();
     const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
     const [types, setTypes] = useState([]);
+    const [filteredTypes, setFilteredTypes] = useState([]);
     const [processes, setProcesses] = useState([]);
     const [processMap, setProcessMap] = useState({});
     const [loading, setLoading] = useState(false);
@@ -31,30 +26,25 @@ const Type = () => {
     const [editingProcessIds, setEditingProcessIds] = useState([]);
     const [editingStatus, setEditingStatus] = useState(true);
     const [originalData, setOriginalData] = useState({});
-    const [form] = Form.useForm();
-    const [searchText, setSearchText] = useState('');
-    const [visibleColumns, setVisibleColumns] = useState({
-        status: true,
-        associatedProcess: true,
-    });
-    const [columnSettingsVisible, setColumnSettingsVisible] = useState(false);
+    const [form] = useForm();
 
     const isMobile = useMediaQuery({ maxWidth: 767 });
     const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1023 });
 
-    const fetchTypes = useCallback(async () => {
+    const fetchTypes = async () => {
         setLoading(true);
         try {
             const response = await API.get('/PaperTypes');
             setTypes(response.data);
+            setFilteredTypes(response.data);
         } catch (error) {
             console.error(error);
         } finally {
             setLoading(false);
         }
-    }, []);
+    };
 
-    const fetchProcesses = useCallback(async () => {
+    const fetchProcesses = async () => {
         setLoading(true);
         try {
             const response = await API.get('/Processes');
@@ -69,27 +59,35 @@ const Type = () => {
         } finally {
             setLoading(false);
         }
-    }, []);
+    };
 
     useEffect(() => {
         fetchTypes();
         fetchProcesses();
-    }, [fetchTypes, fetchProcesses]);
+    }, []);
 
-    const handleAddType = useCallback(async (values) => {
+    const handleAddType = async (values) => {
         try {
+            // Check if the type already exists
+            const typeExists = types.some(type => type.types.toLowerCase() === values.types.toLowerCase());
+            if (typeExists) {
+                message.error("This type already exists!");
+                return;
+            }
+
             const response = await API.post('/PaperTypes', values);
             setTypes(prev => [...prev, response.data]);
-            message.success(t("typeCreatedSuccessfully"));
+            setFilteredTypes(prev => [...prev, response.data]);
+            message.success("Type created successfully");
             setIsModalVisible(false);
             form.resetFields();
         } catch (error) {
             console.error(error);
-            message.error('Failed to add Type')
+            message.error("Failed to create type");
         }
-    }, [form, t]);
+    };
 
-    const handleEditSave = useCallback(async (index) => {
+    const handleEditSave = async (index) => {
         const updatedType = {
             ...types[index],
             types: editingType,
@@ -102,54 +100,57 @@ const Type = () => {
             const updatedTypes = [...types];
             updatedTypes[index] = updatedType;
             setTypes(updatedTypes);
-            message.success(t('typeUpdatedSuccessfully'));
+            setFilteredTypes(updatedTypes);
+            message.success('Type updated successfully!');
             setEditingIndex(null);
         } catch (error) {
             console.error(error);
-            message.error(t('failedToUpdateType'));
+            message.error('Failed to update Type');
         }
-    }, [types, editingType, editingProcessIds, editingStatus, t]);
+    };
 
-    const handleCancelEdit = useCallback(() => {
+    const handleCancelEdit = () => {
         setEditingIndex(null);
         setEditingType(originalData.types);
         setEditingProcessIds(originalData.associatedProcessId);
         setEditingStatus(originalData.status);
-    }, [originalData]);
+    };
 
-    const handleColumnVisibilityChange = useCallback((e, column) => {
-        setVisibleColumns(prev => ({ ...prev, [column]: e.target.checked }));
-    }, []);
+    const handleSearch = (value) => {
+        const lowercasedValue = value.toLowerCase();
+        const filtered = types.filter(item => 
+            item.types.toLowerCase().includes(lowercasedValue) ||
+            item.associatedProcessId.some(id => processMap[id].toLowerCase().includes(lowercasedValue))
+        );
+        setFilteredTypes(filtered);
+    };
 
-    const columns = useMemo(() => [
+    const columns = [
         {
-            title: t('sn'),
+            align:'center',
+            title: 'SN.',
             dataIndex: 'serial',
             key: 'serial',
             render: (_, __, index) => index + 1,
-            width: 80,
         },
         {
-            title: t('type'),
+            title: 'Type',
             dataIndex: 'types',
             key: 'types',
-            sorter: (a, b) => a.types.localeCompare(b.types),
             render: (text, record, index) => (
                 editingIndex === index ? (
                     <Input
                         value={editingType}
                         onChange={(e) => setEditingType(e.target.value)}
                         onPressEnter={() => handleEditSave(index)}
-                        onBlur={() => handleEditSave(index)}
                     />
                 ) : (
                     <span>{text}</span>
                 )
             ),
-            width: 200,
         },
-        visibleColumns.associatedProcess && {
-            title: t('associatedProcess'),
+        {
+            title: 'Associated Process',
             dataIndex: 'associatedProcessId',
             key: 'associatedProcessId',
             render: (ids, record, index) => (
@@ -159,7 +160,6 @@ const Type = () => {
                         value={editingProcessIds}
                         onChange={setEditingProcessIds}
                         style={{ width: '100%' }}
-                        onBlur={() => handleEditSave(index)}
                     >
                         {processes.map(proc => (
                             <Option key={proc.id} value={proc.id}>
@@ -171,10 +171,10 @@ const Type = () => {
                     ids.map(id => processMap[id]).join(', ')
                 )
             ),
-            width: 300,
         },
-        visibleColumns.status && {
-            title: t('status'),
+        {
+            align:'center',
+            title: 'Status',
             dataIndex: 'status',
             key: 'status',
             render: (status, record, index) => (
@@ -182,99 +182,96 @@ const Type = () => {
                     <Switch
                         checked={editingStatus}
                         onChange={setEditingStatus}
-                        onBlur={() => handleEditSave(index)}
+                        checkedChildren="Active"
+                        unCheckedChildren="Inactive"
                     />
                 ) : (
-                    <Switch checked={status} disabled />
+                    <Switch 
+                        checked={status} 
+                        disabled 
+                        checkedChildren="Active"
+                        unCheckedChildren="Inactive"
+                    />
                 )
             ),
-            width: 100,
         },
         {
-            title: t('actions'),
+            title: 'Action',
             key: 'action',
-            render: (_, record, index) => {
-                const hasEditPermission = hasPermission('2.3.3');
-                return (
-                    editingIndex === index ? (
-                        <Space>
-                            <Button type="primary" onClick={() => handleEditSave(index)} disabled={!hasEditPermission} className={customBtn}>{t('save')}</Button>
-                            <Button onClick={handleCancelEdit} disabled={!hasEditPermission}>{t('cancel')}</Button>
-                        </Space>
-                    ) : (
-                        <Button onClick={() => {
-                            if (hasEditPermission) {
-                                setEditingIndex(index);
-                                setEditingType(record.types);
-                                setEditingProcessIds(record.associatedProcessId);
-                                setEditingStatus(record.status);
-                                setOriginalData(record);
-                            }
-                        }} disabled={!hasEditPermission}>{t('edit')}</Button>
-                    )
-                );
-            },
-            width: 150,
+            render: (_, record, index) => (
+                editingIndex === index ? (
+                    <>
+                        <Button type="link" onClick={() => handleEditSave(index)}>Save</Button>
+                        <Button type="link" onClick={handleCancelEdit}>Cancel</Button>
+                    </>
+                ) : (
+                    <Button type="link" onClick={() => {
+                        setEditingIndex(index);
+                        setEditingType(record.types);
+                        setEditingProcessIds(record.associatedProcessId);
+                        setEditingStatus(record.status);
+                        setOriginalData(record);
+                    }}>Edit</Button>
+                )
+            ),
         },
-    ].filter(Boolean), [visibleColumns, editingIndex, editingType, editingProcessIds, editingStatus, processes, processMap, handleEditSave, handleCancelEdit, t, customBtn]);
+    ];
 
-    const handleClose = useCallback(() => {
+    const responsiveColumns = isMobile ? columns.filter(col => col.key !== 'status') : columns;
+
+    const handleClose = () => {
         setIsModalVisible(false);
         form.resetFields();
-    }, [form]);
-
-    const columnSettingsMenu = (
-        <Menu>
-            {Object.entries(visibleColumns).map(([column, isVisible]) => (
-                <Menu.Item key={column}>
-                    <Checkbox
-                        checked={isVisible}
-                        onChange={(e) => handleColumnVisibilityChange(e, column)}
-                    >
-                        {t(column)}
-                    </Checkbox>
-                </Menu.Item>
-            ))}
-        </Menu>
-    );
+    };
 
     return (
-        <div className={`p-${isMobile ? '2' : '4'} bg-white rounded shadow overflow-auto`}>
-            <div className={`d-flex justify-content-between align-items-center mb-${isMobile ? '2' : '4'}`}>
-                <Title level={3} className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`}`}>{t('projectType')}</Title>
-                <Space>
-                    <Input.Search
-                        placeholder={t('searchTypes')}
-                        onSearch={(value) => setSearchText(value)}
-                        style={{ width: '300px' }}
-                    />
-                    <Dropdown overlay={columnSettingsMenu} trigger={['click']} visible={columnSettingsVisible} onVisibleChange={setColumnSettingsVisible}>
-                        <Button icon={<SettingOutlined />} className={`${customDark === "dark-dark" ? "text-dark" : customDarkText} border-0`} />
-                    </Dropdown>
-                    {hasPermission('2.3.1') && (
-                        <Button type="primary" onClick={() => setIsModalVisible(true)} className={customBtn}>
-                            {t('addType')}
-                        </Button>
-                    )}
-                </Space>
+        <div style={{
+            padding: isMobile ? '10px' : '20px',
+            background: '#fff',
+            borderRadius: '8px',
+            boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
+            overflow: 'auto'
+        }}
+        className={`${customDark === "dark-dark" ? customDark : ``}`}>
+            <h2 className={`${customDarkText}`}>Project Type</h2>
+            <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: isMobile ? '10px' : '20px'
+            }}>
+                <Search
+                    placeholder="Search types or processes"
+                    allowClear
+                    onChange={(e) => handleSearch(e.target.value)}
+                    style={{ width: 300 }}
+                />
+                <Button className={`${customBtn}`} onClick={() => setIsModalVisible(true)}>
+                    Add Type
+                </Button>
             </div>
 
-            <Table
-                dataSource={types.filter(type => 
-                    type.types.toLowerCase().includes(searchText.toLowerCase())
-                ).map((item, index) => ({ ...item, serial: index + 1 }))}
-                columns={columns}
-                rowKey="typeId"
-                pagination={{
-                    pageSize: 10,
-                    showSizeChanger: true,
-                    showQuickJumper: true,
-                }}
-                bordered
-                scroll={{ x: 'max-content' }}
-                loading={loading}
-                className={`thead-${customDark.split('-')[0]}`}
-            />
+            {loading ? (
+                <Spin size="large" />
+            ) : (
+                <Table
+                    dataSource={filteredTypes.map((item, index) => ({ ...item, serial: index + 1 }))}
+                    columns={responsiveColumns}
+                    rowKey="typeId"
+                    pagination={false}
+                    bordered
+                    scroll={{ x: 'max-content' }}
+                    className={`${customDark === "default-dark" ? "thead-default" : ""}
+                    ${customDark === "red-dark" ? "thead-red" : ""}
+                    ${customDark === "green-dark" ? "thead-green" : ""}
+                    ${customDark === "blue-dark" ? "thead-blue" : ""}
+                    ${customDark === "dark-dark" ? "thead-dark" : ""}
+                    ${customDark === "pink-dark" ? "thead-pink" : ""}
+                    ${customDark === "purple-dark" ? "thead-purple" : ""}
+                    ${customDark === "light-dark" ? "thead-light" : ""}
+                    ${customDark === "brown-dark" ? "thead-brown" : ""} `}
+                />
+            )}
 
             <Modal
                 show={isModalVisible}
@@ -283,7 +280,7 @@ const Type = () => {
                 size={isMobile ? 'sm' : 'lg'}
             >
                 <Modal.Header closeButton={false} className={`rounded-top-2 ${customDark} ${customLightText} ${customDark === "dark-dark" ? `border ` : `border-0`} border d-flex justify-content-between `}>
-                    <Modal.Title>{t('addType')}</Modal.Title>
+                    <Modal.Title>Add Type</Modal.Title>
                     <AiFillCloseSquare
                         size={35}
                         onClick={handleClose}
@@ -300,28 +297,31 @@ const Type = () => {
                     >
                         <Form.Item
                             name="types"
-                            label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-5 `}>{t("type")}</span>}
+                            label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-5 `}>{"Type"}</span>}
                             rules={[
-                                { required: true, message: t('pleaseInputType') },
+                                { required: true, message: 'Please input type!' },
                                 {
                                     validator: (_, value) => {
                                         const isNumeric = /^\d+$/;
                                         if (value && isNumeric.test(value)) {
-                                            return Promise.reject(new Error(t('typeCannotContainOnlyNumbers')));
+                                            return Promise.reject(new Error('Type cannot contain only numbers!'));
+                                        }
+                                        if (types.some(type => type.types.toLowerCase() === value.toLowerCase())) {
+                                            return Promise.reject(new Error('This type already exists!'));
                                         }
                                         return Promise.resolve();
                                     }
                                 }
                             ]}
                         >
-                            <Input placeholder={t("type")} />
+                            <Input placeholder="Type" />
                         </Form.Item>
                         <Form.Item
                             name="associatedProcessId"
-                            label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-5 `}>{t("associatedProcess")}</span>}
-                            rules={[{ required: true, message: t('pleaseSelectProcess') }]}
+                            label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-5 `}>{"Associated Process"}</span>}
+                            rules={[{ required: true, message: 'Please select a process!' }]}
                         >
-                            <Select mode="multiple" placeholder={t("selectProcess")}>
+                            <Select mode="multiple" placeholder="Select Process">
                                 {processes.map(proc => (
                                     <Option key={proc.id} value={proc.id}>
                                         {proc.name}
@@ -330,17 +330,17 @@ const Type = () => {
                             </Select>
                         </Form.Item>
 
-                        <Form.Item name="status" label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-5 `}>{t("status")}</span>} valuePropName="checked" initialValue={true}>
+                        <Form.Item name="status" label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-5 `}>{"Status"}</span>} valuePropName="checked" initialValue={true}>
                             <Switch
-                                checkedChildren={t("active")}
-                                unCheckedChildren={t("inactive")}
+                                checkedChildren="Active"
+                                unCheckedChildren="Inactive"
                                 defaultChecked
                             />
                         </Form.Item>
 
                         <Form.Item>
-                            <Button type="primary" htmlType="submit" className={`rounded-2 ${customBtn} ${customDark === "dark-dark" ? `` : `border-0`} custom-zoom-btn`}>
-                                {t("submit")}
+                            <Button type="" htmlType="submit" className={`rounded-2 ${customBtn} ${customDark === "dark-dark" ? `` : `border-0`} custom-zoom-btn`}>
+                                Submit
                             </Button>
                         </Form.Item>
                     </Form>

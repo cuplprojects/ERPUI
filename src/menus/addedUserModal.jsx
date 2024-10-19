@@ -5,6 +5,7 @@ import { notification } from 'antd'; // Import AntD notification
 import 'antd/dist/reset.css'; // Import Ant Design styles
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
+import Clipboard from 'clipboard';
 
 const AddUserModal = ({ show, username, password, onClose, fullName }) => {
   const { getCssClasses } = useStore(themeStore);
@@ -47,17 +48,27 @@ const AddUserModal = ({ show, username, password, onClose, fullName }) => {
 
   // Function to copy text to clipboard and show AntD notification
   const handleCopyToClipboard = (text, label) => {
-    navigator.clipboard.writeText(text)
-      .then(() => {
-        notification.success({
-          message: `${label} Copied`,
-          description: `${label} has been successfully copied to the clipboard!`,
-          placement: 'bottomRight',
-        });
-      })
-      .catch((err) => {
-        console.error('Failed to copy text: ', err);
+    const clipboard = new Clipboard('.copy-btn', {
+      text: () => text,
+    });
+
+    clipboard.on('success', () => {
+      notification.success({
+        message: `${label} Copied`,
+        description: `${label} has been successfully copied to the clipboard!`,
+        placement: 'bottomRight',
       });
+      clipboard.destroy(); // Clean up after success
+    });
+
+    clipboard.on('error', (err) => {
+      console.error('Failed to copy text: ', err);
+      notification.error({
+        message: 'Copy Failed',
+        description: 'Unable to copy to the clipboard. Please try again.',
+        placement: 'bottomRight',
+      });
+    });
   };
 
   // Function to copy both username and password to clipboard
@@ -113,6 +124,7 @@ const AddUserModal = ({ show, username, password, onClose, fullName }) => {
               variant="link"
               onClick={() => handleCopyToClipboard(password, 'Password')}
               style={{ marginLeft: '10px', display: 'inline-flex', alignItems: 'center' }}
+              className="copy-btn"
             >
               Copy Password <FaClipboard style={{ marginLeft: '5px' }} />
             </Button>
@@ -124,7 +136,7 @@ const AddUserModal = ({ show, username, password, onClose, fullName }) => {
           <Button
             onClick={handleCopyBothToClipboard}
             style={{ display: 'inline-flex', alignItems: 'center' }}
-            className={`${customDark === "dark-dark" ? `${customBtn} border-light custom-zoom-btn` : `${customBtn} border-0 custom-zoom-btn`}`}
+            className={`${customDark === "dark-dark" ? `${customBtn} border-light custom-zoom-btn` : `${customBtn} border-0 custom-zoom-btn`} copy-btn`}
           >
             Copy Credentials <FaClipboard style={{ marginLeft: '5px' }} />
           </Button>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Tree } from 'antd';
-
+import themeStore from './../../store/themeStore';
+import { useStore } from 'zustand';
 const { TreeNode } = Tree;
 
 const permissionOptions = [
@@ -202,6 +203,8 @@ const permissionOptions = [
   },
   { title: 'Message Management', key: '3' },
   { title: 'Reports', key: '4' },
+  { title: 'Cumulative Dashboard', key: '5' },
+  { title: 'Quantity Sheet', key: '6' },
 ];
 
 const Permissions = ({ selectedPermissions = [], onChange }) => {
@@ -220,16 +223,29 @@ const Permissions = ({ selectedPermissions = [], onChange }) => {
       }
       return <TreeNode title={item.title} key={item.key} />;
     });
+    const { getCssClasses } = useStore(themeStore);
+    const cssClasses = getCssClasses();
+    const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
 
   return (
-    <Tree
-      checkable
-      checkedKeys={selectedPermissions}
-      onCheck={onCheck}
-      selectable={false}
-      defaultExpandAll={false} // Set to false to keep all nodes collapsed
-      treeData={permissionOptions}
-    />
+    <div className={`${customLight} ${customDarkText}`} style={{ width: '100%', overflowX: 'auto' }}>
+      <Tree
+        checkable
+        checkedKeys={selectedPermissions}
+        onCheck={onCheck}
+        selectable={false}
+        defaultExpandAll={false} // Set to false to keep all nodes collapsed
+        treeData={permissionOptions}
+        className={`${customLight} ${customDarkText}`}
+        style={{
+          backgroundColor: customLight,
+          color: customDarkText,
+          borderColor: customLightBorder,
+          minWidth: '300px', // Ensures minimum width on small screens
+          fontSize: '14px' // Adjust font size for better readability on small screens
+        }}
+      />
+    </div>
   );
 };
 

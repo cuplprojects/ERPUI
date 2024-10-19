@@ -8,6 +8,7 @@ import SampleUser from "./../assets/sampleUsers/defaultUser.jpg";
 import "./../styles/Profile.css";
 import axios from 'axios';
 import useUserDataStore from '../store/userDataStore';
+import API from '../CustomHooks/MasterApiHooks/api';
 
 
 const UserProfile = () => {
@@ -21,6 +22,8 @@ const UserProfile = () => {
   const [isZoomed, setIsZoomed] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [profileImageKey, setProfileImageKey] = useState(Date.now());
+  const [roles, setRoles] = useState([]);
+  const [userRole, setUserRole] = useState('');
 
   const APIUrlBase = import.meta.env.VITE_API_BASE_URL;
   const APIUrl = import.meta.env.VITE_API_BASE_API;
@@ -29,6 +32,7 @@ const UserProfile = () => {
     const loadUserData = async () => {
       setIsLoading(true);
       await fetchUserData();
+      await fetchRoles();
       setIsLoading(false);
     };
     loadUserData();
@@ -40,6 +44,22 @@ const UserProfile = () => {
     }, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    if (userData && roles.length > 0) {
+      const role = roles.find(role => role.roleId === userData.roleId);
+      setUserRole(role ? role.roleName : '');
+    }
+  }, [userData, roles]);
+
+  const fetchRoles = async () => {
+    try {
+      const response = await API.get('/Roles');
+      setRoles(response.data);
+    } catch (error) {
+      console.error('Error fetching roles:', error);
+    }
+  };
 
   const handleImageClick = (event) => {
     event.stopPropagation();
@@ -270,7 +290,7 @@ const UserProfile = () => {
                 <Form.Control
                   name="role"
                   placeholder="Your Role"
-                  value={userData.roleName}
+                  value={userRole}
                   className='rounded'
                   disabled
                 />

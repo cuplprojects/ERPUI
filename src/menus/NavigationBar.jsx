@@ -22,7 +22,9 @@ const NavigationBar = ({ onLinkClick }) => {
     { id: "2", to: "/master", icon: SiMastercard, text: "Master Management" },
     { id: "3", to: "/labels", icon: MdFeaturedPlayList, text: "Message Management" },
     { id: "4", to: "/ctp", icon: CgTemplate, text: "Reports" },
-    { id: "5", to: "/cudashboard", icon: BiSolidDashboard , text: "Cumulative dashboard" }
+    { id: "5", to: "/cudashboard", icon: BiSolidDashboard , text: "Cumulative dashboard" },
+    { id: "6", to: "/quantity-sheet-uploads", icon: BiSolidDashboard , text: "Quantity Sheet" }
+
   ], []);
 
   return (

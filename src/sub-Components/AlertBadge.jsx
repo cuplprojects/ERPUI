@@ -9,18 +9,19 @@ const AlertBadge = ({ catchNo, alerts, onClick, status }) => {
 
     //Theme Change Section
     const { getCssClasses } = useStore(themeStore);
-    const cssClasses = getCssClasses();
-    const customDark = cssClasses[0];
-    const customMid = cssClasses[1];
-    const customLight = cssClasses[2];
-    const customBtn = cssClasses[3];
-    const customDarkText = cssClasses[4];
-    const customLightText = cssClasses[5]
-    const customLightBorder = cssClasses[6]
-    const customDarkBorder = cssClasses[7]
+    const [
+        customDark,
+        customMid,
+        customLight,
+        customBtn,
+        customDarkText,
+        customLightText,
+        customLightBorder,
+        customDarkBorder
+    ] = getCssClasses();
 
     const [visible, setVisible] = useState(true);
-    const activeUser = JSON.parse(localStorage.getItem('activeUser'));
+    // const activeUser = JSON.parse(localStorage.getItem('activeUser')); // not implemented
     const handleClose = (e) => {
         e.stopPropagation();
         setVisible(false);
@@ -39,9 +40,7 @@ const AlertBadge = ({ catchNo, alerts, onClick, status }) => {
             // return '';
         }
     };
-    const tickStyle = {
-        textDecoration: 'none' // Removes underline
-    };
+
     return (
         <Row>
             <div
@@ -50,14 +49,13 @@ const AlertBadge = ({ catchNo, alerts, onClick, status }) => {
                 style={{ width: "auto", background: "", border: "2px solid #FFD964" }}
             >
                 <Col lg={10} md={10} xs={10}>
-                    <span className={`fs-5 ${customDarkText}`}>
+                    <span className={`fs-5 `}>
                         Catch : {catchNo}
                     </span>
-                    <span className={`fs-5 ms-2 ${customDarkText}`}>
+                    <span className={`fs-5 ms-2 `}>
                         ({alerts})
                     </span>
                 </Col>
-                {activeUser && activeUser.userId === 'admin' && (
                     <Col lg={2} md={2} xs={2}>
                         <Button
                             variant="link"
@@ -70,7 +68,6 @@ const AlertBadge = ({ catchNo, alerts, onClick, status }) => {
                             </span>
                         </Button>
                     </Col>
-                )}
             </div>
         </Row>
     );

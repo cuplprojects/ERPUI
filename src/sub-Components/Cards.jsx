@@ -20,9 +20,11 @@ const Cards = ({item, onclick}) => {
   return (
     <StyledWrapper>
       <div className="card" onClick={() => onclick(item)}>
+
         <div className="upload-button" onClick={handleUploadClick}>
           <FaUpload />
         </div>
+
         <h4>{item.name}</h4>
         
         <p>{item.completionPercentage}% Completed</p>
