@@ -15,6 +15,7 @@ import "react-toastify/dist/ReactToastify.css";
 import "./index.css";
 import useLanguageStore from "./store/languageStore";
 import ErrorPage from "./pages/ErrorPage";
+import 'bootstrap/dist/css/bootstrap.min.css';
 import "./styles/AgGrid.css"
 
 function App() {
