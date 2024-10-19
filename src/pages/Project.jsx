@@ -1,17 +1,15 @@
 import React, { useEffect, useState } from 'react';
-
 import { Table, Button, Input, Switch, Form, message, Modal, Card, Row, Col, Select, Tabs } from 'antd';
 import { useNavigate } from 'react-router-dom';
+import { useStore } from 'zustand';
+import themeStore from '../store/themeStore';
 import API from '../CustomHooks/MasterApiHooks/api';
 import AddProjectProcess from './AddProjectProcess';
 import ProjectUserAllocation from './ProjectUserAllocation';
 
-
 const { Option } = Select;
 
 const Project = () => {
-===
-
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
   const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
@@ -30,16 +28,14 @@ const Project = () => {
 
   const navigate = useNavigate();
 
-
   const { TabPane } = Tabs;
-  const [activeTabKey, setActiveTabKey] = useState("1"); // State for active tab
-  const [selectedProject,setSelectedProject] = useState();
+  const [activeTabKey, setActiveTabKey] = useState("1");
+  const [selectedProject, setSelectedProject] = useState();
 
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchText, setSearchText] = useState('');
   const [sortedInfo, setSortedInfo] = useState({});
-
 
   const getProjects = async () => {
     try {
@@ -350,7 +346,8 @@ const Project = () => {
     <Card
       title="Projects"
       bordered={true.toString()}
-      style={{ padding: '20px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)' }}
+      className={`${customLight} ${customDarkText}`}
+      style={{ padding: '20px', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)' }}
     >
       <Tabs activeKey={activeTabKey} onChange={setActiveTabKey} items={items} />
     </Card>
