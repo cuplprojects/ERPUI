@@ -183,7 +183,7 @@ const RolesAndDepartments = () => {
     <Card
       className={`w-100 mx-auto p-3 ${customMid} border-0`}
       style={{ maxWidth: '1200px' }}
-      bodyStyle={{ padding: '12px' }}
+      styles={{ body: { padding: '12px' } }}
     >
       <div className={`d-flex justify-content-between align-items-center mb-3`}>
         <h2 className={`${customDarkText} m-0`}>Role List</h2>

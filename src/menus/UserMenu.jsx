@@ -11,7 +11,7 @@ import "./../styles/userMenu.css"
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import SampleUser from "./../assets/sampleUsers/defaultUser.jpg";
-import useUserDataStore from '../store/userDataStore';
+import useUserDataStore, { useUserData, useUserDataActions } from '../store/userDataStore';
 import { useMediaQuery } from 'react-responsive';
 
 const UserMenu = ({ onClose }) => {
@@ -20,7 +20,8 @@ const UserMenu = ({ onClose }) => {
   const [customDark, customMid, , customBtn] = cssClasses;
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
-  const { userData, fetchUserData } = useUserDataStore();
+  const userData = useUserData();
+  const { fetchUserData, clearUserData } = useUserDataActions();
   const isMobile = useMediaQuery({ maxWidth: 767 });
 
   useEffect(() => {
@@ -34,6 +35,7 @@ const UserMenu = ({ onClose }) => {
   const handleChangePasswordClick = () => navigate('/change-password');
 
   const handleLogoutConfirm = () => {
+    clearUserData();
     localStorage.setItem('loggedOut', 'true');
     localStorage.setItem('authToken', null);
     navigate('/');

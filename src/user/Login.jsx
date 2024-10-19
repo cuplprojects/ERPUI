@@ -18,9 +18,7 @@ import { useMediaQuery } from 'react-responsive';
 import { useTranslation } from 'react-i18next';
 import { toast, ToastContainer } from 'react-toastify';
 import { Link } from 'react-router-dom';
-import API from '../CustomHooks/MasterApiHooks/api';
-
-// import AuthService from '../CustomHooks/ApiServices/AuthService';
+import AuthService from '../CustomHooks/ApiServices/AuthService';
 
 const Login = () => {
   const [userName, setUserName] = useState('');
@@ -65,50 +63,22 @@ const Login = () => {
         toastId: "processing",
       });
 
-      const response = await API.post('/Login/login', {
-        userName,
-        password
-      });
+      const response = await AuthService.login(userName, password);
 
       if (response.status === 200) {
         toast.dismiss("processing");
         toast.success("Successfully logged in!");
 
-
-        console.log(response.data)
-        // Extract the token and autogenPass from response.data
-        const { token, autogenPass, role } = response.data;
-        console.log(token)
-        if (token) {     
-          let roleId = '', roleName = '', permissionList = [];
-          if (role) {
-            ({ roleId, roleName, permissionList } = role);
-          }
-    
-          console.log(roleId, roleName, permissionList)
-          // Store only the token in localStorage
-          localStorage.setItem('authToken', token);
-          localStorage.setItem('activeUser', JSON.stringify({
-            roleId,
-            roleName,
-            permissionList, // Parse the permissions array
-          }));
-          console.log('Active User:', localStorage.getItem('activeUser')); // For debugging
-
-          // Navigate based on autogenPass value
-
-          if (autogenPass) {
-            setTimeout(() => {
-              navigate('/setpassword');
-            }, 1500);
-          } else {
-            setTimeout(() => {
-              navigate('/cudashboard');
-            }, 1500);
-          }
+        const { autogenPass } = response.data;
+        
+        if (autogenPass) {
+          setTimeout(() => {
+            navigate('/setpassword');
+          }, 1500);
         } else {
-          toast.error("Authentication token not found in the response.");
-          return;
+          setTimeout(() => {
+            navigate('/cudashboard');
+          }, 1500);
         }
       } else {
         toast.dismiss("processing");
