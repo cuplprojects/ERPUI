@@ -133,7 +133,9 @@ const CuDashboard = () => {
   }, []);
 
   const fetchProject = async () => {
-    const response = await API.get('/Project');
+
+    const response = await API.get('/Project/GetActiveProjects');
+
     setData(response.data);
   }
 
@@ -154,7 +156,9 @@ const CuDashboard = () => {
       <Row className="row-cols-lg-5 row-cols-md-2 mb-3">
         {data.map((item) => (
           <Col key={item.name}>
-            <Cards item={item} onclick={onclick} />
+
+            <Cards item={item} onclick={onclick}  />
+
           </Col>
         ))}
       </Row>
