@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { Table, Select, Input, Space, Button, Typography, Row, Col, Checkbox, Form, Dropdown, Menu, message } from 'antd';
+import { Table, Select, Input, Space, Button, Typography, Row, Col, Checkbox, Form, Dropdown, Menu, message, Switch } from 'antd';
 import { Card, Modal } from 'react-bootstrap';
-import { SaveOutlined, CloseOutlined, SettingOutlined, SearchOutlined } from '@ant-design/icons';
+import { EyeOutlined, EditOutlined, SaveOutlined, CloseOutlined, SettingOutlined, SearchOutlined } from '@ant-design/icons';
 import 'antd/dist/reset.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import API from '../CustomHooks/MasterApiHooks/api';
@@ -9,6 +9,7 @@ import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import { useMediaQuery } from 'react-responsive';
 import { AiFillCloseSquare } from 'react-icons/ai';
+import { BsFunnelFill } from "react-icons/bs";
 import { useTranslation } from 'react-i18next';
 import { hasPermission } from '../CustomHooks/Services/permissionUtils';
 
@@ -116,7 +117,7 @@ const Zone = () => {
     }
   }, [zones, camera, form, getZone, t]);
 
-  const handleEditZone = useCallback(async () => {
+  const handleEditZone = useCallback(async (index) => {
     const updatedZone = {
       ...originalZone,
       ...editingZone,
@@ -178,12 +179,14 @@ const Zone = () => {
           <Input
             value={editingZone.zoneNo || record.zoneNo}
             onChange={(e) => setEditingZone({ ...editingZone, zoneNo: e.target.value })}
+            onPressEnter={() => handleEditZone(index)}
+            onBlur={() => handleEditZone(index)}
           />
         ) : (
           <span>{text}</span>
         )
       ),
-      width: isMobile ? 150 : 200,
+      width: 200,
     },
     visibleColumns.zoneDescription && {
       title: t('zoneDescription'),
@@ -194,6 +197,8 @@ const Zone = () => {
           <Input.TextArea
             value={editingZone.zoneDescription || record.zoneDescription}
             onChange={(e) => setEditingZone({ ...editingZone, zoneDescription: e.target.value })}
+            onPressEnter={() => handleEditZone(index)}
+            onBlur={() => handleEditZone(index)}
             style={{ resize: 'none' }}
             rows={1}
           />
@@ -201,7 +206,7 @@ const Zone = () => {
           <span>{text}</span>
         )
       ),
-      width: isMobile ? 150 : 200,
+      width: 200,
     },
     visibleColumns.cameraNames && {
       title: t('assignCameraNames'),
@@ -213,7 +218,7 @@ const Zone = () => {
             mode="multiple"
             value={editingZone.cameraIds || record.cameraIds}
             onChange={(value) => setEditingZone({ ...editingZone, cameraIds: value })}
-            style={{ width: '100%' }}
+            onBlur={() => handleEditZone(index)}
           >
             {camera.map(c => (
               <Option key={c.cameraId} value={c.cameraId} disabled={zones.some(zone => zone.zoneId !== record.zoneId && zone.cameraIds.includes(c.cameraId))}>
@@ -225,7 +230,7 @@ const Zone = () => {
           <span>{cameraNames.join(', ')}</span>
         )
       ),
-      width: isMobile ? 150 : 200,
+      width: 200,
     },
     visibleColumns.machineNames && {
       title: t('assignMachineNames'),
@@ -237,7 +242,7 @@ const Zone = () => {
             mode="multiple"
             value={editingZone.machineId || record.machineId}
             onChange={(value) => setEditingZone({ ...editingZone, machineId: value })}
-            style={{ width: '100%' }}
+            onBlur={() => handleEditZone(index)}
           >
             {machine.map(m => (
               <Option key={m.machineId} value={m.machineId}>
@@ -249,7 +254,7 @@ const Zone = () => {
           <span>{machineNames.join(', ')}</span>
         )
       ),
-      width: isMobile ? 150 : 200,
+      width: 200,
     },
     {
       title: t('action'),
@@ -259,11 +264,11 @@ const Zone = () => {
           <Space>
             <Button
               icon={<SaveOutlined />}
-              onClick={handleEditZone}
+              onClick={() => handleEditZone(index)}
               type="primary"
               className={customBtn}
             >
-              {isMobile ? '' : t('save')}
+              {t('save')}
             </Button>
             <Button
               icon={<CloseOutlined />}
@@ -273,7 +278,7 @@ const Zone = () => {
                 setOriginalZone({});
               }}
             >
-              {isMobile ? '' : t('cancel')}
+              {t('cancel')}
             </Button>
           </Space>
         ) : (
@@ -295,9 +300,9 @@ const Zone = () => {
           </Button>
         )
       ),
-      width: isMobile ? 100 : 150,
+      width: 150,
     },
-  ].filter(Boolean), [visibleColumns, editingIndex, editingZone, handleEditZone, currentPage, pageSize, sortedInfo, camera, machine, zones, customBtn, t, isMobile]);
+  ].filter(Boolean), [visibleColumns, editingIndex, editingZone, handleEditZone, currentPage, pageSize, sortedInfo, camera, machine, zones, customBtn, t]);
 
   const showModal = () => {
     setIsModalVisible(true);
@@ -331,21 +336,21 @@ const Zone = () => {
   return (
     <Card
       className={`${customDark === "dark-dark" ? `${customDark}` : `${customLight}`}`}
-      bordered={false.toString()} // Change here: Ensure 'bordered' is passed as a string
+      bordered={true}
       style={{ padding: '20px', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)' }}
     >
       <Row justify="space-between" align="middle" style={{ marginBottom: '20px' }}>
         <Title level={3} className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`}`}>{t('zoneManagement')}</Title>
         <Col>
-          <Space wrap>
+          <Space>
             <Input
               placeholder={t('searchZones')}
               suffix={<SearchOutlined />}
               onChange={e => setSearchText(e.target.value)}
-              style={{ width: isMobile ? '100%' : 200 }}
+              style={{ width: 200 }}
               allowClear
             />
-            <Dropdown menu={{ items: columnSettingsMenu }} trigger={['click']} open={columnSettingsVisible} onOpenChange={setColumnSettingsVisible}>
+            <Dropdown overlay={columnSettingsMenu} trigger={['click']} visible={columnSettingsVisible} onVisibleChange={setColumnSettingsVisible}>
               <Button icon={<SettingOutlined />} className={`${customDark === "dark-dark" ? "text-dark" : customDarkText} border-0`}>
               </Button>
             </Dropdown>
@@ -371,7 +376,7 @@ const Zone = () => {
           showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
         }}
         rowKey="zoneId"
-        bordered={true.toString()} // Change here: Ensure 'bordered' is passed as a string
+        bordered
         onChange={handleTableChange}
         className={`${customDark === "default-dark" ? "thead-default" : ""}
                     ${customDark === "red-dark" ? "thead-red" : ""}
@@ -382,7 +387,6 @@ const Zone = () => {
                     ${customDark === "purple-dark" ? "thead-purple" : ""}
                     ${customDark === "light-dark" ? "thead-light" : ""}
                     ${customDark === "brown-dark" ? "thead-brown" : ""} `}
-        scroll={{ x: 'max-content' }}
       />
       <Modal
         show={isModalVisible}
