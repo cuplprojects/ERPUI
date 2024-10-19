@@ -63,7 +63,8 @@ const Userlayout = () => {
               <Route path="/profile" element={<Profile />} />
               <Route path="/settings" element={<UserSettings />} />
               <Route path="/change-password" element={<ChangePassword />} />
-              <Route path="/quantity-sheet-uploads" element={<QtySheetUpload />} />
+              {(hasPermission('6') || isdevelopment) && <Route path="/quantity-sheet-uploads" element={<QtySheetUpload />} />}
+              {/* <Route path="/quantity-sheet-uploads" element={<QtySheetUpload />} /> */}
               <Route path="/project-details/:id" element={<ProcessTable />} />
               <Route path="/message" element={<Message />} />
               <Route path="/labels" element={<Labels />} />

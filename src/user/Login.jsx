@@ -103,7 +103,7 @@ const Login = () => {
             }, 1500);
           } else {
             setTimeout(() => {
-              navigate('/dashboard');
+              navigate('/cudashboard');
             }, 1500);
           }
         } else {

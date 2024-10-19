@@ -8,6 +8,7 @@ import SampleUser from "./../assets/sampleUsers/defaultUser.jpg";
 import "./../styles/Profile.css";
 import axios from 'axios';
 import useUserDataStore from '../store/userDataStore';
+import API from '../CustomHooks/MasterApiHooks/api';
 
 
 const UserProfile = () => {
@@ -53,7 +54,7 @@ const UserProfile = () => {
 
   const fetchRoles = async () => {
     try {
-      const response = await axios.get('https://localhost:7212/api/Roles');
+      const response = await API.get('/Roles');
       setRoles(response.data);
     } catch (error) {
       console.error('Error fetching roles:', error);
