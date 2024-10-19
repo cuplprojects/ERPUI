@@ -7,7 +7,9 @@ import * as XLSX from 'xlsx';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import ViewQuantitySheet from './ViewQuantitySheet';
+
 import API from '../CustomHooks/MasterApiHooks/api';
+
 
 const QtySheetUpload = () => {
     const { getCssClasses } = useStore(themeStore);
@@ -56,7 +58,9 @@ const QtySheetUpload = () => {
         console.log("Final payload:", JSON.stringify(finalPayload, null, 2));
 
         try {
+
             const response = await API.post('/QuantitySheet', finalPayload, {
+
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -107,6 +111,7 @@ const QtySheetUpload = () => {
     const getColumns = async () => {
         try {
             const response = await API.get('/QuantitySheet/Columns');
+
             setColumns(response.data);
         } catch (error) {
             console.error('Failed to fetch columns', error);
@@ -172,7 +177,9 @@ const QtySheetUpload = () => {
 
     const fetchLots = async () => {
         try {
+
             const response = await API.get('/QuantitySheet/Lots?ProjectId=1')
+
             setLots(response.data)
         }
         catch (error) {
@@ -181,8 +188,19 @@ const QtySheetUpload = () => {
     }
 
 
+
     const handleLotClick = (lotNo) => {
         setSelectedLotNo(lotNo);
+
+    };
+
+    const handleLotClick = (lotNo) => {
+        if (selectedLotNo === lotNo) {
+            setShowTable(!showTable); // Toggle table visibility
+        } else {
+            setSelectedLotNo(lotNo);
+            setShowTable(true); // Show table for the selected lot
+        }
     };
 
     return (
@@ -226,6 +244,7 @@ const QtySheetUpload = () => {
                             {lots.map((lotNo, index) => (
                                 <Button
                                     key={index}
+
                                     className={`${customBtn} me-2`}
                                     type="primary"
                                     onClick={() => handleLotClick(lotNo)}
@@ -233,7 +252,9 @@ const QtySheetUpload = () => {
                                     Click to view lot {lotNo}
                                 </Button>
                             ))}
+
                             <ViewQuantitySheet selectedLotNo={selectedLotNo} />
+
                         </Form.Item>
                     </Form>
                 </Col>
