@@ -67,9 +67,11 @@ const Sidebar = () => {
       label: 'User Management',
       permission: '2.1',
       children: [
+
         { key: 'RolePage', icon: <FaUserCog />, label: 'Role', permission: '2.1.1' },
         { key: 'addUser', icon: <FaUserPlus />, label: 'Add User', permission: '2.1.2' },
         { key: 'allUsers', icon: <FaListUl />, label: 'All Users', permission: '2.1.3' },
+
       ],
     },
     { key: 'group', icon: <FaUsers />, label: 'Group', permission: '2.2' },
@@ -102,7 +104,9 @@ const Sidebar = () => {
           <span className={`${customDark === "dark-dark" ? `text-white` : customDarkText} ml-3 ${isOffcanvas ? '' : 'd-none d-md-block d-lg-block'}`}>{menu.label}</span>
           {menu.children && (
             <span className="ml-auto">
+m
               {expandedMenus[menu.key] ? <FaCaretDown className={customDark === "dark-dark" ? `text-white` : customDarkText} size={25} /> : <FaCaretLeft className={customDark === "dark-dark" ? customDarkText : ''} size={25} />}
+
             </span>
           )}
         </Nav.Link>

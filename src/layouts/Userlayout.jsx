@@ -54,10 +54,15 @@ const Userlayout = () => {
               <Route path="/profile" element={<Profile />} />
               <Route path="/settings" element={<UserSettings />} />
               <Route path="/change-password" element={<ChangePassword />} />
-              {hasPermission('6') && <Route path="/quantity-sheet-uploads" element={<QtySheetUpload />} />}
-              <Route path="/project-details/:id" element={<ProcessTable />} />
-              <Route path="/message" element={<Message />} />
-              <Route path="/labels" element={<Labels />} />
+
+
+
+              {(hasPermission('2.4') ) && <Route path="/quantity-sheet-uploads/:projectId" element={<QtySheetUpload />} />}
+              {(hasPermission('2.4')) && <Route path="/project-details/:id" element={<ProcessTable />} />}
+              {(hasPermission('3') ) && <Route path="/message" element={<Message />} />}
+              {(hasPermission('3')) && <Route path="/labels" element={<Labels />} />}
+
+
               <Route path="/*" element={<PageNotFound />} />
             </Routes>
           </div>

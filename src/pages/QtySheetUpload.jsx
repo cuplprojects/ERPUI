@@ -189,6 +189,7 @@ const QtySheetUpload = () => {
 
 
 
+
     const handleLotClick = (lotNo) => {
         if (selectedLotNo === lotNo) {
             setShowTable(!showTable); // Toggle table visibility
