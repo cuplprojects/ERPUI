@@ -18,17 +18,15 @@ import { useMediaQuery } from 'react-responsive';
 import { useTranslation } from 'react-i18next';
 import { toast, ToastContainer } from 'react-toastify';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
-import AuthService from '../CustomHooks/ApiServices/AuthService';
-import { jwtDecode } from 'jwt-decode';
+import API from '../CustomHooks/MasterApiHooks/api';
 
+// import AuthService from '../CustomHooks/ApiServices/AuthService';
 
 const Login = () => {
   const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
-  const { login } = AuthService;
   const { t } = useTranslation();
 
   // Theme Change Section
@@ -38,10 +36,6 @@ const Login = () => {
   const customMid = cssClasses[1];
   const customBtn = cssClasses[3];
   const customDarkText = cssClasses[4];
-  const customLightText = cssClasses[5];
-  const customLightBorder = cssClasses[6];
-  const customDarkBorder = cssClasses[7];
-  const customThead = cssClasses[8];
 
   const themeImages = {
     "purple-dark": PurpleTheme,
@@ -71,7 +65,7 @@ const Login = () => {
         toastId: "processing",
       });
 
-      const response = await axios.post('https://localhost:7212/api/Login/login', {
+      const response = await API.post('/Login/login', {
         userName,
         password
       });
@@ -80,10 +74,28 @@ const Login = () => {
         toast.dismiss("processing");
         toast.success("Successfully logged in!");
 
-        const { token, autogenPass } = response.data;
 
-        if (token) {
+        console.log(response.data)
+        // Extract the token and autogenPass from response.data
+        const { token, autogenPass, role } = response.data;
+        console.log(token)
+        if (token) {     
+          let roleId = '', roleName = '', permissionList = [];
+          if (role) {
+            ({ roleId, roleName, permissionList } = role);
+          }
+    
+          console.log(roleId, roleName, permissionList)
+          // Store only the token in localStorage
           localStorage.setItem('authToken', token);
+          localStorage.setItem('activeUser', JSON.stringify({
+            roleId,
+            roleName,
+            permissionList, // Parse the permissions array
+          }));
+          console.log('Active User:', localStorage.getItem('activeUser')); // For debugging
+
+          // Navigate based on autogenPass value
 
           if (autogenPass) {
             setTimeout(() => {
@@ -91,7 +103,7 @@ const Login = () => {
             }, 1500);
           } else {
             setTimeout(() => {
-              navigate('/dashboard');
+              navigate('/cudashboard');
             }, 1500);
           }
         } else {
@@ -111,13 +123,13 @@ const Login = () => {
             toast.error("Bad Request. Please check your input.");
             break;
           case 401:
-            toast.error("Unauthorized. Invalid User Name or Password.");
+            toast.error("Invalid User Name or Password.");
             break;
           case 403:
             toast.error("Forbidden. You do not have access.");
             break;
           case 404:
-            toast.error("API Endpoint Not Found.");
+            toast.error("Invalid User Name or Password.");
             break;
           case 500:
             toast.error("Server Error. Please try again later.");
@@ -152,7 +164,7 @@ const Login = () => {
 
   return (
     <Container fluid className="vh-100 position-relative overflow-hidden">
-      <ToastContainer autoClose={1000} />
+      <ToastContainer autoClose={1500} />
       {isTabletPortrait && (
         <img
           src={themeImages[customDark] || DefaultTheme}
@@ -181,7 +193,7 @@ const Login = () => {
         </Col>
 
         <Col lg={5} md={12} className={`d-flex align-items-center justify-content-center ${appliedClass}`} style={{ borderTopLeftRadius: "15%", borderBottomLeftRadius: "15%" }}>
-          <div className={`shadow-lg rounded-5 custom-zoom-btn p-3 ${customDark === "dark-dark" ? `${customMid}` : ""}`} style={{ maxWidth: '450px', width: '100%', position: 'relative', zIndex: 1 }}>
+          <div className={`shadow-lg rounded-5  p-3 ${customDark === "dark-dark" ? `${customMid}` : ""}`} style={{ maxWidth: '450px', width: '100%', position: 'relative', zIndex: 1 }}>
             <div className={`text-center mb-4 ${customDark} rounded-3`}>
               <img
                 src={Logo1}

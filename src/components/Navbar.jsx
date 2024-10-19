@@ -4,52 +4,62 @@ import { Container, Row, Col } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import NavigationBar from '../menus/NavigationBar';
 import UserMenu from '../menus/UserMenu';
-import Notification from '../menus/Notification'; // Import the Notification component
+import Notification from '../menus/Notification';
 import "./../styles/navbar.css";
 import { RiNotification2Fill } from "react-icons/ri";
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
-import SampleUser1 from "./../assets/sampleUsers/sampleUser1.jpg";
 import { Link } from 'react-router-dom';
+import useUserDataStore from '../store/userDataStore';
+import SampleUser1 from "./../assets/sampleUsers/defaultUser.jpg";
+const apiUrl = import.meta.env.VITE_API_BASE_URL;
+
 const Navbar = () => {
 
   //Theme Change Section
   const { getCssClasses } = useStore(themeStore);
-  const cssClasses = getCssClasses();
-  const customDark = cssClasses[0];
-  const customMid = cssClasses[1];
-  const customLight = cssClasses[2];
-  const customBtn = cssClasses[3];
-  const customDarkText = cssClasses[4];
-  const customLightText = cssClasses[5]
-  const customLightBorder = cssClasses[6]
-  const customDarkBorder = cssClasses[7]
+  const [
+    customDark,
+    customMid,
+    customLight,
+    customBtn,
+    customDarkText,
+    customLightText,
+    customLightBorder,
+    customDarkBorder
+  ] = getCssClasses();
 
   const [showNav, setShowNav] = useState(false);
   const [userMenu, setUserMenu] = useState(false);
-  const [showNotification, setShowNotification] = useState(false); // State for the notification menu
+  const [showNotification, setShowNotification] = useState(false);
 
   const navRef = useRef(null);
   const userMenuRef = useRef(null);
   const notificationRef = useRef(null);
-  const containerRef = useRef(null); // Reference for the container
+  const containerRef = useRef(null);
+
+  const { userData, fetchUserData } = useUserDataStore();
+
+  useEffect(() => {
+    fetchUserData();
+  }, [fetchUserData]);
 
   const toggleNav = () => {
     setShowNav(prev => !prev);
-    setUserMenu(false); // Hide user menu when nav menu is toggled
-    setShowNotification(false); // Hide notification menu when nav menu is toggled
+    setUserMenu(false);
+    setShowNotification(false);
   };
 
   const toggleUserMenu = () => {
     setUserMenu(prev => !prev);
-    setShowNav(false); // Hide nav menu when user menu is toggled
-    setShowNotification(false); // Hide notification menu when user menu is toggled
+    setShowNav(false);
+    setShowNotification(false);
   };
 
   const toggleNotificationMenu = () => {
     setShowNotification(prev => !prev);
-    setShowNav(false); // Hide nav menu when notification menu is toggled
-    setUserMenu(false); // Hide user menu when notification menu is toggled
+    setShowNav(false);
+    setUserMenu(false);
   };
 
   const handleClickOutside = (event) => {
@@ -91,7 +101,6 @@ const Navbar = () => {
     }
   }, [showNotification]);
 
-  // Function to close the navigation bar
   const closeNav = () => {
     setShowNav(false);
   };
@@ -102,6 +111,17 @@ const Navbar = () => {
 
   const closeNotification = () => {
     setShowNotification(false);
+  };
+
+  const isValidImageUrl = (url) => {
+    return url && url.match(/\.(jpeg|jpg|gif|png)$/) != null;
+  };
+
+  const getProfileImageSrc = () => {
+    if (userData?.profilePicturePath && isValidImageUrl(`${apiUrl}/${userData.profilePicturePath}`)) {
+      return `${apiUrl}/${userData.profilePicturePath}`;
+    }
+    return SampleUser1;
   };
 
   return (
@@ -124,49 +144,65 @@ const Navbar = () => {
           <Col xs={2} md={1} lg={1} className="d-flex align-items-center justify-content-end">
             <button
               onClick={toggleNotificationMenu}
-              className="btn p-0 border-0 bg-transparent me-3"
+              className="btn p-0 border-0 bg-transparent me-2"
               aria-label="Toggle notification menu"
-              style={{ cursor: 'pointer' }}
+              style={{ 
+                cursor: 'pointer',
+                width: '40px',
+                height: '40px',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center'
+              }}
             >
-              <RiNotification2Fill className="fs-4 text-light custom-zoom-btn" size={30}/>
+              <RiNotification2Fill className="text-light custom-zoom-btn" style={{ fontSize: '24px' }} />
             </button>
             <button
               onClick={toggleUserMenu}
               className="btn p-0 border-0 bg-transparent"
               aria-label="Toggle user menu"
-              style={{ cursor: 'pointer' }}
+              style={{ 
+                cursor: 'pointer', 
+                width: '40px', 
+                height: '40px', 
+                overflow: 'hidden',
+                padding: 0,
+                borderRadius: '50%',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                flexShrink: 0
+              }}
             >
               <img
-              src={SampleUser1}
-              alt=""
-              width="40px"
-              className='rounded-circle'
-            />
-              {/* <FaUserCircle className="fs-2 text-light custom-zoom-btn" /> */}
+                src={getProfileImageSrc()}
+                alt={`${userData?.firstName} ${userData?.lastName}`}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover'
+                }}
+              />
             </button>
           </Col>
         </Row>
       </Container>
 
-      {/* NavigationBar with smooth expand/collapse */}
       <div
         ref={navRef}
         className='m-1 border rounded-bottom-5'
         style={{
           position: 'absolute',
-          // top: '53px',
           left: 0,
-          // right: 0,
           overflow: 'hidden',
           transition: '600ms ease-in-out, opacity 600ms ease-in-out',
           opacity: showNav ? 1 : 0,
-          zIndex: 999,
+          // zIndex: 1,
         }}
       >
         <NavigationBar onLinkClick={closeNav} />
       </div>
 
-      {/* UserMenu with smooth expand/collapse */}
       <div
         ref={userMenuRef}
         className='m-1'
@@ -178,13 +214,12 @@ const Navbar = () => {
           overflow: 'hidden',
           transition: '500ms ease-in-out, opacity 500ms ease-in-out',
           opacity: userMenu ? 1 : 0,
-          zIndex: 999,
+          // zIndex: 999,
         }}
       >
         <UserMenu onClose={closeUserMenu} />
       </div>
 
-      {/* Notification Menu with smooth expand/collapse */}
       <div
         ref={notificationRef}
         className='m-1'
@@ -192,11 +227,11 @@ const Navbar = () => {
           width: 'auto',
           position: 'absolute',
           top: '53px',
-          right: '40px', // Adjust position if needed
+          right: '40px',
           overflow: 'hidden',
           transition: '500ms ease-in-out, opacity 500ms ease-in-out',
           opacity: showNotification ? 1 : 0,
-          zIndex: 999,
+          // zIndex: 999,
         }}
       >
         <Notification onClose={closeNotification} />
@@ -206,5 +241,3 @@ const Navbar = () => {
 };
 
 export default Navbar;
-
-

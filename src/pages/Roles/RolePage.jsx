@@ -1,32 +1,39 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Card, Table, Modal, Input, Switch, message, Tabs } from 'antd';
-import { IdcardOutlined } from '@ant-design/icons';
-import axios from 'axios'; // Import axios for API calls
+import { Button, Card, Table, Input, Switch, message, Tabs } from 'antd';
+import { Modal } from 'react-bootstrap';
+import { IdcardOutlined, EditOutlined } from '@ant-design/icons';
+import themeStore from '../../store/themeStore';
+import { useStore } from 'zustand';
 import Permissions from './Permissions';
+import API from '../../CustomHooks/MasterApiHooks/api';
+import { AiFillCloseSquare } from "react-icons/ai";
 
 const { TabPane } = Tabs;
 
 const RolesAndDepartments = () => {
+  const { getCssClasses } = useStore(themeStore);
+  const cssClasses = getCssClasses();
+  const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
   const [roles, setRoles] = useState([]);
-  const [newRole, setNewRole] = useState({ roleId: 0, roleName: '', priorityOrder: 0, status: true, permissions:[] });
+  const [newRole, setNewRole] = useState({ roleId: 0, roleName: '', priorityOrder: 0, status: true, permissions: [] });
   const [isRoleModalVisible, setIsRoleModalVisible] = useState(false);
+  
+  const fetchRoles = async () => {
+    try {
+      const response = await API.get('/Roles');
+      setRoles(response.data);
+      console.log(response.data); 
+    } catch (error) {
+      console.error('Failed to fetch roles');
+    }
+  };
 
-  // Fetch roles from the API on component mount
   useEffect(() => {
-    const fetchRoles = async () => {
-      try {
-        const response = await axios.get('https://localhost:7212/api/Roles'); // Update with your API endpoint
-        setRoles(response.data);
-      } catch (error) {
-        message.error('Failed to fetch roles');
-      }
-    };
-
     fetchRoles();
   }, []);
 
   const onCreateRole = () => {
-    setNewRole({roleName: '', priorityOrder: 0, status: true,permissions:[] });
+    setNewRole({ roleId: 0, roleName: '', priorityOrder: 0, status: true, permissions: [] });
     setIsRoleModalVisible(true);
   };
 
@@ -40,43 +47,70 @@ const RolesAndDepartments = () => {
       message.error('Role name should contain only alphabetic characters');
       return;
     }
-    const isRoleExists = roles.some(role => role.roleName.toLowerCase() === trimmedRoleName.toLowerCase());
-    if (isRoleExists) {
-      message.error('Role name already exists');
-      return;
-    }
-    const isPriorityOrderExists = roles.some(role => role.priorityOrder === newRole.priorityOrder);
+  
+    const isPriorityOrderExists = roles.some(role => role.priorityOrder === newRole.priorityOrder && role.roleId !== newRole.roleId);
     if (isPriorityOrderExists) {
       message.error('Priority order must be unique');
       return;
     }
-
-
+  
     try {
-      // Sending the payload with the new structure
-      const response = await axios.post('https://localhost:7212/api/Roles', {
-        roleName: trimmedRoleName,
-        priorityOrder: newRole.priorityOrder,
-        status: newRole.status,
-        permissions: newRole.permissions,
-      });
-      
-      // Assuming your API returns the created role
-      setRoles([...roles, { ...response.data }]);
-      setIsRoleModalVisible(false);
-      message.success('Role added successfully');
+      let response;
+      if (newRole.roleId === 0) {
+        response = await API.post('/Roles', {
+          roleName: trimmedRoleName,
+          priorityOrder: newRole.priorityOrder,
+          status: newRole.status,
+          permissionList: newRole.permissions.map(permission => permission.toString()),
+        });
+        setRoles([...roles, { ...response.data }]);
+        message.success('Role added successfully');
+      } else {
+        response = await API.put(`/Roles/${newRole.roleId}`, {
+          roleId: newRole.roleId,
+          roleName: trimmedRoleName,
+          priorityOrder: newRole.priorityOrder,
+          status: newRole.status,
+          permission:'',
+          permissionList: newRole.permissions.map(permission => permission.toString()),
+        });
+        const updatedRoles = roles.map(role => (role.roleId === newRole.roleId ? response.data : role));
+        setRoles(updatedRoles);
+        message.success('Role updated successfully');
+      }
+  
+      handleRoleCancel();
+      fetchRoles();
     } catch (error) {
-      message.error('Failed to add role');
+      message.error('Failed to process the role');
     }
   };
 
   const handleRoleCancel = () => {
     setIsRoleModalVisible(false);
+    setNewRole({ roleId: 0, roleName: '', priorityOrder: 0, status: true, permissions: [] });
+  };
+
+  const handleEditRole = (role) => {
+    const defaultCheckedPermissions = role.permissionList || [];
+    setNewRole({ ...role, permissions: defaultCheckedPermissions });
+    setIsRoleModalVisible(true);
   };
 
   const handleRoleStatusChange = async (checked, roleId) => {
     try {
-      await axios.patch(`https://localhost:7212/api/Roles/${roleId}`, { status: checked }); // Update role status in the API
+      const roleResponse = await API.get(`/Roles/${roleId}`);
+      const roleData = roleResponse.data;
+
+      await API.put(`/Roles/${roleId}`, {
+        roleId: roleId,
+        roleName: roleData.roleName,
+        priorityOrder: roleData.priorityOrder,
+        status: checked,
+        permission: '',
+        permissionList: roleData.permissionList
+      });
+
       const updatedRoles = roles.map(role =>
         role.roleId === roleId ? { ...role, status: checked } : role
       );
@@ -87,41 +121,58 @@ const RolesAndDepartments = () => {
     }
   };
 
-  const handlePermissionChange = (checkedValues) => {
-    setNewRole({ ...newRole, permissions: checkedValues });
+  const handlePermissionChange = (checkedKeys) => {
+    setNewRole({ ...newRole, permissions: checkedKeys });
   };
 
   const roleColumns = [
     {
+      align: 'center',
       title: 'SN.',
       dataIndex: 'roleId',
-      width: 100,
+      width: '15%',
     },
     {
-      title: 'Name',
+      title: 'Role Name',
       dataIndex: 'roleName',
-      width: 200,
+      width: '30%',
     },
     {
+      align: 'center',
       title: 'Order',
       dataIndex: 'priorityOrder',
-      width: 200,
+      width: '20%',
     },
     {
       title: 'Status',
       dataIndex: 'status',
       align: 'center',
-      width: 75,
+      width: '15%',
       render: (status, record) => (
         <Switch
           checked={record.status}
           onChange={(checked) => handleRoleStatusChange(checked, record.roleId)}
+          checkedChildren="Active"
+          unCheckedChildren="Inactive"
         />
       ),
     },
+    {
+      title: 'Actions',
+      dataIndex: 'actions',
+      align: 'center',
+      width: '20%',
+      render: (_, record) => (
+        <Button
+          type="link"
+          icon={<EditOutlined />}
+          onClick={() => handleEditRole(record)}
+          className={`${customBtn}`}
+        />
+      ),
+    }
   ];
 
-  // Pagination configuration
   const paginationConfig = {
     pageSize: 5,
     showSizeChanger: true,
@@ -129,74 +180,92 @@ const RolesAndDepartments = () => {
   };
 
   return (
-    <Tabs defaultActiveKey="1">
-      <TabPane
-        tab={
-          <span>
-            <IdcardOutlined style={{ fontSize: '30px', marginRight: '8px' }} /> Roles
-          </span>
-        }
-        key="1"
+    <Card
+      className={`w-100 mx-auto p-3 ${customMid} border-0`}
+      style={{ maxWidth: '1200px' }}
+      bodyStyle={{ padding: '12px' }}
+    >
+      <div className={`d-flex justify-content-between align-items-center mb-3`}>
+        <h2 className={`${customDarkText} m-0`}>Role List</h2>
+        <Button onClick={onCreateRole} className={`${customBtn}`}>
+          New Role
+        </Button>
+      </div>
+      <Table
+        rowKey="roleId"
+        size="small"
+        pagination={{
+          ...paginationConfig,
+          className: `${customDark === "dark-dark" || customDark === "blue-dark" ? "bg-white" : ""} p-3 rounded-bottom-3 `,
+        }}
+        columns={roleColumns}
+        dataSource={roles}
+        style={{ fontSize: '12px' }}
+        scroll={{ x: 'max-content' }}
+        className={`${customDark === "default-dark" ? "thead-default" : ""}
+                                ${customDark === "red-dark" ? "thead-red" : ""}
+                                ${customDark === "green-dark" ? "thead-green" : ""}
+                                ${customDark === "blue-dark" ? "thead-blue" : ""}
+                                ${customDark === "dark-dark" ? "thead-dark" : ""}
+                                ${customDark === "pink-dark" ? "thead-pink" : ""}
+                                ${customDark === "purple-dark" ? "thead-purple" : ""}
+                                ${customDark === "light-dark" ? "thead-light" : ""}
+                                ${customDark === "brown-dark" ? "thead-brown" : ""} `}
+        bordered
+      />
+      <Modal
+        show={isRoleModalVisible}
+        onHide={handleRoleCancel}
+        centered
+        backdrop="static"
+        keyboard={false}
       >
-        <Card
-          title="Role List"
-          extra={
-            <Button type="primary" onClick={onCreateRole}>
-              New Role
-            </Button>
-          }
-          style={{ width: '60%', margin: '0 auto', padding: '16px' }}
-          bodyStyle={{ padding: '12px' }}
-        >
-          <Table
-            rowKey="roleId"
-            size="small"
-            pagination={paginationConfig}
-            columns={roleColumns}
-            dataSource={roles}
-            style={{ fontSize: '12px' }}
+        <Modal.Header className={`${customLight} ${customDarkText} ${customDark === "dark-dark" ? ' border border-bottom-0' : `border-0`} d-flex justify-content-between align-items-center`}>
+          <Modal.Title>{newRole.roleId === 0 ? "Add New Role" : "Edit Role"}</Modal.Title>
+          <AiFillCloseSquare
+            size={35}
+            onClick={handleRoleCancel}
+            className={`rounded-2 ${customDark === "dark-dark" ? "text-dark bg-white " : `${customDark} custom-zoom-btn text-white  ${customDarkBorder}`}`}
+            aria-label="Close"
+            style={{ cursor: 'pointer', fontSize: '1.5rem' }}
           />
-          {/* Modal for Adding New Role */}
-          <Modal
-            title="Add New Role"
-            open={isRoleModalVisible}
-            onOk={handleRoleOk}
-            onCancel={handleRoleCancel}
-            okText="Add Role"
-            okButtonProps={{ type: 'primary' }}
-          >
+        </Modal.Header>
+        <Modal.Body className={`${customLight} ${customDarkText} ${customDark === "dark-dark" ? ' border' : `border-0`}`}>
+          <Input
+            placeholder="Role Name"
+            value={newRole.roleName}
+            onChange={(e) => setNewRole({ ...newRole, roleName: e.target.value })}
+            onPressEnter={handleRoleOk}
+          />
+          <div style={{ marginTop: 10 }}>
             <Input
-              placeholder="Role Name"
-              value={newRole.roleName}
-              onChange={(e) => setNewRole({ ...newRole, roleName: e.target.value })}
-              onPressEnter={handleRoleOk}
+              type="number"
+              placeholder="Priority Order"
+              value={newRole.priorityOrder}
+              onChange={(e) => setNewRole({ ...newRole, priorityOrder: Number(e.target.value) })}
             />
-            <div style={{ marginTop: 10 }}>
-              <Input
-                type="number"
-                placeholder="Priority Order"
-                value={newRole.priorityOrder}
-                onChange={(e) => setNewRole({ ...newRole, priorityOrder: Number(e.target.value) })}
-              />
-            </div>
-            <div style={{ marginTop: 10 }}>
-              <span>Status: </span>
-              <Switch
-                checked={newRole.status}
-                onChange={(checked) => setNewRole({ ...newRole, status: checked })}
-              />
-            </div>
-            {/* Include Permissions Component */}
-            <Permissions
-              selectedPermissions={newRole.permissions}
-              onChange={handlePermissionChange}
+          </div>
+          <div style={{ marginTop: 10 }}>
+            <span>Status: </span>
+            <Switch
+              checked={newRole.status}
+              onChange={(checked) => setNewRole({ ...newRole, status: checked })}
+              checkedChildren="Active"
+              unCheckedChildren="Inactive"
             />
-            {/* Optional: Add an input for priorityOrder */}
-            
-          </Modal>
-        </Card>
-      </TabPane>
-    </Tabs>
+          </div>
+          <Permissions selectedPermissions={newRole.permissions} onChange={handlePermissionChange} />
+        </Modal.Body>
+        <Modal.Footer className={`${customLight} ${customDarkText} ${customDark === "dark-dark" ? 'border border-top-0' : ''}`}>
+          <Button onClick={handleRoleCancel}>
+            Close
+          </Button>
+          <Button type="primary" onClick={handleRoleOk}>
+            {newRole.roleId === 0 ? "Add Role" : "Update Role"}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </Card>
   );
 };
 

@@ -15,23 +15,31 @@ import LockOverlay from './../components/LockOverlay';
 import ProcessTable from './../sub-Components/processTable';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
-import WavyDiv from './WavyDiv';
 import QtySheetUpload from '../pages/QtySheetUpload';
 import Message from '../pages/Message/Message';
 import Labels from '../pages/Message/Labels';
+
+
+import { hasPermission } from '../CustomHooks/Services/permissionUtils';
+import CuDashboard from '../pages/CuDashboard';
+
+const isdevelopment = import.meta.env.VITE_APP_MODE === 'development';
+
+
+import AddProjectProcess from '../pages/AddProjectProcess';
+// import { hasPermission } from '../CustomHooks/Services/permissionUtils';
+
 const Userlayout = () => {
-  
-    //Theme Change Section
-    const { getCssClasses } = useStore(themeStore);
-    const cssClasses = getCssClasses();
-    const customDark = cssClasses[0];
-    const customMid = cssClasses[1];
-    const customLight = cssClasses[2];
-    const customBtn = cssClasses[3];
-    const customDarkText = cssClasses[4];
-    const customLightText = cssClasses[5]
-    const customLightBorder = cssClasses[6]
-    const customDarkBorder = cssClasses[7]
+
+  //Theme Change Section
+  const { getCssClasses } = useStore(themeStore);
+  const cssClasses = getCssClasses();
+  const customDark = cssClasses[0];
+  const customMid = cssClasses[1];
+  const customLight = cssClasses[2];
+  const userpermissions = localStorage.getItem('activeuser');
+  const permissions = JSON.parse(userpermissions);
+  // console.log(permissions);//to see permissions on console
   return (
     <div className={`container-fluid p-0 vh-100  ${customLight}`}>
       <LockOverlay className="lock-button" />
@@ -39,27 +47,32 @@ const Userlayout = () => {
       <div className={`fixed-top w-100 ${customMid}`} style={{ zIndex: "1", height: "350px", borderRadius: "0% 0% 30% 30%" }}></div>
       <Row className="g-0 h-100">
         <Col xs={12} md={12} lg={12} className={`d-flex flex-column ${customLight}`}>
-          <div className="top-nav sticky-to" style={{ zIndex: "9" }}>
+          <div className="top-nav sticky-top" style={{ zIndex: "9" }}>
             <Navbar />
           </div>
-          <div className={`flex-grow-1 d-fle m-2 p-3 `} style={{ zIndex: "2" }}>
+          <div className={`flex-grow-1 d-fle m-2 p-3 `} style={{ zIndex: "3" }}>
             <Routes>
-              <Route path="/dashboard" element={<MainDashboard />} />
-              <Route path="/master" element={<Masters />} />
-              <Route path="/features" element={<Features />} />
+
+              <Route path="/cudashboard" element={<CuDashboard/>} />
+              {(hasPermission(1) || isdevelopment) && <Route path="/dashboard" element={<MainDashboard />} />}
+              {(hasPermission('2') || isdevelopment) && <Route path="/master" element={<Masters />} />}
+              {(hasPermission('2.4') || isdevelopment) && <Route path="/AddProjectProcess/:projectId" element={<AddProjectProcess />} />}
+              {(hasPermission('2') || isdevelopment) && <Route path="/features" element={<Features />} />}
+
               {/* --------------- User Menu Routes -------------- */}
               <Route path="/profile" element={<Profile />} />
               <Route path="/settings" element={<UserSettings />} />
               <Route path="/change-password" element={<ChangePassword />} />
-              <Route path="/quantity-sheet-uploads" element={<QtySheetUpload />} />
+              {(hasPermission('6') || isdevelopment) && <Route path="/quantity-sheet-uploads" element={<QtySheetUpload />} />}
+              {/* <Route path="/quantity-sheet-uploads" element={<QtySheetUpload />} /> */}
               <Route path="/project-details/:id" element={<ProcessTable />} />
               <Route path="/message" element={<Message />} />
               <Route path="/labels" element={<Labels />} />
               <Route path="/*" element={<PageNotFound />} />
             </Routes>
           </div>
-          <div className={`${customDark==='dark-dark'?"d-none":""} fixed-bottom w-100 border ${customMid}`} style={{ zIndex: "1", height: "150px", borderRadius: "20%  ",borderStyle:"wavy" }}></div>
-          <Footer className="sticky-bottom " style={{zIndex:"1"}}/>
+          <div className={`${customDark === 'dark-dark' ? "d-none" : ""} fixed-bottom w-100 border ${customMid}`} style={{ zIndex: "1", height: "150px", borderRadius: "20%  ", borderStyle: "wavy" }}></div>
+          <Footer className="sticky-bottom " style={{ zIndex: "1" }} />
         </Col>
       </Row>
 

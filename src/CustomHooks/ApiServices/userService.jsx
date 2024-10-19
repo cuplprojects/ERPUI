@@ -10,3 +10,13 @@ export const fetchUsers = async () => {
     }
 };
 
+export const getLoggedUserById = async () => {
+    try {
+        const response = await API.get(`User/LoggedUser`);
+        // console.log(response.data);
+        return response.data;
+    } catch (error) {
+        console.error(`Error fetching user with id ${userId}:`, error);
+        throw error;
+    }
+};

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Button, Modal, Input, Form, Card, Row, Col, message } from 'antd';
 import axios from 'axios';
+import API from '../CustomHooks/MasterApiHooks/api';
 
 const CameraList = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -20,10 +21,10 @@ const CameraList = () => {
 
   const getCameras = async () => {
     try {
-      const response = await axios.get('https://localhost:7223/api/Cameras');
+      const response = await API.get('/Cameras');
       setCameras(response.data);
     } catch (error) {
-      message.error('Failed to fetch cameras');
+      console.error('Failed to fetch cameras');
     }
   };
 
@@ -35,7 +36,7 @@ const CameraList = () => {
     form.validateFields().then(async (values) => {
       const newCamera = { name: values.name }; // Add new camera
       try {
-        const response = await axios.post('https://localhost:7223/api/Cameras', newCamera);
+        const response = await API.post('/Cameras', newCamera);
         setCameras([...cameras, response.data]); // Add the camera from the response
         form.resetFields();
         setIsModalOpen(false);
@@ -53,7 +54,7 @@ const CameraList = () => {
     };
 
     try {
-      await axios.put(`https://localhost:7223/api/Cameras/${updatedCamera.cameraId}`, updatedCamera);
+      await API.put(`/Cameras/${updatedCamera.cameraId}`, updatedCamera);
       const updatedCameras = [...cameras];
       updatedCameras[index] = updatedCamera;
       setCameras(updatedCameras);

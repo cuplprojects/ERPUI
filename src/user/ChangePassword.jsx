@@ -7,6 +7,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { jwtDecode } from 'jwt-decode';
 import axios from 'axios';
+
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import API from '../CustomHooks/MasterApiHooks/api';
@@ -23,6 +24,7 @@ const ChangePassword = () => {
   const customLightText = cssClasses[5]
   const customLightBorder = cssClasses[6]
   const customDarkBorder = cssClasses[7]
+
 
 
   // State object to store oldPassword and newPassword
@@ -95,21 +97,25 @@ const ChangePassword = () => {
     }
   
     const userId = userIdApi; // extracted from the decoded token
+
     const apiUrl = `/Login/Changepassword/${userId}`;
+
     const payload = {
       oldPassword: formData.oldPassword,
       newPassword: formData.newPassword,
     };
   
+
     API.put(apiUrl, payload)
+
       .then((response) => {
-        toast.info('Password changed successfully!', {
+        toast.success('Password changed successfully!', {
           position: "top-right",
           autoClose: 3000,
           hideProgressBar: true,
-          closeOnClick: true,
+          closeOnClick: false,
           draggable: true,
-          style: { backgroundColor: '#17a2b8', color: 'white' },
+          style: {  backgroundColor: 'green' , color:"white"  },
         });
       })
       .catch((error) => {
@@ -117,9 +123,9 @@ const ChangePassword = () => {
           position: "top-right",
           autoClose: 3000,
           hideProgressBar: true,
-          closeOnClick: true,
+          closeOnClick: false,
           draggable: true,
-          style: { backgroundColor: '#dc3545', color: 'white' },
+          style: { backgroundColor: '#dc3545', color: 'white'  },
         });
       });
   
@@ -134,7 +140,7 @@ const ChangePassword = () => {
   return (
     <Container
       className={`mt-5 w-100 p-4 shadow-lg rounded-5 ${customLightBorder} ${customLight}`}
-      style={{ maxWidth: '800px' }}
+      style={{ maxWidth: '800px',zIndex:"0" }}
     >
       <Row>
         <Col lg={12}>
@@ -166,6 +172,8 @@ const ChangePassword = () => {
                   name="oldPassword"
                   value={formData.oldPassword}
                   onChange={handleInputChange}
+                  required
+                  minLength={8}
                 />
                 <InputGroup.Text
                   className={`password-eye-icon ${customBtn}`}
@@ -189,6 +197,8 @@ const ChangePassword = () => {
                   name="newPassword"
                   value={formData.newPassword}
                   onChange={handleInputChange}
+                  required
+                  minLength={8}
                 />
                 <InputGroup.Text
                   className={`password-eye-icon ${customBtn}`}
@@ -211,6 +221,8 @@ const ChangePassword = () => {
                   placeholder="Confirm new password"
                   value={confirmPassword}
                   onChange={handleConfirmPasswordChange}
+                  required
+                  minLength={8}
                 />
                 <InputGroup.Text
                   className={`password-eye-icon ${customBtn}`}
@@ -226,12 +238,12 @@ const ChangePassword = () => {
             <Button
               type="submit"
               disabled={false} // No submission logic, so always enabled
-              className={`${customBtn} ${customBtn === "btn-dark" ? "border border-white" : "border-0"} custom-zoom-btn w-100`}
+              className={`${customBtn} ${customDark === "dark-dark" ? "border border-white" : "border-0"} custom-zoom-btn w-100`}
             >
               Submit
             </Button>
           </Form>
-          <ToastContainer />
+          <ToastContainer style={{marginTop:"50px"}} autoClose={1500}/>
         </Col>
       </Row>
     </Container>
