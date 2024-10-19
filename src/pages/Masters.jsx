@@ -107,7 +107,6 @@ const Sidebar = () => {
         { key: 'RolePage', icon: <FaUserCog className={`${customDark === "dark-dark" ? `text-white` : `${customDarkText}`} menu-icon`} />, label: 'Role', permission: '2.1' },
         { key: 'addUser', icon: <FaUserPlus className={`${customDark === "dark-dark" ? `text-white` : `${customDarkText}`} menu-icon`} />, label: 'Add User', permission: '2.1' },
         { key: 'allUsers', icon: <FaListUl className={`${customDark === "dark-dark" ? `text-white` : `${customDarkText}`} menu-icon`} />, label: 'All Users', permission: '2.1' },
-        // { key: 'securityQuestions', icon: <BsQuestionSquareFill className={`${customDark === "dark-dark" ? `text-white` : `${customDarkText}`} menu-icon`} />, label: 'Add Questions', permission: '2.1' },
       ],
     },
 
@@ -148,7 +147,7 @@ const Sidebar = () => {
           {menu.icon} <span className={`${customDark === "dark-dark"  ? `text-white` : `${customDarkText}`} ml-3 ${isOffcanvas ? '' : 'd-none d-md-block d-lg-block'}`}>{menu.label}</span>
           {menu.children && (
             <span className="ml-auto">
-              {expandedMenus[menu.key] ? <FaCaretDown className={`${customDark === `dark-dark` ? `text-white ` : `${customDarkText}`}`} size={25} /> : <FaCaretLeft className={`${customDark === "dark-dark" ? `${customDarkText}` : ``}`} size={25} />}
+              {expandedMenus[menu.key] ? <FaCaretDown className={`${customDark === `dark-dark` ? `text-white ` : `${customDarkText}`}`} size={25} /> : <FaCaretLeft className={`${customDark === "dark-dark" ? `text-white ` : `${customDarkText}`}`} size={25} />}
             </span>
           )}
         </Nav.Link>

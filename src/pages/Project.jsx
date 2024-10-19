@@ -1,19 +1,12 @@
 
 import React, { useEffect, useState } from 'react';
-
 import AddProjectProcess from './AddProjectProcess';
 import ProjectUserAllocation from './ProjectUserAllocation';
-
-
 import { Table, Button, Input, Switch, Form, message, Card, Row, Col, Select, Pagination,Tabs } from 'antd';
 import { Modal } from 'react-bootstrap';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
 import API from '../CustomHooks/MasterApiHooks/api';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
-import { AiFillCloseSquare } from "react-icons/ai";
-import { SearchOutlined } from '@ant-design/icons';
 
 const { Option } = Select;
 
@@ -22,8 +15,6 @@ const Project = () => {
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
   const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
-
-
   const [projects, setProjects] = useState([]);
   const [groups, setGroups] = useState([]);
   const [types, setTypes] = useState([]);
@@ -35,18 +26,15 @@ const Project = () => {
   const [editingStatus, setEditingStatus] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [selectedType, setSelectedType] = useState(null);
-  const navigate = useNavigate();
 
   const { TabPane } = Tabs;
   const [activeTabKey, setActiveTabKey] = useState("1"); // State for active tab
-const [selectedProject,setSelectedProject] = useState();
-
+  const [selectedProject,setSelectedProject] = useState();
 
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchText, setSearchText] = useState('');
   const [sortedInfo, setSortedInfo] = useState({});
-
 
   const getProjects = async () => {
     try {

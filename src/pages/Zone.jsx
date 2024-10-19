@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { Table, Select, Input, Space, Button, Typography, Row, Col, Checkbox, Form, Dropdown, Menu, message, Switch } from 'antd';
+import { Table, Select, Input, Space, Button, Typography, Row, Col, Checkbox, Form, Dropdown, Menu, message } from 'antd';
 import { Card, Modal } from 'react-bootstrap';
-import { EyeOutlined, EditOutlined, SaveOutlined, CloseOutlined, SettingOutlined, SearchOutlined } from '@ant-design/icons';
+import { SaveOutlined, CloseOutlined, SettingOutlined, SearchOutlined } from '@ant-design/icons';
 import 'antd/dist/reset.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import API from '../CustomHooks/MasterApiHooks/api';
@@ -9,7 +9,6 @@ import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import { useMediaQuery } from 'react-responsive';
 import { AiFillCloseSquare } from 'react-icons/ai';
-import { BsFunnelFill } from "react-icons/bs";
 import { useTranslation } from 'react-i18next';
 import { hasPermission } from '../CustomHooks/Services/permissionUtils';
 
@@ -117,7 +116,7 @@ const Zone = () => {
     }
   }, [zones, camera, form, getZone, t]);
 
-  const handleEditZone = useCallback(async (index) => {
+  const handleEditZone = useCallback(async () => {
     const updatedZone = {
       ...originalZone,
       ...editingZone,
@@ -179,14 +178,12 @@ const Zone = () => {
           <Input
             value={editingZone.zoneNo || record.zoneNo}
             onChange={(e) => setEditingZone({ ...editingZone, zoneNo: e.target.value })}
-            onPressEnter={() => handleEditZone(index)}
-            onBlur={() => handleEditZone(index)}
           />
         ) : (
           <span>{text}</span>
         )
       ),
-      width: 200,
+      width: isMobile ? 150 : 200,
     },
     visibleColumns.zoneDescription && {
       title: t('zoneDescription'),
@@ -197,8 +194,6 @@ const Zone = () => {
           <Input.TextArea
             value={editingZone.zoneDescription || record.zoneDescription}
             onChange={(e) => setEditingZone({ ...editingZone, zoneDescription: e.target.value })}
-            onPressEnter={() => handleEditZone(index)}
-            onBlur={() => handleEditZone(index)}
             style={{ resize: 'none' }}
             rows={1}
           />
@@ -206,7 +201,7 @@ const Zone = () => {
           <span>{text}</span>
         )
       ),
-      width: 200,
+      width: isMobile ? 150 : 200,
     },
     visibleColumns.cameraNames && {
       title: t('assignCameraNames'),
@@ -218,7 +213,7 @@ const Zone = () => {
             mode="multiple"
             value={editingZone.cameraIds || record.cameraIds}
             onChange={(value) => setEditingZone({ ...editingZone, cameraIds: value })}
-            onBlur={() => handleEditZone(index)}
+            style={{ width: '100%' }}
           >
             {camera.map(c => (
               <Option key={c.cameraId} value={c.cameraId} disabled={zones.some(zone => zone.zoneId !== record.zoneId && zone.cameraIds.includes(c.cameraId))}>
@@ -230,7 +225,7 @@ const Zone = () => {
           <span>{cameraNames.join(', ')}</span>
         )
       ),
-      width: 200,
+      width: isMobile ? 150 : 200,
     },
     visibleColumns.machineNames && {
       title: t('assignMachineNames'),
@@ -242,7 +237,7 @@ const Zone = () => {
             mode="multiple"
             value={editingZone.machineId || record.machineId}
             onChange={(value) => setEditingZone({ ...editingZone, machineId: value })}
-            onBlur={() => handleEditZone(index)}
+            style={{ width: '100%' }}
           >
             {machine.map(m => (
               <Option key={m.machineId} value={m.machineId}>
@@ -254,7 +249,7 @@ const Zone = () => {
           <span>{machineNames.join(', ')}</span>
         )
       ),
-      width: 200,
+      width: isMobile ? 150 : 200,
     },
     {
       title: t('action'),
@@ -264,11 +259,11 @@ const Zone = () => {
           <Space>
             <Button
               icon={<SaveOutlined />}
-              onClick={() => handleEditZone(index)}
+              onClick={handleEditZone}
               type="primary"
               className={customBtn}
             >
-              {t('save')}
+              {isMobile ? '' : t('save')}
             </Button>
             <Button
               icon={<CloseOutlined />}
@@ -278,7 +273,7 @@ const Zone = () => {
                 setOriginalZone({});
               }}
             >
-              {t('cancel')}
+              {isMobile ? '' : t('cancel')}
             </Button>
           </Space>
         ) : (
@@ -300,9 +295,9 @@ const Zone = () => {
           </Button>
         )
       ),
-      width: 150,
+      width: isMobile ? 100 : 150,
     },
-  ].filter(Boolean), [visibleColumns, editingIndex, editingZone, handleEditZone, currentPage, pageSize, sortedInfo, camera, machine, zones, customBtn, t]);
+  ].filter(Boolean), [visibleColumns, editingIndex, editingZone, handleEditZone, currentPage, pageSize, sortedInfo, camera, machine, zones, customBtn, t, isMobile]);
 
   const showModal = () => {
     setIsModalVisible(true);
@@ -342,12 +337,12 @@ const Zone = () => {
       <Row justify="space-between" align="middle" style={{ marginBottom: '20px' }}>
         <Title level={3} className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`}`}>{t('zoneManagement')}</Title>
         <Col>
-          <Space>
+          <Space wrap>
             <Input
               placeholder={t('searchZones')}
               suffix={<SearchOutlined />}
               onChange={e => setSearchText(e.target.value)}
-              style={{ width: 200 }}
+              style={{ width: isMobile ? '100%' : 200 }}
               allowClear
             />
             <Dropdown overlay={columnSettingsMenu} trigger={['click']} visible={columnSettingsVisible} onVisibleChange={setColumnSettingsVisible}>
@@ -387,6 +382,7 @@ const Zone = () => {
                     ${customDark === "purple-dark" ? "thead-purple" : ""}
                     ${customDark === "light-dark" ? "thead-light" : ""}
                     ${customDark === "brown-dark" ? "thead-brown" : ""} `}
+        scroll={{ x: 'max-content' }}
       />
       <Modal
         show={isModalVisible}

@@ -237,7 +237,6 @@ const AllUsers = () => {
             <Button
               icon={<SaveOutlined />}
               onClick={() => handleSave(record)}
-              // className={`${customLight} border-0`}
               className={`${customDark === "dark-dark" ? `${customMid} text-white border-1 ${customDarkBorder}` : `${customLight} border-1 ${customDarkText} `} ${customDarkBorder}`}
             >
               Save
@@ -249,14 +248,6 @@ const AllUsers = () => {
             >
               Cancel
             </Button>
-            {/* <Button
-              icon={<MdDeleteForever />}
-              onClick={() => showDeleteConfirmation(record)}
-              className={`${customDark}  border-1 ${customLightText}  ${customDarkBorder}`}
-
-            >
-              Delete
-            </Button> */}
           </Space>
         ) : (
           <Space size="middle" wrap>

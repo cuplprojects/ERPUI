@@ -36,8 +36,22 @@ const AddUsers = () => {
 
   const [roles, setRoles] = useState([]);
 
-  const handleCloseModal = () => setShowModal(false);
+  const handleCloseModal = () => {
+    setShowModal(false);
+    handleReset();
+  };
 
+  // Function to check if all required fields are filled
+  const areRequiredFieldsFilled = () => {
+    return (
+      formData.firstName &&
+      formData.gender &&
+      formData.mobileNo &&
+      formData.roleId &&
+      formData.address &&
+      isUsernameValid(formData.username)
+    );
+  };
 
   // Function to handle form submission
   const handleSubmit = async (event) => {
@@ -288,21 +302,26 @@ const AddUsers = () => {
 
         {/* Add and Reset Buttons */}
         <div style={{ textAlign: 'right' }}>
-          <Button variant="secondary" onClick={handleReset} className='custom-zoom-btn'>
+          <Button variant="secondary" onClick={handleReset} className='custom-zoom-btn' style={{ width: '100px' }}>
             Reset
           </Button>
-          <Button type="submit" className={`custom-theme-dark-btn ms-2 ${customBtn === "dark-dark" ? `${customBtn} border-light custom-zoom-btn` : `${customBtn} border-0 custom-zoom-btn`}`} disabled={!isUsernameValid(formData.username)}>
+          <Button 
+            type="submit" 
+            className={`ms-2 ${customBtn === "dark-dark" ? `${customBtn}  custom-zoom-btn ` : `${customBtn}  custom-zoom-btn`} ${areRequiredFieldsFilled() ? `border border-white` : `border-0`}`} 
+            disabled={!areRequiredFieldsFilled()}
+            style={{ width: '100px' }}
+          >
             Add
           </Button>
         </div>
       </Form>
       <div>
-        <ToastContainer />
+      <ToastContainer style={{marginTop:"50px"}} autoClose={2000}/>
       </div>
       <SuccessModal
         show={showModal} username={userDetails.userName} password={userDetails.password} onClose={handleCloseModal} fullName={displayName}
       />
-    </div>
+    </div> 
   );
 };
 export default AddUsers;
