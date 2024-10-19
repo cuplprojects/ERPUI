@@ -1,0 +1,69 @@
+.feature-management-container {
+    padding: 16px; /* Add some padding */
+    box-sizing: border-box; /* Ensure padding is included in the width */
+}
+
+/* Button container styles */
+.button-container {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 10px;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .feature-management-container {
+        padding: 8px; /* Reduce padding on smaller screens */
+    }
+
+    .ant-table {
+        font-size: 14px; /* Adjust font size for readability */
+    }
+
+    .ant-table th, .ant-table td {
+        padding: 8px; /* Reduce padding in table cells */
+    }
+
+    .ant-btn {
+        width: 45%; /* Make button full width on small screens */
+        font-size: 16px; /* Increase font size for better touch targets */
+        margin-top: 10px; /* Add spacing above the button */
+    }
+
+    .ant-input {
+        width: 100%; /* Make input field full width */
+        font-size: 16px; /* Increase font size for better usability */
+        margin-bottom: 10px; /* Add spacing below the input */
+    }
+
+    /* Ensure the modal is responsive */
+    .ant-modal {
+        width: 90%; /* Make modal responsive */
+        max-width: 400px; /* Set a maximum width for smaller screens */
+    }
+}
+
+/* Styles for mobile devices */
+@media (max-width: 480px) {
+    .feature-management-container {
+        padding: 8px; /* Further reduce padding for mobile */
+    }
+
+    .ant-table {
+        font-size: 12px; /* Smaller font size for mobile */
+    }
+
+    .ant-table th, .ant-table td {
+        padding: 4px; /* Further reduce padding in table cells */
+    }
+
+    .ant-btn {
+        font-size: 14px; /* Adjust button font size for mobile */
+        padding: 12px; /* Increase padding for better touch targets */
+    }
+
+    .ant-input {
+        font-size: 14px; /* Adjust input font size for mobile */
+        padding: 10px; /* Increase padding for better touch targets */
+    }
+}
