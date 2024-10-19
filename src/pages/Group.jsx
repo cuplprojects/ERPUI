@@ -6,16 +6,14 @@ import { useMediaQuery } from 'react-responsive';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import { AiFillCloseSquare } from "react-icons/ai";
-import { SortAscendingOutlined, SortDescendingOutlined } from '@ant-design/icons';
-import { MdEditSquare } from "react-icons/md";
-import { FaSearch } from "react-icons/fa";
+import { SortAscendingOutlined, SortDescendingOutlined, EyeOutlined, EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
 import { Col, Row } from 'react-bootstrap';
+import { FaSearch } from "react-icons/fa";
 
 const Group = () => {
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
   const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
-
   const [groups, setGroups] = useState([]);
   const [filteredGroups, setFilteredGroups] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -77,12 +75,12 @@ const Group = () => {
     }
   };
 
-  const handleEditSave = async (index) => {
-    const groupToEdit = filteredGroups[index];
+  const handleEditSave = async (record) => {
+    const groupToEdit = record;
     const updatedGroup = { ...groupToEdit, name: editingValue, status: editingStatus };
 
     const existingGroup = groups.find(group =>
-      group.name.toLowerCase() === editingValue.toLowerCase() && group.name !== groupToEdit.name
+      group.name.toLowerCase() === editingValue.toLowerCase() && group.id !== groupToEdit.id
     );
 
     if (existingGroup) {
@@ -102,7 +100,6 @@ const Group = () => {
       message.success('Group updated successfully!');
     } catch (error) {
       message.error('Failed to update group');
-      fetchGroups();
     } finally {
       setEditingIndex(null);
       setEditingValue('');
@@ -164,8 +161,7 @@ const Group = () => {
           <Input
             value={editingValue}
             onChange={(e) => setEditingValue(e.target.value)}
-            onPressEnter={() => handleEditSave(index)}
-            onBlur={() => handleEditSave(index)}
+            onPressEnter={() => handleEditSave(record)}
             style={{ width: '100%' }}
           />
         ) : (
@@ -207,22 +203,36 @@ const Group = () => {
       ),
     },
     {
+      align: 'left',
       title: 'Action',
       key: 'action',
       width: '25%',
       render: (_, record, index) => (
         editingIndex === index ? (
-          <div style={{ display: 'flex', justifyContent: 'space-around' }}>
-            <Button type="link" onClick={() => handleEditSave(index)}>Save</Button>
-            <Button type="link" onClick={handleCancelEdit}>Cancel</Button>
+          <div style={{ display: 'flex', justifyContent: '' }}>
+            <Button type="link" onClick={() => handleEditSave(record)} className={`${customDark === "dark-dark" ? `${customMid} border` : `${customLight} ${customDarkBorder}`} text-white `}>
+              <SaveOutlined className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}/> 
+              <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}>Save</span> 
+            </Button>
+            <Button type="link" onClick={handleCancelEdit} className={`${customDark === "dark-dark" ? `${customMid} border` : `${customLight} ${customDarkBorder}`} text-white ms-3`}>
+              <CloseOutlined className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}/> 
+              <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}>Cancel</span> 
+            </Button>
           </div>
         ) : (
-          <Button type="link" onClick={() => {
-            setEditingIndex(index);
-            setEditingValue(record.name);
-            setEditingStatus(record.status);
-            setOriginalData(record);
-          }}><MdEditSquare size={20} className={`${customDark === "dark-dark" ? `text-dark` : `${customDarkText}`}`} /></Button>
+          <Button 
+            type="link" 
+            onClick={() => {
+              setEditingIndex(index);
+              setEditingValue(record.name);
+              setEditingStatus(record.status);
+              setOriginalData(record);
+            }}
+            className={`${customBtn}`}
+          >
+            <EditOutlined className={`${customBtn} text-white me-1`} />
+            Edit
+          </Button>
         )
       ),
     },
