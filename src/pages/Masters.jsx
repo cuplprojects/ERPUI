@@ -14,7 +14,7 @@ import {
 } from 'react-icons/fa';
 import { GiGears } from "react-icons/gi";
 import GroupManager from './Group'
-import ProjectManager from './Project';
+import Project from './Project';
 import ZoneManager from './Zone';
 import Type from './Type';
 import AlarmMaster from './Alarm';
@@ -202,7 +202,7 @@ const Sidebar = () => {
           {(userPermissions.includes('2.2') || isDevelopmentMode) && selectedMenu === 'group' && <GroupManager />}
           {(userPermissions.includes('2.3') || isDevelopmentMode) && selectedMenu === 'type' && <Type />}
           {/* {(userPermissions.includes('2.1') || isDevelopmentMode) && selectedMenu === 'securityQuestions' && <SecurityQ />} */}
-          {(userPermissions.includes('2.4') || isDevelopmentMode) && selectedMenu === 'project' && <ProjectManager />}
+          {(userPermissions.includes('2.4') || isDevelopmentMode) && selectedMenu === 'project' && <Project />}
           {(userPermissions.includes('2.5') || isDevelopmentMode) && selectedMenu === 'zone' && <ZoneManager />}
           {(userPermissions.includes('2.6') || isDevelopmentMode) && selectedMenu === 'camera' && <CameraList />}
           {(userPermissions.includes('2.9') || isDevelopmentMode) && selectedMenu === 'team' && <Team />}

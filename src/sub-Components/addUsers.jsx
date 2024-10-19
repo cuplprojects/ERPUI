@@ -88,7 +88,7 @@ const AddUsers = () => {
   useEffect(() => {
     const fetchRoles = async () => {
       try {
-        const response = await axios.get('https://localhost:7212/api/Roles');
+        const response = await API.get('/Roles');
         // Filter out roles with status false
         const activeRoles = response.data.filter(role => role.status === true);
         setRoles(activeRoles);

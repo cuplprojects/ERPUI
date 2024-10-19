@@ -1,5 +1,11 @@
+
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Input, Switch, Form, message, Card, Row, Col, Select, Pagination } from 'antd';
+
+import AddProjectProcess from './AddProjectProcess';
+import ProjectUserAllocation from './ProjectUserAllocation';
+
+
+import { Table, Button, Input, Switch, Form, message, Card, Row, Col, Select, Pagination,Tabs } from 'antd';
 import { Modal } from 'react-bootstrap';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -8,6 +14,7 @@ import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import { AiFillCloseSquare } from "react-icons/ai";
 import { SearchOutlined } from '@ant-design/icons';
+
 const { Option } = Select;
 
 const Project = () => {
@@ -30,10 +37,16 @@ const Project = () => {
   const [selectedType, setSelectedType] = useState(null);
   const navigate = useNavigate();
 
+  const { TabPane } = Tabs;
+  const [activeTabKey, setActiveTabKey] = useState("1"); // State for active tab
+const [selectedProject,setSelectedProject] = useState();
+
+
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchText, setSearchText] = useState('');
   const [sortedInfo, setSortedInfo] = useState({});
+
 
   const getProjects = async () => {
     try {
@@ -98,7 +111,8 @@ const Project = () => {
       form.resetFields();
       setIsModalVisible(false);
       message.success('Project added successfully!');
-      navigate(`/AddProjectProcess/${response.data.projectId}`);
+      setActiveTabKey("2"); // Switch to Select Process tab
+      setSelectedProject(response.data.projectId); 
     } catch (error) {
       console.error('Error adding project:', error);
       message.error('Error adding project. Please try again.');
@@ -146,6 +160,7 @@ const Project = () => {
       sorter: (a, b) => a.name.localeCompare(b.name),
       sortOrder: sortedInfo.columnKey === 'name' && sortedInfo.order,
       render: (text, record, index) =>
+      
         editingIndex === index ? (
           <Input
             value={editingName}
@@ -154,7 +169,15 @@ const Project = () => {
             onBlur={() => handleEditSave(index)}
           />
         ) : (
-          <span>{text}</span>
+          <a 
+          onClick={() => {
+            setActiveTabKey("2"); // Switch to Select Process tab
+            setSelectedProject(record.projectId); // Navigate to process
+          }}
+        >
+          {text}
+        </a>
+          //<span>{text}</span>
         ),
     },
     {
@@ -260,82 +283,41 @@ const Project = () => {
   );
 
   return (
+ 
     <Card
-    className={`${customDark === "dark-dark" ? `${customDark}` : `${customLight}`}`}
-      bordered={true}
-      style={{ padding: '20px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)' }}
-    >
-      <h2 className={`${customDarkText}`}>All Projects</h2>
-      <Row justify="space-between" align="middle" style={{ marginBottom: '20px' }}>
-        <Col>
-          <Input
-            placeholder="Search projects"
-            prefix={<SearchOutlined />}
-            onChange={e => setSearchText(e.target.value)}
-            style={{ width: 200 }}
-            allowClear
-          />
-        </Col>
-        <Col>
-          <Button onClick={showModal} className={`${customBtn} bprder-0`}>
-            Add New Project
-          </Button>
-        </Col>
-      </Row>
-      <Table
-        columns={columns}
-        dataSource={filteredProjects}
-        pagination={false}
-        rowKey="projectId"
-        bordered
-        onChange={handleTableChange}
-        style={{ background: 'white' }}
-        className={`${customDark === "default-dark" ? "thead-default" : ""}
-                    ${customDark === "red-dark" ? "thead-red" : ""}
-                    ${customDark === "green-dark" ? "thead-green" : ""}
-                    ${customDark === "blue-dark" ? "thead-blue" : ""}
-                    ${customDark === "dark-dark" ? "thead-dark" : ""}
-                    ${customDark === "pink-dark" ? "thead-pink" : ""}
-                    ${customDark === "purple-dark" ? "thead-purple" : ""}
-                    ${customDark === "light-dark" ? "thead-light" : ""}
-                    ${customDark === "brown-dark" ? "thead-brown" : ""} `}
-      />
-      <Pagination
-        current={currentPage}
-        pageSize={pageSize}
-        total={filteredProjects.length}
-        onChange={(page, pageSize) => {
-          setCurrentPage(page);
-          setPageSize(pageSize);
-        }}
-        showSizeChanger
-        showQuickJumper
-        showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
-        style={{ marginTop: '20px', textAlign: 'right' }}
-      />
-      <Modal
-        show={isModalVisible}
-        onHide={handleCancel}
-        centered
-        className={`rounded-2 ${customDark === "" ? `${customDark}` : ''}  `}
-      >
-       <Modal.Header closeButton={false} className={`rounded-top-2 ${customDark} ${customLightText} ${customDark === "dark-dark" ? `border ` : `border-0`} border d-flex justify-content-between `}>
-          <Modal.Title>Add New Project</Modal.Title>
-          <AiFillCloseSquare
-            size={35}
-            onClick={handleCancel}
-            className={`rounded-2 ${customDark === "dark-dark" ? "text-dark bg-white " : `${customDark} custom-zoom-btn text-white  ${customDarkBorder}`}`}
-            aria-label="Close"
-            style={{ cursor: 'pointer', fontSize: '1.5rem' }}
-          />
-        </Modal.Header>
-        <Modal.Body className={` ${customMid} ${customDark === "dark-dark" ? `border border-top-0` : `border-0`}`}>
+
+    title="Projects"
+    bordered={true}
+    style={{ padding: '20px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)' }}
+  >
+    <Tabs activeKey={activeTabKey} onChange={setActiveTabKey}>
+      <TabPane tab="Project List" key="1">
+        <Row justify="end" style={{ marginBottom: '20px' }}>
+          <Col>
+            <Button type="primary" onClick={showModal}>
+              Add New Project
+            </Button>
+          </Col>
+        </Row>
+        <Table
+          columns={columns}
+          dataSource={projects.map((project, index) => ({ ...project, serial: index + 1 }))}
+          pagination={false}
+          rowKey="projectId"
+          bordered
+        />
+        <Modal
+          title="Add New Project"
+          open={isModalVisible}
+          onCancel={handleCancel}
+          footer={null}
+        >
           <Form form={form} onFinish={handleAddProject} layout="vertical">
             <Form.Item
               name="group"
-              label={<span className={customDarkText}>Group</span>}
+              label="Group"
               rules={[{ required: true, message: 'Please select a group!' }]}
-              className={`${customDark === "dark-dark" ? `text-white` : ''}`}
+
             >
               <Select onChange={handleGroupChange} placeholder="Select Group">
                 {groups.map((group) => (
@@ -345,7 +327,9 @@ const Project = () => {
             </Form.Item>
             <Form.Item
               name="type"
+
               label={<span className={customDarkText}>Type</span>}
+
               rules={[{ required: true, message: 'Please select a type!' }]}
             >
               <Select onChange={handleTypeChange} placeholder="Select Type">
@@ -356,42 +340,55 @@ const Project = () => {
             </Form.Item>
             <Form.Item
               name="name"
+
               label={<span className={customDarkText}>Project Name</span>}
+
               rules={[{ required: true, message: 'Please enter the project name!' }]}
             >
               <Input placeholder="Enter project name" />
             </Form.Item>
             <Form.Item
               name="description"
+
               label={<span className={customDarkText}>Description</span>}
+
               rules={[{ required: true, message: 'Please enter a description!' }]}
             >
               <Input.TextArea rows={4} placeholder="Enter description" />
             </Form.Item>
             <Form.Item
               name="status"
-              label={<span className={customDarkText}>Status</span>}
+
+              label="Status"
               valuePropName="checked"
-              initialValue={true}
             >
-              <Switch
-                checkedChildren="Active"
-                unCheckedChildren="Inactive"
-                defaultChecked
-              />
+              <Switch />
+            </Form.Item>
+            <Form.Item>
+              <Button type="primary" htmlType="submit" style={{ marginRight: '10px' }}>
+                Save
+              </Button>
+              <Button onClick={handleCancel}>Cancel</Button>
             </Form.Item>
           </Form>
-        </Modal.Body>
-        <Modal.Footer className={` ${customDark} ${customLightText} ${customDark === "dark-dark" ? `border ` : `border-0`} border d-flex justify-content-between `}>
-          <Button variant="secondary" onClick={handleCancel}>
-            Cancel
-          </Button>
-          <Button variant="primary" onClick={form.submit}>
-            Save
-          </Button>
-        </Modal.Footer>
-      </Modal>
-    </Card>
+        </Modal>
+      </TabPane>
+      <TabPane tab="Select Process" key="2">
+        {/* Content for Select Process */}
+        <div>
+          
+          <AddProjectProcess selectedProject={selectedProject}/>
+        </div>
+      </TabPane>
+      <TabPane tab="Allocate Process" key="3">
+        {/* Content for Allocate Process */}
+        <div>
+          <ProjectUserAllocation/>
+        </div>
+      </TabPane>
+    </Tabs>
+  </Card>
+
   );
 };
 
