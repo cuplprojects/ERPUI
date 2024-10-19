@@ -336,7 +336,7 @@ const Zone = () => {
   return (
     <Card
       className={`${customDark === "dark-dark" ? `${customDark}` : `${customLight}`}`}
-      bordered={true}
+      bordered={false.toString()} // Change here: Ensure 'bordered' is passed as a string
       style={{ padding: '20px', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)' }}
     >
       <Row justify="space-between" align="middle" style={{ marginBottom: '20px' }}>
@@ -350,7 +350,7 @@ const Zone = () => {
               style={{ width: 200 }}
               allowClear
             />
-            <Dropdown overlay={columnSettingsMenu} trigger={['click']} visible={columnSettingsVisible} onVisibleChange={setColumnSettingsVisible}>
+            <Dropdown menu={{ items: columnSettingsMenu }} trigger={['click']} open={columnSettingsVisible} onOpenChange={setColumnSettingsVisible}>
               <Button icon={<SettingOutlined />} className={`${customDark === "dark-dark" ? "text-dark" : customDarkText} border-0`}>
               </Button>
             </Dropdown>
@@ -376,7 +376,7 @@ const Zone = () => {
           showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
         }}
         rowKey="zoneId"
-        bordered
+        bordered={true.toString()} // Change here: Ensure 'bordered' is passed as a string
         onChange={handleTableChange}
         className={`${customDark === "default-dark" ? "thead-default" : ""}
                     ${customDark === "red-dark" ? "thead-red" : ""}

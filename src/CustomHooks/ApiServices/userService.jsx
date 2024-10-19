@@ -10,7 +10,7 @@ export const fetchUsers = async () => {
     }
 };
 
-export const getLoggedUserById = async () => {
+export const getLoggedUser = async () => {
     try {
         const response = await API.get(`User/LoggedUser`);
         // console.log(response.data);

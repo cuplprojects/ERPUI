@@ -22,12 +22,12 @@ const Team = () => {
     catch (error) {
       console.error("Failed to fetch Users");
     }
-
-    useEffect(() => {
-      getUsers();
-    }, [])
-
   }
+
+  useEffect(() => {
+    getUsers();
+  }, [])
+
   // Handle opening of the modal
   const showModal = () => {
     setIsModalVisible(true);
@@ -120,7 +120,7 @@ const Team = () => {
         okText="Add Team"
         cancelText="Cancel"
         centered // Center the modal
-        bodyStyle={{ padding: '20px 40px' }}
+        styles={{ body: { padding: '20px 40px' } }}
       >
         <Form form={form} layout="vertical" name="addTeamForm">
           {/* Team Name */}
