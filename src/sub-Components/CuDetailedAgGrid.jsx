@@ -15,7 +15,7 @@ const CuDetailedAgGrid = ({ clickData }) => {
   const [rowData, setRowData] = useState([]);
 
   useEffect(() => {
-    if (clickData && clickData.processes) {
+    if (clickData && clickData.processes) { console.log(clickData);
       setRowData(clickData.processes);
     }
   }, [clickData]);
@@ -33,11 +33,11 @@ const CuDetailedAgGrid = ({ clickData }) => {
       valueGetter: (params) => params.node.rowIndex + 1,
       minWidth: 70,
       maxWidth: 90,
-      cellStyle: { textAlign: 'center', borderRight: '1px solid #ccc', borderLeft: '' }
+      cellStyle: { textAlign: 'center', borderRight: '1px solid #ccc', borderLeft: '1px solid #ccc' }
     },
     { field: 'processName', headerName: 'Processes', minWidth: 150, cellStyle: { borderRight: '1px solid #ccc' } },
     { field: 'totalCatch', headerName: 'Total Catch', minWidth: 100, cellStyle: { textAlign: 'center', borderRight: '1px solid #ccc' } },
-    { field: 'totalQuantity', headerName: 'Total Quantity', minWidth: 100, cellStyle: { textAlign: 'center', borderRight: '1px solid #ccc' } },
+    { field: 'totalQuantity', headerName: 'Total Quantity', minWidth: 95, cellStyle: { textAlign: 'center', borderRight: '1px solid #ccc' } },
     { field: 'remainingQuantity', headerName: 'Remaining Quantity', minWidth: 100, cellStyle: { textAlign: 'center', borderRight: '1px solid #ccc' } },
     { field: 'remainingCatch', headerName: 'Remaining Catch', minWidth: 100, cellStyle: { textAlign: 'center' } }
   ], []);
@@ -91,7 +91,7 @@ const CuDetailedAgGrid = ({ clickData }) => {
         `}
       </style>
 
-      <div id="grid-wrapper" style={{ width: '100%', height: '100%' }}>
+      <div id="grid-wrapper" style={{ width: '850px', height: '100%' }}>
         <div style={gridStyle} className="ag-theme-quartz-dark">
           <AgGridReact
             rowData={rowData}

@@ -18,9 +18,9 @@ const Cards = ({item, onclick}) => {
 const StyledWrapper = styled.div`
   .card {
   box-sizing: border-box;
-  width: 230px;
-  height: 200px;
-  background: rgba(217, 217, 217, 0.58);
+  width: 350px;
+  height: 170px;
+  background: rgba(217, 217, 217,0.3);
   border: 1px solid white;
   box-shadow: 12px 17px 51px rgba(0, 0, 0, 0.22);
   backdrop-filter: blur(6px);

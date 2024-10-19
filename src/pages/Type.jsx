@@ -9,12 +9,14 @@ import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import { AiFillCloseSquare } from "react-icons/ai";
 const { Option } = Select;
+const { Search } = Input;
 
 const Type = () => {
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = getCssClasses();
     const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
     const [types, setTypes] = useState([]);
+    const [filteredTypes, setFilteredTypes] = useState([]);
     const [processes, setProcesses] = useState([]);
     const [processMap, setProcessMap] = useState({});
     const [loading, setLoading] = useState(false);
@@ -34,6 +36,7 @@ const Type = () => {
         try {
             const response = await API.get('/PaperTypes');
             setTypes(response.data);
+            setFilteredTypes(response.data);
         } catch (error) {
             console.error(error);
         } finally {
@@ -67,12 +70,12 @@ const Type = () => {
         try {
             const response = await API.post('/PaperTypes', values);
             setTypes(prev => [...prev, response.data]);
+            setFilteredTypes(prev => [...prev, response.data]);
             message.success("Type created successfully");
             setIsModalVisible(false);
             form.resetFields();
         } catch (error) {
             console.error(error);
-            message.error('Failed to add Type')
         }
     };
 
@@ -89,6 +92,7 @@ const Type = () => {
             const updatedTypes = [...types];
             updatedTypes[index] = updatedType;
             setTypes(updatedTypes);
+            setFilteredTypes(updatedTypes);
             message.success('Type updated successfully!');
             setEditingIndex(null);
         } catch (error) {
@@ -104,8 +108,18 @@ const Type = () => {
         setEditingStatus(originalData.status);
     };
 
+    const handleSearch = (value) => {
+        const lowercasedValue = value.toLowerCase();
+        const filtered = types.filter(item => 
+            item.types.toLowerCase().includes(lowercasedValue) ||
+            item.associatedProcessId.some(id => processMap[id].toLowerCase().includes(lowercasedValue))
+        );
+        setFilteredTypes(filtered);
+    };
+
     const columns = [
         {
+            align:'center',
             title: 'SN.',
             dataIndex: 'serial',
             key: 'serial',
@@ -153,6 +167,7 @@ const Type = () => {
             ),
         },
         {
+            align:'center',
             title: 'Status',
             dataIndex: 'status',
             key: 'status',
@@ -162,9 +177,16 @@ const Type = () => {
                         checked={editingStatus}
                         onChange={setEditingStatus}
                         onBlur={() => handleEditSave(index)}
+                        checkedChildren="Active"
+                        unCheckedChildren="Inactive"
                     />
                 ) : (
-                    <Switch checked={status} disabled />
+                    <Switch 
+                        checked={status} 
+                        disabled 
+                        checkedChildren="Active"
+                        unCheckedChildren="Inactive"
+                    />
                 )
             ),
         },
@@ -204,13 +226,22 @@ const Type = () => {
             borderRadius: '8px',
             boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
             overflow: 'auto'
-        }}>
+        }}
+        className={`${customDark === "dark-dark" ? customDark : ``}`}>
+            <h2 className={`${customDarkText}`}>Project Type</h2>
             <div style={{
                 display: 'flex',
-                justifyContent: 'flex-end',
+                justifyContent: 'space-between',
+                alignItems: 'center',
                 marginBottom: isMobile ? '10px' : '20px'
             }}>
-                <Button type="primary" onClick={() => setIsModalVisible(true)}>
+                <Search
+                    placeholder="Search types or processes"
+                    allowClear
+                    onSearch={handleSearch}
+                    style={{ width: 300 }}
+                />
+                <Button className={`${customBtn}`} onClick={() => setIsModalVisible(true)}>
                     Add Type
                 </Button>
             </div>
@@ -219,12 +250,21 @@ const Type = () => {
                 <Spin size="large" />
             ) : (
                 <Table
-                    dataSource={types.map((item, index) => ({ ...item, serial: index + 1 }))}
+                    dataSource={filteredTypes.map((item, index) => ({ ...item, serial: index + 1 }))}
                     columns={responsiveColumns}
                     rowKey="typeId"
                     pagination={false}
                     bordered
                     scroll={{ x: 'max-content' }}
+                    className={`${customDark === "default-dark" ? "thead-default" : ""}
+                    ${customDark === "red-dark" ? "thead-red" : ""}
+                    ${customDark === "green-dark" ? "thead-green" : ""}
+                    ${customDark === "blue-dark" ? "thead-blue" : ""}
+                    ${customDark === "dark-dark" ? "thead-dark" : ""}
+                    ${customDark === "pink-dark" ? "thead-pink" : ""}
+                    ${customDark === "purple-dark" ? "thead-purple" : ""}
+                    ${customDark === "light-dark" ? "thead-light" : ""}
+                    ${customDark === "brown-dark" ? "thead-brown" : ""} `}
                 />
             )}
 

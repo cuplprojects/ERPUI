@@ -66,6 +66,7 @@
     "react-responsive": "^10.0.0",
     "react-router": "^6.26.1",
     "react-router-dom": "^6.26.1",
+    "react-select": "^5.8.1",
     "react-svg": "^16.1.34",
     "react-switch": "^7.0.0",
     "react-toastify": "^10.0.6",
@@ -75,7 +76,6 @@
     "sweetalert2": "^11.14.0",
     "sweetalert2-react-content": "^5.0.7",
     "uuid": "^10.0.0",
-    "xlsx": "^0.18.5",
     "zustand": "^5.0.0-rc.2"
   },
   "devDependencies": {
