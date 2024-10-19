@@ -55,7 +55,7 @@ const Userlayout = () => {
               <Route path="/settings" element={<UserSettings />} />
               <Route path="/change-password" element={<ChangePassword />} />
 
-              {(hasPermission('2.4') || isdevelopment) && <Route path="/quantity-sheet-uploads" element={<QtySheetUpload />} />}
+              {(hasPermission('2.4') || isdevelopment) && <Route path="/quantity-sheet-uploads/:projectId" element={<QtySheetUpload />} />}
               {(hasPermission('2.4') || isdevelopment) && <Route path="/project-details/:id" element={<ProcessTable />} />}
               {(hasPermission('3') || isdevelopment) && <Route path="/message" element={<Message />} />}
               {(hasPermission('3') || isdevelopment) && <Route path="/labels" element={<Labels />} />}
