@@ -1,5 +1,11 @@
+
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Input, Switch, Form, message, Card, Row, Col, Select, Pagination, Space, Typography } from 'antd';
+
+import AddProjectProcess from './AddProjectProcess';
+import ProjectUserAllocation from './ProjectUserAllocation';
+
+
+import { Table, Button, Input, Switch, Form, message, Card, Row, Col, Select, Pagination,Tabs } from 'antd';
 import { Modal } from 'react-bootstrap';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -8,13 +14,10 @@ import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import { AiFillCloseSquare } from "react-icons/ai";
 import { SearchOutlined } from '@ant-design/icons';
-import { useTranslation } from 'react-i18next';
 
 const { Option } = Select;
-const { Title } = Typography;
 
 const Project = () => {
-  const { t } = useTranslation();
 
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
@@ -34,10 +37,16 @@ const Project = () => {
   const [selectedType, setSelectedType] = useState(null);
   const navigate = useNavigate();
 
+  const { TabPane } = Tabs;
+  const [activeTabKey, setActiveTabKey] = useState("1"); // State for active tab
+const [selectedProject,setSelectedProject] = useState();
+
+
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchText, setSearchText] = useState('');
   const [sortedInfo, setSortedInfo] = useState({});
+
 
   const getProjects = async () => {
     try {
@@ -45,7 +54,7 @@ const Project = () => {
       setProjects(response.data);
     } catch (error) {
       console.error('Failed to fetch projects', error);
-      message.error(t('failedFetchProjects'));
+      message.error('Unable to fetch projects. Please try again later.');
     }
   };
 
@@ -55,7 +64,7 @@ const Project = () => {
       setGroups(response.data);
     } catch (error) {
       console.error('Failed to fetch groups', error);
-      message.error(t('failedFetchGroups'));
+      message.error('Unable to fetch groups. Please try again later.');
     }
   };
 
@@ -65,7 +74,7 @@ const Project = () => {
       setTypes(response.data);
     } catch (error) {
       console.error('Failed to fetch types', error);
-      message.error(t('failedFetchTypes'));
+      message.error('Unable to fetch types. Please try again later.');
     }
   };
 
@@ -82,7 +91,7 @@ const Project = () => {
       (project) => project.name.toLowerCase() === name.toLowerCase()
     );
     if (existingProject) {
-      message.error(t('projectNameExists'));
+      message.error('Project name already exists!');
       return;
     }
 
@@ -101,11 +110,12 @@ const Project = () => {
       setProjects([...projects, response.data]);
       form.resetFields();
       setIsModalVisible(false);
-      message.success(t('projectAddedSuccess'));
-      navigate(`/AddProjectProcess/${response.data.projectId}`);
+      message.success('Project added successfully!');
+      setActiveTabKey("2"); // Switch to Select Process tab
+      setSelectedProject(response.data.projectId); 
     } catch (error) {
       console.error('Error adding project:', error);
-      message.error(t('errorAddingProject'));
+      message.error('Error adding project. Please try again.');
     }
   };
 
@@ -125,10 +135,10 @@ const Project = () => {
       updatedProjects[index] = updatedProject;
       setProjects(updatedProjects);
       setEditingIndex(null);
-      message.success(t('projectUpdatedSuccess'));
+      message.success('Project updated successfully!');
     } catch (error) {
       console.error('Failed to update project:', error);
-      message.error(t('failedUpdateProject'));
+      message.error('Failed to update project. Please try again.');
     }
   };
 
@@ -138,18 +148,19 @@ const Project = () => {
 
   const columns = [
     {
-      title: t('sn'),
+      title: 'SN.',
       dataIndex: 'serial',
       key: 'serial',
       render: (text, record, index) => (currentPage - 1) * pageSize + index + 1,
     },
     {
-      title: t('projectName'),
+      title: 'Project Name',
       dataIndex: 'name',
       key: 'name',
       sorter: (a, b) => a.name.localeCompare(b.name),
       sortOrder: sortedInfo.columnKey === 'name' && sortedInfo.order,
       render: (text, record, index) =>
+      
         editingIndex === index ? (
           <Input
             value={editingName}
@@ -158,11 +169,19 @@ const Project = () => {
             onBlur={() => handleEditSave(index)}
           />
         ) : (
-          <span>{text}</span>
+          <a 
+          onClick={() => {
+            setActiveTabKey("2"); // Switch to Select Process tab
+            setSelectedProject(record.projectId); // Navigate to process
+          }}
+        >
+          {text}
+        </a>
+          //<span>{text}</span>
         ),
     },
     {
-      title: t('projectDescription'),
+      title: 'Project Description',
       dataIndex: 'description',
       key: 'description',
       render: (text, record, index) =>
@@ -178,7 +197,7 @@ const Project = () => {
         ),
     },
     {
-      title: t('status'),
+      title: 'Status',
       dataIndex: 'status',
       key: 'status',
       sorter: (a, b) => a.status - b.status,
@@ -188,29 +207,29 @@ const Project = () => {
           <Switch
             checked={editingStatus}
             onChange={(checked) => setEditingStatus(checked)}
-            checkedChildren={t('active')}
-            unCheckedChildren={t('inactive')}
+            checkedChildren="Active"
+            unCheckedChildren="Inactive"
           />
         ) : (
           <Switch
             checked={status}
             disabled
-            checkedChildren={t('active')}
-            unCheckedChildren={t('inactive')}
+            checkedChildren="Active"
+            unCheckedChildren="Inactive"
           />
         ),
     },
     {
-      title: t('action'),
+      title: 'Action',
       key: 'action',
       render: (_, record, index) =>
         editingIndex === index ? (
           <>
             <Button type="link" onClick={() => handleEditSave(index)}>
-              {t('save')}
+              Save
             </Button>
             <Button type="link" onClick={() => setEditingIndex(null)}>
-              {t('cancel')}
+              Cancel
             </Button>
           </>
         ) : (
@@ -223,7 +242,7 @@ const Project = () => {
               setEditingStatus(record.status);
             }}
           >
-            {t('edit')}
+            Edit
           </Button>
         ),
     },
@@ -264,88 +283,43 @@ const Project = () => {
   );
 
   return (
+ 
     <Card
-    className={`${customDark === "dark-dark" ? `${customDark}` : `${customLight}`}`}
-      bordered={true}
-      style={{ padding: '20px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)' }}
-    >
-      {/* <h2 className={`${customDarkText}`}>{t('allProjects')}</h2> */}
-      <Row justify="space-between" align="middle" style={{ marginBottom: '20px' }}>
 
-         <Title level={3} className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`}`}>{t('project')}</Title>
-        <Col>
-          <Space><Input
-            placeholder={t('searchProjects')}
-            suffix={<SearchOutlined />}
-
-            onChange={e => setSearchText(e.target.value)}
-            style={{ width: 200 }}
-            allowClear
-          />
-          </Space>
-        </Col>
-        <Col>
-          <Button onClick={showModal} className={`${customBtn} bprder-0`}>
-            {t('addNewProject')}
-          </Button>
-        </Col>
-      </Row>
-      <Table
-        columns={columns}
-        dataSource={filteredProjects}
-        pagination={false}
-        rowKey="projectId"
-        bordered
-        onChange={handleTableChange}
-        style={{ background: 'white' }}
-        className={`${customDark === "default-dark" ? "thead-default" : ""}
-                    ${customDark === "red-dark" ? "thead-red" : ""}
-                    ${customDark === "green-dark" ? "thead-green" : ""}
-                    ${customDark === "blue-dark" ? "thead-blue" : ""}
-                    ${customDark === "dark-dark" ? "thead-dark" : ""}
-                    ${customDark === "pink-dark" ? "thead-pink" : ""}
-                    ${customDark === "purple-dark" ? "thead-purple" : ""}
-                    ${customDark === "light-dark" ? "thead-light" : ""}
-                    ${customDark === "brown-dark" ? "thead-brown" : ""} `}
-      />
-      <Pagination
-        current={currentPage}
-        pageSize={pageSize}
-        total={filteredProjects.length}
-        onChange={(page, pageSize) => {
-          setCurrentPage(page);
-          setPageSize(pageSize);
-        }}
-        showSizeChanger
-        showQuickJumper
-        showTotal={(total, range) => t('paginationTotal', { start: range[0], end: range[1], total })}
-        style={{ marginTop: '20px', textAlign: 'right' }}
-      />
-      <Modal
-        show={isModalVisible}
-        onHide={handleCancel}
-        centered
-        className={`rounded-2 ${customDark === "" ? `${customDark}` : ''}  `}
-      >
-       <Modal.Header closeButton={false} className={`rounded-top-2 ${customDark} ${customLightText} ${customDark === "dark-dark" ? `border ` : `border-0`} border d-flex justify-content-between `}>
-          <Modal.Title>{t('addNewProject')}</Modal.Title>
-          <AiFillCloseSquare
-            size={35}
-            onClick={handleCancel}
-            className={`rounded-2 ${customDark === "dark-dark" ? "text-dark bg-white " : `${customDark} custom-zoom-btn text-white  ${customDarkBorder}`}`}
-            aria-label="Close"
-            style={{ cursor: 'pointer', fontSize: '1.5rem' }}
-          />
-        </Modal.Header>
-        <Modal.Body className={` ${customMid} ${customDark === "dark-dark" ? `border border-top-0` : `border-0`}`}>
+    title="Projects"
+    bordered={true}
+    style={{ padding: '20px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)' }}
+  >
+    <Tabs activeKey={activeTabKey} onChange={setActiveTabKey}>
+      <TabPane tab="Project List" key="1">
+        <Row justify="end" style={{ marginBottom: '20px' }}>
+          <Col>
+            <Button type="primary" onClick={showModal}>
+              Add New Project
+            </Button>
+          </Col>
+        </Row>
+        <Table
+          columns={columns}
+          dataSource={projects.map((project, index) => ({ ...project, serial: index + 1 }))}
+          pagination={false}
+          rowKey="projectId"
+          bordered
+        />
+        <Modal
+          title="Add New Project"
+          open={isModalVisible}
+          onCancel={handleCancel}
+          footer={null}
+        >
           <Form form={form} onFinish={handleAddProject} layout="vertical">
             <Form.Item
               name="group"
-              label={<span className={customDarkText}>{t('group')}</span>}
-              rules={[{ required: true, message: t('pleaseSelectGroup') }]}
-              className={`${customDark === "dark-dark" ? `text-white` : ''}`}
+              label="Group"
+              rules={[{ required: true, message: 'Please select a group!' }]}
+
             >
-              <Select onChange={handleGroupChange} placeholder={t('selectGroup')}>
+              <Select onChange={handleGroupChange} placeholder="Select Group">
                 {groups.map((group) => (
                   <Option key={group.id} value={group.id}>{group.name}</Option>
                 ))}
@@ -353,10 +327,12 @@ const Project = () => {
             </Form.Item>
             <Form.Item
               name="type"
-              label={<span className={customDarkText}>{t('type')}</span>}
-              rules={[{ required: true, message: t('pleaseSelectType') }]}
+
+              label={<span className={customDarkText}>Type</span>}
+
+              rules={[{ required: true, message: 'Please select a type!' }]}
             >
-              <Select onChange={handleTypeChange} placeholder={t('selectType')}>
+              <Select onChange={handleTypeChange} placeholder="Select Type">
                 {types.map((type) => (
                   <Option key={type.typeId} value={type.typeId}>{type.types}</Option>
                 ))}
@@ -364,42 +340,55 @@ const Project = () => {
             </Form.Item>
             <Form.Item
               name="name"
-              label={<span className={customDarkText}>{t('projectName')}</span>}
-              rules={[{ required: true, message: t('pleaseEnterProjectName') }]}
+
+              label={<span className={customDarkText}>Project Name</span>}
+
+              rules={[{ required: true, message: 'Please enter the project name!' }]}
             >
-              <Input placeholder={t('enterProjectName')} />
+              <Input placeholder="Enter project name" />
             </Form.Item>
             <Form.Item
               name="description"
-              label={<span className={customDarkText}>{t('description')}</span>}
-              rules={[{ required: true, message: t('pleaseEnterDescription') }]}
+
+              label={<span className={customDarkText}>Description</span>}
+
+              rules={[{ required: true, message: 'Please enter a description!' }]}
             >
-              <Input.TextArea rows={4} placeholder={t('enterDescription')} />
+              <Input.TextArea rows={4} placeholder="Enter description" />
             </Form.Item>
             <Form.Item
               name="status"
-              label={<span className={customDarkText}>{t('status')}</span>}
+
+              label="Status"
               valuePropName="checked"
-              initialValue={true}
             >
-              <Switch
-                checkedChildren={t('active')}
-                unCheckedChildren={t('inactive')}
-                defaultChecked
-              />
+              <Switch />
+            </Form.Item>
+            <Form.Item>
+              <Button type="primary" htmlType="submit" style={{ marginRight: '10px' }}>
+                Save
+              </Button>
+              <Button onClick={handleCancel}>Cancel</Button>
             </Form.Item>
           </Form>
-        </Modal.Body>
-        <Modal.Footer className={` ${customDark} ${customLightText} ${customDark === "dark-dark" ? `border ` : `border-0`} border d-flex justify-content-between `}>
-          <Button variant="secondary" onClick={handleCancel}>
-            {t('cancel')}
-          </Button>
-          <Button variant="primary" onClick={form.submit}>
-            {t('save')}
-          </Button>
-        </Modal.Footer>
-      </Modal>
-    </Card>
+        </Modal>
+      </TabPane>
+      <TabPane tab="Select Process" key="2">
+        {/* Content for Select Process */}
+        <div>
+          
+          <AddProjectProcess selectedProject={selectedProject}/>
+        </div>
+      </TabPane>
+      <TabPane tab="Allocate Process" key="3">
+        {/* Content for Allocate Process */}
+        <div>
+          <ProjectUserAllocation/>
+        </div>
+      </TabPane>
+    </Tabs>
+  </Card>
+
   );
 };
 
