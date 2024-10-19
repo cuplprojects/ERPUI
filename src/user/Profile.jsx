@@ -7,7 +7,8 @@ import { useStore } from 'zustand';
 import SampleUser from "./../assets/sampleUsers/defaultUser.jpg";
 import "./../styles/Profile.css";
 import axios from 'axios';
-import useUserDataStore from '../store/userDataStore';
+import useUserDataStore, { useUserData, useUserDataActions } from '../store/userDataStore';
+import API from '../CustomHooks/MasterApiHooks/api';
 
 
 const UserProfile = () => {
@@ -15,7 +16,8 @@ const UserProfile = () => {
   const cssClasses = getCssClasses();
   const [customDark, customMid, customLight, customBtn, customDarkText, , customLightBorder, customDarkBorder] = cssClasses;
 
-  const { userData, setUserData, fetchUserData } = useUserDataStore();
+  const userData = useUserData();
+  const { fetchUserData, refreshUserData, updateUserData } = useUserDataActions();
   const [isEditing, setIsEditing] = useState(false);
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
   const [isZoomed, setIsZoomed] = useState(false);
@@ -53,7 +55,7 @@ const UserProfile = () => {
 
   const fetchRoles = async () => {
     try {
-      const response = await axios.get('https://localhost:7212/api/Roles');
+      const response = await API.get('/Roles');
       setRoles(response.data);
     } catch (error) {
       console.error('Error fetching roles:', error);
@@ -94,7 +96,7 @@ const UserProfile = () => {
           } else {
             await updateProfilePicture(file);
           }
-          await fetchUserData();
+          await refreshUserData();
           setProfileImageKey(Date.now());
         };
         reader.readAsDataURL(file);
@@ -112,7 +114,7 @@ const UserProfile = () => {
           'Content-Type': 'multipart/form-data'
         }
       });
-      await fetchUserData();
+      await refreshUserData();
       window.location.reload();
       console.log('Upload successful');
     } catch (error) {
@@ -129,8 +131,8 @@ const UserProfile = () => {
           'Content-Type': 'multipart/form-data'
         }
       });
-      await fetchUserData();
-      window.location.reload();
+      await refreshUserData();
+      // window.location.reload();
       console.log('Update successful');
     } catch (error) {
       console.error('Update failed', error);
@@ -139,7 +141,7 @@ const UserProfile = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setUserData(prevData => ({ ...prevData, [name]: value }));
+    updateUserData({ ...userData, [name]: value });
   };
 
   const getProfileImageUrl = (imagePath) => {
@@ -208,7 +210,6 @@ const UserProfile = () => {
                 onClick={handleEditImageClick}
               >
                 <FaPencilAlt
-                  size="sm"
                   className="p-1"
                   style={{ width: '100%', height: '100%' }}
                 />

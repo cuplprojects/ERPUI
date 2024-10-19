@@ -68,6 +68,13 @@ const Type = () => {
 
     const handleAddType = async (values) => {
         try {
+            // Check if the type already exists
+            const typeExists = types.some(type => type.types.toLowerCase() === values.types.toLowerCase());
+            if (typeExists) {
+                message.error("This type already exists!");
+                return;
+            }
+
             const response = await API.post('/PaperTypes', values);
             setTypes(prev => [...prev, response.data]);
             setFilteredTypes(prev => [...prev, response.data]);
@@ -76,6 +83,7 @@ const Type = () => {
             form.resetFields();
         } catch (error) {
             console.error(error);
+            message.error("Failed to create type");
         }
     };
 
@@ -135,7 +143,6 @@ const Type = () => {
                         value={editingType}
                         onChange={(e) => setEditingType(e.target.value)}
                         onPressEnter={() => handleEditSave(index)}
-                        onBlur={() => handleEditSave(index)}
                     />
                 ) : (
                     <span>{text}</span>
@@ -153,7 +160,6 @@ const Type = () => {
                         value={editingProcessIds}
                         onChange={setEditingProcessIds}
                         style={{ width: '100%' }}
-                        onBlur={() => handleEditSave(index)}
                     >
                         {processes.map(proc => (
                             <Option key={proc.id} value={proc.id}>
@@ -176,7 +182,6 @@ const Type = () => {
                     <Switch
                         checked={editingStatus}
                         onChange={setEditingStatus}
-                        onBlur={() => handleEditSave(index)}
                         checkedChildren="Active"
                         unCheckedChildren="Inactive"
                     />
@@ -238,7 +243,7 @@ const Type = () => {
                 <Search
                     placeholder="Search types or processes"
                     allowClear
-                    onSearch={handleSearch}
+                    onChange={(e) => handleSearch(e.target.value)}
                     style={{ width: 300 }}
                 />
                 <Button className={`${customBtn}`} onClick={() => setIsModalVisible(true)}>
@@ -300,6 +305,9 @@ const Type = () => {
                                         const isNumeric = /^\d+$/;
                                         if (value && isNumeric.test(value)) {
                                             return Promise.reject(new Error('Type cannot contain only numbers!'));
+                                        }
+                                        if (types.some(type => type.types.toLowerCase() === value.toLowerCase())) {
+                                            return Promise.reject(new Error('This type already exists!'));
                                         }
                                         return Promise.resolve();
                                     }

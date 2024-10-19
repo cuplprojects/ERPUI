@@ -1,104 +1,27 @@
 // permissionUtils.js
+import { useUserData } from '../../store/userDataStore';
 
-const userpermissions = [
-    "1",
-    "2",
-    "2.1",
-    "2.2",
-    "2.3",
-    "2.4",
-    "2.5",
-    "2.6",
-    "2.7",
-    "2.8",
-    "2.9",
-    "2.10",
-    "2.1.1",
-    "2.1.2",
-    "2.1.3",
-    "2.1.4",
-    "2.2.0",
-    "2.3.0",
-    "2.4.0",
-    "2.5.0",
-    "2.6.0",
-    "2.7.0",
-    "2.1.1.0",
-    "2.1.2.0",
-    "2.1.3.0",
-    "2.1.4.0",
-    "2.2.1",
-    "2.2.2",
-    "2.2.3",
-    "2.2.4",
-    "2.2.5",
-    "2.2.6",
-    "2.3.1",
-    "2.3.2",
-    "2.3.3",
-    "2.3.4",
-    "2.3.5",
-    "2.3.6",
-    "2.4.1",
-    "2.4.2",
-    "2.4.3",
-    "2.4.4",
-    "2.4.5",
-    "2.4.6",
-    "2.5.1",
-    "2.5.2",
-    "2.5.3",
-    "2.5.4",
-    "2.5.5",
-    "2.5.6",
-    "2.6.1",
-    "2.6.2",
-    "2.6.3",
-    "2.6.4",
-    "2.6.5",
-    "2.6.6",
-    "2.7.1",
-    "2.7.2",
-    "2.7.3",
-    "2.7.4",
-    "2.7.5",
-    "2.7.6",
-    "2.1.1.1",
-    "2.1.1.2",
-    "2.1.1.3",
-    "2.1.1.4",
-    "2.1.1.5",
-    "2.1.1.6",
-    "2.1.2.1",
-    "2.1.2.2",
-    "2.1.2.3",
-    "2.1.2.4",
-    "2.1.2.5",
-    "2.1.2.6",
-    "2.1.3.1",
-    "2.1.3.2",
-    "2.1.3.3",
-    "2.1.3.4",
-    "2.1.3.5",
-    "2.1.3.6",
-    "2.1.4.1",
-    "2.1.4.2",
-    "2.1.4.3",
-    "2.1.4.4",
-    "2.1.4.5",
-    "2.1.4.6",
-    "3",
-    "4"
-];
+const isDevelopmentMode = import.meta.env.VITE_APP_MODE === 'development';
+
 /**
- * Checks if the user has permission for a specific action in a given module.
+ * Retrieves user permissions from the user data store
+ * @returns {string[]} Array of permission strings
+ */
+const getUserPermissions = () => {
+  const userData = useUserData();
+  return userData?.role?.permissions || [];
+};
+
+/**
+ * Checks if the user has a specific permission or if in development mode
  * 
- * @param {string} moduleName - The name of the module (e.g., 'moduleA').
- * @param {string} action - The action to check (e.g., 'create').
- * @returns {boolean} - True if the action is permitted, false otherwise.
+ * @param {string} permission - The permission to check
+ * @returns {boolean} - True if the user has the permission or in development mode, false otherwise
  */
 export const hasPermission = (permission) => {
-  // Convert permission to string to ensure it can be compared as a string
-  const permissionString = String(permission);
-  return userpermissions.includes(permissionString);
+  if (isDevelopmentMode) {
+    return true;
+  }
+  const userPermissions = getUserPermissions();
+  return userPermissions.includes(String(permission));
 };

@@ -111,6 +111,7 @@ import CuDetailedAgGrid from "../sub-Components/CuDetailedAgGrid";
 import PieChart from "../sub-Components/PieChart"; // Import PieChart component
 import Cards from "../sub-Components/Cards";
 import data from "../store/CuAgGrid.json";
+import API from '../CustomHooks/MasterApiHooks/api';
 
 const CuDashboard = () => {
   // State to store the selected lots for the BarChart
@@ -120,14 +121,23 @@ const CuDashboard = () => {
   const [pieData, setPieData] = useState([]);
 
   // State to store the currently clicked project data
-  const [clickData, setClickData] = useState(data?.[0]);
+  const [clickData, setClickData] = useState({});
+  const [data, setData] = useState([]);
 
   // useEffect hook to initialize the selected lots and pie data when the component mounts
   useEffect(() => {
     // If rowData is available, set the selected lots to the first row's lots
-      setSelectedLots(data?.[0].lots);
+      // setSelectedLots(data?.[0].lots);
+      fetchProject();
     // Example data for PieChart, replace with real data when available
   }, []);
+
+  const fetchProject = async () => {
+
+    const response = await API.get('/Project/GetActiveProjects');
+
+    setData(response.data);
+  }
 
   // Function to handle click events for projects, updates selected lots
   const handleProjectClick = (project) => {
@@ -145,8 +155,10 @@ const CuDashboard = () => {
       {/* Row for displaying project cards */}
       <Row className="row-cols-lg-5 row-cols-md-2 mb-3">
         {data.map((item) => (
-          <Col key={item.projectName}>
-            <Cards item={item} onclick={onclick} />
+          <Col key={item.name}>
+
+            <Cards item={item} onclick={onclick}  />
+
           </Col>
         ))}
       </Row>
@@ -159,7 +171,7 @@ const CuDashboard = () => {
             style={{ height: "400px", background: "rgba(255,255,255,0.6)" }}
           >
             {/* LineChart component displaying rowData, with project click handler */}
-            <LineChart data={data} onProjectClick={handleProjectClick} /> {console.log(data)}
+            {/* <LineChart data={data} onProjectClick={handleProjectClick} /> {console.log(data)} */}
           </Card>
         </Col>
 
@@ -168,7 +180,7 @@ const CuDashboard = () => {
             className="dcard shadow-lg"
             style={{ height: "400px", background: "rgba(255,255,255,0.6)" }}
           >
-            <PieChart data={clickData.processes} />
+            {/* <PieChart data={clickData.processes} /> */}
           </Card>
         </Col>
       </Row>
@@ -199,7 +211,7 @@ const CuDashboard = () => {
             className="dcard shadow-lg"
             style={{ height: "500px", background: "rgba(255,255,255,0.6)" }}
           >
-            <BarChart lots={selectedLots || data[0].lots} />{console.log(selectedLots)}
+            {/* <BarChart lots={selectedLots || data[0].lots} />{console.log(selectedLots)} */}
           </Card>
         </Col>
       </Row>

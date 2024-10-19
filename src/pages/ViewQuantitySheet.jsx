@@ -5,6 +5,9 @@ import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Modal as BootstrapModal } from 'react-bootstrap';
+
+import API from '../CustomHooks/MasterApiHooks/api';
+
 import { EditOutlined, DeleteOutlined, StopOutlined } from '@ant-design/icons';
 
 const ViewQuantitySheet = ({ selectedLotNo }) => {
@@ -118,7 +121,9 @@ const ViewQuantitySheet = ({ selectedLotNo }) => {
 
     const fetchQuantity = async (lotNo) => {
         try {
-            const response = await axios.get(`https://localhost:7212/api/QuantitySheet?ProjectId=1&lotNo=${lotNo}`);
+
+            const response = await API.get(`/QuantitySheet?ProjectId=1&lotNo=${lotNo}`);
+
             const dataWithKeys = response.data.map(item => ({
                 ...item, key: item.quantitySheetId
             }));
@@ -140,7 +145,9 @@ const ViewQuantitySheet = ({ selectedLotNo }) => {
 
     const fetchProcess = async () => {
         try {
-            const response = await axios.get('https://localhost:7212/api/Processes');
+
+            const response = await API.get('/Processes');
+
             setProcess(response.data);
         } catch (error) {
             console.error('Failed to fetch Processes', error);
@@ -161,6 +168,11 @@ const ViewQuantitySheet = ({ selectedLotNo }) => {
         };
 
         try {
+
+            await API.put(`/QuantitySheet/${editingRow}`, payload);
+
+            setEditingRow(null); // Exit edit mode
+            fetchQuantity(); // Refresh data
             await axios.put(`https://localhost:7212/api/QuantitySheet/${editingRow}`, payload);
             setEditingRow(null);
             fetchQuantity(selectedLotNo);
@@ -362,5 +374,6 @@ const ViewQuantitySheet = ({ selectedLotNo }) => {
         </div>
     );
 };
+
 
 export default ViewQuantitySheet;
