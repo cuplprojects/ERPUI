@@ -187,6 +187,13 @@ const QtySheetUpload = () => {
         }
     }
 
+    const handleDownloadTemplate = () => {
+        const link = document.createElement('a');
+        link.href = 'path_to_your_template_file.xlsx'; // local QS file 
+        link.download = 'QtySheet-Input.xlsx';
+        link.click();
+    };
+
 
 
 
@@ -198,6 +205,8 @@ const QtySheetUpload = () => {
             setShowTable(true); // Show table for the selected lot
         }
     };
+
+
 
     return (
         <div className={`container ${customDarkText} rounded shadow-lg`}>
@@ -227,14 +236,16 @@ const QtySheetUpload = () => {
                             </Upload>
                         </Form.Item>
                         <Form.Item>
-                            <Button
-                                className={`${customBtn}`}
-                                type="primary"
-                                onClick={handleUpload}
-                                loading={uploading}
-                            >
-                                {uploading ? 'Uploading...' : 'Upload'}
-                            </Button>
+                            {fileList.length > 0 && (  // Check if any file is selected
+                                <Button
+                                    className={`${customBtn}`}
+                                    type="primary"
+                                    onClick={handleUpload}
+                                    loading={uploading}
+                                >
+                                    {uploading ? 'Uploading...' : 'Upload'}
+                                </Button>
+                            )}
                         </Form.Item>
                         <Form.Item>
                             {lots.map((lotNo, index) => (
