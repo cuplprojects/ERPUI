@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useLocation, useParams } from 'react-router-dom';
 import { Card, Spinner, Row, Col } from 'react-bootstrap'; // Import Bootstrap components
 import ProjectDetailsTable from './projectDetailTable'; // Import the new component
 import dummyData from "../store/dd.json";
@@ -16,6 +16,7 @@ import { MdPending } from "react-icons/md";
 import { Link } from 'react-router-dom';
 import { MdCloudUpload } from "react-icons/md";//upload icon
 import { FaRegHourglassHalf } from "react-icons/fa6";//pre process running
+import API from '../CustomHooks/MasterApiHooks/api';
 
 const ProcessTable = () => {
 
@@ -33,18 +34,55 @@ const ProcessTable = () => {
     ] = getCssClasses();
 
     const location = useLocation();
-    const { project } = location.state || {}; // Access the project details from the state
+    const { id, lotNo } = useParams();
     const [tableData, setTableData] = useState(dummyData);
     const [showBarChart, setShowBarChart] = useState(true);
     const [catchDetailModalShow, setCatchDetailModalShow] = useState(false);
     const [catchDetailModalData, setCatchDetailModalData] = useState(null);
     const [previousProcessPercentage, setPreviousProcessPercentage] = useState(90);
+    const [projectName, setProjectName] = useState('');
+
+    const formDataGet = {
+        srNo: 0,
+        quantitySheetId: null,
+        catchNo: tableData.catchNumber,
+        paper: tableData.paper,
+        course: tableData.course,
+        subject: tableData.subject,
+        innerEnvelope: tableData.innerEnvelope,
+        outerEnvelope: tableData.outerEnvelope,
+        lotNo: lotNo,
+        quantity: 0,
+        interimQuantity: 0,//interim quantity from separate API
+        percentageCatch: 0,//percentage catch from separate API
+        projectId: id,
+        isOverridden: false,//false by default
+        processId: [],//process id from separate API
+        remarks: "",//remarks from separate API
+        alerts: "",//alerts from separate API
+        status: "Pending",//status from separate API
+      };
+      
+    useEffect(() => {
+        const fetchProjectDetails = async () => {
+            try {
+                const response = await API.get(`https://localhost:7212/api/Project/${id}`);
+                const projectData = response.data;
+                setProjectName(projectData.name);
+                // You can set other project details here if needed
+            } catch (error) {
+                console.error("Error fetching project details:", error);
+            }
+        };
+
+        fetchProjectDetails();
+    }, [id]);
 
     const handleToggleChange = () => {
         setShowBarChart(!showBarChart);
     };
     // Render a loading state while fetching the project data
-    if (!project) {
+    if (!projectName) {
         return (
             <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
                 <Spinner animation="border" variant="primary" />
@@ -110,8 +148,8 @@ const ProcessTable = () => {
                             <Row className='d-flex align-items-center'>
                                 <Col lg={6} md={4} xs={12} className=' d-lg-none d-md-none '>
                                     <div className="center-head d-flex justify-content-center">
-                                        <span className='text-center fs-4 me-3'>{project.label}</span>
-                                        <span className='text-center fs-4'>Lot - {project.lotNumber}</span>
+                                        <span className='text-center fs-4 me-3'>{projectName}</span>
+                                        <span className='text-center fs-4'>Lot - {lotNo}</span>
                                     </div>
                                 </Col>
                                 <div className="d-flex justify-content-center d-lg-none d-md-none ">
@@ -148,8 +186,8 @@ const ProcessTable = () => {
                                 </div>
                                 <Col lg={6} md={4} xs={12} className='d-none d-lg-block d-md-block'>
                                     <div className="center-head ">
-                                        <div className='text-center fs-4'>{project.label} </div>
-                                        <div className='text-center fs-4'>Lot - {project.lotNumber}</div>
+                                        <div className='text-center fs-4'>{projectName}</div>
+                                        <div className='text-center fs-4'>Lot - {lotNo}</div>
                                     </div>
                                 </Col>
                                 <Col lg={3} md={4} xs={12}>
@@ -193,12 +231,10 @@ const ProcessTable = () => {
                 </Col>
             </Row>
             <Row className='mb-2'>
-                <Col lg={2} md={0} ></Col>
-                <Col lg={8} md={12} >
-                    <ProjectDetailsTable tableData={tableData} setTableData={setTableData} />
+                <Col lg={12} md={12} >
+                    <ProjectDetailsTable tableData={tableData} setTableData={setTableData} projectId={id} lotNo={lotNo} />
                 </Col>
                 <Col lg={2} md={0} ></Col>
-                {/* <Col lg={4} md={12}> <UserCard /> </Col> */}
             </Row>
             <Row className='mb-4 d-flex justify-content-between'>
                 <Col lg={8} md={12} className='mb-1'>

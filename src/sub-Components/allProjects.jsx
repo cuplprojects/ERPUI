@@ -12,14 +12,13 @@ import {
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./../styles/allProjects.css";
 import tractor from "./../assets/images/tractor.gif";
-import BarGraphData from "./../store/BarGraphData.json";
-import DoughnutGraphData from "./../store/doughnutChartData.json";
 import DashboardGrid from "./DashboardGrid";
-import { useNavigate } from "react-router";
-import themeStore from './../store/themeStore';
+import { useNavigate, useParams } from "react-router-dom";
+import themeStore from '../store/themeStore';
 import { useStore } from 'zustand';
 import { IoMdArrowDroprightCircle } from "react-icons/io";
 import { IoMdArrowDropleftCircle } from "react-icons/io";
+import axios from 'axios';
 
 Chart.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip);
 
@@ -44,7 +43,7 @@ const ProjectChart = ({ title, chartKey, chartdata, onClick, tCatch, type }) => 
               responsive: true,
               plugins: {
                 legend: {
-                  display: false, // This line removes the legend
+                  display: false,
                 },
                 tooltip: {
                   enabled: true,
@@ -63,9 +62,11 @@ const ProjectChart = ({ title, chartKey, chartdata, onClick, tCatch, type }) => 
     </div>
   </Col>
 );
-const AllProjects = () => {
 
-  //Theme Change Section
+const AllProjects = () => {
+  const { projectId } = useParams();
+  const [lotsData, setLotsData] = useState([]);
+
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
   const customDark = cssClasses[0];
@@ -81,39 +82,48 @@ const AllProjects = () => {
   const [selectedChart, setSelectedChart] = useState({
     label: "",
     lotNumber: "",
-    barLabel: BarGraphData[0].label,
+    barLabel: "",
   });
 
   const navigate = useNavigate();
   const carouselRef = useRef(null);
 
   useEffect(() => {
-    if (DoughnutGraphData.length > 0) {
-      setSelectedChart({
-        label: DoughnutGraphData[0].label,
-        lotNumber: DoughnutGraphData[0].lotId,
-        barLabel: BarGraphData[0].label,
-      });
-    }
+    const fetchLotsData = async () => {
+      try {
+        const response = await axios.get(`https://localhost:7212/api/QuantitySheet/Lots?ProjectId=${projectId}`);
+        setLotsData(response.data);
+        if (response.data.length > 0) {
+          setSelectedChart({
+            label: "Lot",
+            lotNumber: response.data[0],
+            barLabel: "",
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching lots data:", error);
+      }
+    };
 
-  }, []);
+    fetchLotsData();
+  }, [projectId]);
 
-  const handleCardClick = (chartTitle, lotNumber) => {
+  const handleCardClick = (lotNumber) => {
     setSelectedChart((prev) => ({
       ...prev,
-      label: chartTitle,
+      label: "Lot",
       lotNumber,
     }));
   };
 
   const handleTitleClick = (project) => {
-    navigate(`/project-details/${project.lotNumber}`, { state: { project } });
+    navigate(`/project-details/${projectId}/${project.lotNumber}`, { state: { project, projectId } });
   };
 
   const handleBarClick = (elements) => {
     if (elements.length > 0) {
       const clickedIndex = elements[0].index;
-      const clickedBarLabel = BarGraphData[clickedIndex].label;
+      const clickedBarLabel = lotsData[clickedIndex];
 
       setSelectedChart((prev) => ({
         ...prev,
@@ -132,22 +142,38 @@ const AllProjects = () => {
     }
   };
 
-  const itemsPerSlide = 6; // Adjust this number based on how many items you want per slide
+  const itemsPerSlide = 6;
 
   const carouselItems = [];
-  for (let i = 0; i < DoughnutGraphData.length; i += itemsPerSlide) {
+  const [projectName, setProjectName] = useState('');
+
+  useEffect(() => {
+    const fetchProjectName = async () => {
+      try {
+        const response = await fetch(`https://localhost:7212/api/Project/${projectId}`);
+        const data = await response.json();
+        setProjectName(data.name);
+      } catch (error) {
+        console.error("Error fetching project name:", error);
+      }
+    };
+
+    fetchProjectName();
+  }, [projectId]);
+
+  for (let i = 0; i < lotsData.length; i += itemsPerSlide) {
     carouselItems.push(
       <Carousel.Item key={i} style={{ background: "transparent" }}>
         <Row className="flex-nowrap">
-          {DoughnutGraphData.slice(i, i + itemsPerSlide).map((data, idx) => (
+          {lotsData.slice(i, i + itemsPerSlide).map((lotNumber, idx) => (
             <ProjectChart
               key={idx}
-              title={data.label}
-              chartdata={[data.completed, data.remaining]}
-              chartKey={data.lotId}
-              tCatch={data.tCatch}
-              type={data.type}
-              onClick={() => handleCardClick(data.label, data.lotId)}
+              title={`${projectName}`}
+              chartdata={[{title: "Completed", value: 50}, {title: "Remaining", value: 50}]}
+              chartKey={lotNumber}
+              tCatch={0}
+              type="Default"
+              onClick={() => handleCardClick(lotNumber)}
             />
           ))}
         </Row>
@@ -158,19 +184,16 @@ const AllProjects = () => {
   return (
     <Container fluid>
       <div className="position-relative mb-4 ">
-
         <div className="d-none d-lg-block">
           <div
             className={`position-absolute top-50 start-0 translate-middle-y rounded-circle  ${customDark}`} style={{ zIndex: "9", width: "0px", height: "0px" }}
             onClick={() => handleCarouselControl('prev')}
-
           >
             <IoMdArrowDropleftCircle size={40} className={`${customBtn}  rounded-circle custom-zoom-btn`} />
           </div>
           <div
             className={`position-absolute top-50 end- translate-middle-y rounded-circle ${customDark} ${customDark === "dark-dark" ? `${customMid} border-light border-1` : "border-0"}`} style={{ zIndex: "9", width: "0px", height: "0px", right: "20px" }}
             onClick={() => handleCarouselControl('next')}
-
           >
             <IoMdArrowDroprightCircle size={40} className={`${customBtn}  rounded-circle custom-zoom-btn`} />
           </div>
@@ -207,7 +230,7 @@ const AllProjects = () => {
           <Card className="dcard shadow-lg" style={{ height: "400px" }}>
             <h4 className="text-dark d-flex justify-content-between">
               <div>
-                {selectedChart.label} Lot- {selectedChart.lotNumber}{" "}
+                {selectedChart.label} {selectedChart.lotNumber}{" "}
                 {selectedChart.barLabel && `| ${selectedChart.barLabel}`}
               </div>
               <button
@@ -218,7 +241,7 @@ const AllProjects = () => {
                 More Info
               </button>
             </h4>
-            <DashboardGrid />
+            <DashboardGrid projectId={projectId} />
           </Card>
         </Col>
 
@@ -242,60 +265,60 @@ const AllProjects = () => {
                 }}
               >
                 <h4 className="text-dark">
-                  {selectedChart.label} Lot- {selectedChart.lotNumber}
+                  {selectedChart.label} {selectedChart.lotNumber}
                 </h4>
               </div>
               <div style={{ width: "100%", height: "90%" }}>
-              <Bar
-  className="mt-2"
-  data={{
-    labels: BarGraphData.map((data) => data.label),
-    datasets: [
-      {
-        data: BarGraphData.map((data) => data.value),
-        backgroundColor: [
-          "rgba(255, 99, 132, 0.6)",
-          "rgba(255, 159, 64, 0.6)",
-          "rgba(255, 205, 86, 0.6)",
-          "rgba(75, 192, 192, 0.6)",
-          "rgba(54, 162, 235, 0.6)",
-          "rgba(153, 102, 255, 0.6)",
-          "rgba(201, 203, 207, 0.6)",
-        ],
-        borderColor: [
-          "rgb(255, 125, 132)",
-          "rgb(255, 159, 64)",
-          "rgb(255, 205, 86)",
-          "rgb(75, 192, 192)",
-          "rgb(54, 162, 235)",
-          "rgb(153, 102, 255)",
-          "rgb(201, 203, 207)",
-        ],
-        borderWidth: 1,
-        borderRadius: 5,
-      },
-    ],
-  }}
-  options={{
-    responsive: true,
-    maintainAspectRatio: false,
-    onClick: (event, elements) => handleBarClick(elements),
-    plugins: {
-      legend: {
-        display: false, // This line removes the legend
-      },
-      tooltip: {
-        enabled: true,
-        callbacks: {
-          label: (tooltipItem) => {
-            return `${tooltipItem.label}: ${tooltipItem.raw}%`;
-          },
-        },
-      },
-    },
-  }}
-  height={300}
-/>
+                <Bar
+                  className="mt-2"
+                  data={{
+                    labels: lotsData,
+                    datasets: [
+                      {
+                        data: lotsData.map(() => Math.random() * 100),
+                        backgroundColor: [
+                          "rgba(255, 99, 132, 0.6)",
+                          "rgba(255, 159, 64, 0.6)",
+                          "rgba(255, 205, 86, 0.6)",
+                          "rgba(75, 192, 192, 0.6)",
+                          "rgba(54, 162, 235, 0.6)",
+                          "rgba(153, 102, 255, 0.6)",
+                          "rgba(201, 203, 207, 0.6)",
+                        ],
+                        borderColor: [
+                          "rgb(255, 125, 132)",
+                          "rgb(255, 159, 64)",
+                          "rgb(255, 205, 86)",
+                          "rgb(75, 192, 192)",
+                          "rgb(54, 162, 235)",
+                          "rgb(153, 102, 255)",
+                          "rgb(201, 203, 207)",
+                        ],
+                        borderWidth: 1,
+                        borderRadius: 5,
+                      },
+                    ],
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    onClick: (event, elements) => handleBarClick(elements),
+                    plugins: {
+                      legend: {
+                        display: false,
+                      },
+                      tooltip: {
+                        enabled: true,
+                        callbacks: {
+                          label: (tooltipItem) => {
+                            return `${tooltipItem.label}: ${tooltipItem.raw.toFixed(2)}%`;
+                          },
+                        },
+                      },
+                    },
+                  }}
+                  height={300}
+                />
               </div>
             </Card.Body>
           </Card>

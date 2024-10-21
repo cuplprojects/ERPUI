@@ -7,11 +7,13 @@ import * as XLSX from 'xlsx';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import ViewQuantitySheet from './ViewQuantitySheet';
+import { useParams } from 'react-router-dom';
 
 import API from '../CustomHooks/MasterApiHooks/api';
 
 
 const QtySheetUpload = () => {
+    const { projectId } = useParams();
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = getCssClasses();
     const customDarkText = cssClasses[4];
@@ -47,10 +49,10 @@ const QtySheetUpload = () => {
             subject: item.Subject || "",
             innerEnvelope: item.InnerEnvelope || "",
             outerEnvelope: item.OuterEnvelope || "",
-            lotNo: "2",
+            lotNo: item.lotNo || "",
             quantity: Number(item.Quantity) || 0,
             percentageCatch: Number(item.percentageCatch) || 0,
-            projectId: 1,
+            projectId: projectId,
             isOverridden: item.isOverridden === 'true',
             processId: [0],
         }));
@@ -97,7 +99,7 @@ const QtySheetUpload = () => {
                             (property === 'quantity' ? parseFloat(row[index]) || 0 : String(row[index])) : '';
                     }
                     console.log("Row Data Mapped:", rowData);
-                    rowData['projectId'] = 1;
+                    rowData['projectId'] = projectId;
                     rowData['isOverridden'] = 'false';
                     rowData['percentageCatch'] = '0';
                     return rowData;
@@ -145,7 +147,7 @@ const QtySheetUpload = () => {
 
             const autoMappings = {};
             columns.forEach((col) => {
-                const matchingHeader = excelHeaders.find(header => header.toLowerCase() === col.toLowerCase());
+                const matchingHeader = excelHeaders.find(header => header?.toLowerCase() === col?.toLowerCase());
                 autoMappings[col] = matchingHeader || '';
             });
 
@@ -178,7 +180,7 @@ const QtySheetUpload = () => {
     const fetchLots = async () => {
         try {
 
-            const response = await API.get('/QuantitySheet/Lots?ProjectId=1')
+            const response = await API.get(`/QuantitySheet/Lots?ProjectId=${projectId}`)
 
             setLots(response.data)
         }

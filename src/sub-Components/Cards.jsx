@@ -14,7 +14,7 @@ const Cards = ({item, onclick}) => {
 
   const handleInfoClick = (e) => {
     e.stopPropagation();
-    navigate("/dashboard");
+    navigate(`/dashboard/${item.projectId}`);
   };
 
   return (

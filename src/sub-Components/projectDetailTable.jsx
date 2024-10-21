@@ -21,7 +21,7 @@ import { BiSolidFlag } from "react-icons/bi";
 import { MdPending } from "react-icons/md";// for pending
 import { IoCheckmarkDoneCircleSharp } from "react-icons/io5";// for completed
 const { Option } = Select;
-const ProjectDetailsTable = ({ tableData, setTableData }) => {
+const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo}) => {
 
     //Theme Change Section
     const { getCssClasses } = useStore(themeStore);
@@ -93,6 +93,21 @@ const ProjectDetailsTable = ({ tableData, setTableData }) => {
             previousProcess = null;
         }
     }
+
+    useEffect(() => {
+        // Fetch data from API
+        const fetchData = async () => {
+            try {
+                const response = await fetch(`https://localhost:7212/api/QuantitySheet?ProjectId=${projectId}&lotNo=${lotNo}`);
+                const data = await response.json();
+                setTableData(data);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        };
+
+        fetchData();
+    }, [projectId, lotNo]);
 
     useEffect(() => {
         // Update the initialTableData state whenever tableData changes
