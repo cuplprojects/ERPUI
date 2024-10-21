@@ -215,7 +215,7 @@ const ProcessTable = () => {
                             <div className="d-flex gap-4">
                                 {tableData.map((record, index) => (
                                     <>
-                                        {record.alerts.length > 0 && (
+                                        {record.alerts && record.alerts.length > 0 && (
                                             <AlertBadge catchNo={record.catchNumber} alerts={record.alerts} onClick={() => handleCatchClick(record)} status="level1" />
                                         )}
                                     </>
