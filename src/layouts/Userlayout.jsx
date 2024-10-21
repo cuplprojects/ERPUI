@@ -23,6 +23,7 @@ import { hasPermission } from '../CustomHooks/Services/permissionUtils';
 import CuDashboard from '../pages/CuDashboard';
 
 import AddProjectProcess from '../pages/AddProjectProcess';
+import Test from '../pages/Test';
 
 const Userlayout = () => {
   //Theme Change Section
@@ -54,6 +55,7 @@ const Userlayout = () => {
               <Route path="/profile" element={<Profile />} />
               <Route path="/settings" element={<UserSettings />} />
               <Route path="/change-password" element={<ChangePassword />} />
+              <Route path="/test" element={<Test />} />
 
 
 
