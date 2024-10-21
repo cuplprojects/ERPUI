@@ -20,7 +20,7 @@ import AddUsers from '../sub-Components/addUsers';
 import AllUsers from '../sub-Components/allUsers';
 import CameraList from './CameraList';
 import RolesAndDepartments from './Roles/RolePage';
-import Team from './Team';
+
 import SystemSettings from './SystemSettings';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
@@ -39,7 +39,7 @@ const Sidebar = () => {
     customDarkBorder
   ] = getCssClasses();
 
-  const [selectedMenu, setSelectedMenu] = useState('group');
+  const [selectedMenu, setSelectedMenu] = useState(localStorage.getItem('activeTab') || 'group');
   const [expandedMenus, setExpandedMenus] = useState({});
   const [show, setShow] = useState(false);
 
@@ -49,8 +49,19 @@ const Sidebar = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  useEffect(() => {
+    const activeTab = localStorage.getItem('activeTab');
+    if (activeTab) {
+      const parentMenu = menuItems.find(menu => menu.children && menu.children.some(child => child.key === activeTab));
+      if (parentMenu) {
+        setExpandedMenus(prevState => ({ ...prevState, [parentMenu.key]: true }));
+      }
+    }
+  }, []);
+
   const handleMenuClick = (key) => {
     setSelectedMenu(key);
+    localStorage.setItem('activeTab', key);
     if (!expandedMenus[key]) {
       setTimeout(() => setShow(false), 300);
     }
@@ -81,7 +92,6 @@ const Sidebar = () => {
     { key: 'camera', icon: <FaCamera />, label: 'Camera', permission: '2.6' },
     { key: 'machine', icon: <GiGears />, label: 'Production Machines', permission: '2.7' },
     { key: 'alarm', icon: <FaBell />, label: 'Alarm', permission: '2.8' },
-    { key: 'team', icon: <FaUsers />, label: 'Team', permission: '2.9' },
     { key: 'systemSettings', icon: <FaCog />, label: 'Process Settings', permission: '2.10' },
   ];
 
@@ -161,7 +171,6 @@ const Sidebar = () => {
           {hasPermission('2.4') && selectedMenu === 'project' && <Project />}
           {hasPermission('2.5') && selectedMenu === 'zone' && <Zone />}
           {hasPermission('2.6') && selectedMenu === 'camera' && <CameraList />}
-          {hasPermission('2.9') && selectedMenu === 'team' && <Team />}
           {hasPermission('2.10') && selectedMenu === 'systemSettings' && <SystemSettings />}
           {hasPermission('2.7') && selectedMenu === 'machine' && <Machine />}
           {hasPermission('2.8') && selectedMenu === 'alarm' && <AlarmMaster />}
