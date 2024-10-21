@@ -1,30 +1,51 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Modal, Input, Form, Card, Row, Col, message } from 'antd';
+import { Table, Button, Input, Form, Card, Row, Col, message, Pagination, Spin } from 'antd';
+import { Modal } from 'react-bootstrap';
 import axios from 'axios';
 import API from '../CustomHooks/MasterApiHooks/api';
+import { useStore } from 'zustand';
+import themeStore from './../store/themeStore';
+import { useMediaQuery } from 'react-responsive';
+import { AiFillCloseSquare } from "react-icons/ai";
+import { SortAscendingOutlined, SortDescendingOutlined, EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
 
 const CameraList = () => {
+  const { getCssClasses } = useStore(themeStore);
+  const cssClasses = getCssClasses();
+  const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [cameras, setCameras] = useState([]);
   const [form] = Form.useForm();
   const [editingIndex, setEditingIndex] = useState(null);
   const [editingName, setEditingName] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [searchText, setSearchText] = useState('');
+  const [sortOrder, setSortOrder] = useState('ascend');
+  const [sortField, setSortField] = useState('name');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+
+  const isMobile = useMediaQuery({ maxWidth: 767 });
+  const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1023 });
 
   const showModal = () => {
     setIsModalOpen(true);
   };
 
   const handleCancel = () => {
-    form.resetFields(); // Reset form when modal is canceled
+    form.resetFields();
     setIsModalOpen(false);
   };
 
   const getCameras = async () => {
+    setLoading(true);
     try {
       const response = await API.get('/Cameras');
       setCameras(response.data);
     } catch (error) {
       console.error('Failed to fetch cameras');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -34,10 +55,10 @@ const CameraList = () => {
 
   const handleOk = () => {
     form.validateFields().then(async (values) => {
-      const newCamera = { name: values.name }; // Add new camera
+      const newCamera = { name: values.name };
       try {
         const response = await API.post('/Cameras', newCamera);
-        setCameras([...cameras, response.data]); // Add the camera from the response
+        setCameras([...cameras, response.data]);
         form.resetFields();
         setIsModalOpen(false);
         message.success('Camera added successfully!');
@@ -66,16 +87,45 @@ const CameraList = () => {
     }
   };
 
+  const handleSearch = (value) => {
+    setSearchText(value);
+  };
+
+  const handleSort = (field) => {
+    const newSortOrder = field === sortField && sortOrder === 'ascend' ? 'descend' : 'ascend';
+    setSortOrder(newSortOrder);
+    setSortField(field);
+
+    const sortedCameras = [...cameras].sort((a, b) => {
+      if (field === 'name') {
+        return newSortOrder === 'ascend'
+          ? a.name.localeCompare(b.name)
+          : b.name.localeCompare(a.name);
+      }
+    });
+
+    setCameras(sortedCameras);
+  };
+
   const columns = [
     {
       title: 'SN.',
       dataIndex: 'serial',
       key: 'serial',
-      render: (text, record, index) => index + 1,
+      render: (text, record, index) => (currentPage - 1) * pageSize + index + 1,
       width: '10%',
     },
     {
-      title: 'Camera Name',
+      title: (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          Camera Name
+          <Button
+            type="text"
+            onClick={() => handleSort('name')}
+            icon={sortField === 'name' && sortOrder === 'ascend' ? <SortAscendingOutlined style={{ color: 'white', border: '1px solid white' }} className='rounded-2 p-1' /> : <SortDescendingOutlined style={{ color: 'white', border: '1px solid white' }} className='rounded-2 p-1' />}
+          />
+        </div>
+      ),
       dataIndex: 'name',
       key: 'name',
       render: (text, record, index) => (
@@ -97,64 +147,131 @@ const CameraList = () => {
       key: 'action',
       render: (_, record, index) => (
         editingIndex === index ? (
-          <>
-            <Button type="link" onClick={() => handleEditSave(index)}>Save</Button>
-            <Button type="link" onClick={() => setEditingIndex(null)}>Cancel</Button>
-          </>
+          <div style={{ display: 'flex', justifyContent: '' }}>
+            <Button type="link" onClick={() => handleEditSave(index)} className={`${customDark === "dark-dark" ? `${customMid} border` : `${customLight} ${customDarkBorder}`} text-white `}>
+              <SaveOutlined className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}/> 
+              <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}>Save</span> 
+            </Button>
+            <Button type="link" onClick={() => setEditingIndex(null)} className={`${customDark === "dark-dark" ? `${customMid} border` : `${customLight} ${customDarkBorder}`} text-white ms-3`}>
+              <CloseOutlined className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}/> 
+              <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}>Cancel</span> 
+            </Button>
+          </div>
         ) : (
-          <Button type="link" onClick={() => {
+          <Button type="link" icon={<EditOutlined />} onClick={() => {
             setEditingIndex(index);
             setEditingName(record.name);
-          }}>Edit</Button>
+          }} className={`${customBtn} text-white me-1`}>Edit</Button>
         )
       ),
     },
   ];
 
-  const rowClassName = (record, index) => (index % 2 === 0 ? 'striped-row' : '');
+  const filteredCameras = cameras.filter(camera =>
+    camera.name.toLowerCase().includes(searchText.toLowerCase())
+  );
+
+  const paginatedCameras = filteredCameras.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
-    <Card
-      title="Camera List"
-      bordered={true}
-      style={{ padding: '20px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)' }}
+    <div style={{
+      padding: isMobile ? '10px' : '20px',
+      background: '#fff',
+      borderRadius: '8px',
+      boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
+      overflow: 'auto'
+    }}
+    className={`${customDark === "dark-dark" ? customDark : ``}`}>
+      <h2 className={`${customDarkText}`}>Camera List</h2>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: isMobile ? '10px' : '20px'
+      }}>
+        <Input.Search
+          placeholder="Search cameras"
+          allowClear
+          onChange={(e) => handleSearch(e.target.value)}
+          style={{ width: 300 }}
+        />
+        <Button className={`${customBtn} ${customDark === "dark-dark" ? `` : `border-0`} custom-zoom-btn`} onClick={showModal}>
+          Add New Camera
+        </Button>
+      </div>
 
-    >
-      <Row justify="end" style={{ marginBottom: '20px' }}>
-        <Col>
-          <Button type="primary" onClick={showModal}>
-            Add New Camera
-          </Button>
-        </Col>
-      </Row>
-      <Table
-        columns={columns}
-        dataSource={cameras.map((camera, index) => ({ ...camera, serial: index + 1 }))} // Add serial index
-        pagination={false}
-        style={{ marginBottom: '20px' }}
-        size="small"
-        rowKey="cameraId"
-        rowClassName={rowClassName}
-        bordered
-      />
+      {loading ? (
+        <Spin size="large" />
+      ) : (
+        <>
+          <Table
+            columns={columns}
+            dataSource={paginatedCameras}
+            pagination={false}
+            rowKey="cameraId"
+            bordered
+            scroll={{ x: 'max-content' }}
+            className={`${customDark === "default-dark" ? "thead-default" : ""}
+            ${customDark === "red-dark" ? "thead-red" : ""}
+            ${customDark === "green-dark" ? "thead-green" : ""}
+            ${customDark === "blue-dark" ? "thead-blue" : ""}
+            ${customDark === "dark-dark" ? "thead-dark" : ""}
+            ${customDark === "pink-dark" ? "thead-pink" : ""}
+            ${customDark === "purple-dark" ? "thead-purple" : ""}
+            ${customDark === "light-dark" ? "thead-light" : ""}
+            ${customDark === "brown-dark" ? "thead-brown" : ""} rounded-2`}
+          />
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px', background: 'white', padding: '10px' }} className='rounded-2 rounded-top-0'>
+            <Pagination
+              current={currentPage}
+              pageSize={pageSize}
+              total={filteredCameras.length}
+              onChange={(page, pageSize) => {
+                setCurrentPage(page);
+                setPageSize(pageSize);
+              }}
+              showSizeChanger
+              showQuickJumper
+              showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
+            />
+          </div>
+        </>
+      )}
+
       <Modal
-        title="Add New Camera"
-        open={isModalOpen}
-        onOk={handleOk}
-        onCancel={handleCancel}
-        width={300}
+        show={isModalOpen}
+        onHide={handleCancel}
+        centered
+        size={isMobile ? 'sm' : 'md'}
       >
-        <Form form={form} layout="vertical">
-          <Form.Item
-            name="name"
-            label="Camera Name"
-            rules={[{ required: true, message: 'Please enter camera name' }]}
-          >
-            <Input placeholder="Enter camera name" />
-          </Form.Item>
-        </Form>
+        <Modal.Header closeButton={false} className={`rounded-top-2 ${customDark} ${customLightText} ${customDark === "dark-dark" ? `border ` : `border-0`} border d-flex justify-content-between `}>
+          <Modal.Title>Add New Camera</Modal.Title>
+          <AiFillCloseSquare
+            size={30}
+            onClick={handleCancel}
+            className={`rounded-2 ${customDark === "dark-dark" ? "text-dark bg-white " : `${customDark} custom-zoom-btn text-white  ${customDarkBorder}`}`}
+            aria-label="Close"
+            style={{ cursor: 'pointer', fontSize: '1.3rem' }}
+          />
+        </Modal.Header>
+        <Modal.Body className={`rounded-bottom-2 ${customMid} ${customDark === "dark-dark" ? `border border-top-0` : `border-0`}`}>
+          <Form form={form} layout="vertical">
+            <Form.Item
+              name="name"
+              label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-6 `}>{"Camera Name"}</span>}
+              rules={[{ required: true, message: 'Please enter camera name' }]}
+            >
+              <Input placeholder="Enter camera name" />
+            </Form.Item>
+            <Form.Item>
+              <Button type="primary" htmlType="submit" onClick={handleOk} className={`rounded-2 ${customBtn} ${customDark === "dark-dark" ? `` : `border-0`} custom-zoom-btn`} size="small">
+                Submit
+              </Button>
+            </Form.Item>
+          </Form>
+        </Modal.Body>
       </Modal>
-    </Card>
+    </div>
   );
 };
 
