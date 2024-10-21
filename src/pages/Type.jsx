@@ -279,7 +279,7 @@ const Type = () => {
                 centered
                 size={isMobile ? 'sm' : 'lg'}
             >
-                <Modal.Header closeButton={false} className={`rounded-top-2 ${customDark} ${customLightText} ${customDark === "dark-dark" ? `border ` : `border-0`} border d-flex justify-content-between `}>
+                <Modal.Header closeButton={false} className={`rounded-top-2 ${customDark} ${customLightText} ${customDark === "dark-dark" ? `border ` : `border-0`} w border d-flex justify-content-between `}>
                     <Modal.Title>Add Type</Modal.Title>
                     <AiFillCloseSquare
                         size={35}
@@ -289,11 +289,12 @@ const Type = () => {
                         style={{ cursor: 'pointer', fontSize: '1.5rem' }}
                     />
                 </Modal.Header>
-                <Modal.Body className={`rounded-bottom-2 ${customMid} ${customDark === "dark-dark" ? `border border-top-0` : `border-0`}`}>
+                <Modal.Body className={`rounded-bottom-2 ${customMid} ${customDark === "dark-dark" ? `border border-top-0` : `border-0`} `}>
                     <Form
                         form={form}
                         onFinish={handleAddType}
                         layout="vertical"
+                        // className='w-50'
                     >
                         <Form.Item
                             name="types"

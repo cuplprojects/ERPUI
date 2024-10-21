@@ -128,7 +128,7 @@ const SystemSettings = () => {
     if (process) {
       setProcessName(process.name);
       setProcessStatus(process.status);
-      setProcessWeightage(process.weightage.toString());
+      setProcessWeightage(process.weightage?.toString());
       setProcessInstalledFeatures(process.installedFeatures.map(featureId => {
         const feature = features.find(f => f.key === featureId);
         return feature ? feature.name : null;
