@@ -44,11 +44,14 @@ const Userlayout = () => {
           </div>
           <div className={`flex-grow-1 d-fle m-2 p-3 `} style={{ zIndex: "3" }}>
             <Routes>
-              {hasPermission('5') && <Route path="/cudashboard" element={<CuDashboard/>} />}
-              {hasPermission('1') && <Route path="/dashboard" element={<MainDashboard />} />}
-              {hasPermission('2') && <Route path="/master" element={<Masters />} />}
-              {hasPermission('2.4') && <Route path="/AddProjectProcess/:projectId" element={<AddProjectProcess />} />}
-              {hasPermission('2') && <Route path="/features" element={<Features />} />}
+
+
+              <Route path="/cudashboard" element={<CuDashboard/>} />
+              {(hasPermission(1) || isdevelopment) && <Route path="/dashboard/:projectId" element={<MainDashboard />} />}
+              {(hasPermission('2') || isdevelopment) && <Route path="/master" element={<Masters />} />}
+              {(hasPermission('2.4') || isdevelopment) && <Route path="/AddProjectProcess/:projectId" element={<AddProjectProcess />} />}
+              {(hasPermission('2') || isdevelopment) && <Route path="/features" element={<Features />} />}
+
 
               {/* --------------- User Menu Routes -------------- */}
               <Route path="/profile" element={<Profile />} />
