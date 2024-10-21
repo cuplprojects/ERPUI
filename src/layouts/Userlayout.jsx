@@ -54,7 +54,7 @@ const Userlayout = () => {
             <Routes>
 
               <Route path="/cudashboard" element={<CuDashboard/>} />
-              {(hasPermission(1) || isdevelopment) && <Route path="/dashboard" element={<MainDashboard />} />}
+              {(hasPermission(1) || isdevelopment) && <Route path="/dashboard/:projectId" element={<MainDashboard />} />}
               {(hasPermission('2') || isdevelopment) && <Route path="/master" element={<Masters />} />}
               {(hasPermission('2.4') || isdevelopment) && <Route path="/AddProjectProcess/:projectId" element={<AddProjectProcess />} />}
               {(hasPermission('2') || isdevelopment) && <Route path="/features" element={<Features />} />}
