@@ -2,16 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { Row, Col } from 'react-bootstrap';
 import { Form, Upload, Button, Select, message } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
-import axios from 'axios';
 import * as XLSX from 'xlsx';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import ViewQuantitySheet from './ViewQuantitySheet';
+import { useParams } from 'react-router-dom';
 
 import API from '../CustomHooks/MasterApiHooks/api';
 
 
 const QtySheetUpload = () => {
+    const { projectId } = useParams();
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = getCssClasses();
     const customDarkText = cssClasses[4];
@@ -25,6 +26,7 @@ const QtySheetUpload = () => {
     const [selectedFile, setSelectedFile] = useState(null);
     const [showMappingFields, setShowMappingFields] = useState(false);
     const [showTable, setShowTable] = useState(false);
+    const [showBtn, setShowBtn] = useState(false);
     const [dataSource, setDataSource] = useState([]);
     const [lots, setLots] = useState([]);
     const [selectedLotNo, setSelectedLotNo] = useState(null);
@@ -47,10 +49,12 @@ const QtySheetUpload = () => {
             subject: item.Subject || "",
             innerEnvelope: item.InnerEnvelope || "",
             outerEnvelope: item.OuterEnvelope || "",
-            lotNo: "2",
+
+            lotNo: item.lotNo || "",
             quantity: Number(item.Quantity) || 0,
             percentageCatch: Number(item.percentageCatch) || 0,
-            projectId: 1,
+            projectId: projectId,
+
             isOverridden: item.isOverridden === 'true',
             processId: [0],
         }));
@@ -68,6 +72,7 @@ const QtySheetUpload = () => {
             console.log('Upload successful:', response.data);
             setDataSource(finalPayload);
             message.success('Quantity Sheet uploaded successfully')
+            fetchLots();
             resetState();
         } catch (error) {
             console.error('Upload failed', error.response?.data || error.message);
@@ -97,7 +102,9 @@ const QtySheetUpload = () => {
                             (property === 'quantity' ? parseFloat(row[index]) || 0 : String(row[index])) : '';
                     }
                     console.log("Row Data Mapped:", rowData);
-                    rowData['projectId'] = 1;
+
+                    rowData['projectId'] = projectId;
+
                     rowData['isOverridden'] = 'false';
                     rowData['percentageCatch'] = '0';
                     return rowData;
@@ -111,7 +118,6 @@ const QtySheetUpload = () => {
     const getColumns = async () => {
         try {
             const response = await API.get('/QuantitySheet/Columns');
-
             setColumns(response.data);
         } catch (error) {
             console.error('Failed to fetch columns', error);
@@ -137,23 +143,35 @@ const QtySheetUpload = () => {
             const workbook = XLSX.read(data, { type: 'array' });
             const firstSheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[firstSheetName];
+    
+            // Convert the sheet to JSON
             const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
-            const excelHeaders = jsonData[0];
+    
+            // Filter out rows where all cells are empty
+            const filteredData = jsonData.filter(row => row.some(cell => cell !== null && cell !== ''));
+    
+            if (filteredData.length === 0) {
+                console.warn("No valid data found in the file.");
+                return;
+            }
+    
+            const excelHeaders = filteredData[0];
             setHeaders(excelHeaders);
             setShowMappingFields(true);
-
+    
             const autoMappings = {};
             columns.forEach((col) => {
-                const matchingHeader = excelHeaders.find(header => header.toLowerCase() === col.toLowerCase());
-                autoMappings[col] = matchingHeader || '';
-            });
 
+                const matchingHeader = excelHeaders.find(header => header?.toLowerCase() === col?.toLowerCase());
+                autoMappings[col] = matchingHeader || '';
+
+            });
+    
             setFieldMappings(autoMappings);
         };
         reader.readAsArrayBuffer(file);
     };
-
+    
     const handleMappingChange = (property, value) => {
         setFieldMappings(prev => ({ ...prev, [property]: value }));
     };
@@ -178,7 +196,8 @@ const QtySheetUpload = () => {
     const fetchLots = async () => {
         try {
 
-            const response = await API.get('/QuantitySheet/Lots?ProjectId=1')
+
+            const response = await API.get(`/QuantitySheet/Lots?ProjectId=${projectId}`)
 
             setLots(response.data)
         }
@@ -200,9 +219,11 @@ const QtySheetUpload = () => {
     const handleLotClick = (lotNo) => {
         if (selectedLotNo === lotNo) {
             setShowTable(!showTable); // Toggle table visibility
+            setShowBtn(!showBtn)
         } else {
             setSelectedLotNo(lotNo);
             setShowTable(true); // Show table for the selected lot
+            setShowBtn(true);
         }
     };
 
@@ -260,7 +281,7 @@ const QtySheetUpload = () => {
                                 </Button>
                             ))}
 
-                            <ViewQuantitySheet selectedLotNo={selectedLotNo} />
+                            <ViewQuantitySheet selectedLotNo={selectedLotNo} showBtn={showBtn} showTable={showTable} />
 
                         </Form.Item>
                     </Form>

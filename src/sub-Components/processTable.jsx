@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+
+import { useLocation, useParams } from 'react-router-dom';
 import { Card, Spinner, Row, Col } from 'react-bootstrap'; // Import Bootstrap components
 import ProjectDetailsTable from './projectDetailTable'; // Import the new component
 import dummyData from "../store/dd.json";
+
 import StatusPieChart from "./StatusPieChart";
-import StatusBarChart from "./StatusBarChart"; // Import the updated bar chart component
+import StatusBarChart from "./StatusBarChart";
 import "./../styles/processTable.css";
 import { Switch } from 'antd';
 import CatchProgressBar from './catchProgressBar';
@@ -14,12 +16,13 @@ import themeStore from '../store/themeStore';
 import { useStore } from 'zustand';
 import { MdPending } from "react-icons/md";
 import { Link } from 'react-router-dom';
+
 import { MdCloudUpload } from "react-icons/md";//upload icon
 import { FaRegHourglassHalf } from "react-icons/fa6";//pre process running
+import API from '../CustomHooks/MasterApiHooks/api';
+
 
 const ProcessTable = () => {
-
-    //Theme Change Section
     const { getCssClasses } = useStore(themeStore);
     const [
       customDark,
@@ -33,18 +36,85 @@ const ProcessTable = () => {
     ] = getCssClasses();
 
     const location = useLocation();
-    const { project } = location.state || {}; // Access the project details from the state
-    const [tableData, setTableData] = useState(dummyData);
+
+    const { id, lotNo } = useParams();
+
+    const [tableData, setTableData] = useState([]);
     const [showBarChart, setShowBarChart] = useState(true);
     const [catchDetailModalShow, setCatchDetailModalShow] = useState(false);
     const [catchDetailModalData, setCatchDetailModalData] = useState(null);
     const [previousProcessPercentage, setPreviousProcessPercentage] = useState(90);
 
+    const [projectName, setProjectName] = useState('');
+
+    useEffect(() => {
+        const fetchQuantitySheet = async () => {
+            try {
+                const response = await API.get(`/QuantitySheet?ProjectId=${id}&lotNo=${lotNo}`);
+                const quantitySheetData = response.data;
+                console.log('API response:', quantitySheetData);
+                
+                if (Array.isArray(quantitySheetData) && quantitySheetData.length > 0) {
+                    const formDataGet = quantitySheetData.map((item) => ({
+                        srNo: item?.quantitySheetId || "",
+                        catchNumber: item?.catchNo,
+                        paper: item?.paper || "undefined",
+                        course: item?.course,
+                        subject: item?.subject,
+                        outerEnvelope: item?.outerEnvelope,
+                        innerEnvelope: item?.innerEnvelope,
+                        lotNo:item?.lotNo,
+                        quantity: item?.quantity,
+                        percentageCatch: item?.percentageCatch,
+                        projectId:item?.projectId,
+                        isOverridden: item?.isOverridden,
+                        processId: item?.processId || [],
+                        status: item?.status ||  "Pending",//to be fetched later from backend
+                        alerts: "",//to be fetched later from backend
+                        interimQuantity: "0",//to be fetched later from backend
+                        remarks: "",//to be fetched later from backend
+                        previousProcessStats: "",//to be fetched later from backend
+                    }));
+                    console.log('Formatted data:', formDataGet);
+                    setTableData(formDataGet); // Set the table data only here
+                } else {
+                    console.error("API response is not an array or is empty");
+                    setTableData([]); // Set to empty only if there's no data
+                }
+            } catch (error) {
+                console.error("Error fetching quantity sheet data:", error);
+                setTableData([]); // Set to empty on error
+            }
+        };
+
+        fetchQuantitySheet();
+    }, [id, lotNo]);
+      
+    useEffect(() => {
+        const fetchProjectDetails = async () => {
+            try {
+                const response = await API.get(`/Project/${id}`);
+                const projectData = response.data;
+                console.log(projectData)
+                setProjectName(projectData.name);
+                // You can set other project details here if needed
+            } catch (error) {
+                console.error("Error fetching project details:", error);
+            }
+        };
+
+        fetchProjectDetails();
+    }, [id]);
+
+
+    
     const handleToggleChange = () => {
         setShowBarChart(!showBarChart);
     };
+
     // Render a loading state while fetching the project data
-    if (!project) {
+    if (!projectName) {
+
         return (
             <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
                 <Spinner animation="border" variant="primary" />
@@ -59,50 +129,20 @@ const ProcessTable = () => {
         setCatchDetailModalData(record);
     };
 
+    const handleLotClick = (lot) => {
+        setSelectedLot(lot === selectedLot ? null : lot);
+    };
 
-    // const catchNumbers = tableData.map((item) => item.catchNo).sort((a, b) => a - b);
     const catchNumbers = tableData.map((item) => item.catchNumber).sort((a, b) => a - b);
+
     // console.log(tableData);
-    const processList = [
-        { admin: "HQ" },
-        { mss: "MSS" },
-        { dtp: "DTP" },
-        { prooReading: "Proo Reading" },
-        { prodTrans: "Production Transfer" },
-        { preProQC: "QC" },
-        { ctp: "CTP" },
-        { printing: "Printing" },
-        { cutting: "Cutting" },
-        { mixing: "Mixing" },
-        { numbering: "Numbering" },
-        { envelope: "Envelope" },
-        { filling: "Filling" },
-        { finalQC: "Final QC" },
-        { bundling: "Bundling" },
-        { dispatch: "Dispatch" }
-    ];
+
     let activeUser, activeUserProcess, currentIndex, currentProcess, previousProcess;
 
-    try {
-        activeUser = JSON.parse(localStorage.getItem('activeUser'));
-        if (activeUser && activeUser.userId) {
-            activeUserProcess = activeUser.userId;
-            currentIndex = processList.findIndex(obj => Object.keys(obj)[0] === activeUserProcess);
-            if (currentIndex !== -1) {
-                currentProcess = processList[currentIndex][activeUserProcess];
-                if (currentIndex > 0) {
-                    const previousProcessKey = Object.keys(processList[currentIndex - 1])[0];
-                    previousProcess = processList[currentIndex - 1][previousProcessKey];
-                }
-            }
-        }
-    } catch (error) {
-        console.error('Error parsing activeUser from localStorage:', error);
-    }
+
 
     return (
         <div className="container-fluid" >
-            {/* ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
             <Row className="mb-  ">
                 <Col lg={12} md={12} xs={12} className=''>
                     <Card className="shadow-sm ">
@@ -110,8 +150,10 @@ const ProcessTable = () => {
                             <Row className='d-flex align-items-center'>
                                 <Col lg={6} md={4} xs={12} className=' d-lg-none d-md-none '>
                                     <div className="center-head d-flex justify-content-center">
-                                        <span className='text-center fs-4 me-3'>{project.label}</span>
-                                        <span className='text-center fs-4'>Lot - {project.lotNumber}</span>
+
+                                        <span className='text-center fs-4 me-3'>{projectName}</span>
+                                        <span className='text-center fs-4'>Lot - {lotNo}</span>
+
                                     </div>
                                 </Col>
                                 <div className="d-flex justify-content-center d-lg-none d-md-none ">
@@ -135,7 +177,6 @@ const ProcessTable = () => {
                                             <div className='text-center fs-5'>Previous Process </div>
                                             <div className={`p-1  fs-6 text-primary border ${customDarkBorder} rounded ms-1 d-flex justify-content-center align-items-center ${customDark === 'dark-dark' ? `${customBtn} text-white` : `${customLight} bg-light`}`} style={{ fontWeight: 900 }}> 
                                                 {previousProcess} - {previousProcessPercentage}%
-                                                {/* {previousProcessPercentage}% */}
                                                 <span className='ms-2'>
                                                     <FaRegHourglassHalf color='blue' size="20" />
                                                 </span>
@@ -148,8 +189,10 @@ const ProcessTable = () => {
                                 </div>
                                 <Col lg={6} md={4} xs={12} className='d-none d-lg-block d-md-block'>
                                     <div className="center-head ">
-                                        <div className='text-center fs-4'>{project.label} </div>
-                                        <div className='text-center fs-4'>Lot - {project.lotNumber}</div>
+
+                                        <div className='text-center fs-4'>{projectName}</div>
+                                        <div className='text-center fs-4'>Lot - {lotNo}</div>
+
                                     </div>
                                 </Col>
                                 <Col lg={3} md={4} xs={12}>
@@ -158,7 +201,6 @@ const ProcessTable = () => {
                                         <div className={`p-1  fs-6 text-primary border ${customDarkBorder} rounded ms-1 d-flex justify-content-center align-items-center ${customDark === 'dark-dark' ? `${customBtn} text-white` : `${customLight} bg-light text-danger`}`} style={{ fontWeight: 900 }}>{currentProcess}
                                             <span className='ms-2'>
                                                 <MdPending color='red' size="25" />
-                                                {/* pending icon here */}
                                             </span>
                                         </div>
                                     </div>
@@ -168,19 +210,20 @@ const ProcessTable = () => {
                     </Card>
                 </Col>
             </Row>
-            {/* ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ */}
             <Row>
                 <Col lg={12} md={12}>
                     <div className="marquee-container mt-2 mb-2">
                         <marquee id="alert-marquee" behavior="scroll" direction="left" scrollamount="5" onMouseOver={(e) => e.target.stop()}
                             onMouseOut={(e) => e.target.start()}>
                             <div className="d-flex gap-4">
+
                                 {tableData.map((record, index) => (
-                                    <>
-                                        {record.alerts.length > 0 && (
+                                    <React.Fragment key={index}>
+                                        {record.alerts && record.alerts.length > 0 && (
                                             <AlertBadge catchNo={record.catchNumber} alerts={record.alerts} onClick={() => handleCatchClick(record)} status="level1" />
+
                                         )}
-                                    </>
+                                    </React.Fragment>
                                 ))}
                             </div>
                         </marquee>
@@ -189,16 +232,19 @@ const ProcessTable = () => {
             </Row>
             <Row className='mb-5'>
                 <Col lg={12} md={12}>
-                    <CatchProgressBar data={tableData} />
+                    <CatchProgressBar data={filteredTableData} />
                 </Col>
             </Row>
             <Row className='mb-2'>
-                <Col lg={2} md={0} ></Col>
-                <Col lg={8} md={12} >
-                    <ProjectDetailsTable tableData={tableData} setTableData={setTableData} />
+
+                <Col lg={12} md={12} >
+                    {tableData.length > 0 && (
+                        <ProjectDetailsTable tableData={tableData} setTableData={setTableData} projectId={id} lotNo={lotNo} />
+                        
+                    )}
                 </Col>
                 <Col lg={2} md={0} ></Col>
-                {/* <Col lg={4} md={12}> <UserCard /> </Col> */}
+
             </Row>
             <Row className='mb-4 d-flex justify-content-between'>
                 <Col lg={8} md={12} className='mb-1'>
@@ -210,11 +256,11 @@ const ProcessTable = () => {
                 </Col>
                 {showBarChart ? (
                     <Col lg={12} md={12} sm={12} className='mt-1 d-fle justify-content-center'>
-                        <StatusBarChart data={tableData} catchNumbers={catchNumbers} />
+                        <StatusBarChart data={filteredTableData} catchNumbers={catchNumbers} />
                     </Col>
                 ) : (
                     <Col lg={12} md={12} sm={12} className='mt-1 d-fle justify-content-center ' >
-                        <StatusPieChart data={tableData} />
+                        <StatusPieChart data={filteredTableData} />
                     </Col>
                 )}
             </Row>
@@ -223,7 +269,6 @@ const ProcessTable = () => {
                 handleClose={() => setCatchDetailModalShow(false)}
                 data={catchDetailModalData}
             >
-                {/* modal content here */}
             </CatchDetailModal>
         </div>
     );

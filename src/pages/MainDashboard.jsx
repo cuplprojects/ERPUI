@@ -3,7 +3,7 @@ import AllProjects from '../sub-Components/allProjects'
 
 const MainDashboard = () => {
   return (
-    <div className='containe'>
+    <div className='container-flui'>
       <AllProjects/>
     </div>
   )
