@@ -1,13 +1,10 @@
 import React, { useState, useEffect } from 'react';
-
 import { Button, Select, Table, Input } from 'antd';
-import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Modal as BootstrapModal } from 'react-bootstrap';
-
+import themeStore from './../store/themeStore';
 import API from '../CustomHooks/MasterApiHooks/api';
-
 import { EditOutlined, DeleteOutlined, StopOutlined } from '@ant-design/icons';
 import { useParams } from 'react-router-dom';
 
@@ -35,6 +32,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
     const [showNewRow, setShowNewRow] = useState(false);
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = getCssClasses();
+    const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
 
     const columns = [
         {
@@ -286,14 +284,16 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
     };
 
     return (
-        <div className='mt-3'>
+        <div className='mt-'>
             {showBtn && (
                 <>
-                    <Button onClick={() => setShowNewRow(prev => !prev)} type="primary">
-                        {showNewRow ? 'Cancel' : 'Add New Catch'}
-                    </Button>
+                    <div className="d-flex justify-content-end mb-3">
+                        <Button onClick={() => setShowNewRow(prev => !prev)} type="primary" className={`${customBtn} ${customDark === "dark-dark" ? `border` : `border-0`}`}>
+                            {showNewRow ? 'Cancel' : 'Add New Catch'}
+                        </Button>
+                    </div>
                     {showNewRow && (
-                        <table>
+                        <table className='table table-bordered'>
                             <tbody>
                                 <tr>
                                     <td>
@@ -332,7 +332,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
                                         </Select>
                                     </td>
                                     <td>
-                                        <Button type="primary" onClick={handleAddRow}>Add</Button>
+                                        <Button  onClick={handleAddRow} className={`${customDark === "dark-dark" ? `border` : ``}`}> Add</Button>
                                     </td>
                                 </tr>
                             </tbody>
@@ -343,7 +343,6 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
 
             {showTable && (
                 <Table
-                    className={cssClasses.customTable}
                     columns={columns}
                     dataSource={dataSource}
                     pagination={{
@@ -354,6 +353,17 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
                         showTotal: (total) => `Total ${total} items`,
                     }}
                     scroll={{ x: 'max-content' }}
+                    className={`${cssClasses.customTable} ${
+                        customDark === "default-dark" ? "thead-default" :
+                        customDark === "red-dark" ? "thead-red" :
+                        customDark === "green-dark" ? "thead-green" :
+                        customDark === "blue-dark" ? "thead-blue" :
+                        customDark === "dark-dark" ? "thead-dark" :
+                        customDark === "pink-dark" ? "thead-pink" :
+                        customDark === "purple-dark" ? "thead-purple" :
+                        customDark === "light-dark" ? "thead-light" :
+                        customDark === "brown-dark" ? "thead-brown" : ""
+                    }`}
                 />
             )}
 
