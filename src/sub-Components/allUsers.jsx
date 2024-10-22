@@ -316,7 +316,8 @@ const AllUsers = () => {
       <Row className="mb-2">
         <Col lg={2} md={1} xs={12} className="mb-3 mb-md-0">
           <div className="d-flex align-items-center h-100">
-            <Dropdown menu={menu} trigger={['click']} className="border-0">
+          {/* <Dropdown menu={menu} trigger={['click']} className="border-0"> */}
+            <Dropdown overlay={menu} trigger={['click']} className="border-0">
               <Button icon={<BsFunnelFill size={20} className={`${customDark === "dark-dark" ? "text-dark" : customDarkText} border-0`} />}>
               </Button>
             </Dropdown>

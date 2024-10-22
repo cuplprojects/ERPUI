@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 
-
-
 import { Input, Button, Select, Table, Form, message, Pagination } from 'antd';
 import { Modal } from 'react-bootstrap';
+
 
 import API from '../CustomHooks/MasterApiHooks/api';
 import { useMediaQuery } from 'react-responsive';
@@ -81,7 +80,9 @@ const Zone = () => {
     const assignedCameras = zones.flatMap(zone => zone.cameraIds);
     const alreadyAssignedCameras = cameraIds.filter(id => assignedCameras.includes(id));
     if (alreadyAssignedCameras.length > 0) {
+
       const cameraNames = alreadyAssignedCameras.map(id => camera.find(c => c.cameraId === id)?.name).join(', ');
+
       message.error(`The following cameras are already assigned to other zones: ${cameraNames}`);
       return;
     }
@@ -123,7 +124,9 @@ const Zone = () => {
     const assignedCameras = zones.flatMap(zone => zone.zoneId !== updatedZone.zoneId ? zone.cameraIds : []);
     const alreadyAssignedCameras = updatedZone.cameraIds.filter(id => assignedCameras.includes(id));
     if (alreadyAssignedCameras.length > 0) {
+
       const cameraNames = alreadyAssignedCameras.map(id => camera.find(c => c.cameraId === id)?.name).join(', ');
+
       message.error(`The following cameras are already assigned to other zones: ${cameraNames}`);
       return;
     }
@@ -214,9 +217,9 @@ const Zone = () => {
             onChange={(value) => setEditingZone({ ...editingZone, cameraIds: value })}
             onBlur={() => handleEditZone(index)}
           >
-            {camera.map(c => (
-              <Option key={c.cameraId} value={c.cameraId} disabled={zones.some(zone => zone.zoneId !== record.zoneId && zone.cameraIds.includes(c.cameraId))}>
-                {c.name}
+            {camera.map(cam => (
+              <Option key={cam.cameraId} value={cam.cameraId} disabled={zones.some(zone => zone.zoneId !== record.zoneId && zone.cameraIds.includes(cam.cameraId))}>
+                {cam.name}
               </Option>
             ))}
           </Select>
@@ -241,9 +244,9 @@ const Zone = () => {
             onChange={(value) => setEditingZone({ ...editingZone, machineId: value })}
             onBlur={() => handleEditZone(index)}
           >
-            {machine.map(m => (
-              <Option key={m.machineId} value={m.machineId}>
-                {m.machineName}
+            {machine.map(mach => (
+              <Option key={mach.machineId} value={mach.machineId}>
+                {mach.machineName}
               </Option>
             ))}
           </Select>
@@ -261,12 +264,14 @@ const Zone = () => {
       key: 'action',
       render: (_, record, index) => (
         editingIndex === index ? (
+
           <>
             <Button type="link" onClick={() => handleEditZone(index)}>Save</Button>
             <Button type="link" onClick={handleCancelEdit}>Cancel</Button>
           </>
         ) : (
           <Button type="link" onClick={() => {
+
             setEditingIndex(index);
             setEditingZone({ 
               zoneNo: record.zoneNo, 
@@ -275,7 +280,9 @@ const Zone = () => {
               machineId: record.machineId
             });
             setOriginalZone(record);
+
           }}>Edit</Button>
+
         )
       ),
     },
@@ -290,7 +297,9 @@ const Zone = () => {
     setIsModalVisible(false);
   };
 
+
   const responsiveColumns = isMobile ? columns.slice(0, 2) : isTablet ? columns.slice(0, 4) : columns;
+
 
   const filteredZones = zones.filter(zone => 
     zone.zoneNo.toLowerCase().includes(searchText.toLowerCase()) ||
@@ -310,7 +319,9 @@ const Zone = () => {
           style={{ width: 200 }}
           allowClear
         />
+
         <Button onClick={showModal} className={`${customBtn}`}>
+
           Add Zone
         </Button>
       </div>
@@ -384,9 +395,11 @@ const Zone = () => {
               label={<span className={customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`}>Assign Camera <span className="text-danger">*</span></span>}
             >
               <Select mode="multiple" placeholder="Select Camera" required>
+
                 {camera.map(c => (
                   <Option key={c.cameraId} value={c.cameraId} disabled={zones.some(zone => zone.cameraIds.includes(c.cameraId))}>
                     {c.name}
+
                   </Option>
                 ))}
               </Select>
@@ -396,15 +409,19 @@ const Zone = () => {
               label={<span className={customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`}>Assign Machine</span>}
             >
               <Select mode="multiple" placeholder="Select Machine">
+
                 {machine.map(m => (
                   <Option key={m.machineId} value={m.machineId}>
                     {m.machineName}
+
                   </Option>
                 ))}
               </Select>
             </Form.Item>
+
             <Form.Item>
               <Button htmlType="submit" className={`${customBtn}`}>
+
                 Add Zone
               </Button>
             </Form.Item>

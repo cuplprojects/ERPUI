@@ -6,7 +6,7 @@ import { useMediaQuery } from 'react-responsive';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import { AiFillCloseSquare } from "react-icons/ai";
-import { SortAscendingOutlined, SortDescendingOutlined, EyeOutlined, EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
+import { SortAscendingOutlined, SortDescendingOutlined, EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
 import { Col, Row } from 'react-bootstrap';
 import { FaSearch } from "react-icons/fa";
 
