@@ -88,7 +88,7 @@ const ProjectUserAllocation = () => {
       key: 'processName',
     },
     {
-      title: 'Assign Users',
+      title: 'Assign Supervisor',
       key: 'assignUser',
       render: (text, record) => (
         <Select

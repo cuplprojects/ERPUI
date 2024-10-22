@@ -146,6 +146,7 @@ const AllProjects = () => {
 
   const carouselItems = [];
   const [projectName, setProjectName] = useState('');
+  const [type, setType] = useState('');
 
   useEffect(() => {
     const fetchProjectName = async () => {
@@ -153,6 +154,7 @@ const AllProjects = () => {
         const response = await fetch(`https://localhost:7212/api/Project/${projectId}`);
         const data = await response.json();
         setProjectName(data.name);
+        setType(data.typeId);
       } catch (error) {
         console.error("Error fetching project name:", error);
       }
@@ -172,7 +174,7 @@ const AllProjects = () => {
               chartdata={[{title: "Completed", value: 50}, {title: "Remaining", value: 50}]}
               chartKey={lotNumber}
               tCatch={0}
-              type="Default"
+              type={type}
               onClick={() => handleCardClick(lotNumber)}
             />
           ))}

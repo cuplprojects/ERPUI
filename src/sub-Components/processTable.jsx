@@ -50,7 +50,7 @@ const ProcessTable = () => {
     useEffect(() => {
         const fetchQuantitySheet = async () => {
             try {
-                const response = await API.get(`/QuantitySheet?ProjectId=${id}&lotNo=${lotNo}`);
+                const response = await API.get(`/QuantitySheet/Catch?ProjectId=${id}&lotNo=${lotNo}`);
                 const quantitySheetData = response.data;
                 console.log('API response:', quantitySheetData);
                 
@@ -232,13 +232,13 @@ const ProcessTable = () => {
             </Row>
             <Row className='mb-5'>
                 <Col lg={12} md={12}>
-                    <CatchProgressBar data={filteredTableData} />
+                    <CatchProgressBar data={tableData} />
                 </Col>
             </Row>
             <Row className='mb-2'>
 
                 <Col lg={12} md={12} >
-                    {tableData.length > 0 && (
+                    {tableData?.length > 0 && (
                         <ProjectDetailsTable tableData={tableData} setTableData={setTableData} projectId={id} lotNo={lotNo} />
                         
                     )}
@@ -256,11 +256,11 @@ const ProcessTable = () => {
                 </Col>
                 {showBarChart ? (
                     <Col lg={12} md={12} sm={12} className='mt-1 d-fle justify-content-center'>
-                        <StatusBarChart data={filteredTableData} catchNumbers={catchNumbers} />
+                        <StatusBarChart data={tableData} catchNumbers={catchNumbers} />
                     </Col>
                 ) : (
                     <Col lg={12} md={12} sm={12} className='mt-1 d-fle justify-content-center ' >
-                        <StatusPieChart data={filteredTableData} />
+                        <StatusPieChart data={tableData} />
                     </Col>
                 )}
             </Row>

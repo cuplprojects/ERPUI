@@ -49,7 +49,7 @@ const DraggableRow = ({
     }));
   };
   
-  
+  console.log("Add ProjectProcess called")
 
   return (
     <tr ref={(node) => ref(drop(node))}>
@@ -95,7 +95,9 @@ const AddProjectProcess = ({ selectedProject }) => {
 
   useEffect(() => {
     fetchProjectData();
-  }, []);
+    fetchUpdatedProcesses();
+    
+  }, [selectedProject]);
 
   const fetchUpdatedProcesses = async () => {
     try {

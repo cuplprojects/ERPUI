@@ -50,7 +50,7 @@ const QtySheetUpload = () => {
             innerEnvelope: item.InnerEnvelope || "",
             outerEnvelope: item.OuterEnvelope || "",
 
-            lotNo: item.lotNo || "",
+            lotNo: item.LotNo || "",
             quantity: Number(item.Quantity) || 0,
             percentageCatch: Number(item.percentageCatch) || 0,
             projectId: projectId,

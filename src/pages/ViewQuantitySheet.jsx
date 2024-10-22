@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
+
 import { Button, Select, Table, Input } from 'antd';
-import axios from 'axios';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -9,8 +9,10 @@ import { Modal as BootstrapModal } from 'react-bootstrap';
 import API from '../CustomHooks/MasterApiHooks/api';
 
 import { EditOutlined, DeleteOutlined, StopOutlined } from '@ant-design/icons';
+import { useParams } from 'react-router-dom';
 
 const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
+    const { projectId } = useParams();
     const [process, setProcess] = useState([]);
     const [dataSource, setDataSource] = useState([]);
     const [editingRow, setEditingRow] = useState(null);
@@ -25,13 +27,12 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
         outerEnvelope: '',
         quantity: 0,
         percentageCatch: 0,
-        projectId: 2,
+        projectId: projectId,
         isOverridden: false,
     });
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [itemToDelete, setItemToDelete] = useState(null);
     const [showNewRow, setShowNewRow] = useState(false);
-
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = getCssClasses();
 
@@ -120,7 +121,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
 
     const fetchQuantity = async (lotNo) => {
         try {
-            const response = await API.get(`/QuantitySheet/Catch?ProjectId=2&lotNo=${lotNo}`);
+            const response = await API.get(`/QuantitySheet/Catch?ProjectId=${projectId}&lotNo=${lotNo}`);
             const dataWithKeys = response.data.map(item => ({
                 ...item, key: item.quantitySheetId
             }));
@@ -248,7 +249,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
                 lotNo: selectedLotNo,
                 quantity: parseInt(newRowData.quantity, 10),
                 percentageCatch: 0,
-                projectId: 2,
+                projectId: projectId,
                 isOverridden: false,
                 processId: selectedAddProcessIds.length > 0 ? selectedAddProcessIds.map(procName => process.find(proc => proc.name === procName)?.id).filter(Boolean) : [],
             }
@@ -269,7 +270,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
                 outerEnvelope: '',
                 quantity: 0,
                 percentageCatch: 0,
-                projectId: 2,
+                projectId: projectId,
                 isOverridden: false,
             });
             setSelectedAddProcessIds([]);
