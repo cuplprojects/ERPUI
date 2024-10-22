@@ -18,7 +18,6 @@ import { useMediaQuery } from 'react-responsive';
 import { useTranslation } from 'react-i18next';
 import { toast, ToastContainer } from 'react-toastify';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
 import API from '../CustomHooks/MasterApiHooks/api';
 
 // import AuthService from '../CustomHooks/ApiServices/AuthService';
@@ -124,13 +123,13 @@ const Login = () => {
             toast.error("Bad Request. Please check your input.");
             break;
           case 401:
-            toast.error("Unauthorized. Invalid User Name or Password.");
+            toast.error("Invalid User Name or Password.");
             break;
           case 403:
             toast.error("Forbidden. You do not have access.");
             break;
           case 404:
-            toast.error("API Endpoint Not Found.");
+            toast.error("Invalid User Name or Password.");
             break;
           case 500:
             toast.error("Server Error. Please try again later.");
@@ -165,7 +164,7 @@ const Login = () => {
 
   return (
     <Container fluid className="vh-100 position-relative overflow-hidden">
-      <ToastContainer autoClose={1000} />
+      <ToastContainer autoClose={1500} />
       {isTabletPortrait && (
         <img
           src={themeImages[customDark] || DefaultTheme}

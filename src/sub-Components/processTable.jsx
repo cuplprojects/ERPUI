@@ -10,13 +10,9 @@ import { Switch } from 'antd';
 import CatchProgressBar from './catchProgressBar';
 import AlertBadge from "./AlertBadge";
 import CatchDetailModal from '../menus/CatchDetailModal';
-import UserCard from "./UserCard";
 import themeStore from '../store/themeStore';
 import { useStore } from 'zustand';
-import ProcessingIcon from '../components/ProcessingIcon';
 import { MdPending } from "react-icons/md";
-import PendingIcon from "./../assets/Icons/pendingIcon.gif";
-import { t } from '../scripts/translation';
 import { Link } from 'react-router-dom';
 import { MdCloudUpload } from "react-icons/md";//upload icon
 import { FaRegHourglassHalf } from "react-icons/fa6";//pre process running
@@ -25,15 +21,16 @@ const ProcessTable = () => {
 
     //Theme Change Section
     const { getCssClasses } = useStore(themeStore);
-    const cssClasses = getCssClasses();
-    const customDark = cssClasses[0];
-    const customMid = cssClasses[1];
-    const customLight = cssClasses[2];
-    const customBtn = cssClasses[3];
-    const customDarkText = cssClasses[4];
-    const customLightText = cssClasses[5]
-    const customLightBorder = cssClasses[6]
-    const customDarkBorder = cssClasses[7]
+    const [
+      customDark,
+      customMid, 
+      customLight,
+      customBtn,
+      customDarkText,
+      customLightText,
+      customLightBorder,
+      customDarkBorder
+    ] = getCssClasses();
 
     const location = useLocation();
     const { project } = location.state || {}; // Access the project details from the state
@@ -84,15 +81,23 @@ const ProcessTable = () => {
         { bundling: "Bundling" },
         { dispatch: "Dispatch" }
     ];
-    const activeUser = JSON.parse(localStorage.getItem('activeUser'));
-    const activeUserProcess = activeUser.userId;
-    const currentIndex = processList.findIndex(obj => Object.keys(obj)[0] === activeUserProcess);
-    const currentProcess = processList[currentIndex][activeUserProcess];
-    let previousProcess = '';
+    let activeUser, activeUserProcess, currentIndex, currentProcess, previousProcess;
 
-    if (currentIndex > 0) {
-        const previousProcessKey = Object.keys(processList[currentIndex - 1])[0];
-        previousProcess = processList[currentIndex - 1][previousProcessKey];
+    try {
+        activeUser = JSON.parse(localStorage.getItem('activeUser'));
+        if (activeUser && activeUser.userId) {
+            activeUserProcess = activeUser.userId;
+            currentIndex = processList.findIndex(obj => Object.keys(obj)[0] === activeUserProcess);
+            if (currentIndex !== -1) {
+                currentProcess = processList[currentIndex][activeUserProcess];
+                if (currentIndex > 0) {
+                    const previousProcessKey = Object.keys(processList[currentIndex - 1])[0];
+                    previousProcess = processList[currentIndex - 1][previousProcessKey];
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error parsing activeUser from localStorage:', error);
     }
 
     return (

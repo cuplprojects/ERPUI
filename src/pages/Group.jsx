@@ -29,7 +29,6 @@ const Group = () => {
   const [sortField, setSortField] = useState('name');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
-  const [jumpToPage, setJumpToPage] = useState('');
 
   const isMobile = useMediaQuery({ maxWidth: 767 });
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1023 });
@@ -236,14 +235,6 @@ const Group = () => {
     setPageSize(pageSize);
   };
 
-  const handleJumpToPage = (value) => {
-    const pageNumber = parseInt(value, 10);
-    if (!isNaN(pageNumber) && pageNumber > 0 && pageNumber <= Math.ceil(filteredGroups.length / pageSize)) {
-      setCurrentPage(pageNumber);
-    }
-    setJumpToPage(value);
-  };
-
   return (
     <div style={{
       padding: isMobile ? '10px' : '20px',
@@ -251,7 +242,8 @@ const Group = () => {
       boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
       overflowX: 'auto'
     }}
-      className={`rounded-2 ${customDark === "dark-dark" ? `${customDark} border` : ``}`}>
+      className={`rounded-2 ${customDark === "dark-dark" ? `${customDark} border text-white` : `${customDarkText}`}`}>
+      <h2 style={{ marginBottom: '20px', fontSize: 'clamp(1.5rem, 4vw, 2rem)' }} className=''>Groups</h2>
       <div style={{
         display: 'flex',
         flexWrap: 'wrap',
@@ -299,30 +291,21 @@ const Group = () => {
                     ${customDark === "light-dark" ? "thead-light" : ""}
                     ${customDark === "brown-dark" ? "thead-brown" : ""} `}
       />
-      <div style={{ display: 'flex', justifyContent: 'end', alignItems: 'center', marginTop: '20px' }}>
-        <Pagination
-          current={currentPage}
-          pageSize={pageSize}
-          total={filteredGroups.length}
-          onChange={handlePageChange}
-          showSizeChanger
-          pageSizeOptions={['5', '10']}
-          defaultPageSize={5}
-          showQuickJumper={false}
-          showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
-          className={`${customDark === "dark-dark" ? `bg-white` : ``} p-3 rounded`}
-        />
-        <div style={{ display: 'flex', alignItems: 'center', marginLeft: '10px' }} className={`${customDark === "dark-dark" ? `bg-white` : ``} p-3 rounded-2`}>
-          <label htmlFor="goToPage" style={{ marginRight: '5px' }}>Go To Page:</label>
-          <Input
-            id="goToPage"
-            style={{ width: 70, height: 30 }}
-            placeholder="Page"
-            value={jumpToPage}
-            onChange={(e) => {
-              const value = e.target.value.replace(/[^0-9]/g, '');
-              handleJumpToPage(value);
-            }}
+      <div className="d-flex flex-wrap justify-content-end align-items-center mt-4">
+        <div className="mb-3 mb-md-0 me-md-3">
+          <Pagination
+            current={currentPage}
+            pageSize={pageSize}
+            total={filteredGroups.length}
+            onChange={handlePageChange}
+            showSizeChanger
+            pageSizeOptions={['5', '10']}
+            defaultPageSize={5}
+            showQuickJumper={false}
+            showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
+            className={`${customDark === "dark-dark" ? `bg-white` : ``} p-2 p-md-3 rounded`}
+            responsive
+            size="small"
           />
         </div>
       </div>
@@ -330,7 +313,7 @@ const Group = () => {
         show={isModalVisible}
         onHide={handleCancel}
         centered
-        size={isMobile ? 'sm' : 'lg'}
+        size={isMobile ? 'sm' : 'md'}
         className={`rounded-2 ${customDark === "" ? `${customDark}` : ''}  `}
       >
         <Modal.Header closeButton={false} className={`rounded-top-2 ${customDark} ${customLightText} ${customDark === "dark-dark" ? `border ` : `border-0`} border d-flex justify-content-between `}>

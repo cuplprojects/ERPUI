@@ -88,7 +88,7 @@ To successfully build and deploy the ApexERP project using Vite, please follow t
 1. Configuration:
    - Open the `vite.config.js` file.
    - Locate the `outDir` setting and update it to point to the shared folder:
-     `//192.168.1.24/e/hosted apps/ApexERP`
+     `//192.168.1.27/e/ERP/ERPUI`
 
 2. Access Permissions:
    - Ensure you have the necessary permissions to access and write to the shared folder.

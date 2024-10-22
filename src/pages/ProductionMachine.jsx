@@ -1,11 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Input, Select, Switch, message, Modal, Spin } from 'antd';
+import { Table, Button, Input, Select, Switch, message, Spin } from 'antd';
+import { Row, Col, Modal } from 'react-bootstrap';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid'; // Importing uuid for unique IDs
 import API from '../CustomHooks/MasterApiHooks/api';
+import themeStore from './../store/themeStore';
+import { useStore } from 'zustand';
+import { FaSearch } from "react-icons/fa";
+import { AiFillCloseSquare } from "react-icons/ai";
 
+const { Search } = Input;
 
 const Machine = () => {
+  const { getCssClasses } = useStore(themeStore);
+  const cssClasses = getCssClasses();
+  const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
+
   const [machines, setMachines] = useState([]);
   const [newMachineName, setNewMachineName] = useState('');
   const [newMachineProcessId, setNewMachineProcessId] = useState(null);
@@ -17,7 +27,10 @@ const Machine = () => {
   const [processes, setProcesses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  
+  const [searchText, setSearchText] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+
   const fetchMachines = async () => {
     setLoading(true);
     try {
@@ -54,19 +67,19 @@ const Machine = () => {
     }
 
     const newMachine = {
-      machineId: uuidv4(),
       machineName: newMachineName,
       status: newMachineStatus,
       processId: newMachineProcessId
     };
 
     try {
-      await axios.post(API_URL, newMachine);
+      await API.post('/Machines', newMachine);
       setMachines([...machines, newMachine]);
       setNewMachineName('');
       setNewMachineProcessId(null);
       setNewMachineStatus(true);
       setIsModalVisible(false);
+      fetchMachines();
       message.success('Machine added successfully!');
     } catch (error) {
       console.error("Failed to add machine", error);
@@ -88,7 +101,7 @@ const Machine = () => {
     };
 
     try {
-      await axios.put(`${API_URL}/${updatedMachine.machineId}`, updatedMachine);
+      await API.put(`/Machines/${updatedMachine.machineId}`, updatedMachine);
       const updatedMachines = [...machines];
       updatedMachines[index] = updatedMachine;
       setMachines(updatedMachines);
@@ -115,6 +128,7 @@ const Machine = () => {
       title: 'Machine Name',
       dataIndex: 'machineName',
       key: 'machineName',
+      sorter: (a, b) => a.machineName.localeCompare(b.machineName),
       render: (text, record, index) => (
         editingIndex === index ? (
           <Input
@@ -133,6 +147,7 @@ const Machine = () => {
       title: 'Process',
       dataIndex: 'processId',
       key: 'processId',
+      sorter: (a, b) => a.processName.localeCompare(b.processName),
       render: (text, record, index) => (
         editingIndex === index ? (
           <Select
@@ -156,14 +171,17 @@ const Machine = () => {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
+      sorter: (a, b) => a.status - b.status,
       render: (status, record, index) => (
         editingIndex === index ? (
           <Switch
             checked={editingStatus}
             onChange={setEditingStatus}
+            checkedChildren="Functional"
+            unCheckedChildren="Dysfunctional"
           />
         ) : (
-          <Switch checked={status} checkedChildren="Operational" unCheckedChildren="Not Operational" disabled />
+          <Switch checked={status} checkedChildren="Functional" unCheckedChildren="Dysfunctional" disabled />
         )
       ),
     },
@@ -188,60 +206,148 @@ const Machine = () => {
     },
   ];
 
+  const handleSearch = (value) => {
+    setSearchText(value);
+  };
+
+  const filteredMachines = machines.filter(machine =>
+    machine.machineName.toLowerCase().includes(searchText.toLowerCase()) ||
+    machine.processName.toLowerCase().includes(searchText.toLowerCase()) ||
+    (machine.status ? 'Functional' : 'Dysfunctional').includes(searchText.toLowerCase())
+  );
+
   return (
-    <div style={{ padding: '20px', background: '#f9f9f9', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)' }}>
-      <h2 style={{ marginBottom: '20px' }}>Production Machines</h2>
-      <Button type="primary" onClick={() => setIsModalVisible(true)} style={{ marginBottom: '20px' }}>
-        Add Machine
-      </Button>
+    <div className={`${customDark === "dark-dark" ? `${customDark} border` : `border-0`}`} style={{ padding: '20px', background: '#f9f9f9', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)' }}>
+      <h2 style={{ marginBottom: '20px', fontSize: 'clamp(1.5rem, 4vw, 2rem)' }} className={`${customDark === "dark-dark" ? ` text-white` : `${customDarkText}`}`}>Production Machines</h2>
+
+      <div className="mb-3 d-flex flex-wrap justify-content-between align-items-center">
+        <div style={{ marginBottom: '10px', marginRight: '10px' }}>
+          <Button className={`rounded-2 ${customBtn} ${customDark === "dark-dark" ? `border-white` : `border-0`}`} type="primary" onClick={() => setIsModalVisible(true)}>
+            Add Machine
+          </Button>
+        </div>
+        <div className="d-flex align-items-center justify-content-start" style={{ flex: '1', minWidth: '200px', maxWidth: '300px' }}>
+          <Input
+            placeholder="Search machines"
+            value={searchText}
+            onChange={(e) => handleSearch(e.target.value)}
+            style={{ width: '100%', height: '32px' }}
+            allowClear
+            className={`rounded-2 ${customDark === "dark-dark" ? `${customLightBorder} text-dark` : customDarkText} ${customDarkBorder} rounded-end-0`}
+          />
+          <Button
+            onClick={() => {/* Add search functionality here */}}
+            className={`rounded-2 ${customBtn} ${customDark === "dark-dark" ? 'border-white' : 'border-0'} rounded-start-0`}
+            style={{ height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <FaSearch size={20}/>
+          </Button>
+        </div>
+      </div>
 
       {loading ? (
-        <Spin />
+        <div className="d-flex justify-content-center">
+          <Spin />
+        </div>
       ) : (
-        <Table
-          dataSource={machines}
-          columns={columns}
-          rowKey="machineId"
-          pagination={false}
-          bordered
-          style={{ marginTop: '20px' }}
-        />
+        <div style={{ overflowX: 'auto' }}>
+          <Table
+            dataSource={filteredMachines}
+            columns={columns}
+            rowKey="machineId"
+            pagination={{
+              current: currentPage,
+              pageSize: pageSize,
+              total: filteredMachines.length,
+              showSizeChanger: true,
+              pageSizeOptions: ['5', '10'],
+              onChange: (page, pageSize) => {
+                setCurrentPage(page);
+                setPageSize(pageSize);
+              },
+              style: { marginTop: '16px', textAlign: 'center' },
+            }}
+            className={`${customDark === "default-dark" ? "thead-default" : ""}
+              ${customDark === "red-dark" ? "thead-red" : ""}
+              ${customDark === "green-dark" ? "thead-green" : ""}
+              ${customDark === "blue-dark" ? "thead-blue" : ""}
+              ${customDark === "dark-dark" ? "thead-dark" : ""}
+              ${customDark === "pink-dark" ? "thead-pink" : ""}
+              ${customDark === "purple-dark" ? "thead-purple" : ""}
+              ${customDark === "light-dark" ? "thead-light" : ""}
+              ${customDark === "brown-dark" ? "thead-brown" : ""} custom-pagination`}
+            bordered
+            style={{ marginTop: '20px' }}
+            scroll={{ x: 'max-content' }}
+          />
+        </div>
       )}
 
       <Modal
-        title="Add Machine"
-        open={isModalVisible}
-        onCancel={() => setIsModalVisible(false)}
-        footer={null}
+        show={isModalVisible}
+        onHide={() => setIsModalVisible(false)}
+        centered
+        size="lg"
       >
-        <Input
-          placeholder="Enter Machine Name"
-          value={newMachineName}
-          onChange={(e) => setNewMachineName(e.target.value)}
-        />
-        <Select
-          placeholder="Select Process"
-          value={newMachineProcessId}
-          onChange={setNewMachineProcessId}
-          style={{ marginTop: '10px', marginBottom: '10px', width: '100%' }}
-        >
-          {processes.map(process => (
-            <Select.Option key={process.id} value={process.id}>
-              {process.name}
-            </Select.Option>
-          ))}
-        </Select>
-        <Switch
-          checked={newMachineStatus}
-          checkedChildren="Operational"
-          unCheckedChildren="Not Operational"
-          onChange={setNewMachineStatus}
-          style={{ marginBottom: '10px' }}
-        />
-        <div style={{ textAlign: 'right', marginTop: '16px' }}>
-          <Button onClick={() => setIsModalVisible(false)} style={{ marginRight: '8px' }}>Cancel</Button>
+        <Modal.Header className={`${customDark} ${customLightText} d-flex justify-content-between align-items-center`}>
+          <Modal.Title>Add Machine</Modal.Title>
+          <AiFillCloseSquare
+            size={35}
+            onClick={() => setIsModalVisible(false)}
+            className={`${customDark === "dark-dark" ? "text-dark bg-white " : `${customDark} custom-zoom-btn text-white  ${customDarkBorder}`} rounded-2`}
+            aria-label="Close"
+            style={{ cursor: 'pointer', fontSize: '1.5rem' }}
+          />
+        </Modal.Header>
+        <Modal.Body className={customMid}>
+          <div style={{ marginBottom: '15px' }}>
+            <label htmlFor="machineName" style={{ display: 'block', marginBottom: '5px' }} className={`${customDarkText}`}>
+              Machine Name <span style={{ color: 'red' }}>*</span>
+            </label>
+            <Input
+              id="machineName"
+              placeholder="Enter Machine Name"
+              value={newMachineName}
+              onChange={(e) => setNewMachineName(e.target.value)}
+              required
+            />
+          </div>
+          <div style={{ marginBottom: '15px' }}>
+            <label htmlFor="processSelect" style={{ display: 'block', marginBottom: '5px' }}>
+              Select Process <span style={{ color: 'red' }}>*</span>
+            </label>
+            <Select
+              id="processSelect"
+              placeholder="Select Process"
+              value={newMachineProcessId}
+              onChange={setNewMachineProcessId}
+              style={{ width: '100%' }}
+              required
+            >
+              {processes.map(process => (
+                <Select.Option key={process.id} value={process.id}>
+                  {process.name}
+                </Select.Option>
+              ))}
+            </Select>
+          </div>
+          <div>
+            <label htmlFor="machineStatus" style={{ display: 'block', marginBottom: '5px' }}>
+              Machine Status
+            </label>
+            <Switch
+              id="machineStatus"
+              checked={newMachineStatus}
+              checkedChildren="Functional"
+              unCheckedChildren="Dysfunctional"
+              onChange={setNewMachineStatus}
+            />
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          {/* <Button onClick={() => setIsModalVisible(false)}>Cancel</Button> */}
           <Button type="primary" onClick={handleAddMachine}>Add</Button>
-        </div>
+        </Modal.Footer>
       </Modal>
     </div>
   );

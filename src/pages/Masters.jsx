@@ -3,22 +3,16 @@ import { Container, Row, Col, Nav, Offcanvas } from 'react-bootstrap';
 import {
   FaUsers,
   FaProjectDiagram,
-  FaGlobeAmericas,
-  FaTools,
   FaBell,
-  FaFileContract,
   FaUserPlus,
   FaUserCog,
   FaListUl,
   FaCamera,
   FaCog,
-  FaPlusCircle,
   FaCaretDown,
   FaCaretLeft,
-  FaFileAlt,
-  FaCogs
 } from 'react-icons/fa';
-
+import { GiGears } from "react-icons/gi";
 import GroupManager from './Group'
 import ProjectManager from './Project';
 import ZoneManager from './Zone';
@@ -36,10 +30,11 @@ import SystemSettings from './SystemSettings';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import { RiMenuFold4Fill } from "react-icons/ri";
-import Report from './Report.jsx';
+// import Report from './Report.jsx';
 import { AiFillCloseSquare } from "react-icons/ai";
 import { RiUserSettingsFill } from "react-icons/ri";
 import { FaBookOpenReader } from "react-icons/fa6";
+import { BiSolidCctv } from "react-icons/bi";
 // import {BsQuestionSquareFill} from 'react-icons/bs'//not  integrated
 
 
@@ -47,15 +42,17 @@ import { FaBookOpenReader } from "react-icons/fa6";
 const Sidebar = () => {
   // Theme Change Section
   const { getCssClasses } = useStore(themeStore);
-  const cssClasses = getCssClasses();
-  const customDark = cssClasses[0];
-  const customMid = cssClasses[1];
-  const customLight = cssClasses[2];
-  const customBtn = cssClasses[3];
-  const customDarkText = cssClasses[4];
-  const customLightText = cssClasses[5]
-  const customLightBorder = cssClasses[6]
-  const customDarkBorder = cssClasses[7]
+  const [
+    customDark,
+    customMid,
+    customLight,
+    customBtn,
+    customDarkText,
+    customLightText,
+    customLightBorder,
+    customDarkBorder
+  ] = getCssClasses();
+  
   const isDevelopmentMode = import.meta.env.VITE_APP_MODE === 'development'
 
   const [selectedMenu, setSelectedMenu] = useState('group'); // Default to 'group'
@@ -117,9 +114,9 @@ const Sidebar = () => {
     { key: 'group', icon: <FaUsers className={`${customDark === "dark-dark" ? `text-white` : `${customDarkText}`} menu-icon`} />, label: 'Group', permission: '2.2' },
     { key: 'type', icon: <FaBookOpenReader className={`${customDark === "dark-dark" ? `text-white` : `${customDarkText}`} menu-icon`} />, label: 'Project Type', permission: '2.3' },
     { key: 'project', icon: <FaProjectDiagram className={`${customDark === "dark-dark" ? `text-white` : `${customDarkText}`} menu-icon`} />, label: 'Project', permission: '2.4' },
-    { key: 'zone', icon: <FaGlobeAmericas className={`${customDark === "dark-dark" ? `text-white` : `${customDarkText}`} menu-icon`} />, label: 'Zone', permission: '2.5' },
+    { key: 'zone', icon: <BiSolidCctv  className={`${customDark === "dark-dark" ? `text-white` : `${customDarkText}`} menu-icon`} />, label: 'Zone', permission: '2.5' },
     { key: 'camera', icon: <FaCamera className={`${customDark === "dark-dark" ? `text-white` : `${customDarkText}`} menu-icon`} />, label: 'Camera', permission: '2.6' },
-    { key: 'machine', icon: <FaListUl className={`${customDark === "dark-dark" ? `text-white` : `${customDarkText}`} menu-icon`} />, label: 'Machines', permission: '2.7' },
+    { key: 'machine', icon: <GiGears className={`${customDark === "dark-dark" ? `text-white` : `${customDarkText}`} menu-icon`} />, label: 'Production Machines', permission: '2.7' },
     { key: 'alarm', icon: <FaBell className={`${customDark === "dark-dark" ? `text-white` : `${customDarkText}`} menu-icon`} />, label: 'Alarm', permission: '2.8' },
     { key: 'team', icon: <FaUsers className={`${customDark === "dark-dark" ? `text-white` : `${customDarkText}`} menu-icon`} />, label: 'Team', permission: '2.9' },
     { key: 'systemSettings', icon: <FaCog className={`${customDark === "dark-dark" ? `text-white` : `${customDarkText}`} menu-icon`} />, label: 'Process Settings', permission: '2.10' },
