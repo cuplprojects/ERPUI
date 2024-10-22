@@ -270,7 +270,8 @@ useEffect(() => {
           >
             <h4 className="text-dark d-flex justify-content-between p-3">
               <div>
-                {clickData.projectName || 'Select a project'} | {clickData.type || ''}
+                {console.log(clickData)}
+                {clickData.name || 'Select a project'} 
               </div>
             </h4>
             <div style={{ flex: 1, overflow: "hidden", padding: "0 15px" }}>

@@ -107,7 +107,6 @@ const Cards = ({ item, onclick, disableProject }) => {
 
   // Navigate to quantity sheet uploads and send projectId
   const handleUploadClick = (e) => {
-  
     e.stopPropagation();
     navigate(`/quantity-sheet-uploads/${item.projectId}`);
   };
@@ -118,6 +117,15 @@ const Cards = ({ item, onclick, disableProject }) => {
       return;
     }
     navigate(`/dashboard/${item.projectId}`);
+  };
+
+  // Handle info button click
+  const handleInfoClick = (e) => {
+    if(disableProject){
+      return;
+    }
+    e.stopPropagation();
+    onclick(item);
   };
 
   return (
@@ -132,11 +140,8 @@ const Cards = ({ item, onclick, disableProject }) => {
         <p>{item.remainingPercentage}% Remaining</p>
         
         <div
-          className="info-button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onclick(item);
-          }}
+          className={`info-button ${disableProject ? 'disabled' : ''}`}
+          onClick={handleInfoClick}
         >
           <FaInfoCircle />
         </div>
@@ -202,6 +207,15 @@ const StyledWrapper = styled.div`
 
   .upload-button:hover, .info-button:hover {
     background-color: rgba(0, 0, 0, 0.1);
+  }
+
+  .info-button.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .info-button.disabled:hover {
+    background-color: transparent;
   }
 `;
 
