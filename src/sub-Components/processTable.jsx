@@ -40,6 +40,7 @@ const ProcessTable = () => {
     const [catchDetailModalData, setCatchDetailModalData] = useState(null);
     const [previousProcessPercentage, setPreviousProcessPercentage] = useState(90);
 
+    
     const handleToggleChange = () => {
         setShowBarChart(!showBarChart);
     };
