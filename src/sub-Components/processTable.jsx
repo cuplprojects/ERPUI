@@ -35,39 +35,62 @@ const ProcessTable = () => {
 
     const location = useLocation();
     const { id, lotNo } = useParams();
-    const [tableData, setTableData] = useState(dummyData);
+    const [tableData, setTableData] = useState([]);
     const [showBarChart, setShowBarChart] = useState(true);
     const [catchDetailModalShow, setCatchDetailModalShow] = useState(false);
     const [catchDetailModalData, setCatchDetailModalData] = useState(null);
     const [previousProcessPercentage, setPreviousProcessPercentage] = useState(90);
     const [projectName, setProjectName] = useState('');
 
-    const formDataGet = {
-        srNo: 0,
-        quantitySheetId: null,
-        catchNo: tableData.catchNumber,
-        paper: tableData.paper,
-        course: tableData.course,
-        subject: tableData.subject,
-        innerEnvelope: tableData.innerEnvelope,
-        outerEnvelope: tableData.outerEnvelope,
-        lotNo: lotNo,
-        quantity: 0,
-        interimQuantity: 0,//interim quantity from separate API
-        percentageCatch: 0,//percentage catch from separate API
-        projectId: id,
-        isOverridden: false,//false by default
-        processId: [],//process id from separate API
-        remarks: "",//remarks from separate API
-        alerts: "",//alerts from separate API
-        status: "Pending",//status from separate API
-      };
+    useEffect(() => {
+        const fetchQuantitySheet = async () => {
+            try {
+                const response = await API.get(`/QuantitySheet?ProjectId=${id}&lotNo=${lotNo}`);
+                const quantitySheetData = response.data;
+                console.log('API response:', quantitySheetData);
+                
+                if (Array.isArray(quantitySheetData) && quantitySheetData.length > 0) {
+                    const formDataGet = quantitySheetData.map((item) => ({
+                        srNo: item?.quantitySheetId || "",
+                        catchNumber: item?.catchNo,
+                        paper: item?.paper || "undefined",
+                        course: item?.course,
+                        subject: item?.subject,
+                        outerEnvelope: item?.outerEnvelope,
+                        innerEnvelope: item?.innerEnvelope,
+                        lotNo:item?.lotNo,
+                        quantity: item?.quantity,
+                        percentageCatch: item?.percentageCatch,
+                        projectId:item?.projectId,
+                        isOverridden: item?.isOverridden,
+                        processId: item?.processId || [],
+                        status: item?.status ||  "Pending",//to be fetched later from backend
+                        alerts: "",//to be fetched later from backend
+                        interimQuantity: "0",//to be fetched later from backend
+                        remarks: "",//to be fetched later from backend
+                        previousProcessStats: "",//to be fetched later from backend
+                    }));
+                    console.log('Formatted data:', formDataGet);
+                    setTableData(formDataGet); // Set the table data only here
+                } else {
+                    console.error("API response is not an array or is empty");
+                    setTableData([]); // Set to empty only if there's no data
+                }
+            } catch (error) {
+                console.error("Error fetching quantity sheet data:", error);
+                setTableData([]); // Set to empty on error
+            }
+        };
+
+        fetchQuantitySheet();
+    }, [id, lotNo]);
       
     useEffect(() => {
         const fetchProjectDetails = async () => {
             try {
-                const response = await API.get(`https://localhost:7212/api/Project/${id}`);
+                const response = await API.get(`/Project/${id}`);
                 const projectData = response.data;
+                console.log(projectData)
                 setProjectName(projectData.name);
                 // You can set other project details here if needed
             } catch (error) {
@@ -101,42 +124,9 @@ const ProcessTable = () => {
     // const catchNumbers = tableData.map((item) => item.catchNo).sort((a, b) => a - b);
     const catchNumbers = tableData.map((item) => item.catchNumber).sort((a, b) => a - b);
     // console.log(tableData);
-    const processList = [
-        { admin: "HQ" },
-        { mss: "MSS" },
-        { dtp: "DTP" },
-        { prooReading: "Proo Reading" },
-        { prodTrans: "Production Transfer" },
-        { preProQC: "QC" },
-        { ctp: "CTP" },
-        { printing: "Printing" },
-        { cutting: "Cutting" },
-        { mixing: "Mixing" },
-        { numbering: "Numbering" },
-        { envelope: "Envelope" },
-        { filling: "Filling" },
-        { finalQC: "Final QC" },
-        { bundling: "Bundling" },
-        { dispatch: "Dispatch" }
-    ];
     let activeUser, activeUserProcess, currentIndex, currentProcess, previousProcess;
 
-    try {
-        activeUser = JSON.parse(localStorage.getItem('activeUser'));
-        if (activeUser && activeUser.userId) {
-            activeUserProcess = activeUser.userId;
-            currentIndex = processList.findIndex(obj => Object.keys(obj)[0] === activeUserProcess);
-            if (currentIndex !== -1) {
-                currentProcess = processList[currentIndex][activeUserProcess];
-                if (currentIndex > 0) {
-                    const previousProcessKey = Object.keys(processList[currentIndex - 1])[0];
-                    previousProcess = processList[currentIndex - 1][previousProcessKey];
-                }
-            }
-        }
-    } catch (error) {
-        console.error('Error parsing activeUser from localStorage:', error);
-    }
+
 
     return (
         <div className="container-fluid" >
@@ -214,11 +204,11 @@ const ProcessTable = () => {
                             onMouseOut={(e) => e.target.start()}>
                             <div className="d-flex gap-4">
                                 {tableData.map((record, index) => (
-                                    <>
+                                    <React.Fragment key={index}>
                                         {record.alerts && record.alerts.length > 0 && (
                                             <AlertBadge catchNo={record.catchNumber} alerts={record.alerts} onClick={() => handleCatchClick(record)} status="level1" />
                                         )}
-                                    </>
+                                    </React.Fragment>
                                 ))}
                             </div>
                         </marquee>
@@ -232,7 +222,10 @@ const ProcessTable = () => {
             </Row>
             <Row className='mb-2'>
                 <Col lg={12} md={12} >
-                    <ProjectDetailsTable tableData={tableData} setTableData={setTableData} projectId={id} lotNo={lotNo} />
+                    {tableData.length > 0 && (
+                        <ProjectDetailsTable tableData={tableData} setTableData={setTableData} projectId={id} lotNo={lotNo} />
+                        
+                    )}
                 </Col>
                 <Col lg={2} md={0} ></Col>
             </Row>
