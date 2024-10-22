@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Card, Spinner, Row, Col } from 'react-bootstrap'; // Import Bootstrap components
-import ProjectDetailsTable from './projectDetailTable'; // Import the new component
-import dummyData from "../store/dd.json";
+import { Card, Spinner, Row, Col, ListGroup } from 'react-bootstrap';
+import ProjectDetailsTable from './projectDetailTable';
 import StatusPieChart from "./StatusPieChart";
-import StatusBarChart from "./StatusBarChart"; // Import the updated bar chart component
+import StatusBarChart from "./StatusBarChart";
 import "./../styles/processTable.css";
 import { Switch } from 'antd';
 import CatchProgressBar from './catchProgressBar';
@@ -14,12 +13,11 @@ import themeStore from '../store/themeStore';
 import { useStore } from 'zustand';
 import { MdPending } from "react-icons/md";
 import { Link } from 'react-router-dom';
-import { MdCloudUpload } from "react-icons/md";//upload icon
-import { FaRegHourglassHalf } from "react-icons/fa6";//pre process running
+import { MdCloudUpload } from "react-icons/md";
+import { FaRegHourglassHalf } from "react-icons/fa6";
+import axios from 'axios';
 
 const ProcessTable = () => {
-
-    //Theme Change Section
     const { getCssClasses } = useStore(themeStore);
     const [
       customDark,
@@ -33,18 +31,47 @@ const ProcessTable = () => {
     ] = getCssClasses();
 
     const location = useLocation();
-    const { project } = location.state || {}; // Access the project details from the state
-    const [tableData, setTableData] = useState(dummyData);
+    const { project } = location.state || {};
+    const [tableData, setTableData] = useState([]);
     const [showBarChart, setShowBarChart] = useState(true);
     const [catchDetailModalShow, setCatchDetailModalShow] = useState(false);
     const [catchDetailModalData, setCatchDetailModalData] = useState(null);
     const [previousProcessPercentage, setPreviousProcessPercentage] = useState(90);
+    const [selectedLot, setSelectedLot] = useState(null);
+    const [filteredTableData, setFilteredTableData] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const response = await axios.get(`https://localhost:7212/api/QuantitySheet?ProjectId=${project.id}&lotNo=${project.lotNumber}`);
+                setTableData(response.data);
+                setFilteredTableData(response.data);
+                setIsLoading(false);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                setIsLoading(false);
+            }
+        };
+
+        if (project && project.id && project.lotNumber) {
+            fetchData();
+        }
+    }, [project]);
+
+    useEffect(() => {
+        if (selectedLot) {
+            setFilteredTableData(tableData.filter(item => item.catchNumber === selectedLot));
+        } else {
+            setFilteredTableData(tableData);
+        }
+    }, [selectedLot, tableData]);
 
     const handleToggleChange = () => {
         setShowBarChart(!showBarChart);
     };
-    // Render a loading state while fetching the project data
-    if (!project) {
+
+    if (isLoading) {
         return (
             <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
                 <Spinner animation="border" variant="primary" />
@@ -59,10 +86,12 @@ const ProcessTable = () => {
         setCatchDetailModalData(record);
     };
 
+    const handleLotClick = (lot) => {
+        setSelectedLot(lot === selectedLot ? null : lot);
+    };
 
-    // const catchNumbers = tableData.map((item) => item.catchNo).sort((a, b) => a - b);
     const catchNumbers = tableData.map((item) => item.catchNumber).sort((a, b) => a - b);
-    // console.log(tableData);
+
     const processList = [
         { admin: "HQ" },
         { mss: "MSS" },
@@ -102,7 +131,6 @@ const ProcessTable = () => {
 
     return (
         <div className="container-fluid" >
-            {/* ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
             <Row className="mb-  ">
                 <Col lg={12} md={12} xs={12} className=''>
                     <Card className="shadow-sm ">
@@ -111,7 +139,7 @@ const ProcessTable = () => {
                                 <Col lg={6} md={4} xs={12} className=' d-lg-none d-md-none '>
                                     <div className="center-head d-flex justify-content-center">
                                         <span className='text-center fs-4 me-3'>{project.label}</span>
-                                        <span className='text-center fs-4'>Lot - {project.lotNumber}</span>
+                                        <span className='text-center fs-4'>Lot - {selectedLot || project.lotNumber}</span>
                                     </div>
                                 </Col>
                                 <div className="d-flex justify-content-center d-lg-none d-md-none ">
@@ -135,7 +163,6 @@ const ProcessTable = () => {
                                             <div className='text-center fs-5'>Previous Process </div>
                                             <div className={`p-1  fs-6 text-primary border ${customDarkBorder} rounded ms-1 d-flex justify-content-center align-items-center ${customDark === 'dark-dark' ? `${customBtn} text-white` : `${customLight} bg-light`}`} style={{ fontWeight: 900 }}> 
                                                 {previousProcess} - {previousProcessPercentage}%
-                                                {/* {previousProcessPercentage}% */}
                                                 <span className='ms-2'>
                                                     <FaRegHourglassHalf color='blue' size="20" />
                                                 </span>
@@ -149,7 +176,7 @@ const ProcessTable = () => {
                                 <Col lg={6} md={4} xs={12} className='d-none d-lg-block d-md-block'>
                                     <div className="center-head ">
                                         <div className='text-center fs-4'>{project.label} </div>
-                                        <div className='text-center fs-4'>Lot - {project.lotNumber}</div>
+                                        <div className='text-center fs-4'>Lot - {selectedLot || project.lotNumber}</div>
                                     </div>
                                 </Col>
                                 <Col lg={3} md={4} xs={12}>
@@ -158,7 +185,6 @@ const ProcessTable = () => {
                                         <div className={`p-1  fs-6 text-primary border ${customDarkBorder} rounded ms-1 d-flex justify-content-center align-items-center ${customDark === 'dark-dark' ? `${customBtn} text-white` : `${customLight} bg-light text-danger`}`} style={{ fontWeight: 900 }}>{currentProcess}
                                             <span className='ms-2'>
                                                 <MdPending color='red' size="25" />
-                                                {/* pending icon here */}
                                             </span>
                                         </div>
                                     </div>
@@ -168,17 +194,16 @@ const ProcessTable = () => {
                     </Card>
                 </Col>
             </Row>
-            {/* ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ */}
             <Row>
                 <Col lg={12} md={12}>
                     <div className="marquee-container mt-2 mb-2">
                         <marquee id="alert-marquee" behavior="scroll" direction="left" scrollamount="5" onMouseOver={(e) => e.target.stop()}
                             onMouseOut={(e) => e.target.start()}>
                             <div className="d-flex gap-4">
-                                {tableData.map((record, index) => (
+                                {filteredTableData.map((record, index) => (
                                     <>
-                                        {record.alerts.length > 0 && (
-                                            <AlertBadge catchNo={record.catchNumber} alerts={record.alerts} onClick={() => handleCatchClick(record)} status="level1" />
+                                        {record.alerts && record.alerts.length > 0 && (
+                                            <AlertBadge key={index} catchNo={record.catchNumber} alerts={record.alerts} onClick={() => handleCatchClick(record)} status="level1" />
                                         )}
                                     </>
                                 ))}
@@ -189,16 +214,34 @@ const ProcessTable = () => {
             </Row>
             <Row className='mb-5'>
                 <Col lg={12} md={12}>
-                    <CatchProgressBar data={tableData} />
+                    <CatchProgressBar data={filteredTableData} />
                 </Col>
             </Row>
             <Row className='mb-2'>
-                <Col lg={2} md={0} ></Col>
-                <Col lg={8} md={12} >
-                    <ProjectDetailsTable tableData={tableData} setTableData={setTableData} />
+                <Col lg={4} md={12}>
+                    <h4 className={`${customDark} text-white p-2`}>Project Lots</h4>
+                    <div className="d-flex flex-column align-items-center" style={{ width: '100%' }}>
+                        {tableData.map((item, index) => (
+                            <div
+                                key={index}
+                                className={`mb-2 p-3 rounded-3 ${customLight} ${customDarkText} ${selectedLot === item.catchNumber ? 'border border-primary shadow-lg' : 'border'}`}
+                                onClick={() => handleLotClick(item.catchNumber)}
+                                style={{ 
+                                    cursor: 'pointer', 
+                                    transition: 'all 0.3s',
+                                    transform: selectedLot === item.catchNumber ? 'scale(1.05)' : 'scale(1)',
+                                    width: '35%',
+                                    backgroundColor: selectedLot === item.catchNumber ? '#e6f7ff' : 'inherit'
+                                }}
+                            >
+                                <h5 className={`mb-0 ${selectedLot === item.catchNumber ? 'fw-bold text-primary' : ''}`}>Lot {item.catchNumber}</h5>
+                            </div>
+                        ))}
+                    </div>
                 </Col>
-                <Col lg={2} md={0} ></Col>
-                {/* <Col lg={4} md={12}> <UserCard /> </Col> */}
+                <Col lg={8} md={12}>
+                    <ProjectDetailsTable tableData={selectedLot ? filteredTableData : tableData} setTableData={setTableData} selectedLot={selectedLot} />
+                </Col>
             </Row>
             <Row className='mb-4 d-flex justify-content-between'>
                 <Col lg={8} md={12} className='mb-1'>
@@ -210,11 +253,11 @@ const ProcessTable = () => {
                 </Col>
                 {showBarChart ? (
                     <Col lg={12} md={12} sm={12} className='mt-1 d-fle justify-content-center'>
-                        <StatusBarChart data={tableData} catchNumbers={catchNumbers} />
+                        <StatusBarChart data={filteredTableData} catchNumbers={catchNumbers} />
                     </Col>
                 ) : (
                     <Col lg={12} md={12} sm={12} className='mt-1 d-fle justify-content-center ' >
-                        <StatusPieChart data={tableData} />
+                        <StatusPieChart data={filteredTableData} />
                     </Col>
                 )}
             </Row>
@@ -223,7 +266,6 @@ const ProcessTable = () => {
                 handleClose={() => setCatchDetailModalShow(false)}
                 data={catchDetailModalData}
             >
-                {/* modal content here */}
             </CatchDetailModal>
         </div>
     );

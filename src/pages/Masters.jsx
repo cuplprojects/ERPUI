@@ -26,7 +26,7 @@ import AllUsers from '../sub-Components/allUsers';
 import CameraList from './CameraList';
 import RolesAndDepartments from './Roles/RolePage';
 import Team from './team';
-import SystemSettings from './SystemSettings';
+import SystemSettings from './Configurtaion/SystemSettings';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import { RiMenuFold4Fill } from "react-icons/ri";
