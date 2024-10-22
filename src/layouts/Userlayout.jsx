@@ -23,6 +23,7 @@ import { hasPermission } from '../CustomHooks/Services/permissionUtils';
 import CuDashboard from '../pages/CuDashboard';
 
 import AddProjectProcess from '../pages/AddProjectProcess';
+import Test from '../pages/Test';
 
 const Userlayout = () => {
   //Theme Change Section
@@ -44,16 +45,24 @@ const Userlayout = () => {
           </div>
           <div className={`flex-grow-1 d-fle m-2 p-3 `} style={{ zIndex: "3" }}>
             <Routes>
+
               {hasPermission('5') && <Route path="/cudashboard" element={<CuDashboard/>} />}
               {hasPermission('1') && <Route path="/dashboard/:projectId" element={<MainDashboard />} />}
               {hasPermission('2') && <Route path="/master" element={<Masters />} />}
               {hasPermission('2.4') && <Route path="/AddProjectProcess/:projectId" element={<AddProjectProcess />} />}
               {hasPermission('2') && <Route path="/features" element={<Features />} />}
 
+
               {/* --------------- User Menu Routes -------------- */}
               <Route path="/profile" element={<Profile />} />
               <Route path="/settings" element={<UserSettings />} />
               <Route path="/change-password" element={<ChangePassword />} />
+
+              <Route path="/test" element={<Test />} />
+
+
+
+
               {(hasPermission('2.4') ) && <Route path="/quantity-sheet-uploads/:projectId" element={<QtySheetUpload />} />}
               {(hasPermission('2.4')) && <Route path="/project-details/:id/:lotNo" element={<ProcessTable />} />}
               {(hasPermission('3') ) && <Route path="/message" element={<Message />} />}

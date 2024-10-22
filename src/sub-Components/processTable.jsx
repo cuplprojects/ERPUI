@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+
 import { useLocation, useParams } from 'react-router-dom';
 import { Card, Spinner, Row, Col } from 'react-bootstrap'; // Import Bootstrap components
 import ProjectDetailsTable from './projectDetailTable'; // Import the new component
 import dummyData from "../store/dd.json";
+
 import StatusPieChart from "./StatusPieChart";
-import StatusBarChart from "./StatusBarChart"; // Import the updated bar chart component
+import StatusBarChart from "./StatusBarChart";
 import "./../styles/processTable.css";
 import { Switch } from 'antd';
 import CatchProgressBar from './catchProgressBar';
@@ -14,13 +16,13 @@ import themeStore from '../store/themeStore';
 import { useStore } from 'zustand';
 import { MdPending } from "react-icons/md";
 import { Link } from 'react-router-dom';
+
 import { MdCloudUpload } from "react-icons/md";//upload icon
 import { FaRegHourglassHalf } from "react-icons/fa6";//pre process running
 import API from '../CustomHooks/MasterApiHooks/api';
 
-const ProcessTable = () => {
 
-    //Theme Change Section
+const ProcessTable = () => {
     const { getCssClasses } = useStore(themeStore);
     const [
       customDark,
@@ -34,12 +36,15 @@ const ProcessTable = () => {
     ] = getCssClasses();
 
     const location = useLocation();
+
     const { id, lotNo } = useParams();
+
     const [tableData, setTableData] = useState([]);
     const [showBarChart, setShowBarChart] = useState(true);
     const [catchDetailModalShow, setCatchDetailModalShow] = useState(false);
     const [catchDetailModalData, setCatchDetailModalData] = useState(null);
     const [previousProcessPercentage, setPreviousProcessPercentage] = useState(90);
+
     const [projectName, setProjectName] = useState('');
 
     useEffect(() => {
@@ -101,11 +106,15 @@ const ProcessTable = () => {
         fetchProjectDetails();
     }, [id]);
 
+
+    
     const handleToggleChange = () => {
         setShowBarChart(!showBarChart);
     };
+
     // Render a loading state while fetching the project data
     if (!projectName) {
+
         return (
             <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
                 <Spinner animation="border" variant="primary" />
@@ -120,17 +129,20 @@ const ProcessTable = () => {
         setCatchDetailModalData(record);
     };
 
+    const handleLotClick = (lot) => {
+        setSelectedLot(lot === selectedLot ? null : lot);
+    };
 
-    // const catchNumbers = tableData.map((item) => item.catchNo).sort((a, b) => a - b);
     const catchNumbers = tableData.map((item) => item.catchNumber).sort((a, b) => a - b);
+
     // console.log(tableData);
+
     let activeUser, activeUserProcess, currentIndex, currentProcess, previousProcess;
 
 
 
     return (
         <div className="container-fluid" >
-            {/* ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
             <Row className="mb-  ">
                 <Col lg={12} md={12} xs={12} className=''>
                     <Card className="shadow-sm ">
@@ -138,8 +150,10 @@ const ProcessTable = () => {
                             <Row className='d-flex align-items-center'>
                                 <Col lg={6} md={4} xs={12} className=' d-lg-none d-md-none '>
                                     <div className="center-head d-flex justify-content-center">
+
                                         <span className='text-center fs-4 me-3'>{projectName}</span>
                                         <span className='text-center fs-4'>Lot - {lotNo}</span>
+
                                     </div>
                                 </Col>
                                 <div className="d-flex justify-content-center d-lg-none d-md-none ">
@@ -163,7 +177,6 @@ const ProcessTable = () => {
                                             <div className='text-center fs-5'>Previous Process </div>
                                             <div className={`p-1  fs-6 text-primary border ${customDarkBorder} rounded ms-1 d-flex justify-content-center align-items-center ${customDark === 'dark-dark' ? `${customBtn} text-white` : `${customLight} bg-light`}`} style={{ fontWeight: 900 }}> 
                                                 {previousProcess} - {previousProcessPercentage}%
-                                                {/* {previousProcessPercentage}% */}
                                                 <span className='ms-2'>
                                                     <FaRegHourglassHalf color='blue' size="20" />
                                                 </span>
@@ -176,8 +189,10 @@ const ProcessTable = () => {
                                 </div>
                                 <Col lg={6} md={4} xs={12} className='d-none d-lg-block d-md-block'>
                                     <div className="center-head ">
+
                                         <div className='text-center fs-4'>{projectName}</div>
                                         <div className='text-center fs-4'>Lot - {lotNo}</div>
+
                                     </div>
                                 </Col>
                                 <Col lg={3} md={4} xs={12}>
@@ -186,7 +201,6 @@ const ProcessTable = () => {
                                         <div className={`p-1  fs-6 text-primary border ${customDarkBorder} rounded ms-1 d-flex justify-content-center align-items-center ${customDark === 'dark-dark' ? `${customBtn} text-white` : `${customLight} bg-light text-danger`}`} style={{ fontWeight: 900 }}>{currentProcess}
                                             <span className='ms-2'>
                                                 <MdPending color='red' size="25" />
-                                                {/* pending icon here */}
                                             </span>
                                         </div>
                                     </div>
@@ -196,17 +210,18 @@ const ProcessTable = () => {
                     </Card>
                 </Col>
             </Row>
-            {/* ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ */}
             <Row>
                 <Col lg={12} md={12}>
                     <div className="marquee-container mt-2 mb-2">
                         <marquee id="alert-marquee" behavior="scroll" direction="left" scrollamount="5" onMouseOver={(e) => e.target.stop()}
                             onMouseOut={(e) => e.target.start()}>
                             <div className="d-flex gap-4">
+
                                 {tableData.map((record, index) => (
                                     <React.Fragment key={index}>
                                         {record.alerts && record.alerts.length > 0 && (
                                             <AlertBadge catchNo={record.catchNumber} alerts={record.alerts} onClick={() => handleCatchClick(record)} status="level1" />
+
                                         )}
                                     </React.Fragment>
                                 ))}
@@ -217,10 +232,11 @@ const ProcessTable = () => {
             </Row>
             <Row className='mb-5'>
                 <Col lg={12} md={12}>
-                    <CatchProgressBar data={tableData} />
+                    <CatchProgressBar data={filteredTableData} />
                 </Col>
             </Row>
             <Row className='mb-2'>
+
                 <Col lg={12} md={12} >
                     {tableData.length > 0 && (
                         <ProjectDetailsTable tableData={tableData} setTableData={setTableData} projectId={id} lotNo={lotNo} />
@@ -228,6 +244,7 @@ const ProcessTable = () => {
                     )}
                 </Col>
                 <Col lg={2} md={0} ></Col>
+
             </Row>
             <Row className='mb-4 d-flex justify-content-between'>
                 <Col lg={8} md={12} className='mb-1'>
@@ -239,11 +256,11 @@ const ProcessTable = () => {
                 </Col>
                 {showBarChart ? (
                     <Col lg={12} md={12} sm={12} className='mt-1 d-fle justify-content-center'>
-                        <StatusBarChart data={tableData} catchNumbers={catchNumbers} />
+                        <StatusBarChart data={filteredTableData} catchNumbers={catchNumbers} />
                     </Col>
                 ) : (
                     <Col lg={12} md={12} sm={12} className='mt-1 d-fle justify-content-center ' >
-                        <StatusPieChart data={tableData} />
+                        <StatusPieChart data={filteredTableData} />
                     </Col>
                 )}
             </Row>
@@ -252,7 +269,6 @@ const ProcessTable = () => {
                 handleClose={() => setCatchDetailModalShow(false)}
                 data={catchDetailModalData}
             >
-                {/* modal content here */}
             </CatchDetailModal>
         </div>
     );

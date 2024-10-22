@@ -117,6 +117,7 @@
 
 // export default CuDashboard;
 
+
 import React, { useEffect, useState, useRef } from "react";
 
 import LineChart from "./../sub-Components/LineChart";
@@ -192,6 +193,7 @@ useEffect(() => {
   };
 
   const itemsPerSlide = 5;
+
 
   const carouselItems = [];
   for (let i = 0; i < data.length; i += itemsPerSlide) {
