@@ -67,6 +67,7 @@ const ProcessTable = () => {
         }
     }, [selectedLot, tableData]);
 
+    
     const handleToggleChange = () => {
         setShowBarChart(!showBarChart);
     };

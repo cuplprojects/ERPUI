@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Card, Table, Input, Switch, message, Tabs } from 'antd';
 import { Modal } from 'react-bootstrap';
-import { IdcardOutlined, EditOutlined } from '@ant-design/icons';
+import { EditOutlined } from '@ant-design/icons';
 import themeStore from '../../store/themeStore';
 import { useStore } from 'zustand';
 import Permissions from './Permissions';
@@ -168,7 +168,9 @@ const RolesAndDepartments = () => {
           icon={<EditOutlined />}
           onClick={() => handleEditRole(record)}
           className={`${customBtn}`}
-        />
+        >
+          Edit
+        </Button>
       ),
     }
   ];
@@ -183,7 +185,7 @@ const RolesAndDepartments = () => {
     <Card
       className={`w-100 mx-auto p-3 ${customMid} border-0`}
       style={{ maxWidth: '1200px' }}
-      bodyStyle={{ padding: '12px' }}
+      styles={{ body: { padding: '12px' } }}
     >
       <div className={`d-flex justify-content-between align-items-center mb-3`}>
         <h2 className={`${customDarkText} m-0`}>Role List</h2>
