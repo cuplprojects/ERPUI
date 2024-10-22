@@ -10,7 +10,7 @@ import { RiNotification2Fill } from "react-icons/ri";
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import { Link } from 'react-router-dom';
-import useUserDataStore from '../store/userDataStore';
+import useUserDataStore, { useUserData, useUserDataActions } from '../store/userDataStore';
 import SampleUser1 from "./../assets/sampleUsers/defaultUser.jpg";
 const apiUrl = import.meta.env.VITE_API_BASE_URL;
 
@@ -38,7 +38,8 @@ const Navbar = () => {
   const notificationRef = useRef(null);
   const containerRef = useRef(null);
 
-  const { userData, fetchUserData } = useUserDataStore();
+  const userData = useUserData();
+  const { fetchUserData } = useUserDataActions();
 
   useEffect(() => {
     fetchUserData();

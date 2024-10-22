@@ -18,28 +18,21 @@ import { useStore } from 'zustand';
 import QtySheetUpload from '../pages/QtySheetUpload';
 import Message from '../pages/Message/Message';
 import Labels from '../pages/Message/Labels';
-
-
+import Reports from '../pages/Reports';
 import { hasPermission } from '../CustomHooks/Services/permissionUtils';
 import CuDashboard from '../pages/CuDashboard';
 
-const isdevelopment = import.meta.env.VITE_APP_MODE === 'development';
-
-
 import AddProjectProcess from '../pages/AddProjectProcess';
-// import { hasPermission } from '../CustomHooks/Services/permissionUtils';
+import Test from '../pages/Test';
 
 const Userlayout = () => {
-
   //Theme Change Section
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
   const customDark = cssClasses[0];
   const customMid = cssClasses[1];
   const customLight = cssClasses[2];
-  const userpermissions = localStorage.getItem('activeuser');
-  const permissions = JSON.parse(userpermissions);
-  // console.log(permissions);//to see permissions on console
+
   return (
     <div className={`container-fluid p-0 vh-100  ${customLight}`}>
       <LockOverlay className="lock-button" />
@@ -53,20 +46,30 @@ const Userlayout = () => {
           <div className={`flex-grow-1 d-fle m-2 p-3 `} style={{ zIndex: "3" }}>
             <Routes>
 
-              <Route path="/cudashboard" element={<CuDashboard/>} />
-              {(hasPermission(1) || isdevelopment) && <Route path="/dashboard" element={<MainDashboard />} />}
-              {(hasPermission('2') || isdevelopment) && <Route path="/master" element={<Masters />} />}
-              {(hasPermission('2.4') || isdevelopment) && <Route path="/AddProjectProcess/:projectId" element={<AddProjectProcess />} />}
-              {(hasPermission('2') || isdevelopment) && <Route path="/features" element={<Features />} />}
+              {hasPermission('5') && <Route path="/cudashboard" element={<CuDashboard/>} />}
+              {hasPermission('1') && <Route path="/dashboard/:projectId" element={<MainDashboard />} />}
+              {hasPermission('2') && <Route path="/master" element={<Masters />} />}
+              {hasPermission('2.4') && <Route path="/AddProjectProcess/:projectId" element={<AddProjectProcess />} />}
+              {hasPermission('2') && <Route path="/features" element={<Features />} />}
+
 
               {/* --------------- User Menu Routes -------------- */}
               <Route path="/profile" element={<Profile />} />
               <Route path="/settings" element={<UserSettings />} />
               <Route path="/change-password" element={<ChangePassword />} />
-              <Route path="/quantity-sheet-uploads" element={<QtySheetUpload />} />
-              <Route path="/project-details/:id" element={<ProcessTable />} />
-              <Route path="/message" element={<Message />} />
-              <Route path="/labels" element={<Labels />} />
+
+              <Route path="/test" element={<Test />} />
+
+
+
+
+              {(hasPermission('2.4') ) && <Route path="/quantity-sheet-uploads/:projectId" element={<QtySheetUpload />} />}
+              {(hasPermission('2.4')) && <Route path="/project-details/:id/:lotNo" element={<ProcessTable />} />}
+              {(hasPermission('3') ) && <Route path="/message" element={<Message />} />}
+              {(hasPermission('3')) && <Route path="/labels" element={<Labels />} />}
+              {(hasPermission('3')) && <Route path="/reports" element={<Reports />} />}
+
+
               <Route path="/*" element={<PageNotFound />} />
             </Routes>
           </div>
@@ -74,7 +77,6 @@ const Userlayout = () => {
           <Footer className="sticky-bottom " style={{ zIndex: "1" }} />
         </Col>
       </Row>
-
     </div>
   );
 };

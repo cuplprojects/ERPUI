@@ -203,6 +203,8 @@ const permissionOptions = [
   },
   { title: 'Message Management', key: '3' },
   { title: 'Reports', key: '4' },
+  { title: 'Cumulative Dashboard', key: '5' },
+  { title: 'Quantity Sheet', key: '6' },
 ];
 
 const Permissions = ({ selectedPermissions = [], onChange }) => {

@@ -7,25 +7,27 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { jwtDecode } from 'jwt-decode';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import API from '../CustomHooks/MasterApiHooks/api';
+
 const ChangePassword = () => {
-  // Static class names for simplicity
+  const navigate = useNavigate();
+
   //Theme Change Section
   const { getCssClasses } = useStore(themeStore);
-  const cssClasses = getCssClasses();
-  const customDark = cssClasses[0];
-  const customMid = cssClasses[1];
-  const customLight = cssClasses[2];
-  const customBtn = cssClasses[3];
-  const customDarkText = cssClasses[4];
-  const customLightText = cssClasses[5]
-  const customLightBorder = cssClasses[6]
-  const customDarkBorder = cssClasses[7]
-
-
+  const [
+    customDark,
+    customMid,
+    customLight,
+    customBtn,
+    customDarkText,
+    customLightText,
+    customLightBorder,
+    customDarkBorder
+  ] = getCssClasses();
 
   // State object to store oldPassword and newPassword
   const [formData, setFormData] = useState({
@@ -95,6 +97,18 @@ const ChangePassword = () => {
       });
       return;
     }
+
+    if (formData.oldPassword === formData.newPassword) {
+      toast.error('New password cannot be the same as the old password!', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: true,
+        closeOnClick: true,
+        draggable: true,
+        style: { backgroundColor: '#dc3545', color: 'white' },
+      });
+      return;
+    }
   
     const userId = userIdApi; // extracted from the decoded token
 
@@ -107,15 +121,17 @@ const ChangePassword = () => {
   
 
     API.put(apiUrl, payload)
-
       .then((response) => {
         toast.success('Password changed successfully!', {
           position: "top-right",
-          autoClose: 3000,
+          autoClose: 1500,
           hideProgressBar: true,
           closeOnClick: false,
           draggable: true,
           style: {  backgroundColor: 'green' , color:"white"  },
+          onClose: () => {
+            navigate('/cudashboard');
+          }
         });
       })
       .catch((error) => {

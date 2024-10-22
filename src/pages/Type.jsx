@@ -1,6 +1,5 @@
-import { message, Table, Input, Button, Switch, Form, Select, Spin } from 'antd';
+import { message, Table, Input, Button, Switch, Form, Select, Spin, Pagination } from 'antd';
 import { Modal } from 'react-bootstrap';
-import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'antd/es/form/Form';
 import API from '../CustomHooks/MasterApiHooks/api';
@@ -8,6 +7,7 @@ import { useMediaQuery } from 'react-responsive';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import { AiFillCloseSquare } from "react-icons/ai";
+import { SortAscendingOutlined, SortDescendingOutlined, EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
 const { Option } = Select;
 const { Search } = Input;
 
@@ -27,6 +27,11 @@ const Type = () => {
     const [editingStatus, setEditingStatus] = useState(true);
     const [originalData, setOriginalData] = useState({});
     const [form] = useForm();
+    const [searchText, setSearchText] = useState('');
+    const [sortOrder, setSortOrder] = useState('ascend');
+    const [sortField, setSortField] = useState('types');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(5);
 
     const isMobile = useMediaQuery({ maxWidth: 767 });
     const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1023 });
@@ -66,8 +71,24 @@ const Type = () => {
         fetchProcesses();
     }, []);
 
+    useEffect(() => {
+        const filtered = types.filter(type =>
+            type.types.toLowerCase().includes(searchText.toLowerCase()) ||
+            type.associatedProcessId.some(id => processMap[id].toLowerCase().includes(searchText.toLowerCase()))
+        );
+        setFilteredTypes(filtered);
+        setCurrentPage(1);
+    }, [searchText, types, processMap]);
+
     const handleAddType = async (values) => {
         try {
+            // Check if the type already exists
+            const typeExists = types.some(type => type.types.toLowerCase() === values.types.toLowerCase());
+            if (typeExists) {
+                message.error("This type already exists!");
+                return;
+            }
+
             const response = await API.post('/PaperTypes', values);
             setTypes(prev => [...prev, response.data]);
             setFilteredTypes(prev => [...prev, response.data]);
@@ -76,6 +97,7 @@ const Type = () => {
             form.resetFields();
         } catch (error) {
             console.error(error);
+            message.error("Failed to create type");
         }
     };
 
@@ -109,12 +131,27 @@ const Type = () => {
     };
 
     const handleSearch = (value) => {
-        const lowercasedValue = value.toLowerCase();
-        const filtered = types.filter(item => 
-            item.types.toLowerCase().includes(lowercasedValue) ||
-            item.associatedProcessId.some(id => processMap[id].toLowerCase().includes(lowercasedValue))
-        );
-        setFilteredTypes(filtered);
+        setSearchText(value);
+    };
+
+    const handleSort = (field) => {
+        const newSortOrder = field === sortField && sortOrder === 'ascend' ? 'descend' : 'ascend';
+        setSortOrder(newSortOrder);
+        setSortField(field);
+
+        const sortedTypes = [...filteredTypes].sort((a, b) => {
+            if (field === 'types') {
+                return newSortOrder === 'ascend'
+                    ? a.types.localeCompare(b.types)
+                    : b.types.localeCompare(a.types);
+            } else if (field === 'status') {
+                return newSortOrder === 'ascend'
+                    ? (a.status === b.status ? 0 : a.status ? -1 : 1)
+                    : (a.status === b.status ? 0 : a.status ? 1 : -1);
+            }
+        });
+
+        setFilteredTypes(sortedTypes);
     };
 
     const columns = [
@@ -123,10 +160,20 @@ const Type = () => {
             title: 'SN.',
             dataIndex: 'serial',
             key: 'serial',
-            render: (_, __, index) => index + 1,
+            render: (text, record, index) => (currentPage - 1) * pageSize + index + 1,
+            width: '10%',
         },
         {
-            title: 'Type',
+            title: (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    Type
+                    <Button
+                        type="text"
+                        onClick={() => handleSort('types')}
+                        icon={sortField === 'types' && sortOrder === 'ascend' ? <SortAscendingOutlined style={{ color: 'white', border: '1px solid white' }} className='rounded-2 p-1' /> : <SortDescendingOutlined style={{ color: 'white', border: '1px solid white' }} className='rounded-2 p-1' />}
+                    />
+                </div>
+            ),
             dataIndex: 'types',
             key: 'types',
             render: (text, record, index) => (
@@ -135,7 +182,6 @@ const Type = () => {
                         value={editingType}
                         onChange={(e) => setEditingType(e.target.value)}
                         onPressEnter={() => handleEditSave(index)}
-                        onBlur={() => handleEditSave(index)}
                     />
                 ) : (
                     <span>{text}</span>
@@ -153,7 +199,6 @@ const Type = () => {
                         value={editingProcessIds}
                         onChange={setEditingProcessIds}
                         style={{ width: '100%' }}
-                        onBlur={() => handleEditSave(index)}
                     >
                         {processes.map(proc => (
                             <Option key={proc.id} value={proc.id}>
@@ -168,7 +213,16 @@ const Type = () => {
         },
         {
             align:'center',
-            title: 'Status',
+            title: (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    Status
+                    <Button
+                        type="text"
+                        onClick={() => handleSort('status')}
+                        icon={sortField === 'status' && sortOrder === 'ascend' ? <SortAscendingOutlined style={{ color: 'white', border: '1px solid white' }} className='rounded-2 p-1' /> : <SortDescendingOutlined style={{ color: 'white', border: '1px solid white' }} className='rounded-2 p-1' />}
+                    />
+                </div>
+            ),
             dataIndex: 'status',
             key: 'status',
             render: (status, record, index) => (
@@ -176,7 +230,6 @@ const Type = () => {
                     <Switch
                         checked={editingStatus}
                         onChange={setEditingStatus}
-                        onBlur={() => handleEditSave(index)}
                         checkedChildren="Active"
                         unCheckedChildren="Inactive"
                     />
@@ -195,18 +248,24 @@ const Type = () => {
             key: 'action',
             render: (_, record, index) => (
                 editingIndex === index ? (
-                    <>
-                        <Button type="link" onClick={() => handleEditSave(index)}>Save</Button>
-                        <Button type="link" onClick={handleCancelEdit}>Cancel</Button>
-                    </>
+                    <div style={{ display: 'flex', justifyContent: '' }}>
+                        <Button type="link" onClick={() => handleEditSave(index)} className={`${customDark === "dark-dark" ? `${customMid} border` : `${customLight} ${customDarkBorder}`} text-white `}>
+                            <SaveOutlined className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}/> 
+                            <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}>Save</span> 
+                        </Button>
+                        <Button type="link" onClick={handleCancelEdit} className={`${customDark === "dark-dark" ? `${customMid} border` : `${customLight} ${customDarkBorder}`} text-white ms-3`}>
+                            <CloseOutlined className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}/> 
+                            <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}>Cancel</span> 
+                        </Button>
+                    </div>
                 ) : (
-                    <Button type="link" onClick={() => {
+                    <Button type="link" icon={<EditOutlined />} onClick={() => {
                         setEditingIndex(index);
                         setEditingType(record.types);
                         setEditingProcessIds(record.associatedProcessId);
                         setEditingStatus(record.status);
                         setOriginalData(record);
-                    }}>Edit</Button>
+                    }} className={`${customBtn} text-white me-1`}>Edit</Button>
                 )
             ),
         },
@@ -218,6 +277,8 @@ const Type = () => {
         setIsModalVisible(false);
         form.resetFields();
     };
+
+    const paginatedTypes = filteredTypes.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
     return (
         <div style={{
@@ -238,10 +299,10 @@ const Type = () => {
                 <Search
                     placeholder="Search types or processes"
                     allowClear
-                    onSearch={handleSearch}
+                    onChange={(e) => handleSearch(e.target.value)}
                     style={{ width: 300 }}
                 />
-                <Button className={`${customBtn}`} onClick={() => setIsModalVisible(true)}>
+                <Button className={`${customBtn} border-0 custom-zoom-btn`} onClick={() => setIsModalVisible(true)}>
                     Add Type
                 </Button>
             </div>
@@ -249,23 +310,39 @@ const Type = () => {
             {loading ? (
                 <Spin size="large" />
             ) : (
-                <Table
-                    dataSource={filteredTypes.map((item, index) => ({ ...item, serial: index + 1 }))}
-                    columns={responsiveColumns}
-                    rowKey="typeId"
-                    pagination={false}
-                    bordered
-                    scroll={{ x: 'max-content' }}
-                    className={`${customDark === "default-dark" ? "thead-default" : ""}
-                    ${customDark === "red-dark" ? "thead-red" : ""}
-                    ${customDark === "green-dark" ? "thead-green" : ""}
-                    ${customDark === "blue-dark" ? "thead-blue" : ""}
-                    ${customDark === "dark-dark" ? "thead-dark" : ""}
-                    ${customDark === "pink-dark" ? "thead-pink" : ""}
-                    ${customDark === "purple-dark" ? "thead-purple" : ""}
-                    ${customDark === "light-dark" ? "thead-light" : ""}
-                    ${customDark === "brown-dark" ? "thead-brown" : ""} `}
-                />
+                <>
+                    <Table
+                        dataSource={paginatedTypes}
+                        columns={responsiveColumns}
+                        rowKey="typeId"
+                        pagination={false}
+                        bordered
+                        scroll={{ x: 'max-content' }}
+                        className={`${customDark === "default-dark" ? "thead-default" : ""}
+                        ${customDark === "red-dark" ? "thead-red" : ""}
+                        ${customDark === "green-dark" ? "thead-green" : ""}
+                        ${customDark === "blue-dark" ? "thead-blue" : ""}
+                        ${customDark === "dark-dark" ? "thead-dark" : ""}
+                        ${customDark === "pink-dark" ? "thead-pink" : ""}
+                        ${customDark === "purple-dark" ? "thead-purple" : ""}
+                        ${customDark === "light-dark" ? "thead-light" : ""}
+                        ${customDark === "brown-dark" ? "thead-brown" : ""} rounded-2`}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px', background: 'white', padding: '10px' }} className='rounded-2 rounded-top-0'>
+                        <Pagination
+                            current={currentPage}
+                            pageSize={pageSize}
+                            total={filteredTypes.length}
+                            onChange={(page, pageSize) => {
+                                setCurrentPage(page);
+                                setPageSize(pageSize);
+                            }}
+                            showSizeChanger
+                            showQuickJumper
+                            showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
+                        />
+                    </div>
+                </>
             )}
 
             <Modal
@@ -300,6 +377,9 @@ const Type = () => {
                                         const isNumeric = /^\d+$/;
                                         if (value && isNumeric.test(value)) {
                                             return Promise.reject(new Error('Type cannot contain only numbers!'));
+                                        }
+                                        if (types.some(type => type.types.toLowerCase() === value.toLowerCase())) {
+                                            return Promise.reject(new Error('This type already exists!'));
                                         }
                                         return Promise.resolve();
                                     }
