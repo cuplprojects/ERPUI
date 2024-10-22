@@ -319,7 +319,7 @@ const [selectedProject,setSelectedProject] = useState();
           </Form>
         </Modal>
       </TabPane>
-      <TabPane tab="Select Process" key="2">
+      <TabPane tab="Select Process" key="2" disabled>
         {/* Content for Select Process */}
         <div>
           
