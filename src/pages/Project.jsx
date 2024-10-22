@@ -1,18 +1,27 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Input, Switch, Form, message, Modal, Card, Row, Col, Select, Tabs } from 'antd';
-import { useNavigate } from 'react-router-dom';
-import { useStore } from 'zustand';
-import themeStore from '../store/themeStore';
-import API from '../CustomHooks/MasterApiHooks/api';
+
 import AddProjectProcess from './AddProjectProcess';
 import ProjectUserAllocation from './ProjectUserAllocation';
+
+
+import { Table, Button, Input, Switch, Form, message, Card, Row, Col, Select, Pagination } from 'antd';
+import { Modal } from 'react-bootstrap';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import API from '../CustomHooks/MasterApiHooks/api';
+import themeStore from './../store/themeStore';
+import { useStore } from 'zustand';
+import { AiFillCloseSquare } from "react-icons/ai";
+import { SearchOutlined } from '@ant-design/icons';
 
 const { Option } = Select;
 
 const Project = () => {
+
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
   const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
+
 
   const [projects, setProjects] = useState([]);
   const [groups, setGroups] = useState([]);
@@ -25,17 +34,18 @@ const Project = () => {
   const [editingStatus, setEditingStatus] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [selectedType, setSelectedType] = useState(null);
-
   const navigate = useNavigate();
 
   const { TabPane } = Tabs;
-  const [activeTabKey, setActiveTabKey] = useState("1");
-  const [selectedProject, setSelectedProject] = useState();
+  const [activeTabKey, setActiveTabKey] = useState("1"); // State for active tab
+const [selectedProject,setSelectedProject] = useState();
+
 
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchText, setSearchText] = useState('');
   const [sortedInfo, setSortedInfo] = useState({});
+
 
   const getProjects = async () => {
     try {
@@ -100,8 +110,8 @@ const Project = () => {
       form.resetFields();
       setIsModalVisible(false);
       message.success('Project added successfully!');
-      setActiveTabKey("2");
-      setSelectedProject(response.data.projectId);
+      setActiveTabKey("2"); // Switch to Select Process tab
+      setSelectedProject(response.data.projectId); 
     } catch (error) {
       console.error('Error adding project:', error);
       message.error('Error adding project. Please try again.');
@@ -131,18 +141,25 @@ const Project = () => {
     }
   };
 
+  const handleTableChange = (pagination, filters, sorter) => {
+    setSortedInfo(sorter);
+  };
+
   const columns = [
     {
       title: 'SN.',
       dataIndex: 'serial',
       key: 'serial',
-      render: (text, record, index) => index + 1,
+      render: (text, record, index) => (currentPage - 1) * pageSize + index + 1,
     },
     {
       title: 'Project Name',
       dataIndex: 'name',
       key: 'name',
+      sorter: (a, b) => a.name.localeCompare(b.name),
+      sortOrder: sortedInfo.columnKey === 'name' && sortedInfo.order,
       render: (text, record, index) =>
+      
         editingIndex === index ? (
           <Input
             value={editingName}
@@ -151,14 +168,15 @@ const Project = () => {
             onBlur={() => handleEditSave(index)}
           />
         ) : (
-          <a
-            onClick={() => {
-              setActiveTabKey("2");
-              setSelectedProject(record.projectId);
-            }}
-          >
-            {text}
-          </a>
+          <a 
+          onClick={() => {
+            setActiveTabKey("2"); // Switch to Select Process tab
+            setSelectedProject(record.projectId); // Navigate to process
+          }}
+        >
+          {text}
+        </a>
+          //<span>{text}</span>
         ),
     },
     {
@@ -181,14 +199,23 @@ const Project = () => {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
+      sorter: (a, b) => a.status - b.status,
+      sortOrder: sortedInfo.columnKey === 'status' && sortedInfo.order,
       render: (status, record, index) =>
         editingIndex === index ? (
           <Switch
             checked={editingStatus}
             onChange={(checked) => setEditingStatus(checked)}
+            checkedChildren="Active"
+            unCheckedChildren="Inactive"
           />
         ) : (
-          <Switch checked={status} disabled />
+          <Switch
+            checked={status}
+            disabled
+            checkedChildren="Active"
+            unCheckedChildren="Inactive"
+          />
         ),
     },
     {
@@ -248,109 +275,119 @@ const Project = () => {
     form.setFieldsValue({ name: projectName });
   };
 
-  const items = [
-    {
-      key: '1',
-      label: 'Project List',
-      children: (
-        <>
-          <Row justify="end" style={{ marginBottom: '20px' }}>
-            <Col>
-              <Button type="primary" onClick={showModal}>
-                Add New Project
-              </Button>
-            </Col>
-          </Row>
-          <Table
-            columns={columns}
-            dataSource={projects.map((project, index) => ({ ...project, serial: index + 1 }))}
-            pagination={false}
-            rowKey="projectId"
-            bordered
-          />
-          <Modal
-            title="Add New Project"
-            open={isModalVisible}
-            onCancel={handleCancel}
-            footer={null}
-            bordered={true.toString()}
-          >
-            <Form form={form} onFinish={handleAddProject} layout="vertical" styles={{ body: { padding: '20px' } }}>
-              <Form.Item
-                name="group"
-                label="Group"
-                rules={[{ required: true, message: 'Please select a group!' }]}
-              >
-                <Select onChange={handleGroupChange} placeholder="Select Group">
-                  {groups.map((group) => (
-                    <Option key={group.id} value={group.id}>{group.name}</Option>
-                  ))}
-                </Select>
-              </Form.Item>
-              <Form.Item
-                name="type"
-                label="Type"
-                rules={[{ required: true, message: 'Please select a type!' }]}
-              >
-                <Select onChange={handleTypeChange} placeholder="Select Type">
-                  {types.map((type) => (
-                    <Option key={type.typeId} value={type.typeId}>{type.types}</Option>
-                  ))}
-                </Select>
-              </Form.Item>
-              <Form.Item
-                name="name"
-                label="Project Name"
-                rules={[{ required: true, message: 'Please enter the project name!' }]}
-              >
-                <Input placeholder="Enter project name" />
-              </Form.Item>
-              <Form.Item
-                name="description"
-                label="Description"
-                rules={[{ required: true, message: 'Please enter a description!' }]}
-              >
-                <Input.TextArea rows={4} placeholder="Enter description" />
-              </Form.Item>
-              <Form.Item
-                name="status"
-                label="Status"
-                valuePropName="checked"
-              >
-                <Switch />
-              </Form.Item>
-              <Form.Item>
-                <Button type="primary" htmlType="submit" style={{ marginRight: '10px' }}>
-                  Save
-                </Button>
-                <Button onClick={handleCancel}>Cancel</Button>
-              </Form.Item>
-            </Form>
-          </Modal>
-        </>
-      ),
-    },
-    {
-      key: '2',
-      label: 'Select Process',
-      children: <AddProjectProcess selectedProject={selectedProject} />,
-    },
-    {
-      key: '3',
-      label: 'Allocate Process',
-      children: <ProjectUserAllocation />,
-    },
-  ];
+  const filteredProjects = projects.filter(project =>
+    Object.values(project).some(value =>
+      value && value.toString().toLowerCase().includes(searchText.toLowerCase())
+    )
+  );
 
   return (
+ 
     <Card
-      title="Projects"
-      bordered={true.toString()}
-      className={`${customLight} ${customDarkText}`}
-      style={{ padding: '20px', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)' }}
-    >
-      <Tabs activeKey={activeTabKey} onChange={setActiveTabKey} items={items} />
-    </Card>
+
+    title="Projects"
+    bordered={true}
+    style={{ padding: '20px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)' }}
+  >
+    <Tabs activeKey={activeTabKey} onChange={setActiveTabKey}>
+      <TabPane tab="Project List" key="1">
+        <Row justify="end" style={{ marginBottom: '20px' }}>
+          <Col>
+            <Button type="primary" onClick={showModal}>
+              Add New Project
+            </Button>
+          </Col>
+        </Row>
+        <Table
+          columns={columns}
+          dataSource={projects.map((project, index) => ({ ...project, serial: index + 1 }))}
+          pagination={false}
+          rowKey="projectId"
+          bordered
+        />
+        <Modal
+          title="Add New Project"
+          open={isModalVisible}
+          onCancel={handleCancel}
+          footer={null}
+        >
+          <Form form={form} onFinish={handleAddProject} layout="vertical">
+            <Form.Item
+              name="group"
+              label="Group"
+              rules={[{ required: true, message: 'Please select a group!' }]}
+
+            >
+              <Select onChange={handleGroupChange} placeholder="Select Group">
+                {groups.map((group) => (
+                  <Option key={group.id} value={group.id}>{group.name}</Option>
+                ))}
+              </Select>
+            </Form.Item>
+            <Form.Item
+              name="type"
+
+              label={<span className={customDarkText}>Type</span>}
+
+              rules={[{ required: true, message: 'Please select a type!' }]}
+            >
+              <Select onChange={handleTypeChange} placeholder="Select Type">
+                {types.map((type) => (
+                  <Option key={type.typeId} value={type.typeId}>{type.types}</Option>
+                ))}
+              </Select>
+            </Form.Item>
+            <Form.Item
+              name="name"
+
+              label={<span className={customDarkText}>Project Name</span>}
+
+              rules={[{ required: true, message: 'Please enter the project name!' }]}
+            >
+              <Input placeholder="Enter project name" />
+            </Form.Item>
+            <Form.Item
+              name="description"
+
+              label={<span className={customDarkText}>Description</span>}
+
+              rules={[{ required: true, message: 'Please enter a description!' }]}
+            >
+              <Input.TextArea rows={4} placeholder="Enter description" />
+            </Form.Item>
+            <Form.Item
+              name="status"
+
+              label="Status"
+              valuePropName="checked"
+            >
+              <Switch />
+            </Form.Item>
+            <Form.Item>
+              <Button type="primary" htmlType="submit" style={{ marginRight: '10px' }}>
+                Save
+              </Button>
+              <Button onClick={handleCancel}>Cancel</Button>
+            </Form.Item>
+          </Form>
+        </Modal>
+      </TabPane>
+      <TabPane tab="Select Process" key="2" disabled>
+        {/* Content for Select Process */}
+        <div>
+          
+          <AddProjectProcess selectedProject={selectedProject}/>
+        </div>
+      </TabPane>
+      <TabPane tab="Allocate Process" key="3">
+        {/* Content for Allocate Process */}
+        <div>
+          <ProjectUserAllocation/>
+        </div>
+      </TabPane>
+    </Tabs>
+  </Card>
+
   );
 };
 

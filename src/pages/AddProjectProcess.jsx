@@ -48,6 +48,8 @@ const DraggableRow = ({
       [process.id]: updatedCheckedFeatures,
     }));
   };
+  
+  
 
   return (
     <tr ref={(node) => ref(drop(node))}>
@@ -95,9 +97,9 @@ const AddProjectProcess = ({ selectedProject }) => {
     fetchProjectData();
   }, []);
 
-  const fetchProcesses = async () => {
+  const fetchUpdatedProcesses = async () => {
     try {
-        const response = await API.get('/Processes');
+        const response = await API.get('/Project/AddProcessesToProject');
         setProcesses(response.data);
         console.log('Fetched processes:', response.data);
     } catch (error) {
@@ -139,26 +141,77 @@ const AddProjectProcess = ({ selectedProject }) => {
     }
   };
 
-  const handleCheckboxChange = (proc) => {
-    const isChecked = selectedProcesses.some(
-      (selectedProc) => selectedProc.id === proc.id
-    );
-    if (isChecked) {
-      const updatedSelectedProcesses = selectedProcesses.filter(
-        (selectedProc) => selectedProc.id !== proc.id
-      );
-      setSelectedProcesses(updatedSelectedProcesses);
-      const updatedCheckedFeatures = { ...checkedFeatures };
-      delete updatedCheckedFeatures[proc.id];
-      setCheckedFeatures(updatedCheckedFeatures);
-    } else {
-      setSelectedProcesses([...selectedProcesses, proc]);
-      setCheckedFeatures((prev) => ({
-        ...prev,
-        [proc.id]: features.map((feature) => feature.featureId),
-      }));
-    }
-  };
+//   const handleCheckboxChange = (featureId, proc) => {
+//     const updatedCheckedFeatures = checkedFeatures[proc.id] || [];
+//     if (updatedCheckedFeatures.includes(featureId)) {
+//         updatedCheckedFeatures.splice(updatedCheckedFeatures.indexOf(featureId), 1);
+//     } else {
+//         updatedCheckedFeatures.push(featureId);
+//     }
+//     setCheckedFeatures((prev) => ({
+//         ...prev,
+//         [proc.id]: updatedCheckedFeatures,
+//     }));
+
+//     // Update the process on checkbox change
+//     updateProcess(proc.id, updatedCheckedFeatures);
+// };
+
+const handleCheckboxChange = (featureId, proc) => {
+  if (!proc || !proc.id) {
+      console.error("Process is undefined or does not have an id", proc);
+      return; // Exit the function early if proc is not valid
+  }
+
+  const updatedCheckedFeatures = checkedFeatures[proc.id] || [];
+  if (updatedCheckedFeatures.includes(featureId)) {
+      updatedCheckedFeatures.splice(updatedCheckedFeatures.indexOf(featureId), 1);
+  } else {
+      updatedCheckedFeatures.push(featureId);
+  }
+  setCheckedFeatures((prev) => ({
+      ...prev,
+      [proc.id]: updatedCheckedFeatures,
+  }));
+
+  // Update the process on checkbox change
+  updateProcess(proc.id, updatedCheckedFeatures);
+};
+
+
+
+//   const updateProcess = async (processId, featuresList) => {
+//     try {
+//         await API.put('/Project/UpdateProcesses', {
+//             projectProcesses: [{
+//                 projectId: parseInt(projectId),
+//                 processId,
+//                 featuresList,
+//             }]
+//         });
+//         message.success("Process updated successfully!");
+//     } catch (error) {
+//         message.error("Error updating process");
+//     }
+// };
+
+const updateProcess = async (processId, featuresList) => {
+  try {
+      await API.post('/Project/AddProcessesToProject', {
+          projectProcesses: [{
+              projectId: parseInt(projectId),
+              processId,
+              weightage: 0, // Set your weightage logic here
+              sequence: selectedProcesses.findIndex(p => p.id === processId) + 1,
+              featuresList,
+              userId: [] // Set userId as needed
+          }]
+      });
+      message.success("Process updated successfully!");
+  } catch (error) {
+      message.error("Error updating process");
+  }
+};
 
   const moveProcess = (fromIndex, toIndex) => {
     const updatedProcesses = [...selectedProcesses];
@@ -167,46 +220,73 @@ const AddProjectProcess = ({ selectedProject }) => {
     setSelectedProcesses(updatedProcesses);
   };
 
+  // const handleSubmit = async () => {
+  //   const projectProcesses = selectedProcesses.map((proc, index) => {
+  //     const featuresList = checkedFeatures[proc.id] || [];
+  //     return {
+  //       projectId: parseInt(projectId),
+  //       processId: proc.id,
+  //       weightage: 0,
+  //       sequence: index + 1,
+  //       featuresList: featuresList,
+  //       userId: [] // Set userId as an empty array
+  //     };
+  //   });
+
+  //   try {
+  //     await API.post(
+  //       "/Project/AddProcessesToProject",
+  //       { projectProcesses },
+  //       { headers: { "Content-Type": "application/json" } }
+  //     );
+  //     message.success("Processes added successfully!");
+  //     //setSelectedProcesses([]);
+  //     //setCheckedFeatures({});
+  //     fetchProjectData();
+  //     fetchUpdatedProcesses();
+  //   } catch (error) {
+  //     message.error("Error adding processes");
+  //   }
+  // };
+
   const handleSubmit = async () => {
     const projectProcesses = selectedProcesses.map((proc, index) => {
-      const featuresList = checkedFeatures[proc.id] || [];
-      return {
-        projectId: parseInt(projectId),
-        processId: proc.id,
-        weightage: 0,
-        sequence: index + 1,
-        featuresList: featuresList,
-        userId: [] // Set userId as an empty array
-      };
+        const featuresList = checkedFeatures[proc.id] || [];
+        return {
+            projectId: parseInt(projectId),
+            processId: proc.id,
+            weightage: 0, // Use your logic to set weightage
+            sequence: index + 1,
+            featuresList,
+            userId: [] // Add user ID logic if necessary
+        };
     });
 
     try {
-      await API.post(
-        "/Project/AddProcessesToProject",
-        { projectProcesses },
-        { headers: { "Content-Type": "application/json" } }
-      );
-      message.success("Processes added successfully!");
-      //setSelectedProcesses([]);
-      //setCheckedFeatures({});
-      fetchProjectData();
+        await API.post("/Project/AddProcessesToProject", { projectProcesses });
+        message.success("Processes updated successfully!");
+        //fetchProjectData();
+        fetchUpdatedProcesses();
     } catch (error) {
-      message.error("Error adding processes");
+        message.error("Error adding processes");
     }
-  };
+};
 
   return (
 
     <DndProvider backend={HTML5Backend}>
-      <Card className={`mb-4 shadow-lg p-0 border-0 ${customDark === "dark-dark" ? `${customLightBorder}` : "border-0"}`}>
-        <Card.Header className={`d-flex justify-content-between align-items-center ${customDark === "dark-dark" ? `${customDark} text-white ${customLightBorder}` : `text-white ${customDark}`}`}>
-          <Button
+      <div className={`mb-4 shadow-lg p-0 border-0 ${customDark === "dark-dark" ? `${customLightBorder}` : "border-0"}`}>
+        <div className={`d-flex justify-content-between align-items-center ${customDark === "dark-dark" ? `${customDark} text-white ${customLightBorder}` : `text-white ${customDark}`}`}>
+         <div classNames="ms-2">
+          <Button 
             icon={<MenuOutlined />}
             onClick={() => setIsDrawerVisible(!isDrawerVisible)}
             className="responsive-button"
           />
-          <h5 className="text-center">Project: {project.name}</h5>
-        </Card.Header>
+         </div>
+          
+          <h5 className="text-center me-2 mt-2">Project: {project.name}</h5>
+        </div>
 
         <Card.Body className={`${customDark === "dark-dark" ? `${customLightBorder}` : ""}`}>
           <Drawer
@@ -279,10 +359,12 @@ const AddProjectProcess = ({ selectedProject }) => {
             </Button>
           </div>
         </Card.Body>
-      </Card>
+      </div>
     </DndProvider>
 
   );
 };
 
 export default AddProjectProcess;
+
+
