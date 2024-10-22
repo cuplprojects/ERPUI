@@ -21,7 +21,7 @@ import { BiSolidFlag } from "react-icons/bi";
 import { MdPending } from "react-icons/md";// for pending
 import { IoCheckmarkDoneCircleSharp } from "react-icons/io5";// for completed
 const { Option } = Select;
-const ProjectDetailsTable = ({ tableData, setTableData }) => {
+const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo}) => {
 
     //Theme Change Section
     const { getCssClasses } = useStore(themeStore);
@@ -29,8 +29,9 @@ const ProjectDetailsTable = ({ tableData, setTableData }) => {
     const customDark = cssClasses[0];
     const customBtn = cssClasses[3];
     const customDarkText = cssClasses[4];
+    console.log(tableData);
 
-    const [initialTableData, setInitialTableData] = useState();
+    const [initialTableData, setInitialTableData] = useState(tableData);
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
     const [columnVisibility, setColumnVisibility] = useState({
         Alerts: false,
@@ -60,39 +61,6 @@ const ProjectDetailsTable = ({ tableData, setTableData }) => {
     const [showOnlyAlerts, setShowOnlyAlerts] = useState(false);
     const [showOnlyCompletedPreviousProcess, setShowOnlyCompletedPreviousProcess] = useState(true);
     const [showOnlyRemarks, setShowOnlyRemarks] = useState(false);
-    const processList = [
-        { mss: "MSS" },
-        { dtp: "DTP" },
-        { prooReading: "Proo Reading" },
-        { prodTrans: "Production Transfer" },
-        { preProQC: "QC" },
-        { ctp: "CTP" },
-        { printing: "Printing" },
-        { cutting: "Cutting" },
-        { mixing: "Mixing" },
-        { numbering: "Numbering" },
-        { envelope: "Envelope" },
-        { filling: "Filling" },
-        { finalQC: "Final QC" },
-        { bundling: "Bundling" },
-        { dispatch: "Dispatch" }
-    ];
-    const activeUser = JSON.parse(localStorage.getItem('activeUser'));
-    const activeUserProcess = activeUser.userId;
-
-    let previousProcess;
-    const currentIndex = processList.findIndex(process => Object.keys(process)[0] === activeUserProcess);
-
-    if (currentIndex === -1) {
-        previousProcess = null;
-    } else {
-        previousProcess = processList[currentIndex - 1];
-        if (previousProcess) {
-            previousProcess = Object.values(previousProcess)[0];
-        } else {
-            previousProcess = null;
-        }
-    }
 
     useEffect(() => {
         // Update the initialTableData state whenever tableData changes
@@ -104,15 +72,10 @@ const ProjectDetailsTable = ({ tableData, setTableData }) => {
     }, [searchText, hideCompleted]); // Add other dependencies if necessary
     const filteredData = tableData.filter(item =>
         Object.values(item).some(value =>
-            value.toString().toLowerCase().includes(searchText.toLowerCase())
+            value && value.toString().toLowerCase().includes(searchText.toLowerCase())
         )
         && (!hideCompleted || item.status !== 'Completed')
     );
-    // Auto-calculate Sr.No. based on current data
-    const dataWithSrNo = filteredData.map((item, index) => ({
-        ...item,
-        srNo: index + 1 // Sr.No starts from 1
-    }));
 
     useEffect(() => {
         setShowOptions(selectedRowKeys.length === 1);
@@ -175,11 +138,9 @@ const ProjectDetailsTable = ({ tableData, setTableData }) => {
         {
             width: '10%',
             title: 'Sr.No.',
-            dataIndex: 'srNo',
             key: 'srNo',
             align: "center",
-            sorter: (a, b) => a.srNo - b.srNo,
-
+            render: (_, __, index) => index + 1,
         },
         {
             width: '15%',
@@ -496,7 +457,9 @@ const ProjectDetailsTable = ({ tableData, setTableData }) => {
         }
     };
     const filteredDataAlert = tableData.filter((item) =>
-        Object.values(item).some((value) => value.toString().toLowerCase().includes(searchText.toLowerCase()))
+        Object.values(item).some((value) => 
+            value && value.toString().toLowerCase().includes(searchText.toLowerCase())
+        )
         && (!hideCompleted || item.status !== 'Completed')
         && (!showOnlyAlerts || item.alerts)
         && (!showOnlyCompletedPreviousProcess || item.previousProcessStats === 'Completed')
@@ -663,7 +626,8 @@ const ProjectDetailsTable = ({ tableData, setTableData }) => {
                                     ${customDark === "brown-dark" ? "thead-brown" : ""} `}
                         rowKey="catchNumber"
                         columns={columns}
-                        dataSource={filteredDataAlert}
+                        dataSource={filteredData}
+                        // dataSource={tableData}
                         pagination={customPagination}
                         bordered
                         scroll={{ y: 400 }}
