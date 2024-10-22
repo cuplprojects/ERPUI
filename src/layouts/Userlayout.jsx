@@ -47,10 +47,10 @@ const Userlayout = () => {
 
 
               <Route path="/cudashboard" element={<CuDashboard/>} />
-              {(hasPermission(1) || isdevelopment) && <Route path="/dashboard/:projectId" element={<MainDashboard />} />}
-              {(hasPermission('2') || isdevelopment) && <Route path="/master" element={<Masters />} />}
-              {(hasPermission('2.4') || isdevelopment) && <Route path="/AddProjectProcess/:projectId" element={<AddProjectProcess />} />}
-              {(hasPermission('2') || isdevelopment) && <Route path="/features" element={<Features />} />}
+              {hasPermission("1") && <Route path="/dashboard/:projectId" element={<MainDashboard />} />}
+              {hasPermission('2') && <Route path="/master" element={<Masters />} />}
+              {hasPermission('2.4') && <Route path="/AddProjectProcess/:projectId" element={<AddProjectProcess />} />}
+              {hasPermission('2') && <Route path="/features" element={<Features />} />}
 
 
               {/* --------------- User Menu Routes -------------- */}
@@ -60,10 +60,10 @@ const Userlayout = () => {
 
 
 
-              {(hasPermission('2.4') ) && <Route path="/quantity-sheet-uploads/:projectId" element={<QtySheetUpload />} />}
-              {(hasPermission('2.4')) && <Route path="/project-details/:id" element={<ProcessTable />} />}
-              {(hasPermission('3') ) && <Route path="/message" element={<Message />} />}
-              {(hasPermission('3')) && <Route path="/labels" element={<Labels />} />}
+              {hasPermission('2.4') && <Route path="/quantity-sheet-uploads/:projectId" element={<QtySheetUpload />} />}
+              {hasPermission('2.4') && <Route path="/project-details/:id" element={<ProcessTable />} />}
+              {hasPermission('3') && <Route path="/message" element={<Message />} />}
+              {hasPermission('3') && <Route path="/labels" element={<Labels />} />}
 
 
               <Route path="/*" element={<PageNotFound />} />
