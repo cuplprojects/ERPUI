@@ -19,6 +19,7 @@ import { useStore } from 'zustand';
 import { IoMdArrowDroprightCircle } from "react-icons/io";
 import { IoMdArrowDropleftCircle } from "react-icons/io";
 import axios from 'axios';
+import API from "../CustomHooks/MasterApiHooks/api";
 
 Chart.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip);
 
@@ -91,7 +92,7 @@ const AllProjects = () => {
   useEffect(() => {
     const fetchLotsData = async () => {
       try {
-        const response = await axios.get(`https://localhost:7212/api/QuantitySheet/Lots?ProjectId=${projectId}`);
+        const response = await API.get(`/QuantitySheet/Lots?ProjectId=${projectId}`);
         setLotsData(response.data);
         if (response.data.length > 0) {
           setSelectedChart({
@@ -150,9 +151,8 @@ const AllProjects = () => {
   useEffect(() => {
     const fetchProjectName = async () => {
       try {
-        const response = await fetch(`https://localhost:7212/api/Project/${projectId}`);
-        const data = await response.json();
-        setProjectName(data.name);
+        const response = await API.get(`/Project/${projectId}`);
+        setProjectName(response.data.name);
       } catch (error) {
         console.error("Error fetching project name:", error);
       }
