@@ -6,7 +6,6 @@ import { IoMdLock } from "react-icons/io";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { jwtDecode } from 'jwt-decode';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
 import themeStore from './../store/themeStore';
