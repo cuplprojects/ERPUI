@@ -81,38 +81,30 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
             // Update existing feature
             try {
                 const response = await API.put(`/Features/${editingFeatureId}`, featurePayload);
-
-                if (response.ok) {
-                    setFeatures(prevFeatures =>
-                        prevFeatures.map(feature =>
-                            feature.key === editingFeatureId ? { ...feature, name: featureName } : feature
-                        )
-                    );
-                    notification.success({ message: 'Feature updated successfully!' });
-                } else {
-                    notification.error({ message: 'Failed to update feature!' });
-                }
+                setFeatures(prevFeatures =>
+                    prevFeatures.map(feature =>
+                        feature.key === editingFeatureId ? { ...feature, name: featureName } : feature
+                    )
+                );
+                notification.success({ message: 'Feature updated successfully!' });
             } catch (error) {
-                notification.error({ message: 'An error occurred while updating the feature.' });
+                console.error('Error updating feature:', error);
+                notification.error({ message: 'Failed to update feature!' });
             }
         } else {
             // Add new feature
             try {
                 const response = await API.post('/Features', featurePayload);
-
-                if (response.ok) {
-                    const addedFeature = await response.json();
-                    const newFeature = { key: addedFeature.featureId, name: addedFeature.features };
-                    setFeatures([...features, newFeature]);
-                    notification.success({ message: 'Feature added successfully!' });
-                    
-                    // Notify parent component to update Feature Configuration
-                    onAddFeature(newFeature);
-                } else {
-                    notification.error({ message: 'Failed to add feature!' });
-                }
+                const addedFeature = response.data;
+                const newFeature = { key: addedFeature.featureId, name: addedFeature.features };
+                setFeatures([...features, newFeature]);
+                notification.success({ message: 'Feature added successfully!' });
+                
+                // Notify parent component to update Feature Configuration
+                onAddFeature(newFeature);
             } catch (error) {
-                notification.error({ message: 'An error occurred while adding the feature.' });
+                console.error('Error adding feature:', error);
+               
             }
         }
 
