@@ -37,6 +37,8 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
     const [OFFSET_PRINTING_ID, setOFFSET_PRINTING_ID] = useState(null);
     const [DIGITAL_PRINTING_ID, setDIGITAL_PRINTING_ID] = useState(null);
     const [isConfirmed, setIsConfirmed] = useState(false);
+    const [searchText, setSearchText] = useState('');
+    const [pageSize, setPageSize] = useState(5);
 
     const columns = [
         {
@@ -44,6 +46,9 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
             dataIndex: 'catchNo',
             key: 'catchNo',
             width: 100,
+            filteredValue: [searchText],
+            onFilter: (value, record) => 
+                record.catchNo.toString().toLowerCase().includes(value.toLowerCase()),
         },
         {
             title: 'Paper',
@@ -311,46 +316,42 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
         console.log('Stop button clicked for key:', key);
     };
 
+    const handlePageSizeChange = (current, size) => {
+        setPageSize(size);
+    };
+
     return (
         <div className='mt-'>
             {showBtn && (
                 <>
-                    <div className="d-flex justify-content-end mb-3">
+                    <div className="d-flex justify-content-between align-items-center mb-3 mt-3">
+                        <Input.Search
+                            placeholder="Search by Catch No"
+                            onChange={(e) => setSearchText(e.target.value)}
+                            style={{ width: '250px' }}
+                            allowClear
+                        />
                         <Button onClick={() => setShowNewRow(prev => !prev)} type="primary" className={`${customBtn} ${customDark === "dark-dark" ? `border` : `border-0`}`}>
                             {showNewRow ? 'Cancel' : 'Add New Catch'}
                         </Button>
                     </div>
                     {showNewRow && (
-                        <table className='table table-bordered'>
-                            <tbody>
-                                <tr>
-                                    <td>
-                                        <Input placeholder="Catch No" name="catchNo" value={newRowData.catchNo} onChange={handleNewRowChange} />
-                                    </td>
-                                    <td>
-                                        <Input placeholder="Paper" name="paper" value={newRowData.paper} onChange={handleNewRowChange} />
-                                    </td>
-                                    <td>
-                                        <Input placeholder="Course" name="course" value={newRowData.course} onChange={handleNewRowChange} />
-                                    </td>
-                                    <td>
-                                        <Input placeholder="Subject" name="subject" value={newRowData.subject} onChange={handleNewRowChange} />
-                                    </td>
-                                    <td>
-                                        <Input placeholder="Inner Envelope" name="innerEnvelope" value={newRowData.innerEnvelope} onChange={handleNewRowChange} />
-                                    </td>
-                                    <td>
-                                        <Input placeholder="Outer Envelope" name="outerEnvelope" value={newRowData.outerEnvelope} onChange={handleNewRowChange} />
-                                    </td>
-                                    <td>
-                                        <Input placeholder="Quantity" type="number" name="quantity" value={newRowData.quantity} onChange={handleNewRowChange} />
-                                    </td>
-                                    <td>
-                                        <Button onClick={handleAddRow} className={`${customDark === "dark-dark" ? `border` : ``}`}> Add</Button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        <div className="mb-3">
+                            <table className='table table-bordered'>
+                                <tbody>
+                                    <tr>
+                                        <td><Input size="small" placeholder="Catch No" name="catchNo" value={newRowData.catchNo} onChange={handleNewRowChange} /></td>
+                                        <td><Input size="small" placeholder="Paper" name="paper" value={newRowData.paper} onChange={handleNewRowChange} /></td>
+                                        <td><Input size="small" placeholder="Course" name="course" value={newRowData.course} onChange={handleNewRowChange} /></td>
+                                        <td><Input size="small" placeholder="Subject" name="subject" value={newRowData.subject} onChange={handleNewRowChange} /></td>
+                                        <td><Input size="small" placeholder="Inner Envelope" name="innerEnvelope" value={newRowData.innerEnvelope} onChange={handleNewRowChange} /></td>
+                                        <td><Input size="small" placeholder="Outer Envelope" name="outerEnvelope" value={newRowData.outerEnvelope} onChange={handleNewRowChange} /></td>
+                                        <td><Input size="small" placeholder="Quantity" type="number" name="quantity" value={newRowData.quantity} onChange={handleNewRowChange} /></td>
+                                        <td><Button size="small" onClick={handleAddRow} className={`${customDark === "dark-dark" ? `border` : ``}`}>Add</Button></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     )}
                 </>
             )}
@@ -360,12 +361,13 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
                     columns={columns}
                     dataSource={dataSource}
                     pagination={{
-                        pageSize: 10,
+                        pageSize: pageSize,
                         showSizeChanger: true,
-                        pageSizeOptions: ['10', '20', '50', '100'],
+                        pageSizeOptions: ['5', '10', '25', '50', '100'],
                         total: dataSource.length,
                         showTotal: (total) => `Total ${total} items`,
-                        className: `p-2 rounded rounded-top-0 ${customDark === "dark-dark" ? `bg-white` : ``}`
+                        onShowSizeChange: handlePageSizeChange,
+                        className: `p-2 rounded rounded-top-0 ${customDark === "dark-dark" ? `bg-white` : ``} mt`
                     }}
                     scroll={{ x: true }}
                     className={`${
