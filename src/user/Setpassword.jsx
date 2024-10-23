@@ -8,7 +8,6 @@ import { useMediaQuery } from 'react-responsive';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import BackgroundImage from './../assets/bgImages/setpass/defaultSetPass.png';
-import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import API from '../CustomHooks/MasterApiHooks/api';
 

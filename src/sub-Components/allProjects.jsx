@@ -18,8 +18,7 @@ import themeStore from '../store/themeStore';
 import { useStore } from 'zustand';
 import { IoMdArrowDroprightCircle } from "react-icons/io";
 import { IoMdArrowDropleftCircle } from "react-icons/io";
-import axios from 'axios';
-import API from "../CustomHooks/MasterApiHooks/api";
+import API from '../CustomHooks/MasterApiHooks/api';
 
 Chart.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip);
 
@@ -147,12 +146,15 @@ const AllProjects = () => {
 
   const carouselItems = [];
   const [projectName, setProjectName] = useState('');
+  const [type, setType] = useState('');
 
   useEffect(() => {
     const fetchProjectName = async () => {
       try {
-        const response = await API.get(`/Project/${projectId}`);
-        setProjectName(response.data.name);
+        const response = await fetch(`https://localhost:7212/api/Project/${projectId}`);
+        const data = await response.json();
+        setProjectName(data.name);
+        setType(data.typeId);
       } catch (error) {
         console.error("Error fetching project name:", error);
       }
@@ -172,7 +174,7 @@ const AllProjects = () => {
               chartdata={[{title: "Completed", value: 50}, {title: "Remaining", value: 50}]}
               chartKey={lotNumber}
               tCatch={0}
-              type="Default"
+              type={type}
               onClick={() => handleCardClick(lotNumber)}
             />
           ))}

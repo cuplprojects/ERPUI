@@ -6,7 +6,6 @@ import 'react-toastify/dist/ReactToastify.css';
 import { validateFormData } from './../scripts/addUsersValidations';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
-import axios from 'axios';
 import SuccessModal from './../menus/addedUserModal.jsx';
 import API from '../CustomHooks/MasterApiHooks/api.jsx';
 

@@ -70,7 +70,7 @@ const ProcessTable = () => {
     useEffect(() => {
         const fetchQuantitySheet = async () => {
             try {
-                const response = await API.get(`/QuantitySheet?ProjectId=${id}&lotNo=${lotNo}`);
+                const response = await API.get(`/QuantitySheet/Catch?ProjectId=${id}&lotNo=${lotNo}`);
                 const quantitySheetData = response.data;
                 console.log('API response:', quantitySheetData);
                 
@@ -247,7 +247,7 @@ const ProcessTable = () => {
             </Row>
             <Row className='mb-2'>
                 <Col lg={12} md={12} >
-                    {tableData.length > 0 && (
+                    {tableData?.length > 0 && (
                         <ProjectDetailsTable tableData={tableData} setTableData={setTableData} projectId={id} lotNo={lotNo} />
                         
                     )}
