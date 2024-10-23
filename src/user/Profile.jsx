@@ -6,8 +6,7 @@ import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import SampleUser from "./../assets/sampleUsers/defaultUser.jpg";
 import "./../styles/Profile.css";
-import axios from 'axios';
-import useUserDataStore, { useUserData, useUserDataActions } from '../store/userDataStore';
+import { useUserData, useUserDataActions } from '../store/userDataStore';
 import API from '../CustomHooks/MasterApiHooks/api';
 
 
@@ -27,7 +26,6 @@ const UserProfile = () => {
   const [userRole, setUserRole] = useState('');
 
   const APIUrlBase = import.meta.env.VITE_API_BASE_URL;
-  const APIUrl = import.meta.env.VITE_API_BASE_API;
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -109,7 +107,7 @@ const UserProfile = () => {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      await axios.post(`${APIUrl}/User/upload`, formData, {
+      await API.post('/User/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -126,7 +124,7 @@ const UserProfile = () => {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      await axios.put(`${APIUrl}/User/updateProfilePicture/${userData.userId}`, formData, {
+      await API.put(`/User/updateProfilePicture/${userData.userId}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Button, Popconfirm, Select, Switch } from 'antd';
 import './FeatureConfiguration.css';
-import axios from 'axios';
+import API from '../../CustomHooks/MasterApiHooks/api';
 
 const FeatureConfiguration = () => {
     const [features, setFeatures] = useState([]);
@@ -10,7 +10,7 @@ const FeatureConfiguration = () => {
 
     const fetchProcesses = async () => {
         try {
-            const response = await axios.get('https://localhost:7212/api/Processes');
+            const response = await API.get('/Processes');
             setProcesses(response.data);
             console.log('Fetched processes:', response.data);
         } catch (error) {
@@ -20,7 +20,7 @@ const FeatureConfiguration = () => {
 
     const fetchFeatures = async () => {
         try {
-            const response = await axios.get('https://localhost:7212/api/Features');
+            const response = await API.get('/Features');
             setFeatures(response.data);
             console.log('Fetched features:', response.data);
         } catch (error) {

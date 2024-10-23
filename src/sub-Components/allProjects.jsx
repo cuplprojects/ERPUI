@@ -18,7 +18,7 @@ import themeStore from '../store/themeStore';
 import { useStore } from 'zustand';
 import { IoMdArrowDroprightCircle } from "react-icons/io";
 import { IoMdArrowDropleftCircle } from "react-icons/io";
-import axios from 'axios';
+import API from '../CustomHooks/MasterApiHooks/api';
 
 Chart.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip);
 
@@ -91,7 +91,7 @@ const AllProjects = () => {
   useEffect(() => {
     const fetchLotsData = async () => {
       try {
-        const response = await axios.get(`https://localhost:7212/api/QuantitySheet/Lots?ProjectId=${projectId}`);
+        const response = await API.get(`/QuantitySheet/Lots?ProjectId=${projectId}`);
         setLotsData(response.data);
         if (response.data.length > 0) {
           setSelectedChart({

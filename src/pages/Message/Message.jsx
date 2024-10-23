@@ -53,11 +53,6 @@ const Message = () => {
   const fetchMessages = async () => {
     try {
       const data = await fetchMessagesApi();
-      // const data = await axios.get("apiurl}{/message", {
-      //   headers: {
-      //     Authorization: `Bearer ${token}`,
-      //   }
-      // });
       setMessages(data);
     } catch (error) {
       console.error('Error fetching messages:', error);
