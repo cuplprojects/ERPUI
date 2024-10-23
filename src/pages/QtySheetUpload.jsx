@@ -61,12 +61,10 @@ const QtySheetUpload = () => {
             subject: item.Subject || "",
             innerEnvelope: item.InnerEnvelope || "",
             outerEnvelope: item.OuterEnvelope || "",
-
             lotNo: item.LotNo || "",
             quantity: Number(item.Quantity) || 0,
             percentageCatch: Number(item.percentageCatch) || 0,
             projectId: projectId,
-
             isOverridden: item.isOverridden === 'true',
             processId: [0],
         }));
@@ -114,9 +112,7 @@ const QtySheetUpload = () => {
                             (property === 'quantity' ? parseFloat(row[index]) || 0 : String(row[index])) : '';
                     }
                     console.log("Row Data Mapped:", rowData);
-
                     rowData['projectId'] = projectId;
-
                     rowData['isOverridden'] = 'false';
                     rowData['percentageCatch'] = '0';
                     return rowData;
@@ -173,10 +169,8 @@ const QtySheetUpload = () => {
     
             const autoMappings = {};
             columns.forEach((col) => {
-
                 const matchingHeader = excelHeaders.find(header => header?.toLowerCase() === col?.toLowerCase());
                 autoMappings[col] = matchingHeader || '';
-
             });
     
             setFieldMappings(autoMappings);
@@ -207,11 +201,8 @@ const QtySheetUpload = () => {
 
     const fetchLots = async () => {
         try {
-
-
             const response = await API.get(`/QuantitySheet/Lots?ProjectId=${projectId}`)
-
-            setLots(response.data)
+           setLots(response.data)
         }
         catch (error) {
             console.error('Failed to fetch Lots')
@@ -305,6 +296,7 @@ const QtySheetUpload = () => {
                             <div className="">
                                 <ViewQuantitySheet selectedLotNo={selectedLotNo} showBtn={showBtn} showTable={showTable} />
                             </div>
+
                         </Form.Item>
                     </Form>
                 </Col>

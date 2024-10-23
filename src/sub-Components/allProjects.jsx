@@ -153,7 +153,7 @@ const AllProjects = () => {
       try {
         const response = await API.get(`/Project/${projectId}`);
         setProjectName(response.data.name);
-        setType(response.data.typeId);
+        setType(response.data.projectType);
       } catch (error) {
         console.error("Error fetching project name:", error);
       }
