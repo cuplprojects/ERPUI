@@ -242,7 +242,7 @@ const QtySheetUpload = () => {
 
 
     return (
-        <div className={`container ${customDarkText} rounded shadow-lg ${customLight}`}>
+        <div className={`container ${customDarkText} rounded shadow-lg ${customLight} ${customLightBorder}`}>
             <Row className='mt-2 mb-2'>
                 <Col lg={12} className='d-flex justify-content-center'>
                     <div className="d-flex flex-column align-items-center">
@@ -290,16 +290,17 @@ const QtySheetUpload = () => {
                             )}
                         </Form.Item>
                         <Form.Item>
-                            <div className="d-flex flex-wrap justify-content-start">
+                            <div className="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 g-2">
                                 {lots.map((lotNo, index) => (
-                                    <Button
-                                        key={index}
-                                        className={`${customBtn} me-2 mb-4 ${customDark === "dark-dark" ? `border` : `border-0`}`}
-                                        type="primary"
-                                        onClick={() => handleLotClick(lotNo)}
-                                    >
-                                        Lot - {lotNo} <IoMdEye />
-                                    </Button>
+                                    <div key={index} className="col">
+                                        <Button
+                                            className={`${customBtn} w-100 ${customDark === "dark-dark" ? `border` : `border-0`}`}
+                                            type="primary"
+                                            onClick={() => handleLotClick(lotNo)}
+                                        >
+                                            Lot - {lotNo} <IoMdEye />
+                                        </Button>
+                                    </div>
                                 ))}
                             </div>
                             <div className="">

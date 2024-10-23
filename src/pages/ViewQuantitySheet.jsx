@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Select, Table, Input } from 'antd';
+import { Button, Select, Table, Input, Checkbox } from 'antd';
 import { useStore } from 'zustand';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Modal as BootstrapModal } from 'react-bootstrap';
@@ -9,12 +9,12 @@ import { EditOutlined, DeleteOutlined, StopOutlined } from '@ant-design/icons';
 import { useParams } from 'react-router-dom';
 
 const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
+    const [modalMessage, setModalMessage] = useState('');
     const { projectId } = useParams();
     const [process, setProcess] = useState([]);
     const [dataSource, setDataSource] = useState([]);
     const [editingRow, setEditingRow] = useState(null);
     const [selectedProcessIds, setSelectedProcessIds] = useState([]);
-    const [selectedAddProcessIds, setSelectedAddProcessIds] = useState([]);
     const [newRowData, setNewRowData] = useState({
         catchNo: '',
         paper: '',
@@ -33,6 +33,10 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = getCssClasses();
     const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
+    const [CTP_ID, setCTP_ID] = useState(null);
+    const [OFFSET_PRINTING_ID, setOFFSET_PRINTING_ID] = useState(null);
+    const [DIGITAL_PRINTING_ID, setDIGITAL_PRINTING_ID] = useState(null);
+    const [isConfirmed, setIsConfirmed] = useState(false);
 
     const columns = [
         {
@@ -143,37 +147,44 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
         try {
             const response = await API.get('/Processes');
             setProcess(response.data);
+            const ctpProcess = response.data.find(proc => proc.name === 'CTP');
+            const offsetProcess = response.data.find(proc => proc.name === 'Offset Printing');
+            const digitalProcess = response.data.find(proc => proc.name === 'Digital Printing');
+
+            setCTP_ID(ctpProcess ? ctpProcess.id : null);
+            setOFFSET_PRINTING_ID(offsetProcess ? offsetProcess.id : null);
+            setDIGITAL_PRINTING_ID(digitalProcess ? digitalProcess.id : null);
         } catch (error) {
             console.error('Failed to fetch Processes', error);
         }
     };
 
-    const handleProcessChange = (value) => {
-        let newValue = [...value];
-        const hasDigitalPrinting = newValue.includes('Digital Printing');
-        const hasOffsetPrinting = newValue.includes('Offset Printing');
-        const hasCTP = newValue.includes('CTP');
-        const otherProcesses = newValue.filter(process =>
-            !['Digital Printing', 'Offset Printing', 'CTP'].includes(process)
-        );
-        if (hasDigitalPrinting) {
-            newValue = ['Digital Printing', ...otherProcesses];
-        } else if (hasOffsetPrinting || hasCTP) {
-            newValue = ['CTP', 'Offset Printing', ...otherProcesses];
-        } else {
-            newValue = ['CTP', 'Offset Printing', ...otherProcesses];
-        }
-        setSelectedProcessIds(newValue);
-        setSelectedAddProcessIds(newValue);
-    };
 
     const handleSaveEdit = async () => {
         const updatedItem = dataSource.find(item => item.key === editingRow);
         if (!updatedItem) return;
 
+        // Start with the existing process IDs
+        let updatedProcessIds = [...updatedItem.processId];
+
+        // Adjust process IDs based on the modal message
+        if (modalMessage === 'Do you want to switch to Digital Printing?') {
+            // Remove CTP and Offset Printing IDs
+            updatedProcessIds = updatedProcessIds.filter(id => id !== CTP_ID && id !== OFFSET_PRINTING_ID);
+            // Add Digital Printing ID
+            updatedProcessIds.push(DIGITAL_PRINTING_ID);
+        } else if (modalMessage === 'Do you want to switch to Offset Printing?') {
+            // Remove Digital Printing ID
+            updatedProcessIds = updatedProcessIds.filter(id => id !== DIGITAL_PRINTING_ID);
+            // Add Offset Printing ID
+            updatedProcessIds.push(CTP_ID);
+            updatedProcessIds.push(OFFSET_PRINTING_ID);
+        }
+
+        // Prepare the payload
         const payload = {
             ...updatedItem,
-            processId: selectedProcessIds.map(procName => process.find(proc => proc.name === procName)?.id).filter(Boolean),
+            processId: updatedProcessIds,
         };
 
         try {
@@ -211,15 +222,33 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
         setItemToDelete(null);
         setEditingRow(null);
         setSelectedProcessIds([]);
+        setIsConfirmed(false);
     };
 
     const handleEditButtonClick = (key) => {
         setEditingRow(key);
         const record = dataSource.find(item => item.key === key);
-        if (record && Array.isArray(record.processId)) {
-            setSelectedProcessIds(record.processId.map(id => process.find(proc => proc.id === id)?.name).filter(Boolean));
-        } else {
-            setSelectedProcessIds([]);
+
+        if (record) {
+            // Update selected process IDs
+            if (Array.isArray(record.processId)) {
+                setSelectedProcessIds(record.processId.map(id => process.find(proc => proc.id === id)?.name).filter(Boolean));
+            } else {
+                setSelectedProcessIds([]);
+            }
+
+            // Check process IDs and set the modal message accordingly
+            const hasCTP = record.processId.includes(CTP_ID);
+            const hasOffsetPrinting = record.processId.includes(OFFSET_PRINTING_ID);
+            const hasDigitalPrinting = record.processId.includes(DIGITAL_PRINTING_ID);
+
+            if (hasCTP && hasOffsetPrinting) {
+                setModalMessage('Do you want to switch to Digital Printing?');
+            } else if (hasDigitalPrinting) {
+                setModalMessage('Do you want to switch to Offset Printing?');
+            } else {
+                setModalMessage('Do you want to switch processes?'); // Default message if none match
+            }
         }
     };
 
@@ -249,7 +278,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
                 percentageCatch: 0,
                 projectId: projectId,
                 isOverridden: false,
-                processId: selectedAddProcessIds.length > 0 ? selectedAddProcessIds.map(procName => process.find(proc => proc.name === procName)?.id).filter(Boolean) : [],
+                processId: [],
             }
         ];
 
@@ -271,7 +300,6 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
                 projectId: projectId,
                 isOverridden: false,
             });
-            setSelectedAddProcessIds([]);
             fetchQuantity(selectedLotNo);
         } catch (error) {
             console.error('Failed to add new row', error);
@@ -318,21 +346,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
                                         <Input placeholder="Quantity" type="number" name="quantity" value={newRowData.quantity} onChange={handleNewRowChange} />
                                     </td>
                                     <td>
-                                        <Select
-                                            mode="multiple"
-                                            value={selectedAddProcessIds}
-                                            onChange={handleProcessChange}
-                                            style={{ width: '100%' }}
-                                        >
-                                            {process.map(proc => (
-                                                <Select.Option key={proc.id} value={proc.name}>
-                                                    {proc.name}
-                                                </Select.Option>
-                                            ))}
-                                        </Select>
-                                    </td>
-                                    <td>
-                                        <Button  onClick={handleAddRow} className={`${customDark === "dark-dark" ? `border` : ``}`}> Add</Button>
+                                        <Button onClick={handleAddRow} className={`${customDark === "dark-dark" ? `border` : ``}`}> Add</Button>
                                     </td>
                                 </tr>
                             </tbody>
@@ -351,9 +365,10 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
                         pageSizeOptions: ['10', '20', '50', '100'],
                         total: dataSource.length,
                         showTotal: (total) => `Total ${total} items`,
+                        className: `p-2 rounded rounded-top-0 ${customDark === "dark-dark" ? `bg-white` : ``}`
                     }}
-                    scroll={{ x: 'max-content' }}
-                    className={`${cssClasses.customTable} ${
+                    scroll={{ x: true }}
+                    className={`${
                         customDark === "default-dark" ? "thead-default" :
                         customDark === "red-dark" ? "thead-red" :
                         customDark === "green-dark" ? "thead-green" :
@@ -364,6 +379,9 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
                         customDark === "light-dark" ? "thead-light" :
                         customDark === "brown-dark" ? "thead-brown" : ""
                     }`}
+                    size="small"
+                    tableLayout="auto"
+                    responsive={['sm', 'md', 'lg', 'xl']}
                 />
             )}
 
@@ -373,22 +391,18 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
                         <BootstrapModal.Title>Edit Process</BootstrapModal.Title>
                     </BootstrapModal.Header>
                     <BootstrapModal.Body>
-                        <Select
-                            mode="multiple"
-                            value={selectedProcessIds}
-                            onChange={handleProcessChange}
-                            style={{ width: '100%' }}
-                        >
-                            {process.map(proc => (
-                                <Select.Option key={proc.id} value={proc.name}>
-                                    {proc.name}
-                                </Select.Option>
-                            ))}
-                        </Select>
+                        {modalMessage}
+                        <div className="mt-3">
+                            <Checkbox checked={isConfirmed} onChange={(e) => setIsConfirmed(e.target.checked)}>
+                                {modalMessage === "Do you want to switch to Digital Printing?" ? "Switch from Offset to Digital" :
+                                    modalMessage === "Do you want to switch to Offset Printing?" ? "Switch from Digital to Offset" :
+                                        "I confirm this change"}
+                            </Checkbox>
+                        </div>
                     </BootstrapModal.Body>
                     <BootstrapModal.Footer>
                         <Button variant="secondary" onClick={handleModalClose}>Close</Button>
-                        <Button variant="primary" onClick={handleSaveEdit}>Save Changes</Button>
+                        <Button variant="primary" onClick={handleSaveEdit} disabled={!isConfirmed}>Save Changes</Button>
                     </BootstrapModal.Footer>
                 </BootstrapModal>
             )}
