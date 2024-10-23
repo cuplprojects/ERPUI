@@ -266,6 +266,8 @@ const updateProcess = async (processId, featuresList) => {
         await API.post("/Project/AddProcessesToProject", { projectProcesses });
         message.success("Processes updated successfully!");
         //fetchProjectData();
+        setSelectedProcesses();
+        setCheckedFeatures();
         fetchUpdatedProcesses();
     } catch (error) {
         message.error("Error adding processes");

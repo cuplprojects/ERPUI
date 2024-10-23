@@ -4,7 +4,7 @@ import AddProjectProcess from './AddProjectProcess';
 import ProjectUserAllocation from './ProjectUserAllocation';
 
 
-import { Table, Button, Input, Switch, Form, message, Card, Row, Col, Select, Pagination } from 'antd';
+import { Table,Tabs, Button, Input, Switch, Form, message, Card, Row, Col, Select, Pagination } from 'antd';
 import { Modal } from 'react-bootstrap';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
