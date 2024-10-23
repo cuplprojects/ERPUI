@@ -50,7 +50,7 @@ const QtySheetUpload = () => {
             lotNo: item.LotNo,
             quantity: Number(item.Quantity) || 0,
             percentageCatch: Number(item.percentageCatch) || 0,
-            projectId: 2,
+            projectId: 14,
             isOverridden: item.isOverridden === 'true',
             processId: [0],
         }));
@@ -192,7 +192,7 @@ const QtySheetUpload = () => {
     const fetchLots = async () => {
         try {
 
-            const response = await API.get('/QuantitySheet/Lots?ProjectId=2')
+            const response = await API.get('/QuantitySheet/Lots?ProjectId=14')
 
             setLots(response.data)
         }
