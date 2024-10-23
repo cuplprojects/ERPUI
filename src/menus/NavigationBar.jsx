@@ -8,9 +8,10 @@
  * @component
  * @param {Object} props - The component props
  * @param {Function} props.onLinkClick - Callback function to be called when a navigation link is clicked
+ * @param {Function} props.onClose - Callback function to be called when the navigation bar should close
  */
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Container, Row, Col } from 'react-bootstrap';
 import { useStore } from 'zustand';
@@ -21,8 +22,10 @@ import { useUserData } from '../store/userDataStore';
 import { TbReportSearch } from "react-icons/tb";
 import { TbMessage2Cog } from "react-icons/tb";
 import { IoIosSwitch } from "react-icons/io";
+import { useTranslation } from 'react-i18next';
 
-const NavigationBar = ({ onLinkClick }) => {
+const NavigationBar = ({ onLinkClick, onClose }) => {
+  const { t } = useTranslation();
   // Get the CSS classes for theming
   const { getCssClasses } = useStore(themeStore);
   const [customDark] = getCssClasses();
@@ -33,19 +36,35 @@ const NavigationBar = ({ onLinkClick }) => {
   // Retrieve the user data from a custom hook
   const userData = useUserData();
 
+  // Ref for the navigation bar container
+  const navRef = useRef(null);
+
   /**
    * Navigation items configuration
    * Each item represents a link in the navigation bar
    */
   const navItems = useMemo(() => [
-    { id: "1", to: "/cudashboard", icon: BiSolidDashboard, text: "Cumulative dashboard", permission: "1" },
-    { id: "2", to: "/master", icon: IoIosSwitch, text: "Master Management", permission: "2" },
-    { id: "3", to: "/labels", icon: TbMessage2Cog , text: "Message Management", permission: "3" },
-    { id: "4", to: "/reports", icon: TbReportSearch, text: "View Reports", permission: "4" },
-  ], []);
+    { id: "1", to: "/cudashboard", icon: BiSolidDashboard, text: t('cumulativeDashboard'), permission: "1" },
+    { id: "2", to: "/master", icon: IoIosSwitch, text: t('masterManagement'), permission: "2" },
+    { id: "3", to: "/labels", icon: TbMessage2Cog , text: t('messageManagement'), permission: "3" },
+    { id: "4", to: "/reports", icon: TbReportSearch, text: t('viewReports'), permission: "4" },
+  ], [t]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (navRef.current && !navRef.current.contains(event.target)) {
+        onClose();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [onClose]);
 
   return (
-    <Container fluid className={`${customDark} py-4`}>
+    <Container fluid className={`${customDark} py-4`} ref={navRef}>
       <Row className="justify-content-evenly g-4">
         {navItems.map(item => (
           // Render the navigation item only if the user has the required permission

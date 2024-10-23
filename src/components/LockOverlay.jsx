@@ -5,8 +5,10 @@ import './../styles/lockOverlay.css';
 import { ToastContainer } from 'react-toastify';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
+import { useTranslation } from 'react-i18next';
 
 const LockOverlay = () => {
+    const { t } = useTranslation();
     const { getCssClasses } = useStore(themeStore);
     const [customDark, customMid, customLight, customBtn, customDarkText, customLightText] = getCssClasses();
 
@@ -63,10 +65,10 @@ const LockOverlay = () => {
                             style={{ height: "250px", width: "250px" }}>
                             <Form.Group controlId="formBasicPassword" className='d-flex flex-column justify-content-center align-items-center'>
                                 <FaLock size={100} color="white" className={customLightText} />
-                                <Form.Label className='text-light text-center mt-1'>Enter Your Unlock Key</Form.Label>
+                                <Form.Label className='text-light text-center mt-1'>{t('enterYourUnlockKey')}</Form.Label>
                                 <Form.Control
                                     type="password"
-                                    placeholder="Enter Unlock Key"
+                                    placeholder={t('enterUnlockKey')}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     className='rounded-bottom-5'
