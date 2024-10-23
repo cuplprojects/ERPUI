@@ -151,10 +151,9 @@ const AllProjects = () => {
   useEffect(() => {
     const fetchProjectName = async () => {
       try {
-        const response = await fetch(`https://localhost:7212/api/Project/${projectId}`);
-        const data = await response.json();
-        setProjectName(data.name);
-        setType(data.typeId);
+        const response = await API.get(`/Project/${projectId}`);
+        setProjectName(response.data.name);
+        setType(response.data.typeId);
       } catch (error) {
         console.error("Error fetching project name:", error);
       }

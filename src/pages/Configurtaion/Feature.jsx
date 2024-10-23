@@ -13,9 +13,13 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
     // Fetch features
     useEffect(() => {
         const fetchFeatures = async () => {
-            const response = await fetch('https://localhost:7212/api/Features');
-            const data = await response.json();
-            setFeatures(data.map(feature => ({ key: feature.featureId, name: feature.features })));
+            try {
+                const response = await API.get('/Features');
+                setFeatures(response.data.map(feature => ({ key: feature.featureId, name: feature.features })));
+            } catch (error) {
+                console.error('Error fetching features:', error);
+                notification.error({ message: 'Failed to fetch features. Please try again.' });
+            }
         };
 
         fetchFeatures();
@@ -75,14 +79,7 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
         if (isEditingFeature) {
             // Update existing feature
             try {
-                const response = await fetch(`https://localhost:7212/api/Features/${editingFeatureId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'text/plain',
-                    },
-                    body: JSON.stringify(featurePayload),
-                });
+                const response = await API.put(`/Features/${editingFeatureId}`, featurePayload);
 
                 if (response.ok) {
                     setFeatures(prevFeatures =>
@@ -100,14 +97,7 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
         } else {
             // Add new feature
             try {
-                const response = await fetch('https://localhost:7212/api/Features', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'text/plain',
-                    },
-                    body: JSON.stringify(featurePayload),
-                });
+                const response = await API.post('/Features', featurePayload);
 
                 if (response.ok) {
                     const addedFeature = await response.json();
