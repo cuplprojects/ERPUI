@@ -1,38 +1,50 @@
 import React from "react";
 import styled from "styled-components";
-import { FaUpload } from "react-icons/fa";
+import { FaUpload, FaInfoCircle } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import { Button } from "react-bootstrap";
 
-const Cards = ({item, onclick}) => {
+const Cards = ({ item, onclick, disableProject }) => {
   const navigate = useNavigate();
 
+  // Navigate to quantity sheet uploads and send projectId
   const handleUploadClick = (e) => {
     e.stopPropagation();
     navigate(`/quantity-sheet-uploads/${item.projectId}`);
   };
 
+  // Navigate to the dashboard and send projectId as a route parameter
+  const handleCardClick = () => {
+    if(!disableProject){
+      return;
+    }
+    navigate(`/dashboard/${item.projectId}`);
+  };
+
+  // Handle info button click
   const handleInfoClick = (e) => {
+    if(disableProject){
+      return;
+    }
     e.stopPropagation();
-    navigate("/dashboard");
+    onclick(item);
   };
 
   return (
     <StyledWrapper>
-      <div className="card" onClick={() => onclick(item)}>
-
-        <div className="upload-button" onClick={handleUploadClick}>
+      <div className="card" onClick={handleCardClick}>
+        <div className="upload-button" onClick={handleUploadClick} >
           <FaUpload />
         </div>
 
         <h4>{item.name}</h4>
-        
         <p>{item.completionPercentage}% Completed</p>
         <p>{item.remainingPercentage}% Remaining</p>
-        <div className="info-button">
-          <Button onClick={handleInfoClick} variant="outline-info" size="sm">
-            More Info
-          </Button>
+        
+        <div
+          className={`info-button ${disableProject ? 'disabled' : ''}`}
+          onClick={handleInfoClick}
+        >
+          <FaInfoCircle />
         </div>
       </div>
     </StyledWrapper>
@@ -42,9 +54,9 @@ const Cards = ({item, onclick}) => {
 const StyledWrapper = styled.div`
   .card {
     box-sizing: border-box;
-    width: 350px;
+    width: 343px;
     height: 170px;
-    background: rgba(217, 217, 217,0.3);
+    background: rgba(217, 217, 217, 0.3);
     border: 1px solid white;
     box-shadow: 12px 17px 51px rgba(0, 0, 0, 0.22);
     backdrop-filter: blur(6px);
@@ -89,10 +101,22 @@ const StyledWrapper = styled.div`
   .info-button {
     bottom: 10px;
     right: 10px;
+    padding: 10px;
+    font-size: 1.2em;
+    border-radius: 50%;
   }
 
-  .upload-button:hover {
+  .upload-button:hover, .info-button:hover {
     background-color: rgba(0, 0, 0, 0.1);
+  }
+
+  .info-button.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .info-button.disabled:hover {
+    background-color: transparent;
   }
 `;
 

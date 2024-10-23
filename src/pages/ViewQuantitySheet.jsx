@@ -1,20 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Select, Table, Input } from 'antd';
-import axios from 'axios';
-import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Modal as BootstrapModal } from 'react-bootstrap';
-
+import themeStore from './../store/themeStore';
 import API from '../CustomHooks/MasterApiHooks/api';
-
 import { EditOutlined, DeleteOutlined, StopOutlined } from '@ant-design/icons';
+import { useParams } from 'react-router-dom';
 
 const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
+    const { projectId } = useParams();
     const [process, setProcess] = useState([]);
     const [dataSource, setDataSource] = useState([]);
     const [editingRow, setEditingRow] = useState(null);
     const [selectedProcessIds, setSelectedProcessIds] = useState([]);
+    const [selectedAddProcessIds, setSelectedAddProcessIds] = useState([]);
     const [newRowData, setNewRowData] = useState({
         catchNo: '',
         paper: '',
@@ -24,7 +24,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
         outerEnvelope: '',
         quantity: 0,
         percentageCatch: 0,
-        projectId: 14,
+        projectId: projectId,
         isOverridden: false,
     });
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -36,6 +36,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
     const [DIGITAL_PRINTING_ID, setDIGITAL_PRINTING_ID] = useState(null);
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = getCssClasses();
+    const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
 
     const columns = [
         {
@@ -122,7 +123,9 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
 
     const fetchQuantity = async (lotNo) => {
         try {
-            const response = await API.get(`/QuantitySheet/Catch?ProjectId=14&lotNo=${lotNo}`);
+
+            const response = await API.get(`/QuantitySheet?ProjectId=1&lotNo=${lotNo}`);
+
             const dataWithKeys = response.data.map(item => ({
                 ...item, key: item.quantitySheetId
             }));
@@ -275,7 +278,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
                 lotNo: selectedLotNo,
                 quantity: parseInt(newRowData.quantity, 10),
                 percentageCatch: 0,
-                projectId: 14,
+                projectId: projectId,
                 isOverridden: false,
                 processId:[],
             }
@@ -296,7 +299,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
                 outerEnvelope: '',
                 quantity: 0,
                 percentageCatch: 0,
-                projectId: 2,
+                projectId: projectId,
                 isOverridden: false,
             });
             fetchQuantity(selectedLotNo);
@@ -312,61 +315,64 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
 
     return (
         <div className='mt-3'>
-            {showBtn && (
-                <>
-                    <Button onClick={() => setShowNewRow(prev => !prev)} type="primary">
-                        {showNewRow ? 'Cancel' : 'Add New Catch'}
-                    </Button>
-                    {showNewRow && (
-                        <table>
-                            <tbody>
-                                <tr>
-                                    <td>
-                                        <Input placeholder="Catch No" name="catchNo" value={newRowData.catchNo} onChange={handleNewRowChange} />
-                                    </td>
-                                    <td>
-                                        <Input placeholder="Paper" name="paper" value={newRowData.paper} onChange={handleNewRowChange} />
-                                    </td>
-                                    <td>
-                                        <Input placeholder="Course" name="course" value={newRowData.course} onChange={handleNewRowChange} />
-                                    </td>
-                                    <td>
-                                        <Input placeholder="Subject" name="subject" value={newRowData.subject} onChange={handleNewRowChange} />
-                                    </td>
-                                    <td>
-                                        <Input placeholder="Inner Envelope" name="innerEnvelope" value={newRowData.innerEnvelope} onChange={handleNewRowChange} />
-                                    </td>
-                                    <td>
-                                        <Input placeholder="Outer Envelope" name="outerEnvelope" value={newRowData.outerEnvelope} onChange={handleNewRowChange} />
-                                    </td>
-                                    <td>
-                                        <Input placeholder="Quantity" type="number" name="quantity" value={newRowData.quantity} onChange={handleNewRowChange} />
-                                    </td>
-                                    <td>
-                                        <Button type="primary" onClick={handleAddRow}>Add</Button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    )}
-                </>
-            )}
+            <Table
+                className={cssClasses.customTable}
+                columns={columns}
+                dataSource={dataSource}
+                pagination={{
+                    pageSize: 10,
+                    showSizeChanger: true,
+                    pageSizeOptions: ['10', '20', '50', '100'],
+                    total: dataSource.length,
+                    showTotal: (total) => `Total ${total} items`,
+                }}
+                scroll={{ x: 'max-content' }}
+            />
 
-            {showTable && (
-                <Table
-                    className={cssClasses.customTable}
-                    columns={columns}
-                    dataSource={dataSource}
-                    pagination={{
-                        pageSize: 10,
-                        showSizeChanger: true,
-                        pageSizeOptions: ['10', '20', '50', '100'],
-                        total: dataSource.length,
-                        showTotal: (total) => `Total ${total} items`,
-                    }}
-                    scroll={{ x: 'max-content' }}
-                />
-            )}
+            <table>
+                <tbody>
+                    <tr>
+                        <td>
+                            <Input placeholder="Catch No" name="catchNo" value={newRowData.catchNo} onChange={handleNewRowChange} />
+                        </td>
+                        <td>
+                            <Input placeholder="Paper" name="paper" value={newRowData.paper} onChange={handleNewRowChange} />
+                        </td>
+                        <td>
+                            <Input placeholder="Course" name="course" value={newRowData.course} onChange={handleNewRowChange} />
+                        </td>
+                        <td>
+                            <Input placeholder="Subject" name="subject" value={newRowData.subject} onChange={handleNewRowChange} />
+                        </td>
+                        <td>
+                            <Input placeholder="Inner Envelope" name="innerEnvelope" value={newRowData.innerEnvelope} onChange={handleNewRowChange} />
+                        </td>
+                        <td>
+                            <Input placeholder="Outer Envelope" name="outerEnvelope" value={newRowData.outerEnvelope} onChange={handleNewRowChange} />
+                        </td>
+                        <td>
+                            <Input placeholder="Quantity" type="number" name="quantity" value={newRowData.quantity} onChange={handleNewRowChange} />
+                        </td>
+                        <td>
+                            <Select
+                                mode="multiple"
+                                value={selectedProcessIds}
+                                onChange={handleProcessChange}
+                                style={{ width: '100%' }}
+                            >
+                                {process.map(proc => (
+                                    <Select.Option key={proc.id} value={proc.name}>
+                                        {proc.name}
+                                    </Select.Option>
+                                ))}
+                            </Select>
+                        </td>
+                        <td>
+                            <Button type="primary" onClick={handleAddRow}>Add Row</Button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
 
             {editingRow !== null && (
                 <BootstrapModal show={true} onHide={handleModalClose}>

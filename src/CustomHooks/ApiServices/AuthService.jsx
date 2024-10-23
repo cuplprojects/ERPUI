@@ -1,7 +1,7 @@
 /**
  * AuthService: Handles authentication-related operations
  * Created by Shivom on 2023-10-05
- * Updated to use useUserTokenStore for token management
+ * Updated to use useUserTokenStore for token management and fetch user data after login
  * 
  * This service uses the custom API instance for making requests
  */
@@ -17,6 +17,10 @@ const AuthService = {
       if (response.status === 200 && response.data.token) {
         const { setToken } = useUserTokenStore.getState();
         setToken(response.data.token);
+        
+        // Fetch user data after setting the token
+        const { actions } = useUserDataStore.getState();
+        await actions.fetchUserData();
       }
       return response;
     } catch (error) {
@@ -30,6 +34,7 @@ const AuthService = {
     
     clearToken();
     actions.clearUserData();
+    localStorage.removeItem('userData');
   }
 };
 

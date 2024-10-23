@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Input, Select, Switch, message, Spin } from 'antd';
-import { Row, Col, Modal } from 'react-bootstrap';
-import axios from 'axios';
+import { Table, Input, Select, Switch, message, Spin, Pagination } from 'antd';
+import { Row, Col, Modal, Button } from 'react-bootstrap';
 import { v4 as uuidv4 } from 'uuid'; // Importing uuid for unique IDs
 import API from '../CustomHooks/MasterApiHooks/api';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import { FaSearch } from "react-icons/fa";
 import { AiFillCloseSquare } from "react-icons/ai";
+import { EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
 
 const { Search } = Input;
 
@@ -190,17 +190,23 @@ const Machine = () => {
       key: 'action',
       render: (_, record, index) => (
         editingIndex === index ? (
-          <>
-            <Button type="link" onClick={() => handleEditSave(index)}>Save</Button>
-            <Button type="link" onClick={() => setEditingIndex(null)}>Cancel</Button>
-          </>
+          <div style={{ display: 'flex', justifyContent: '' }}>
+            <Button type="link" onClick={() => handleEditSave(index)} className={`${customDark === "dark-dark" ? `${customMid} border` : `${customLight} ${customDarkBorder}`} text-white `}>
+              <SaveOutlined className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } me-1`}/> 
+              <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}>Save</span> 
+            </Button>
+            <Button type="link" onClick={() => setEditingIndex(null)} className={`${customDark === "dark-dark" ? `${customMid} border` : `${customLight} ${customDarkBorder}`} text-white ms-3`}>
+              <CloseOutlined className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } me-1`}/> 
+              <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}>Cancel</span> 
+            </Button>
+          </div>
         ) : (
-          <Button type="link" onClick={() => {
+          <Button type="link" icon={<EditOutlined />} onClick={() => {
             setEditingIndex(index);
             setEditingValue(record.machineName);
             setEditingProcessId(record.processId);
             setEditingStatus(record.status);
-          }}>Edit</Button>
+          }} className={`${customBtn} text-white me-1 border-0`}>Edit</Button>
         )
       ),
     },
@@ -222,7 +228,7 @@ const Machine = () => {
 
       <div className="mb-3 d-flex flex-wrap justify-content-between align-items-center">
         <div style={{ marginBottom: '10px', marginRight: '10px' }}>
-          <Button className={`rounded-2 ${customBtn} ${customDark === "dark-dark" ? `border-white` : `border-0`}`} type="primary" onClick={() => setIsModalVisible(true)}>
+          <Button className={`rounded-2 ${customBtn} ${customDark === "dark-dark" ? `border-white` : `border-0`}`} onClick={() => setIsModalVisible(true)}>
             Add Machine
           </Button>
         </div>
@@ -255,18 +261,7 @@ const Machine = () => {
             dataSource={filteredMachines}
             columns={columns}
             rowKey="machineId"
-            pagination={{
-              current: currentPage,
-              pageSize: pageSize,
-              total: filteredMachines.length,
-              showSizeChanger: true,
-              pageSizeOptions: ['5', '10'],
-              onChange: (page, pageSize) => {
-                setCurrentPage(page);
-                setPageSize(pageSize);
-              },
-              style: { marginTop: '16px', textAlign: 'center' },
-            }}
+            pagination={false}
             className={`${customDark === "default-dark" ? "thead-default" : ""}
               ${customDark === "red-dark" ? "thead-red" : ""}
               ${customDark === "green-dark" ? "thead-green" : ""}
@@ -280,6 +275,20 @@ const Machine = () => {
             style={{ marginTop: '20px' }}
             scroll={{ x: 'max-content' }}
           />
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px', background: 'white', padding: '10px' }} className='rounded-2 rounded-top-0'>
+            <Pagination
+              current={currentPage}
+              pageSize={pageSize}
+              total={filteredMachines.length}
+              onChange={(page, pageSize) => {
+                setCurrentPage(page);
+                setPageSize(pageSize);
+              }}
+              showSizeChanger
+              showQuickJumper
+              showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
+            />
+          </div>
         </div>
       )}
 
@@ -288,13 +297,14 @@ const Machine = () => {
         onHide={() => setIsModalVisible(false)}
         centered
         size="lg"
+        className={`rounded-2 ${customDark === "" ? `${customDark}` : ''}  `}
       >
-        <Modal.Header className={`${customDark} ${customLightText} d-flex justify-content-between align-items-center`}>
+        <Modal.Header closeButton={false} className={`rounded-top-2 ${customDark} ${customLightText} ${customDark === "dark-dark" ? `border ` : `border-0`} border d-flex justify-content-between `}>
           <Modal.Title>Add Machine</Modal.Title>
           <AiFillCloseSquare
             size={35}
             onClick={() => setIsModalVisible(false)}
-            className={`${customDark === "dark-dark" ? "text-dark bg-white " : `${customDark} custom-zoom-btn text-white  ${customDarkBorder}`} rounded-2`}
+            className={`rounded-2 ${customDark === "dark-dark" ? "text-dark bg-white " : `${customDark} custom-zoom-btn text-white  ${customDarkBorder}`}`}
             aria-label="Close"
             style={{ cursor: 'pointer', fontSize: '1.5rem' }}
           />
@@ -345,8 +355,8 @@ const Machine = () => {
           </div>
         </Modal.Body>
         <Modal.Footer>
-          {/* <Button onClick={() => setIsModalVisible(false)}>Cancel</Button> */}
-          <Button type="primary" onClick={handleAddMachine}>Add</Button>
+          <Button variant="secondary" className={`rounded-2 ${customBtn} ${customDark === "dark-dark" ? `border-white` : `border-0`}`} onClick={() => setIsModalVisible(false)}>Cancel</Button>
+          <Button variant="primary" className={`rounded-2 ${customBtn} ${customDark === "dark-dark" ? `border-white` : `border-0`}`} onClick={handleAddMachine}>Add</Button>
         </Modal.Footer>
       </Modal>
     </div>

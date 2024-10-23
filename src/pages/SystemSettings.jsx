@@ -3,7 +3,6 @@ import { Tabs, Table, Button, Modal, Input, Select, notification, Switch } from 
 import { AppstoreAddOutlined, BuildOutlined, EditOutlined } from '@ant-design/icons';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import axios from 'axios';
 import API from '../CustomHooks/MasterApiHooks/api';
 
 const ItemType = 'FEATURE';

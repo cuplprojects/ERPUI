@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Button, Modal, Input, Switch, Select, notification } from 'antd';
 import { EditOutlined } from '@ant-design/icons';
+import API from '../../CustomHooks/MasterApiHooks/api';
 
 const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => {} }) => {
     const [processModalVisible, setProcessModalVisible] = useState(false);
@@ -20,10 +21,8 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => {} }) => {
     useEffect(() => {
         const fetchProcesses = async () => {
             try {
-                const response = await fetch('https://localhost:7212/api/Processes');
-                if (!response.ok) throw new Error('Failed to fetch processes');
-                const data = await response.json();
-                setProcesses(data.map(process => ({
+                const response = await API.get('/Processes');
+                setProcesses(response.data.map(process => ({
                     key: process.id.toString(),
                     ...process,
                 })));
@@ -35,10 +34,8 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => {} }) => {
 
         const fetchFeatures = async () => {
             try {
-                const response = await fetch('https://localhost:7212/api/Features');
-                if (!response.ok) throw new Error('Failed to fetch features');
-                const data = await response.json();
-                setFeatures(data.map(feature => ({
+                const response = await API.get('/Features');
+                setFeatures(response.data.map(feature => ({
                     key: feature.featureId,
                     id: feature.featureId,
                     name: feature.features,
@@ -63,7 +60,7 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => {} }) => {
             setProcessType(process.processType);
             setIsEditingProcess(true);
             setEditingProcessId(process.id);
-            setRangeStart(process.rangeStart || '');
+            setRangeStart(process.processType === 'Dependent' ? '' : (process.rangeStart || ''));
             setRangeEnd(process.rangeEnd || '');
         } else {
             setProcessName('');
@@ -101,53 +98,19 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => {} }) => {
             installedFeatures: processInstalledFeatures.map(Number),
             processIdInput,
             processType,
-            rangeStart: rangeStart || 0,
+            rangeStart: processType === 'Dependent' ? '' : (rangeStart || 0),
             rangeEnd: rangeEnd || 0,
         };
 
         try {
             let response;
             if (isEditingProcess) {
-                response = await fetch(`https://localhost:7212/api/Processes/${editingProcessId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(newProcess),
-                });
+                response = await API.put(`/Processes/${editingProcessId}`, newProcess);
             } else {
-                response = await fetch('https://localhost:7212/api/Processes', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(newProcess),
-                });
+                response = await API.post('/Processes', newProcess);
             }
 
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`Failed to save process: ${errorText}`);
-            }
-
-            let processWithKey;
-            try {
-                const responseText = await response.text();
-                if (responseText) {
-                    processWithKey = JSON.parse(responseText);
-                    if (!processWithKey || typeof processWithKey !== 'object') {
-                        throw new Error('Invalid server response');
-                    }
-                } else {
-                    // If the response is empty, use the newProcess object
-                    processWithKey = { ...newProcess, id: isEditingProcess ? editingProcessId : Date.now() };
-                }
-            } catch (error) {
-                console.error('Error parsing JSON:', error);
-                // If parsing fails, use the newProcess object
-                processWithKey = { ...newProcess, id: isEditingProcess ? editingProcessId : Date.now() };
-            }
-
+            let processWithKey = response.data;
             processWithKey.key = processWithKey.id.toString();
 
             if (isEditingProcess) {
@@ -167,7 +130,7 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => {} }) => {
             onUpdateProcesses([...processes, processWithKey]);
         } catch (error) {
             console.error('Error saving process:', error);
-            notification.error({ message: error.message });
+            notification.error({ message: error.response?.data || 'Failed to save process' });
         }
     };
 
@@ -183,9 +146,9 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => {} }) => {
         },
         {
             title: 'Installed Features',
-            dataIndex: 'installedFeatures',
-            key: 'installedFeatures',
-            render: features => features.join(', ') || 'None',
+            dataIndex: 'featureNames',
+            key: 'featureNames',
+            render: features => features?.join(', ') || 'None',
         },
         { title: 'Process Order', dataIndex: 'processIdInput', key: 'processIdInput' },
         { title: 'Process Type', dataIndex: 'processType', key: 'processType' },
@@ -274,8 +237,12 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => {} }) => {
                         value={processType}
                         onChange={(value) => {
                             setProcessType(value);
-                            setRangeStart(''); // Reset range values when changing process type
-                            setRangeEnd('');
+                            if (value === 'Dependent') {
+                                setRangeStart('');
+                            } else {
+                                setRangeStart('');
+                                setRangeEnd('');
+                            }
                         }}
                         style={{ width: '100%' }}
                     >
@@ -294,7 +261,7 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => {} }) => {
                         style={{ width: '22%' }}
                     />
                 </div>
-                {(processType === 'Independent' || processType === 'Dependent') && (
+                {processType === 'Independent' && (
                     <div>
                         <div style={{ marginBottom: '16px' }}>
                             <label htmlFor="rangeStart">Range Start:</label>
@@ -316,6 +283,18 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => {} }) => {
                                 style={{ width: '100%' }}
                             />
                         </div>
+                    </div>
+                )}
+                {processType === 'Dependent' && (
+                    <div style={{ marginBottom: '16px' }}>
+                        <label htmlFor="rangeEnd">Range End:</label>
+                        <Input
+                            id="rangeEnd"
+                            placeholder="Range End"
+                            value={rangeEnd}
+                            onChange={e => setRangeEnd(e.target.value)}
+                            style={{ width: '100%' }}
+                        />
                     </div>
                 )}
             </Modal>

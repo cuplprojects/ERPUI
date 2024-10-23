@@ -1,6 +1,5 @@
-import { message, Table, Input, Button, Switch, Form, Select, Spin } from 'antd';
+import { message, Table, Input, Button, Switch, Form, Select, Spin, Pagination } from 'antd';
 import { Modal } from 'react-bootstrap';
-import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'antd/es/form/Form';
 import API from '../CustomHooks/MasterApiHooks/api';
@@ -8,6 +7,7 @@ import { useMediaQuery } from 'react-responsive';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import { AiFillCloseSquare } from "react-icons/ai";
+import { SortAscendingOutlined, SortDescendingOutlined, EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
 const { Option } = Select;
 const { Search } = Input;
 
@@ -21,12 +21,20 @@ const Type = () => {
     const [processMap, setProcessMap] = useState({});
     const [loading, setLoading] = useState(false);
     const [isModalVisible, setIsModalVisible] = useState(false);
+    const [associatedProcessIds, setAssociatedProcessIds] = useState([]);
+    const [requiredProcessIds, setRequiredProcessIds] = useState([]);
     const [editingIndex, setEditingIndex] = useState(null);
     const [editingType, setEditingType] = useState('');
     const [editingProcessIds, setEditingProcessIds] = useState([]);
+    const [requirededitingProcessIds, setRequiredEditingProcessIds] = useState([]);
     const [editingStatus, setEditingStatus] = useState(true);
     const [originalData, setOriginalData] = useState({});
     const [form] = useForm();
+    const [searchText, setSearchText] = useState('');
+    const [sortOrder, setSortOrder] = useState('ascend');
+    const [sortField, setSortField] = useState('types');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(5);
 
     const isMobile = useMediaQuery({ maxWidth: 767 });
     const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1023 });
@@ -66,7 +74,18 @@ const Type = () => {
         fetchProcesses();
     }, []);
 
+    useEffect(() => {
+        const filtered = types.filter(type =>
+            type.types.toLowerCase().includes(searchText.toLowerCase()) ||
+            type.associatedProcessId.some(id => processMap[id].toLowerCase().includes(searchText.toLowerCase()))
+        );
+        setFilteredTypes(filtered);
+        setCurrentPage(1);
+    }, [searchText, types, processMap]);
+
     const handleAddType = async (values) => {
+        const { associatedProcessId,requiredProcessId } = values;
+
         try {
             // Check if the type already exists
             const typeExists = types.some(type => type.types.toLowerCase() === values.types.toLowerCase());
@@ -74,13 +93,18 @@ const Type = () => {
                 message.error("This type already exists!");
                 return;
             }
-
-            const response = await API.post('/PaperTypes', values);
+            const postData = {
+                ...values,
+                associatedProcessId: associatedProcessIds, // Keep all selected for submission
+                requiredProcessId: requiredProcessIds // Only send the currently displayed required processes
+            };
+            const response = await API.post('/PaperTypes', postData);
             setTypes(prev => [...prev, response.data]);
             setFilteredTypes(prev => [...prev, response.data]);
             message.success("Type created successfully");
             setIsModalVisible(false);
             form.resetFields();
+            setRequiredProcessIds([])
         } catch (error) {
             console.error(error);
             message.error("Failed to create type");
@@ -92,6 +116,7 @@ const Type = () => {
             ...types[index],
             types: editingType,
             associatedProcessId: editingProcessIds,
+            requiredProcessId:requirededitingProcessIds,
             status: editingStatus,
         };
 
@@ -113,28 +138,54 @@ const Type = () => {
         setEditingIndex(null);
         setEditingType(originalData.types);
         setEditingProcessIds(originalData.associatedProcessId);
+        setRequiredEditingProcessIds(originalData.requiredProcessId)
         setEditingStatus(originalData.status);
     };
-
+console.log(originalData.requiredProcessIds)
     const handleSearch = (value) => {
-        const lowercasedValue = value.toLowerCase();
-        const filtered = types.filter(item => 
-            item.types.toLowerCase().includes(lowercasedValue) ||
-            item.associatedProcessId.some(id => processMap[id].toLowerCase().includes(lowercasedValue))
-        );
-        setFilteredTypes(filtered);
+        setSearchText(value);
+    };
+
+    const handleSort = (field) => {
+        const newSortOrder = field === sortField && sortOrder === 'ascend' ? 'descend' : 'ascend';
+        setSortOrder(newSortOrder);
+        setSortField(field);
+
+        const sortedTypes = [...filteredTypes].sort((a, b) => {
+            if (field === 'types') {
+                return newSortOrder === 'ascend'
+                    ? a.types.localeCompare(b.types)
+                    : b.types.localeCompare(a.types);
+            } else if (field === 'status') {
+                return newSortOrder === 'ascend'
+                    ? (a.status === b.status ? 0 : a.status ? -1 : 1)
+                    : (a.status === b.status ? 0 : a.status ? 1 : -1);
+            }
+        });
+
+        setFilteredTypes(sortedTypes);
     };
 
     const columns = [
         {
-            align:'center',
+            align: 'center',
             title: 'SN.',
             dataIndex: 'serial',
             key: 'serial',
-            render: (_, __, index) => index + 1,
+            render: (text, record, index) => (currentPage - 1) * pageSize + index + 1,
+            width: '10%',
         },
         {
-            title: 'Type',
+            title: (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    Type
+                    <Button
+                        type="text"
+                        onClick={() => handleSort('types')}
+                        icon={sortField === 'types' && sortOrder === 'ascend' ? <SortAscendingOutlined style={{ color: 'white', border: '1px solid white' }} className='rounded-2 p-1' /> : <SortDescendingOutlined style={{ color: 'white', border: '1px solid white' }} className='rounded-2 p-1' />}
+                    />
+                </div>
+            ),
             dataIndex: 'types',
             key: 'types',
             render: (text, record, index) => (
@@ -173,8 +224,40 @@ const Type = () => {
             ),
         },
         {
-            align:'center',
-            title: 'Status',
+            title: 'Required Process',
+            dataIndex: 'requiredProcessId',
+            key: 'requiredProcessId',
+            render: (ids, record, index) => (
+                editingIndex === index ? (
+                    <Select
+                        mode="multiple"
+                        value={requirededitingProcessIds}
+                        onChange={setRequiredEditingProcessIds}
+                        style={{ width: '100%' }}
+                    >
+                        {processes.map(proc => (
+                            <Option key={proc.id} value={proc.id}>
+                                {proc.name}
+                            </Option>
+                        ))}
+                    </Select>
+                ) : (
+                    ids.map(id => processMap[id]).join(', ')
+                )
+            ),
+        },
+        {
+            align: 'center',
+            title: (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    Status
+                    <Button
+                        type="text"
+                        onClick={() => handleSort('status')}
+                        icon={sortField === 'status' && sortOrder === 'ascend' ? <SortAscendingOutlined style={{ color: 'white', border: '1px solid white' }} className='rounded-2 p-1' /> : <SortDescendingOutlined style={{ color: 'white', border: '1px solid white' }} className='rounded-2 p-1' />}
+                    />
+                </div>
+            ),
             dataIndex: 'status',
             key: 'status',
             render: (status, record, index) => (
@@ -186,9 +269,9 @@ const Type = () => {
                         unCheckedChildren="Inactive"
                     />
                 ) : (
-                    <Switch 
-                        checked={status} 
-                        disabled 
+                    <Switch
+                        checked={status}
+                        disabled
                         checkedChildren="Active"
                         unCheckedChildren="Inactive"
                     />
@@ -200,18 +283,25 @@ const Type = () => {
             key: 'action',
             render: (_, record, index) => (
                 editingIndex === index ? (
-                    <>
-                        <Button type="link" onClick={() => handleEditSave(index)}>Save</Button>
-                        <Button type="link" onClick={handleCancelEdit}>Cancel</Button>
-                    </>
+                    <div style={{ display: 'flex', justifyContent: '' }}>
+                        <Button type="link" onClick={() => handleEditSave(index)} className={`${customDark === "dark-dark" ? `${customMid} border` : `${customLight} ${customDarkBorder}`} text-white `}>
+                            <SaveOutlined className={`${customDark === "dark-dark" ? `` : `${customDarkText}`} `} />
+                            <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}`} `}>Save</span>
+                        </Button>
+                        <Button type="link" onClick={handleCancelEdit} className={`${customDark === "dark-dark" ? `${customMid} border` : `${customLight} ${customDarkBorder}`} text-white ms-3`}>
+                            <CloseOutlined className={`${customDark === "dark-dark" ? `` : `${customDarkText}`} `} />
+                            <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}`} `}>Cancel</span>
+                        </Button>
+                    </div>
                 ) : (
-                    <Button type="link" onClick={() => {
+                    <Button type="link" icon={<EditOutlined />} onClick={() => {
                         setEditingIndex(index);
                         setEditingType(record.types);
                         setEditingProcessIds(record.associatedProcessId);
+                        setRequiredEditingProcessIds(record.requiredProcessId)
                         setEditingStatus(record.status);
                         setOriginalData(record);
-                    }}>Edit</Button>
+                    }} className={`${customBtn} text-white me-1`}>Edit</Button>
                 )
             ),
         },
@@ -224,6 +314,8 @@ const Type = () => {
         form.resetFields();
     };
 
+    const paginatedTypes = filteredTypes.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
     return (
         <div style={{
             padding: isMobile ? '10px' : '20px',
@@ -232,7 +324,7 @@ const Type = () => {
             boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
             overflow: 'auto'
         }}
-        className={`${customDark === "dark-dark" ? customDark : ``}`}>
+            className={`${customDark === "dark-dark" ? customDark : ``}`}>
             <h2 className={`${customDarkText}`}>Project Type</h2>
             <div style={{
                 display: 'flex',
@@ -246,7 +338,7 @@ const Type = () => {
                     onChange={(e) => handleSearch(e.target.value)}
                     style={{ width: 300 }}
                 />
-                <Button className={`${customBtn}`} onClick={() => setIsModalVisible(true)}>
+                <Button className={`${customBtn} border-0 custom-zoom-btn`} onClick={() => setIsModalVisible(true)}>
                     Add Type
                 </Button>
             </div>
@@ -254,23 +346,39 @@ const Type = () => {
             {loading ? (
                 <Spin size="large" />
             ) : (
-                <Table
-                    dataSource={filteredTypes.map((item, index) => ({ ...item, serial: index + 1 }))}
-                    columns={responsiveColumns}
-                    rowKey="typeId"
-                    pagination={false}
-                    bordered
-                    scroll={{ x: 'max-content' }}
-                    className={`${customDark === "default-dark" ? "thead-default" : ""}
-                    ${customDark === "red-dark" ? "thead-red" : ""}
-                    ${customDark === "green-dark" ? "thead-green" : ""}
-                    ${customDark === "blue-dark" ? "thead-blue" : ""}
-                    ${customDark === "dark-dark" ? "thead-dark" : ""}
-                    ${customDark === "pink-dark" ? "thead-pink" : ""}
-                    ${customDark === "purple-dark" ? "thead-purple" : ""}
-                    ${customDark === "light-dark" ? "thead-light" : ""}
-                    ${customDark === "brown-dark" ? "thead-brown" : ""} `}
-                />
+                <>
+                    <Table
+                        dataSource={paginatedTypes}
+                        columns={responsiveColumns}
+                        rowKey="typeId"
+                        pagination={false}
+                        bordered
+                        scroll={{ x: 'max-content' }}
+                        className={`${customDark === "default-dark" ? "thead-default" : ""}
+                        ${customDark === "red-dark" ? "thead-red" : ""}
+                        ${customDark === "green-dark" ? "thead-green" : ""}
+                        ${customDark === "blue-dark" ? "thead-blue" : ""}
+                        ${customDark === "dark-dark" ? "thead-dark" : ""}
+                        ${customDark === "pink-dark" ? "thead-pink" : ""}
+                        ${customDark === "purple-dark" ? "thead-purple" : ""}
+                        ${customDark === "light-dark" ? "thead-light" : ""}
+                        ${customDark === "brown-dark" ? "thead-brown" : ""} rounded-2`}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px', background: 'white', padding: '10px' }} className='rounded-2 rounded-top-0'>
+                        <Pagination
+                            current={currentPage}
+                            pageSize={pageSize}
+                            total={filteredTypes.length}
+                            onChange={(page, pageSize) => {
+                                setCurrentPage(page);
+                                setPageSize(pageSize);
+                            }}
+                            showSizeChanger
+                            showQuickJumper
+                            showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
+                        />
+                    </div>
+                </>
             )}
 
             <Modal
@@ -294,7 +402,7 @@ const Type = () => {
                         form={form}
                         onFinish={handleAddType}
                         layout="vertical"
-                        // className='w-50'
+                    // className='w-50'
                     >
                         <Form.Item
                             name="types"
@@ -322,13 +430,34 @@ const Type = () => {
                             label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-5 `}>{"Associated Process"}</span>}
                             rules={[{ required: true, message: 'Please select a process!' }]}
                         >
-                            <Select mode="multiple" placeholder="Select Process">
+                            <Select
+                                mode="multiple"
+                                placeholder="Select Process"
+                                onChange={(selected) => {
+                                    setAssociatedProcessIds(selected); 
+                                    setRequiredProcessIds(selected); 
+                                }}
+                                style={{ width: '100%' }}
+                            >
                                 {processes.map(proc => (
                                     <Option key={proc.id} value={proc.id}>
                                         {proc.name}
                                     </Option>
                                 ))}
                             </Select>
+                        </Form.Item>
+                        <Form.Item label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-5 `}>{"Required Process"}</span>}>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                {requiredProcessIds.map(id => (
+                                    <span key={id} style={{ border: '1px solid #ccc', borderRadius: '4px', padding: '4px 8px', display: 'flex', alignItems: 'center' }}>
+                                        {processMap[id]}
+                                        <AiFillCloseSquare
+                                            style={{ marginLeft: '8px', cursor: 'pointer' }}
+                                            onClick={() => setRequiredProcessIds(requiredProcessIds.filter(processId => processId !== id))}
+                                        />
+                                    </span>
+                                ))}
+                            </div>
                         </Form.Item>
 
                         <Form.Item name="status" label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-5 `}>{"Status"}</span>} valuePropName="checked" initialValue={true}>
