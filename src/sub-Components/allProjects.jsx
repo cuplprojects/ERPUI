@@ -239,7 +239,7 @@ const AllProjects = () => {
                 onClick={() => handleTitleClick(selectedChart)}
                 className="btn btn-outline-info"
               >
-                More Info
+                Manage Process
               </button>
             </h4>
             <DashboardGrid projectId={projectId} />
