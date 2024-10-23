@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Input, Button, message, Modal, Spin } from 'antd';
 import { v4 as uuidv4 } from 'uuid'; 
-import axios from 'axios';
 import API from '../CustomHooks/MasterApiHooks/api';
 
 const AlarmMaster = () => {

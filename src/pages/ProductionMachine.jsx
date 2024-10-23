@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Input, Select, Switch, message, Spin, Pagination } from 'antd';
 import { Row, Col, Modal, Button } from 'react-bootstrap';
-import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid'; // Importing uuid for unique IDs
 import API from '../CustomHooks/MasterApiHooks/api';
 import themeStore from './../store/themeStore';

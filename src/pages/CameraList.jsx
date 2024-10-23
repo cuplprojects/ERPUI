@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Button, Input, Form, Card, Row, Col, message, Pagination, Spin } from 'antd';
 import { Modal } from 'react-bootstrap';
-import axios from 'axios';
 import API from '../CustomHooks/MasterApiHooks/api';
 import { useStore } from 'zustand';
 import themeStore from './../store/themeStore';

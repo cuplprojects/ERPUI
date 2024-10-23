@@ -7,7 +7,7 @@ import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import ViewQuantitySheet from './ViewQuantitySheet';
 import { useParams } from 'react-router-dom';
-
+import { IoMdEye } from "react-icons/io";
 import API from '../CustomHooks/MasterApiHooks/api';
 
 
@@ -15,8 +15,7 @@ const QtySheetUpload = () => {
     const { projectId } = useParams();
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = getCssClasses();
-    const customDarkText = cssClasses[4];
-    const customBtn = cssClasses[3];
+    const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
     const [fileList, setFileList] = useState([]);
     const [uploading, setUploading] = useState(false);
     const [columns, setColumns] = useState([]);
@@ -30,7 +29,20 @@ const QtySheetUpload = () => {
     const [dataSource, setDataSource] = useState([]);
     const [lots, setLots] = useState([]);
     const [selectedLotNo, setSelectedLotNo] = useState(null);
+    const [projectName, setProjectName] = useState('');
 
+    useEffect(() => {
+        const fetchProjectName = async () => {
+            try {
+                const response = await API.get(`/Project/${projectId}`);
+                setProjectName(response.data.name);
+            } catch (error) {
+                console.error('Failed to fetch project name', error);
+            }
+        };
+
+        fetchProjectName();
+    }, [projectId]);
 
     const handleUpload = async () => {
         setUploading(true);
@@ -49,12 +61,10 @@ const QtySheetUpload = () => {
             subject: item.Subject || "",
             innerEnvelope: item.InnerEnvelope || "",
             outerEnvelope: item.OuterEnvelope || "",
-
             lotNo: item.LotNo || "",
             quantity: Number(item.Quantity) || 0,
             percentageCatch: Number(item.percentageCatch) || 0,
             projectId: projectId,
-
             isOverridden: item.isOverridden === 'true',
             processId: [0],
         }));
@@ -102,9 +112,7 @@ const QtySheetUpload = () => {
                             (property === 'quantity' ? parseFloat(row[index]) || 0 : String(row[index])) : '';
                     }
                     console.log("Row Data Mapped:", rowData);
-
                     rowData['projectId'] = projectId;
-
                     rowData['isOverridden'] = 'false';
                     rowData['percentageCatch'] = '0';
                     return rowData;
@@ -161,10 +169,8 @@ const QtySheetUpload = () => {
     
             const autoMappings = {};
             columns.forEach((col) => {
-
                 const matchingHeader = excelHeaders.find(header => header?.toLowerCase() === col?.toLowerCase());
                 autoMappings[col] = matchingHeader || '';
-
             });
     
             setFieldMappings(autoMappings);
@@ -195,11 +201,8 @@ const QtySheetUpload = () => {
 
     const fetchLots = async () => {
         try {
-
-
             const response = await API.get(`/QuantitySheet/Lots?ProjectId=${projectId}`)
-
-            setLots(response.data)
+           setLots(response.data)
         }
         catch (error) {
             console.error('Failed to fetch Lots')
@@ -230,10 +233,17 @@ const QtySheetUpload = () => {
 
 
     return (
-        <div className={`container ${customDarkText} rounded shadow-lg`}>
+        <div className={`container ${customDarkText} rounded shadow-lg ${customLight}`}>
             <Row className='mt-2 mb-2'>
                 <Col lg={12} className='d-flex justify-content-center'>
-                    <h1 className={`text-center p-2 mt-3 rounded w-50 ${customDarkText}`}>Upload Quantity Sheet</h1>
+                    <div className="d-flex flex-column align-items-center">
+                        <div className="text-center p-2 mt-3 rounded">
+                            <h1 className={`${customDarkText}`}>Upload Quantity Sheet</h1>
+                        </div>
+                        <div className="text-center">
+                            <h2 className={`${customDarkText} custom-zoom-btn `}>{projectName}</h2>
+                        </div>
+                    </div>
                 </Col>
             </Row>
 
@@ -251,8 +261,10 @@ const QtySheetUpload = () => {
                                 beforeUpload={handleFileUpload}
                                 fileList={fileList}
                             >
-                                <Button className='fs-5 custom-zoom-btn'>
-                                    <UploadOutlined className='me-2' /> Select File
+                                <Button className='fs-5 custom-zoom-btn w-100'>
+                                    <UploadOutlined className='me-2' />
+                                    <span className='d-none d-sm-inline'>Select File</span>
+                                    <span className='d-inline d-sm-none'>Upload</span>
                                 </Button>
                             </Upload>
                         </Form.Item>
@@ -269,19 +281,21 @@ const QtySheetUpload = () => {
                             )}
                         </Form.Item>
                         <Form.Item>
-                            {lots.map((lotNo, index) => (
-                                <Button
-                                    key={index}
-
-                                    className={`${customBtn} me-2`}
-                                    type="primary"
-                                    onClick={() => handleLotClick(lotNo)}
-                                >
-                                    Click to view lot {lotNo}
-                                </Button>
-                            ))}
-
-                            <ViewQuantitySheet selectedLotNo={selectedLotNo} showBtn={showBtn} showTable={showTable} />
+                            <div className="d-flex flex-wrap justify-content-start">
+                                {lots.map((lotNo, index) => (
+                                    <Button
+                                        key={index}
+                                        className={`${customBtn} me-2 mb-4 ${customDark === "dark-dark" ? `border` : `border-0`}`}
+                                        type="primary"
+                                        onClick={() => handleLotClick(lotNo)}
+                                    >
+                                        Lot - {lotNo} <IoMdEye />
+                                    </Button>
+                                ))}
+                            </div>
+                            <div className="">
+                                <ViewQuantitySheet selectedLotNo={selectedLotNo} showBtn={showBtn} showTable={showTable} />
+                            </div>
 
                         </Form.Item>
                     </Form>

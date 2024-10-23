@@ -1,13 +1,10 @@
 import React, { useState, useEffect } from 'react';
-
 import { Button, Select, Table, Input } from 'antd';
-import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Modal as BootstrapModal } from 'react-bootstrap';
-
+import themeStore from './../store/themeStore';
 import API from '../CustomHooks/MasterApiHooks/api';
-
 import { EditOutlined, DeleteOutlined, StopOutlined } from '@ant-design/icons';
 import { useParams } from 'react-router-dom';
 
@@ -33,8 +30,13 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [itemToDelete, setItemToDelete] = useState(null);
     const [showNewRow, setShowNewRow] = useState(false);
+    const [modalMessage, setModalMessage] = useState('');
+    const [CTP_ID, setCTP_ID] = useState(null);
+    const [OFFSET_PRINTING_ID, setOFFSET_PRINTING_ID] = useState(null);
+    const [DIGITAL_PRINTING_ID, setDIGITAL_PRINTING_ID] = useState(null);
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = getCssClasses();
+    const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
 
     const columns = [
         {
@@ -121,7 +123,9 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
 
     const fetchQuantity = async (lotNo) => {
         try {
-            const response = await API.get(`/QuantitySheet/Catch?ProjectId=${projectId}&lotNo=${lotNo}`);
+
+            const response = await API.get(`/QuantitySheet?ProjectId=1&lotNo=${lotNo}`);
+
             const dataWithKeys = response.data.map(item => ({
                 ...item, key: item.quantitySheetId
             }));
@@ -145,39 +149,46 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
         try {
             const response = await API.get('/Processes');
             setProcess(response.data);
+            const ctpProcess = response.data.find(proc => proc.name === 'CTP');
+            const offsetProcess = response.data.find(proc => proc.name === 'Offset Printing');
+            const digitalProcess = response.data.find(proc => proc.name === 'Digital Printing');
+
+            setCTP_ID(ctpProcess ? ctpProcess.id : null);
+            setOFFSET_PRINTING_ID(offsetProcess ? offsetProcess.id : null);
+            setDIGITAL_PRINTING_ID(digitalProcess ? digitalProcess.id : null);
         } catch (error) {
             console.error('Failed to fetch Processes', error);
         }
     };
-
-    const handleProcessChange = (value) => {
-        let newValue = [...value];
-        const hasDigitalPrinting = newValue.includes('Digital Printing');
-        const hasOffsetPrinting = newValue.includes('Offset Printing');
-        const hasCTP = newValue.includes('CTP');
-        const otherProcesses = newValue.filter(process =>
-            !['Digital Printing', 'Offset Printing', 'CTP'].includes(process)
-        );
-        if (hasDigitalPrinting) {
-            newValue = ['Digital Printing', ...otherProcesses];
-        } else if (hasOffsetPrinting || hasCTP) {
-            newValue = ['CTP', 'Offset Printing', ...otherProcesses];
-        } else {
-            newValue = ['CTP', 'Offset Printing', ...otherProcesses];
-        }
-        setSelectedProcessIds(newValue);
-        setSelectedAddProcessIds(newValue);
-    };
-
+    
+    
     const handleSaveEdit = async () => {
         const updatedItem = dataSource.find(item => item.key === editingRow);
         if (!updatedItem) return;
-
+    
+        // Start with the existing process IDs
+        let updatedProcessIds = [...updatedItem.processId];
+    
+        // Adjust process IDs based on the modal message
+        if (modalMessage === 'Do you want to switch to Digital Printing?') {
+            // Remove CTP and Offset Printing IDs
+            updatedProcessIds = updatedProcessIds.filter(id => id !== CTP_ID && id !== OFFSET_PRINTING_ID);
+            // Add Digital Printing ID
+            updatedProcessIds.push(DIGITAL_PRINTING_ID);
+        } else if (modalMessage === 'Do you want to switch to Offset Printing?') {
+            // Remove Digital Printing ID
+            updatedProcessIds = updatedProcessIds.filter(id => id !== DIGITAL_PRINTING_ID);
+            // Add Offset Printing ID
+            updatedProcessIds.push(CTP_ID);
+            updatedProcessIds.push(OFFSET_PRINTING_ID);
+        }
+    
+        // Prepare the payload
         const payload = {
             ...updatedItem,
-            processId: selectedProcessIds.map(procName => process.find(proc => proc.name === procName)?.id).filter(Boolean),
+            processId: updatedProcessIds,
         };
-
+    
         try {
             await API.put(`/QuantitySheet/${editingRow}`, payload);
             setEditingRow(null);
@@ -186,7 +197,8 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
             console.error('Failed to save changes', error);
         }
     };
-
+    
+    
     const handleRemoveButtonClick = (key) => {
         const record = dataSource.find(item => item.key === key);
         if (record) {
@@ -218,10 +230,27 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
     const handleEditButtonClick = (key) => {
         setEditingRow(key);
         const record = dataSource.find(item => item.key === key);
-        if (record && Array.isArray(record.processId)) {
-            setSelectedProcessIds(record.processId.map(id => process.find(proc => proc.id === id)?.name).filter(Boolean));
-        } else {
-            setSelectedProcessIds([]);
+        
+        if (record) {
+            // Update selected process IDs
+            if (Array.isArray(record.processId)) {
+                setSelectedProcessIds(record.processId.map(id => process.find(proc => proc.id === id)?.name).filter(Boolean));
+            } else {
+                setSelectedProcessIds([]);
+            }
+
+            // Check process IDs and set the modal message accordingly
+            const hasCTP = record.processId.includes(CTP_ID);
+            const hasOffsetPrinting = record.processId.includes(OFFSET_PRINTING_ID);
+            const hasDigitalPrinting = record.processId.includes(DIGITAL_PRINTING_ID);
+
+            if (hasCTP && hasOffsetPrinting) {
+                setModalMessage('Do you want to switch to Digital Printing?');
+            } else if (hasDigitalPrinting) {
+                setModalMessage('Do you want to switch to Offset Printing?');
+            } else {
+                setModalMessage('Do you want to switch processes?'); // Default message if none match
+            }
         }
     };
 
@@ -251,7 +280,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
                 percentageCatch: 0,
                 projectId: projectId,
                 isOverridden: false,
-                processId: selectedAddProcessIds.length > 0 ? selectedAddProcessIds.map(procName => process.find(proc => proc.name === procName)?.id).filter(Boolean) : [],
+                processId:[],
             }
         ];
 
@@ -273,7 +302,6 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
                 projectId: projectId,
                 isOverridden: false,
             });
-            setSelectedAddProcessIds([]);
             fetchQuantity(selectedLotNo);
         } catch (error) {
             console.error('Failed to add new row', error);
@@ -287,75 +315,64 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
 
     return (
         <div className='mt-3'>
-            {showBtn && (
-                <>
-                    <Button onClick={() => setShowNewRow(prev => !prev)} type="primary">
-                        {showNewRow ? 'Cancel' : 'Add New Catch'}
-                    </Button>
-                    {showNewRow && (
-                        <table>
-                            <tbody>
-                                <tr>
-                                    <td>
-                                        <Input placeholder="Catch No" name="catchNo" value={newRowData.catchNo} onChange={handleNewRowChange} />
-                                    </td>
-                                    <td>
-                                        <Input placeholder="Paper" name="paper" value={newRowData.paper} onChange={handleNewRowChange} />
-                                    </td>
-                                    <td>
-                                        <Input placeholder="Course" name="course" value={newRowData.course} onChange={handleNewRowChange} />
-                                    </td>
-                                    <td>
-                                        <Input placeholder="Subject" name="subject" value={newRowData.subject} onChange={handleNewRowChange} />
-                                    </td>
-                                    <td>
-                                        <Input placeholder="Inner Envelope" name="innerEnvelope" value={newRowData.innerEnvelope} onChange={handleNewRowChange} />
-                                    </td>
-                                    <td>
-                                        <Input placeholder="Outer Envelope" name="outerEnvelope" value={newRowData.outerEnvelope} onChange={handleNewRowChange} />
-                                    </td>
-                                    <td>
-                                        <Input placeholder="Quantity" type="number" name="quantity" value={newRowData.quantity} onChange={handleNewRowChange} />
-                                    </td>
-                                    <td>
-                                        <Select
-                                            mode="multiple"
-                                            value={selectedAddProcessIds}
-                                            onChange={handleProcessChange}
-                                            style={{ width: '100%' }}
-                                        >
-                                            {process.map(proc => (
-                                                <Select.Option key={proc.id} value={proc.name}>
-                                                    {proc.name}
-                                                </Select.Option>
-                                            ))}
-                                        </Select>
-                                    </td>
-                                    <td>
-                                        <Button type="primary" onClick={handleAddRow}>Add</Button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    )}
-                </>
-            )}
+            <Table
+                className={cssClasses.customTable}
+                columns={columns}
+                dataSource={dataSource}
+                pagination={{
+                    pageSize: 10,
+                    showSizeChanger: true,
+                    pageSizeOptions: ['10', '20', '50', '100'],
+                    total: dataSource.length,
+                    showTotal: (total) => `Total ${total} items`,
+                }}
+                scroll={{ x: 'max-content' }}
+            />
 
-            {showTable && (
-                <Table
-                    className={cssClasses.customTable}
-                    columns={columns}
-                    dataSource={dataSource}
-                    pagination={{
-                        pageSize: 10,
-                        showSizeChanger: true,
-                        pageSizeOptions: ['10', '20', '50', '100'],
-                        total: dataSource.length,
-                        showTotal: (total) => `Total ${total} items`,
-                    }}
-                    scroll={{ x: 'max-content' }}
-                />
-            )}
+            <table>
+                <tbody>
+                    <tr>
+                        <td>
+                            <Input placeholder="Catch No" name="catchNo" value={newRowData.catchNo} onChange={handleNewRowChange} />
+                        </td>
+                        <td>
+                            <Input placeholder="Paper" name="paper" value={newRowData.paper} onChange={handleNewRowChange} />
+                        </td>
+                        <td>
+                            <Input placeholder="Course" name="course" value={newRowData.course} onChange={handleNewRowChange} />
+                        </td>
+                        <td>
+                            <Input placeholder="Subject" name="subject" value={newRowData.subject} onChange={handleNewRowChange} />
+                        </td>
+                        <td>
+                            <Input placeholder="Inner Envelope" name="innerEnvelope" value={newRowData.innerEnvelope} onChange={handleNewRowChange} />
+                        </td>
+                        <td>
+                            <Input placeholder="Outer Envelope" name="outerEnvelope" value={newRowData.outerEnvelope} onChange={handleNewRowChange} />
+                        </td>
+                        <td>
+                            <Input placeholder="Quantity" type="number" name="quantity" value={newRowData.quantity} onChange={handleNewRowChange} />
+                        </td>
+                        <td>
+                            <Select
+                                mode="multiple"
+                                value={selectedProcessIds}
+                                onChange={handleProcessChange}
+                                style={{ width: '100%' }}
+                            >
+                                {process.map(proc => (
+                                    <Select.Option key={proc.id} value={proc.name}>
+                                        {proc.name}
+                                    </Select.Option>
+                                ))}
+                            </Select>
+                        </td>
+                        <td>
+                            <Button type="primary" onClick={handleAddRow}>Add Row</Button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
 
             {editingRow !== null && (
                 <BootstrapModal show={true} onHide={handleModalClose}>
@@ -363,18 +380,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
                         <BootstrapModal.Title>Edit Process</BootstrapModal.Title>
                     </BootstrapModal.Header>
                     <BootstrapModal.Body>
-                        <Select
-                            mode="multiple"
-                            value={selectedProcessIds}
-                            onChange={handleProcessChange}
-                            style={{ width: '100%' }}
-                        >
-                            {process.map(proc => (
-                                <Select.Option key={proc.id} value={proc.name}>
-                                    {proc.name}
-                                </Select.Option>
-                            ))}
-                        </Select>
+                        {modalMessage}
                     </BootstrapModal.Body>
                     <BootstrapModal.Footer>
                         <Button variant="secondary" onClick={handleModalClose}>Close</Button>
