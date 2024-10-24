@@ -231,7 +231,7 @@ console.log(originalData.requiredProcessIds)
                 editingIndex === index ? (
                     <Select
                         mode="multiple"
-                        value={requirededitingProcessIds}
+                        value={requirededitingProcessIds || []} // Ensure default value
                         onChange={setRequiredEditingProcessIds}
                         style={{ width: '100%' }}
                     >
@@ -242,10 +242,11 @@ console.log(originalData.requiredProcessIds)
                         ))}
                     </Select>
                 ) : (
-                    ids.map(id => processMap[id]).join(', ')
+                    (Array.isArray(ids) ? ids : []).map(id => processMap[id]).join(', ') // Handle undefined or non-array ids
                 )
             ),
         },
+        
         {
             align: 'center',
             title: (
