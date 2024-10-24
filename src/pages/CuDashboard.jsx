@@ -14,6 +14,29 @@ import statisticsImage from './../assets/images/statistics.png';
 import PieChartIcon from './../assets/images/pie-chart.png';
 import LineChartIcon from './../assets/images/line-chart.png';
 import Grid from './../assets/images/table.png';
+import { CSSTransition } from 'react-transition-group';
+import styled from 'styled-components';
+
+const AnimatedDropdownMenu = styled(Dropdown.Menu)`
+  &.dropdown-enter {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  &.dropdown-enter-active {
+    opacity: 1;
+    transform: scale(1);
+    transition: opacity 300ms, transform 300ms;
+  }
+  &.dropdown-exit {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  &.dropdown-exit-active {
+    opacity: 1;
+    transform: scale(1);
+    transition: opacity 300ms, transform 300ms;
+  }
+`;
 
 const CuDashboard = () => {
   const [selectedLots, setSelectedLots] = useState([]);
@@ -186,38 +209,46 @@ const CuDashboard = () => {
               <PiDotsNineBold className="mt-3" size={30} style={{ cursor: "pointer" }} />
             </Dropdown.Toggle>
 
-            <Dropdown.Menu style={{ border: 'none', boxShadow: 'none' }}>
-              <Dropdown.Item as="div" onClick={(e) => e.stopPropagation()} style={{ background: 'transparent' }}>
-                <Row className="g-3 p-1">
-                  {Object.entries(visibleCards).slice(0, 4).map(([key, value], index) => (
-                    <Col key={key} xs={6} >
-                      <OverlayTrigger
-                        placement="bottom"
-                        overlay={<Tooltip id={`tooltip-${key}`}>{key.charAt(0).toUpperCase() + key.slice(1)}</Tooltip>}
-                      >
-                        <div
-                          className="d-flex align-items-center justify-content-center"
-                          style={{ cursor: "pointer" }}
-                          onClick={() => toggleCardVisibility(key)}
+            <CSSTransition
+              in={showDropdown}
+              timeout={300}
+              classNames="dropdown"
+              unmountOnExit
+            >
+              <AnimatedDropdownMenu style={{ border: 'none', boxShadow: 'none' }}>
+                <Dropdown.Item as="div" onClick={(e) => e.stopPropagation()} style={{ background: 'transparent' }}>
+                  <Row className="g-3 p-1">
+                    {Object.entries(visibleCards).slice(0, 4).map(([key, value], index) => (
+                      <Col key={key} xs={6} >
+                      
+                        <OverlayTrigger
+                          placement="bottom"
+                          overlay={<Tooltip id={`tooltip-${key}`}>{key.charAt(0).toUpperCase() + key.slice(1)}</Tooltip>}
                         >
-                          <img 
-                            src={visiblecardsIcon[key]} 
-                            alt="" 
-                            width={50} 
-                            height={50} 
-                            style={{ 
-                              opacity: value ? 1 : 0.5,
-                              transition: 'opacity 0.3s ease'
-                            }} 
-                            className="c-pointer "
-                          />
-                        </div>
-                      </OverlayTrigger>
-                    </Col>
-                  ))}
-                </Row>
-              </Dropdown.Item>
-            </Dropdown.Menu>
+                          <div
+                            className="d-flex align-items-center justify-content-center"
+                            style={{ cursor: "pointer" }}
+                            onClick={() => toggleCardVisibility(key)}
+                          >
+                            <img 
+                              src={visiblecardsIcon[key]} 
+                              alt="" 
+                              width={50} 
+                              height={50} 
+                              style={{ 
+                                opacity: value ? 1 : 0.5,
+                                transition: 'opacity 0.3s ease'
+                              }} 
+                              className="c-pointer "
+                            />
+                          </div>
+                        </OverlayTrigger>
+                      </Col>
+                    ))}
+                  </Row>
+                </Dropdown.Item>
+              </AnimatedDropdownMenu>
+            </CSSTransition>
           </Dropdown>
         </div>
       </div>
@@ -226,7 +257,7 @@ const CuDashboard = () => {
 
       <Row className="gx-3 mt-4">
         {visibleCards.lineChart && (
-          <Col lg={8}>
+          <Col lg={visibleCards.pieChart ? 8 : 12}>
             <Card
               className="dcard shadow-lg mb-3"
               style={{ height: "400px", background: "rgba(255,255,255,0.6)" }}
@@ -266,7 +297,7 @@ const CuDashboard = () => {
         )}
 
         {visibleCards.barChart && (
-          <Col lg={6}>
+          <Col lg={visibleCards.agGrid ? 6 : 12}>
             <Card
               className="dcard shadow-lg mb-3"
               style={{ height: "500px", background: "rgba(255,255,255,0.6)" }}

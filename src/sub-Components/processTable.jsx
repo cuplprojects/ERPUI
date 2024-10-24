@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
+
 import { useLocation, useParams } from 'react-router-dom';
-import { Card, Spinner, Row, Col } from 'react-bootstrap';
-import ProjectDetailsTable from './projectDetailTable';
+import { Card, Spinner, Row, Col } from 'react-bootstrap'; // Import Bootstrap components
+import ProjectDetailsTable from './projectDetailTable'; // Import the new component
+import dummyData from "../store/dd.json";
+
 import StatusPieChart from "./StatusPieChart";
 import StatusBarChart from "./StatusBarChart";
 import "./../styles/processTable.css";
@@ -13,9 +16,11 @@ import themeStore from '../store/themeStore';
 import { useStore } from 'zustand';
 import { MdPending } from "react-icons/md";
 import { Link } from 'react-router-dom';
-import { MdCloudUpload } from "react-icons/md";
-import { FaRegHourglassHalf } from "react-icons/fa6";
+
+import { MdCloudUpload } from "react-icons/md";//upload icon
+import { FaRegHourglassHalf } from "react-icons/fa6";//pre process running
 import API from '../CustomHooks/MasterApiHooks/api';
+
 
 const ProcessTable = () => {
     const { getCssClasses } = useStore(themeStore);
@@ -31,6 +36,7 @@ const ProcessTable = () => {
     ] = getCssClasses();
 
     const location = useLocation();
+
     const { id, lotNo } = useParams();
 
     const [tableData, setTableData] = useState([]);
@@ -38,14 +44,13 @@ const ProcessTable = () => {
     const [catchDetailModalShow, setCatchDetailModalShow] = useState(false);
     const [catchDetailModalData, setCatchDetailModalData] = useState(null);
     const [previousProcessPercentage, setPreviousProcessPercentage] = useState(90);
-    const [selectedLot, setSelectedLot] = useState(null);
+
     const [projectName, setProjectName] = useState('');
-    const [projectLots, setProjectLots] = useState([]);
 
     useEffect(() => {
         const fetchQuantitySheet = async () => {
             try {
-                const response = await API.get(`https://localhost:7212/api/QuantitySheet`);
+                const response = await API.get(`/QuantitySheet/Catch?ProjectId=${id}&lotNo=${lotNo}`);
                 const quantitySheetData = response.data;
                 console.log('API response:', quantitySheetData);
                 
@@ -58,33 +63,27 @@ const ProcessTable = () => {
                         subject: item?.subject,
                         outerEnvelope: item?.outerEnvelope,
                         innerEnvelope: item?.innerEnvelope,
-                        lotNo: item?.lotNo,
+                        lotNo:item?.lotNo,
                         quantity: item?.quantity,
                         percentageCatch: item?.percentageCatch,
-                        projectId: item?.projectId,
+                        projectId:item?.projectId,
                         isOverridden: item?.isOverridden,
                         processId: item?.processId || [],
-                        status: item?.status ||  "Pending",
-                        alerts: "",
-                        interimQuantity: "0",
-                        remarks: "",
-                        previousProcessStats: "",
+                        status: item?.status ||  "Pending",//to be fetched later from backend
+                        alerts: "",//to be fetched later from backend
+                        interimQuantity: "0",//to be fetched later from backend
+                        remarks: "",//to be fetched later from backend
+                        previousProcessStats: "",//to be fetched later from backend
                     }));
                     console.log('Formatted data:', formDataGet);
-                    setTableData(formDataGet);
-
-                    // Extract unique lot numbers
-                    const uniqueLots = [...new Set(formDataGet.map(item => item.lotNo))];
-                    setProjectLots(uniqueLots.map(lotNo => ({ lotNo })));
+                    setTableData(formDataGet); // Set the table data only here
                 } else {
                     console.error("API response is not an array or is empty");
-                    setTableData([]);
-                    setProjectLots([]);
+                    setTableData([]); // Set to empty only if there's no data
                 }
             } catch (error) {
                 console.error("Error fetching quantity sheet data:", error);
-                setTableData([]);
-                setProjectLots([]);
+                setTableData([]); // Set to empty on error
             }
         };
 
@@ -98,6 +97,7 @@ const ProcessTable = () => {
                 const projectData = response.data;
                 console.log(projectData)
                 setProjectName(projectData.name);
+                // You can set other project details here if needed
             } catch (error) {
                 console.error("Error fetching project details:", error);
             }
@@ -106,11 +106,15 @@ const ProcessTable = () => {
         fetchProjectDetails();
     }, [id]);
 
+
+    
     const handleToggleChange = () => {
         setShowBarChart(!showBarChart);
     };
 
+    // Render a loading state while fetching the project data
     if (!projectName) {
+
         return (
             <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
                 <Spinner animation="border" variant="primary" />
@@ -126,16 +130,16 @@ const ProcessTable = () => {
     };
 
     const handleLotClick = (lot) => {
-        setSelectedLot(lot);
+        setSelectedLot(lot === selectedLot ? null : lot);
     };
 
     const catchNumbers = tableData.map((item) => item.catchNumber).sort((a, b) => a - b);
 
+    // console.log(tableData);
+
     let activeUser, activeUserProcess, currentIndex, currentProcess, previousProcess;
 
-    const filteredTableData = selectedLot
-        ? tableData.filter(item => item.lotNo === selectedLot)
-        : tableData;
+
 
     return (
         <div className="container-fluid" >
@@ -146,8 +150,10 @@ const ProcessTable = () => {
                             <Row className='d-flex align-items-center'>
                                 <Col lg={6} md={4} xs={12} className=' d-lg-none d-md-none '>
                                     <div className="center-head d-flex justify-content-center">
+
                                         <span className='text-center fs-4 me-3'>{projectName}</span>
                                         <span className='text-center fs-4'>Lot - {lotNo}</span>
+
                                     </div>
                                 </Col>
                                 <div className="d-flex justify-content-center d-lg-none d-md-none ">
@@ -183,10 +189,10 @@ const ProcessTable = () => {
                                 </div>
                                 <Col lg={6} md={4} xs={12} className='d-none d-lg-block d-md-block'>
                                     <div className="center-head ">
+
                                         <div className='text-center fs-4'>{projectName}</div>
-                                        <div className='text-center fs-4'>
-                                            Lot - {selectedLot ? selectedLot : lotNo}
-                                        </div>
+                                        <div className='text-center fs-4'>Lot - {lotNo}</div>
+
                                     </div>
                                 </Col>
                                 <Col lg={3} md={4} xs={12}>
@@ -210,10 +216,12 @@ const ProcessTable = () => {
                         <marquee id="alert-marquee" behavior="scroll" direction="left" scrollamount="5" onMouseOver={(e) => e.target.stop()}
                             onMouseOut={(e) => e.target.start()}>
                             <div className="d-flex gap-4">
+
                                 {tableData.map((record, index) => (
                                     <React.Fragment key={index}>
                                         {record.alerts && record.alerts.length > 0 && (
                                             <AlertBadge catchNo={record.catchNumber} alerts={record.alerts} onClick={() => handleCatchClick(record)} status="level1" />
+
                                         )}
                                     </React.Fragment>
                                 ))}
@@ -228,40 +236,15 @@ const ProcessTable = () => {
                 </Col>
             </Row>
             <Row className='mb-2'>
-                <Col lg={3} md={12} className="pe-0">
-                    <h4 className={`${customDark} text-white p-2`}>Project Lots</h4>
-                    <div className="d-flex flex-column" style={{ width: '100%', maxHeight: '400px', overflowY: 'auto', overflowX: 'hidden', backgroundColor: '#f0f8ff' }}>
-                        {projectLots.map((lot, index) => (
-                            <div
-                                key={index}
-                                className={`mb-2 p-2 rounded-1 ${customLight} ${customDarkText} ${selectedLot === lot.lotNo ? 'border border-primary shadow-lg' : 'border'}`}
-                                onClick={() => handleLotClick(lot.lotNo)}
-                                style={{ 
-                                    cursor: 'pointer', 
-                                    transition: 'all 0.3s',
-                                    transform: selectedLot === lot.lotNo ? 'scale(1.02)' : 'scale(1)',
-                                    backgroundColor: selectedLot === lot.lotNo ? '#e6f7ff' : '#ffffff'
-                                }}
-                            >
-                                <div className="d-flex justify-content-between align-items-center">
-                                    <h5 className={`mb-0 ${selectedLot === lot.lotNo ? 'fw-bold text-dark' : ''}`} style={{ width: '90%' }}>
-                                        <span className="d-flex justify-content-start align-items-center" style={{ height: '100%' }}>
-                                            Lot {lot.lotNo}
-                                        </span>
-                                    </h5>
-                                    {selectedLot === lot.lotNo && (
-                                        <span className="text-primary">✓</span>
-                                    )}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </Col>
-                <Col lg={9} md={8} className="ps-0">
+
+                <Col lg={12} md={12} >
                     {tableData?.length > 0 && (
-                        <ProjectDetailsTable tableData={filteredTableData} setTableData={setTableData} projectId={id} lotNo={lotNo} />
+                        <ProjectDetailsTable tableData={tableData} setTableData={setTableData} projectId={id} lotNo={lotNo} />
+                        
                     )}
                 </Col>
+                <Col lg={2} md={0} ></Col>
+
             </Row>
             <Row className='mb-4 d-flex justify-content-between'>
                 <Col lg={8} md={12} className='mb-1'>
