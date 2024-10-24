@@ -251,16 +251,16 @@ const Labels = () => {
           ${customDark === "pink-dark" ? "thead-pink" : ""}
           ${customDark === "purple-dark" ? "thead-purple" : ""}
           ${customDark === "light-dark" ? "thead-light" : ""}
-          ${customDark === "brown-dark" ? "thead-brown" : ""} rounded-2`}
+          ${customDark === "brown-dark" ? "thead-brown" : ""} `}
         />
-        <div className="d-flex justify-content-end mt-3">
+        <div className={`d-flex justify-content-end mt-3 ${customDark === "dark-dark" ? "bg-white" : ""} rounded rounded-2 rounded-top-0 p-2`}>
           <Pagination
             current={currentPage}
             total={filteredLabels.length}
             pageSize={pageSize}
             onChange={(page) => setCurrentPage(page)}
             showSizeChanger={false}
-           
+            className=""
           />
         </div>
       </div>
