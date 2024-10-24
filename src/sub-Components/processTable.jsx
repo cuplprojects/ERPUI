@@ -1,8 +1,10 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+
 import { useLocation, useParams } from 'react-router-dom';
 import { Card, Spinner, Row, Col } from 'react-bootstrap'; // Import Bootstrap components
 import ProjectDetailsTable from './projectDetailTable'; // Import the new component
-import dummyData from "../store/dd.json";
+
 
 import StatusPieChart from "./StatusPieChart";
 import StatusBarChart from "./StatusBarChart";
@@ -15,7 +17,9 @@ import themeStore from '../store/themeStore';
 import { useStore } from 'zustand';
 import { MdPending, MdCloudUpload } from "react-icons/md";
 import { Link } from 'react-router-dom';
-import { FaRegHourglassHalf } from "react-icons/fa6";
+
+
+import { FaRegHourglassHalf } from "react-icons/fa6";//pre process running
 
 import API from '../CustomHooks/MasterApiHooks/api';
 import { useUserData } from '../store/userDataStore';
@@ -25,6 +29,10 @@ import { decrypt } from "../Security/Security";
 
 
 const ProcessTable = () => {
+    
+        const { encryptedProjectId, encryptedLotNo } = useParams();
+        const id = decrypt(encryptedProjectId);
+        const lotNo = decrypt(encryptedLotNo);
     const [featureData, setFeatureData] = useState(null);
     const { processId, processName } = useCurrentProcessStore();
     const { setProcess, clearProcess } = useCurrentProcessStore((state) => state.actions);
@@ -45,10 +53,6 @@ const ProcessTable = () => {
     ] = cssClasses;
 
     const location = useLocation();
-    const { encryptedProjectId, encryptedLotNo } = useParams();
-    const id = decrypt(encryptedProjectId);
-    const lotNo = decrypt(encryptedLotNo);
-
 
 
     const [tableData, setTableData] = useState([]);
@@ -56,8 +60,8 @@ const ProcessTable = () => {
     const [catchDetailModalShow, setCatchDetailModalShow] = useState(false);
     const [catchDetailModalData, setCatchDetailModalData] = useState(null);
     const [previousProcessPercentage, setPreviousProcessPercentage] = useState(90);
-    const [selectedLot, setSelectedLot] = useState(lotNo);
 
+    const [selectedLot, setSelectedLot] = useState(lotNo);
     const [projectName, setProjectName] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState(null);
@@ -108,13 +112,17 @@ const ProcessTable = () => {
         return false;
     }
 
+
     useEffect(() => {
         const fetchQuantitySheet = async () => {
             try {
+
                 const response = await API.get(`/QuantitySheet/CatchByproject?ProjectId=${id}`);
+
                 const quantitySheetData = response.data;
                 
                 if (Array.isArray(quantitySheetData) && quantitySheetData.length > 0) {
+                    console.log(quantitySheetData);
                     const formDataGet = quantitySheetData.map((item) => ({
                         srNo: item?.quantitySheetId || "",
                         catchNumber: item?.catchNo,
@@ -129,26 +137,29 @@ const ProcessTable = () => {
                         projectId:item?.projectId,
                         isOverridden: item?.isOverridden,
                         processId: item?.processId || [],
+
                         status: item?.status || "Pending",
                         alerts: "",
                         interimQuantity: "0",
                         remarks: "",
                         previousProcessStats: "",
-                        status: item?.status ||  "Pending",//to be fetched later from backend
-                        alerts: "",//to be fetched later from backend
-                        interimQuantity: "0",//to be fetched later from backend
-                        remarks: "",//to be fetched later from backend
-                        previousProcessStats: "",//to be fetched later from backend
+
                     }));
                     console.log('Formatted data:', formDataGet);
                     setTableData(formDataGet); // Set the table data only here
+
+                    // Extract unique lot numbers and set projectLots
+                    const uniqueLots = [...new Set(formDataGet.map(item => item.lotNo))];
+                    setProjectLots(uniqueLots.map(lotNo => ({ lotNo })));
                 } else {
                     console.error("API response is not an array or is empty");
                     setTableData([]); // Set to empty only if there's no data
+                    setProjectLots([]); // Set projectLots to empty array
                 }
             } catch (error) {
                 console.error("Error fetching quantity sheet data:", error);
                 setTableData([]); // Set to empty on error
+                setProjectLots([]); // Set projectLots to empty array on error
             }
         };
 
@@ -172,15 +183,12 @@ const ProcessTable = () => {
 
 
 
-
-    
     const handleToggleChange = () => {
         setShowBarChart(!showBarChart);
     };
 
+
     if (isLoading) {
-    // Render a loading state while fetching the project data
-    if (!projectName) {
 
         return (
             <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
@@ -200,13 +208,12 @@ const ProcessTable = () => {
     };
 
     const catchNumbers = tableData.map((item) => item.catchNumber).sort((a, b) => a - b);
+    console.log(catchNumbers);
 
-    // console.log(tableData);
-
-    let activeUser, activeUserProcess, currentIndex, currentProcess, previousProcess;
-
-
-
+    const filteredTableData = selectedLot
+        ? tableData.filter(item => item.lotNo === selectedLot)
+        : tableData;
+console.log(filteredTableData);
     return (
         <div className="container-fluid" >
             <Row className="mb-  ">
@@ -218,7 +225,7 @@ const ProcessTable = () => {
                                     <div className="center-head d-flex justify-content-center">
 
                                         <span className='text-center fs-4 me-3'>{projectName}</span>
-                                        <span className='text-center fs-4'>Lot - {lotNo}</span>
+                                        <span className='text-center fs-4'>Lot - {selectedLot}</span>
 
                                     </div>
                                 </Col>
@@ -257,7 +264,7 @@ const ProcessTable = () => {
                                     <div className="center-head ">
 
                                         <div className='text-center fs-4'>{projectName}</div>
-                                        <div className='text-center fs-4'>Lot - {lotNo}</div>
+                                        <div className='text-center fs-4'>Lot - {selectedLot}</div>
 
                                     </div>
                                 </Col>
@@ -302,6 +309,7 @@ const ProcessTable = () => {
                 </Col>
             </Row>
             <Row className='mb-2'>
+
                 <Col lg={12} md={12}>
                     <Row>
                         <Col lg={3} md={12} className="pe-0">
@@ -335,10 +343,11 @@ const ProcessTable = () => {
                         </Col>
                         <Col lg={9} md={8} className="ps-0">
                             {tableData?.length > 0 && (
-                                <ProjectDetailsTable tableData={tableData} setTableData={setTableData} projectId={id} lotNo={lotNo} featureData={featureData} hasFeaturePermission={hasFeaturePermission}/>
+                                <ProjectDetailsTable tableData={filteredTableData} setTableData={setTableData} projectId={id} lotNo={selectedLot} featureData={featureData} hasFeaturePermission={hasFeaturePermission}/>
                             )}
                         </Col>
                     </Row>
+
                 </Col>
                 <Col lg={2} md={0} ></Col>
 
@@ -370,6 +379,6 @@ const ProcessTable = () => {
             </CatchDetailModal>
         </div>
     );
-}};
+};
 
 export default ProcessTable;
