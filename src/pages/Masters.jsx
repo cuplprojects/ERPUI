@@ -26,8 +26,10 @@ import SystemSettings from  './Configurtaion/SystemSettings';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import { hasPermission } from '../CustomHooks/Services/permissionUtils';
+import { useTranslation } from 'react-i18next';
 
 const Sidebar = () => {
+  const { t } = useTranslation();
   const { getCssClasses } = useStore(themeStore);
   const [
     customDark,
@@ -76,24 +78,22 @@ const Sidebar = () => {
     {
       key: 'userManagement',
       icon: <RiUserSettingsFill />,
-      label: 'User Management',
+      label: t('userManagement'),
       permission: '2.1',
       children: [
-
-        { key: 'RolePage', icon: <FaUserCog />, label: 'Role', permission: '2.1.1' },
-        { key: 'addUser', icon: <FaUserPlus />, label: 'Add User', permission: '2.1.2' },
-        { key: 'allUsers', icon: <FaListUl />, label: 'All Users', permission: '2.1.3' },
-
+        { key: 'RolePage', icon: <FaUserCog />, label: t('role'), permission: '2.1.1' },
+        { key: 'addUser', icon: <FaUserPlus />, label: t('addUser'), permission: '2.1.2' },
+        { key: 'allUsers', icon: <FaListUl />, label: t('allUsers'), permission: '2.1.3' },
       ],
     },
-    { key: 'group', icon: <FaUsers />, label: 'Group', permission: '2.2' },
-    { key: 'type', icon: <FaBookOpenReader />, label: 'Project Type', permission: '2.3' },
-    { key: 'project', icon: <FaProjectDiagram />, label: 'Project', permission: '2.4' },
-    { key: 'zone', icon: <BiSolidCctv />, label: 'Zone', permission: '2.5' },
-    { key: 'camera', icon: <FaCamera />, label: 'Camera', permission: '2.6' },
-    { key: 'machine', icon: <GiGears />, label: 'Production Machines', permission: '2.7' },
-    { key: 'alarm', icon: <FaBell />, label: 'Alarm', permission: '2.8' },
-    { key: 'systemSettings', icon: <FaCog />, label: 'Process Settings', permission: '2.10' },
+    { key: 'group', icon: <FaUsers />, label: t('group'), permission: '2.2' },
+    { key: 'type', icon: <FaBookOpenReader />, label: t('projectType'), permission: '2.3' },
+    { key: 'project', icon: <FaProjectDiagram />, label: t('project'), permission: '2.4' },
+    { key: 'zone', icon: <BiSolidCctv />, label: t('zone'), permission: '2.5' },
+    { key: 'camera', icon: <FaCamera />, label: t('camera'), permission: '2.6' },
+    { key: 'machine', icon: <GiGears />, label: t('productionMachines'), permission: '2.7' },
+    { key: 'alarm', icon: <FaBell />, label: t('alarm'), permission: '2.8' },
+    { key: 'systemSettings', icon: <FaCog />, label: t('processSettings'), permission: '2.10' },
   ];
 
   const allowedMenuItems = menuItems.filter(menu => {
@@ -115,7 +115,7 @@ const Sidebar = () => {
           <span className={`${customDark === "dark-dark" ? `text-white` : customDarkText} ml-3 ${isOffcanvas ? '' : 'd-none d-md-block d-lg-block'}`}>{menu.label}</span>
           {menu.children && (
             <span className="ml-auto">
-              {expandedMenus[menu.key] ? <FaCaretDown className={customDark === "dark-dark" ? `text-white` : customDarkText} size={25} /> : <FaCaretLeft className={customDark === "dark-dark" ? customDarkText : ''} size={25} />}
+              {expandedMenus[menu.key] ? <FaCaretDown className={customDark === "dark-dark" ? `text-white` : customDarkText} size={25} /> : <FaCaretLeft className={customDark === "dark-dark" ? 'text-white' : customDarkText} size={25} />}
             </span>
           )}
         </Nav.Link>
@@ -147,7 +147,7 @@ const Sidebar = () => {
           </button>
           <Offcanvas show={show} onHide={() => setShow(false)} placement="start" className={customDark === "dark-dark" ? customDark : customLight} style={{ width: '80%', zIndex: "9999" }}>
             <Offcanvas.Header closeButton={false} className={`${customDark} ${customLightText} d-flex justify-content-between`}>
-              <Offcanvas.Title className={customDark === 'dark-dark' ? `text-white` : ''}>Menu</Offcanvas.Title>
+              <Offcanvas.Title className={customDark === 'dark-dark' ? `text-white` : ''}>{t('menu')}</Offcanvas.Title>
               <AiFillCloseSquare 
                 size={35}
                 onClick={() => setShow(false)} 

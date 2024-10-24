@@ -9,8 +9,10 @@ import { AiFillCloseSquare } from "react-icons/ai";
 import { SortAscendingOutlined, SortDescendingOutlined, EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
 import { Col, Row } from 'react-bootstrap';
 import { FaSearch } from "react-icons/fa";
+import { useTranslation } from 'react-i18next';
 
 const Group = () => {
+  const { t } = useTranslation();
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
   const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
@@ -37,7 +39,7 @@ const Group = () => {
       setGroups(response.data);
       setFilteredGroups(response.data);
     } catch (error) {
-      console.log('Failed to fetch groups!');
+      console.log(t('failedToFetchGroups'));
     }
   };
 
@@ -58,7 +60,7 @@ const Group = () => {
 
     const existingGroup = groups.find(group => group.name.toLowerCase() === name.toLowerCase());
     if (existingGroup) {
-      message.error('Group name already exists!');
+      message.error(t('groupNameAlreadyExists'));
       return;
     }
 
@@ -69,9 +71,9 @@ const Group = () => {
       setFilteredGroups([...filteredGroups, newGroup]);
       form.resetFields();
       setIsModalVisible(false);
-      message.success('Group added successfully!');
+      message.success(t('groupAddedSuccessfully'));
     } catch (error) {
-      message.error('Failed to add group!');
+      message.error(t('failedToAddGroup'));
     }
   };
 
@@ -84,7 +86,7 @@ const Group = () => {
     );
 
     if (existingGroup) {
-      message.error('Group name already exists!');
+      message.error(t('groupNameAlreadyExists'));
       return;
     }
 
@@ -97,9 +99,9 @@ const Group = () => {
       setFilteredGroups(updatedGroups.filter(group =>
         group.name.toLowerCase().includes(searchText.toLowerCase())
       ));
-      message.success('Group updated successfully!');
+      message.success(t('groupUpdatedSuccessfully'));
     } catch (error) {
-      message.error('Failed to update group');
+      message.error(t('failedToUpdateGroup'));
     } finally {
       setEditingIndex(null);
       setEditingValue('');
@@ -136,7 +138,7 @@ const Group = () => {
   const columns = [
     {
       align: 'center',
-      title: 'SN.',
+      title: t('sn'),
       dataIndex: 'serial',
       key: 'serial',
       render: (text, record, index) => (currentPage - 1) * pageSize + index + 1,
@@ -145,7 +147,7 @@ const Group = () => {
     {
       title: (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          Group Name
+          {t('groupName')}
           <Button
             type="text"
             onClick={() => handleSort('name')}
@@ -173,7 +175,7 @@ const Group = () => {
       align: 'center',
       title: (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          Status
+          {t('status')}
           <Button
             type="text"
             onClick={() => handleSort('status')}
@@ -189,22 +191,22 @@ const Group = () => {
           <Switch
             checked={editingStatus}
             onChange={(checked) => setEditingStatus(checked)}
-            checkedChildren="Active"
-            unCheckedChildren="Inactive"
+            checkedChildren={t('active')}
+            unCheckedChildren={t('inactive')}
           />
         ) : (
           <Switch
             checked={status}
             disabled
-            checkedChildren="Active"
-            unCheckedChildren="Inactive"
+            checkedChildren={t('active')}
+            unCheckedChildren={t('inactive')}
           />
         )
       ),
     },
     {
       align: 'left',
-      title: 'Action',
+      title: t('action'),
       key: 'action',
       width: '25%',
       render: (_, record, index) => (
@@ -212,11 +214,11 @@ const Group = () => {
           <div style={{ display: 'flex', justifyContent: '' }}>
             <Button type="link" onClick={() => handleEditSave(record)} className={`${customDark === "dark-dark" ? `${customMid} border` : `${customLight} ${customDarkBorder}`} text-white `}>
               <SaveOutlined className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}/> 
-              <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}>Save</span> 
+              <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}>{t('save')}</span> 
             </Button>
             <Button type="link" onClick={handleCancelEdit} className={`${customDark === "dark-dark" ? `${customMid} border` : `${customLight} ${customDarkBorder}`} text-white ms-3`}>
               <CloseOutlined className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}/> 
-              <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}>Cancel</span> 
+              <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}>{t('cancel')}</span> 
             </Button>
           </div>
         ) : (
@@ -231,7 +233,7 @@ const Group = () => {
             className={`${customBtn}`}
           >
             <EditOutlined className={`${customBtn} text-white me-1`} />
-            Edit
+            {t('edit')}
           </Button>
         )
       ),
@@ -260,7 +262,7 @@ const Group = () => {
       overflowX: 'auto'
     }}
       className={`rounded-2 ${customDark === "dark-dark" ? `${customDark} border text-white` : `${customDarkText}`}`}>
-      <h2 style={{ marginBottom: '20px', fontSize: 'clamp(1.5rem, 4vw, 2rem)' }} className=''>Groups</h2>
+      <h2 style={{ marginBottom: '20px', fontSize: 'clamp(1.5rem, 4vw, 2rem)' }} className=''>{t('groups')}</h2>
       <div style={{
         display: 'flex',
         flexWrap: 'wrap',
@@ -270,11 +272,11 @@ const Group = () => {
       }}
       >
         <Button type="" className={`mb-2 rounded-2 ${customBtn} ${customDark === "dark-dark" ? `border-white` : `border-0`} custom-zoom-btn `} onClick={showModal}>
-          Add Group
+          {t('addGroup')}
         </Button>
         <div className="d-flex align-items-center">
           <Input
-            placeholder="Search groups"
+            placeholder={t('searchGroups')}
             onChange={(e) => setSearchText(e.target.value)}
             style={{ width: 200, height: 32 }}
             className={` mb-2 rounded-2 ${customDark === "dark-dark" ? ` ${customLightBorder} text-dark` : `${customDarkText}`} ${customDarkBorder}  rounded-end-0`}
@@ -310,7 +312,7 @@ const Group = () => {
       />
       <div className="d-flex flex-wrap justify-content-end align-items-center mt-4">
         <div className="mb-3 mb-md-0 me-md-3">
-          <Pagination
+        <Pagination
             current={currentPage}
             pageSize={pageSize}
             total={filteredGroups.length}
@@ -319,7 +321,7 @@ const Group = () => {
             pageSizeOptions={['5', '10']}
             defaultPageSize={5}
             showQuickJumper={false}
-            showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
+            showTotal={(total, range) => `${range[0]}-${range[1]} ${t('of') } ${total} ${t('items')}`}
             className={`${customDark === "dark-dark" ? `bg-white` : ``} p-2 p-md-3 rounded`}
             responsive
             size="small"
@@ -334,12 +336,12 @@ const Group = () => {
         className={`rounded-2 ${customDark === "" ? `${customDark}` : ''}  `}
       >
         <Modal.Header closeButton={false} className={`rounded-top-2 ${customDark} ${customLightText} ${customDark === "dark-dark" ? `border ` : `border-0`} border d-flex justify-content-between `}>
-          <Modal.Title>Add Group</Modal.Title>
+          <Modal.Title>{t('addGroup')}</Modal.Title>
           <AiFillCloseSquare
             size={35}
             onClick={handleCancel}
             className={`rounded-2 ${customDark === "dark-dark" ? "text-dark bg-white " : `${customDark} custom-zoom-btn text-white  ${customDarkBorder}`}`}
-            aria-label="Close"
+            aria-label={t('close')}
             style={{ cursor: 'pointer', fontSize: '1.5rem' }}
           />
         </Modal.Header>
@@ -353,26 +355,26 @@ const Group = () => {
             <div className="d-flex justify-content-between align-items-center">
               <Form.Item
                 name="name"
-                label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-5 `}>{"Group Name"}</span>}
-                rules={[{ required: true, message: 'Please input group name!' }]}
+                label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-5 `}>{t('groupName')}</span>}
+                rules={[{ required: true, message: t('pleaseInputGroupName') }]}
                 className="flex-grow-1 me-3"
               >
-                <Input placeholder="Group Name" className="rounded-2" />
+                <Input placeholder={t('groupName')} className="rounded-2" />
               </Form.Item>
 
               <Form.Item
                 name="status"
-                label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-5 `}>{"Status"}</span>}
+                label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-5 `}>{t('status')}</span>}
                 valuePropName="checked"
                 initialValue={true}
               >
-                <Switch checkedChildren="Active" unCheckedChildren="Inactive" className="" />
+                <Switch checkedChildren={t('active')} unCheckedChildren={t('inactive')} className="" />
               </Form.Item>
             </div>
 
             <Form.Item>
               <Button type="" htmlType="submit" className={`rounded-2 ${customBtn} ${customDark === "dark-dark" ? `` : `border-0`} custom-zoom-btn`}>
-                Submit
+                {t('submit')}
               </Button>
             </Form.Item>
           </Form>

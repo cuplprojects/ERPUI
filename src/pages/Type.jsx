@@ -77,7 +77,7 @@ const Type = () => {
     useEffect(() => {
         const filtered = types.filter(type =>
             type.types.toLowerCase().includes(searchText.toLowerCase()) ||
-            type.associatedProcessId.some(id => processMap[id].toLowerCase().includes(searchText.toLowerCase()))
+            type.associatedProcessId.some(id => processMap[id]?.toLowerCase().includes(searchText.toLowerCase()))
         );
         setFilteredTypes(filtered);
         setCurrentPage(1);
@@ -141,7 +141,7 @@ const Type = () => {
         setRequiredEditingProcessIds(originalData.requiredProcessId)
         setEditingStatus(originalData.status);
     };
-console.log(originalData.requiredProcessIds)
+
     const handleSearch = (value) => {
         setSearchText(value);
     };
@@ -219,7 +219,7 @@ console.log(originalData.requiredProcessIds)
                         ))}
                     </Select>
                 ) : (
-                    ids.map(id => processMap[id]).join(', ')
+                    ids?.map(id => processMap[id]).join(', ') || ''
                 )
             ),
         },
@@ -231,7 +231,7 @@ console.log(originalData.requiredProcessIds)
                 editingIndex === index ? (
                     <Select
                         mode="multiple"
-                        value={requirededitingProcessIds || []} // Ensure default value
+                        value={requirededitingProcessIds}
                         onChange={setRequiredEditingProcessIds}
                         style={{ width: '100%' }}
                     >
@@ -242,11 +242,10 @@ console.log(originalData.requiredProcessIds)
                         ))}
                     </Select>
                 ) : (
-                    (Array.isArray(ids) ? ids : []).map(id => processMap[id]).join(', ') // Handle undefined or non-array ids
+                    ids?.map(id => processMap[id]).join(', ') || ''
                 )
             ),
         },
-        
         {
             align: 'center',
             title: (

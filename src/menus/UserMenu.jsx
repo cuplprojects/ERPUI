@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FaUserCircle, FaPowerOff } from 'react-icons/fa';
 import { ImProfile } from "react-icons/im";
 import { IoSettingsSharp } from "react-icons/io5";
@@ -11,10 +11,12 @@ import "./../styles/userMenu.css"
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import SampleUser from "./../assets/sampleUsers/defaultUser.jpg";
-import useUserDataStore, { useUserData, useUserDataActions } from '../store/userDataStore';
+import { useUserData, useUserDataActions } from '../store/userDataStore';
 import { useMediaQuery } from 'react-responsive';
+import { useTranslation } from 'react-i18next';
 
 const UserMenu = ({ onClose }) => {
+  const { t, i18n } = useTranslation();
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
   const [customDark, customMid, , customBtn] = cssClasses;
@@ -23,13 +25,26 @@ const UserMenu = ({ onClose }) => {
   const userData = useUserData();
   const { fetchUserData, clearUserData } = useUserDataActions();
   const isMobile = useMediaQuery({ maxWidth: 767 });
+  const menuRef = useRef(null);
 
   useEffect(() => {
     fetchUserData();
   }, [fetchUserData]);
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        onClose();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [onClose]);
+
   const handleLogoutClick = () => setShowModal(true);
-  const handleButtonClick = () => onClose();
   const handleProfileClick = () => navigate('/profile');
   const handleSettingsClick = () => navigate('/settings');
   const handleChangePasswordClick = () => navigate('/change-password');
@@ -40,6 +55,7 @@ const UserMenu = ({ onClose }) => {
     localStorage.setItem('authToken', null);
     navigate('/');
     setShowModal(false);
+    onClose();
   };
 
   const handleClose = () => setShowModal(false);
@@ -48,12 +64,12 @@ const UserMenu = ({ onClose }) => {
 
   return (
     <div
+      ref={menuRef}
       className={`card p-3 rounded shadow-sm ${customDark} border mt-1`}
       style={{
         minWidth: isMobile ? '100%' : '200px',
         maxWidth: isMobile ? '100%' : '300px',
       }}
-      onClick={handleButtonClick}
     >
       <div className="text-center mb-2 custom-zoom-btn">
         <div style={{ 
@@ -88,10 +104,10 @@ const UserMenu = ({ onClose }) => {
       </div>
       <ul className="list-unstyled">
         {[
-          { icon: <ImProfile />, text: 'Profile', onClick: handleProfileClick },
-          { icon: <IoSettingsSharp />, text: 'My Settings', onClick: handleSettingsClick },
-          { icon: <RiLockPasswordFill />, text: 'Change Password', onClick: handleChangePasswordClick },
-          { icon: <FaPowerOff />, text: 'Logout', onClick: handleLogoutClick },
+          { icon: <ImProfile />, text: 'profile', route: '/profile', onClick: handleProfileClick },
+          // { icon: <IoSettingsSharp />, text: 'mySettings', route: '/settings', onClick: handleSettingsClick },
+          { icon: <RiLockPasswordFill />, text: 'changePassword', route: '/change-password', onClick: handleChangePasswordClick },
+          { icon: <FaPowerOff />, text: 'logout', onClick: handleLogoutClick },
         ].map((item, index) => (
           <li key={index} className={`p-2 ${index !== 3 ? 'border-bottom' : ''} d-flex align-items-center custom-zoom-btn`}>
             <span className="me-2 text-light">{item.icon}</span>
@@ -101,11 +117,11 @@ const UserMenu = ({ onClose }) => {
                 className="btn text-decoration-none text-light d-block p-0 border-0 bg-transparent"
                 style={{ cursor: 'pointer' }}
               >
-                {item.text}
+                {t(item.text)}
               </button>
             ) : (
-              <Link to={`/${item.text.toLowerCase().replace(' ', '-')}`} className="text-decoration-none text-light d-block" onClick={item.onClick}>
-                {item.text}
+              <Link to={item.route} className="text-decoration-none text-light d-block" onClick={item.onClick}>
+                {t(item.text)}
               </Link>
             )}
           </li>
@@ -114,21 +130,21 @@ const UserMenu = ({ onClose }) => {
 
       <Modal show={showModal} onHide={handleClose} centered>
         <Modal.Header closeButton={false} className={`${customDark} ${customBtn} ${customDark === 'dark-dark' ? "border border-bottom-0" : ""}`}>
-          <Modal.Title>Confirm Logout</Modal.Title>
+          <Modal.Title>{t('confirmLogout')}</Modal.Title>
         </Modal.Header>
         <Modal.Body className={`${customDark} ${customBtn} ${customDark === 'dark-dark' ? "border border-top-0 border-bottom-0" : ""}`}>
-          Are you sure you want to log out?
+          {t('areYouSureYouWantToLogOut')}
         </Modal.Body>
         <Modal.Footer className={`${customDark} ${customBtn} ${customDark === 'dark-dark' ? "border border-top-0" : ""}`}>
           <Button variant="light" onClick={handleClose} className={`${customDark === 'dark-dark' ? `${customMid} text-light` : `${customDark} text-white`}`}>
-            Cancel
+            {t('cancel')}
           </Button>
           <Button
             variant="danger"
             onClick={handleLogoutConfirm}
             className={customDark === 'red-dark' ? 'text-danger bg-white' : ''}
           >
-            Logout
+            {t('logout')}
           </Button>
         </Modal.Footer>
       </Modal>

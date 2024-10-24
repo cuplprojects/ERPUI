@@ -14,6 +14,7 @@ import themeStore from '../../store/themeStore';
 import { useStore } from 'zustand';
 import useAlertMessage from '../../CustomHooks/Services/AlertMessage';
 import { fetchTextLabels, addTextLabel, updateTextLabel } from '../../CustomHooks/ApiServices/textLabelSevice';
+import { EditOutlined, CloseOutlined } from '@ant-design/icons';
 
 const Labels = () => {
   const [labels, setLabels] = useState([]);
@@ -33,10 +34,8 @@ const Labels = () => {
   const { language } = useLanguageStore();
 
   const { getCssClasses } = useStore(themeStore);
-  const cssClasses = getCssClasses();
-  const customLight = cssClasses[2];
-  const customDarkText = cssClasses[4];
-
+    const cssClasses = getCssClasses();
+    const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
   // Hardcoded developer flag
   const isDeveloper = true;
 
@@ -84,7 +83,15 @@ const Labels = () => {
       title: t('actions'),
       key: 'actions',
       render: (_, record) => (
-        <Button onClick={() => handleEdit(record)}>{t('edit')}</Button>
+        <div className="d-flex justify-content-center">
+          <Button
+            onClick={() => handleEdit(record)}
+            className={`${customBtn} ${customLightBorder} btn-sm d-flex align-items-center`}
+          >
+            <EditOutlined className="me-1" />
+            <span className="d-none d-sm-inline">{t('edit')}</span>
+          </Button>
+        </div>
       ),
     },
   ];
@@ -197,13 +204,19 @@ const Labels = () => {
             </Col>
           </Row>
           <div className="d-flex justify-content-center">
-            <Button type="primary" htmlType="submit" className="me-2">
-              {showAddForm ? t('addMessage') : t('updateMessage')}
+            <Button type="primary" htmlType="submit" className={`me-2 ${customBtn} ${customLightBorder}`}>
+               {showAddForm ? t('addMessage') : t('updateMessage')}
             </Button>
-            <Button onClick={() => {
-              setShowEditForm(false);
-              setShowAddForm(false);
-            }}>{t('cancel')}</Button>
+            <Button 
+              onClick={() => {
+                setShowEditForm(false);
+                setShowAddForm(false);
+              }} 
+              className={`${customBtn} ${customLightBorder} d-flex align-items-center`}
+            >
+              <CloseOutlined className="me-2"/> 
+              <span>{t('cancel')}</span>
+            </Button>
           </div>
         </Form>
       )}
@@ -211,7 +224,9 @@ const Labels = () => {
         <div className="d-flex justify-content-between mb-3">
           <div>
             {isDeveloper && (
-              <Button onClick={handleAdd}>{t('addMessage')}</Button>
+              <Button onClick={handleAdd} className={`${customBtn} ${customLightBorder}`}>
+                 {t('addMessage')}
+              </Button>
             )}
           </div>
           <div>
@@ -228,14 +243,24 @@ const Labels = () => {
           pagination={false}
           scroll={{ x: true }}
           bordered
+          className={`${customDark === "default-dark" ? "thead-default" : ""}
+          ${customDark === "red-dark" ? "thead-red" : ""}
+          ${customDark === "green-dark" ? "thead-green" : ""}
+          ${customDark === "blue-dark" ? "thead-blue" : ""}
+          ${customDark === "dark-dark" ? "thead-dark" : ""}
+          ${customDark === "pink-dark" ? "thead-pink" : ""}
+          ${customDark === "purple-dark" ? "thead-purple" : ""}
+          ${customDark === "light-dark" ? "thead-light" : ""}
+          ${customDark === "brown-dark" ? "thead-brown" : ""} `}
         />
-        <div className="d-flex justify-content-end mt-3">
+        <div className={`d-flex justify-content-end mt-3 ${customDark === "dark-dark" ? "bg-white" : ""} rounded rounded-2 rounded-top-0 p-2`}>
           <Pagination
             current={currentPage}
             total={filteredLabels.length}
             pageSize={pageSize}
             onChange={(page) => setCurrentPage(page)}
             showSizeChanger={false}
+            className=""
           />
         </div>
       </div>
