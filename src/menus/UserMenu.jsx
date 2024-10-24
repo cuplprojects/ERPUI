@@ -105,7 +105,7 @@ const UserMenu = ({ onClose }) => {
       <ul className="list-unstyled">
         {[
           { icon: <ImProfile />, text: 'profile', route: '/profile', onClick: handleProfileClick },
-          { icon: <IoSettingsSharp />, text: 'mySettings', route: '/settings', onClick: handleSettingsClick },
+          // { icon: <IoSettingsSharp />, text: 'mySettings', route: '/settings', onClick: handleSettingsClick },
           { icon: <RiLockPasswordFill />, text: 'changePassword', route: '/change-password', onClick: handleChangePasswordClick },
           { icon: <FaPowerOff />, text: 'logout', onClick: handleLogoutClick },
         ].map((item, index) => (
