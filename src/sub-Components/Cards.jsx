@@ -22,10 +22,10 @@ const Cards = ({ item, onclick, disableProject }) => {
 
   // Handle info button click
   const handleInfoClick = (e) => {
-    if(disableProject){
+    e.stopPropagation();
+    if(!disableProject){
       return;
     }
-    e.stopPropagation();
     onclick(item);
   };
 
