@@ -265,7 +265,7 @@ console.log(originalData.requiredProcessIds)
                         ))}
                     </Select>
                 ) : (
-                    ids.map(id => processMap[id]).join(', ')
+                    ids?.map(id => processMap[id]).join(', ') || ''
                 )
             ),
         },
@@ -472,7 +472,7 @@ console.log(originalData.requiredProcessIds)
                         </Form.Item>
                         <Form.Item label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-5 `}>{"Required Process"}</span>}>
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                                {requiredProcessIds.map(id => (
+                                {requiredProcessIds?.map(id => (
                                     <span key={id} style={{ border: '1px solid #ccc', borderRadius: '4px', padding: '4px 8px', display: 'flex', alignItems: 'center' }}>
                                         {processMap[id]}
                                         <AiFillCloseSquare

@@ -10,10 +10,12 @@ import { useParams } from 'react-router-dom';
 import { IoMdEye } from "react-icons/io";
 import API from '../CustomHooks/MasterApiHooks/api';
 import { useTranslation } from 'react-i18next';
+import { decrypt } from '../Security/Security';
 
 const QtySheetUpload = () => {
     const { t } = useTranslation();
-    const { projectId } = useParams();
+    const { encryptedProjectId } = useParams();
+    const projectId = decrypt(encryptedProjectId);
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = getCssClasses();
     const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
@@ -305,7 +307,7 @@ const QtySheetUpload = () => {
                                 ))}
                             </div>
                             <div className="">
-                                <ViewQuantitySheet selectedLotNo={selectedLotNo} showBtn={showBtn} showTable={showTable} />
+                                <ViewQuantitySheet project={projectId} selectedLotNo={selectedLotNo} showBtn={showBtn} showTable={showTable} />
                             </div>
                         </Form.Item>
                     </Form>

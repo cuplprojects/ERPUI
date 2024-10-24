@@ -8,11 +8,13 @@ import API from '../CustomHooks/MasterApiHooks/api';
 import { EditOutlined, DeleteOutlined, StopOutlined } from '@ant-design/icons';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { decrypt } from '../Security/Security';
 
 const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
     const { t } = useTranslation();
     const [modalMessage, setModalMessage] = useState('');
-    const { projectId } = useParams();
+    const { encryptedProjectId } = useParams();
+    const projectId = decrypt(encryptedProjectId);
     const [process, setProcess] = useState([]);
     const [dataSource, setDataSource] = useState([]);
     const [editingRow, setEditingRow] = useState(null);
@@ -32,12 +34,12 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [itemToDelete, setItemToDelete] = useState(null);
     const [showNewRow, setShowNewRow] = useState(false);
-    const { getCssClasses } = useStore(themeStore);
-    const cssClasses = getCssClasses();
-    const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
     const [CTP_ID, setCTP_ID] = useState(null);
     const [OFFSET_PRINTING_ID, setOFFSET_PRINTING_ID] = useState(null);
     const [DIGITAL_PRINTING_ID, setDIGITAL_PRINTING_ID] = useState(null);
+    const { getCssClasses } = useStore(themeStore);
+    const cssClasses = getCssClasses();
+    const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
     const [isConfirmed, setIsConfirmed] = useState(false);
     const [searchText, setSearchText] = useState('');
     const [pageSize, setPageSize] = useState(5);

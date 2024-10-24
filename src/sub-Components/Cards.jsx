@@ -2,6 +2,7 @@ import React from "react";
 import styled from "styled-components";
 import { FaUpload, FaInfoCircle } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { encrypt } from "../Security/Security";
 
 const Cards = ({ item, onclick, disableProject }) => {
   const navigate = useNavigate();
@@ -9,7 +10,7 @@ const Cards = ({ item, onclick, disableProject }) => {
   // Navigate to quantity sheet uploads and send projectId
   const handleUploadClick = (e) => {
     e.stopPropagation();
-    navigate(`/quantity-sheet-uploads/${item.projectId}`);
+    navigate(`/quantity-sheet-uploads/${encrypt(item.projectId)}`);
   };
 
   // Navigate to the dashboard and send projectId as a route parameter
@@ -17,7 +18,7 @@ const Cards = ({ item, onclick, disableProject }) => {
     if(!disableProject){
       return;
     }
-    navigate(`/dashboard/${item.projectId}`);
+    navigate(`/dashboard/${encrypt(item.projectId)}`);
   };
 
   // Handle info button click

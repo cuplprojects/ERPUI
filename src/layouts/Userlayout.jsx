@@ -47,7 +47,7 @@ const Userlayout = () => {
             <Routes>
 
               {hasPermission('5') && <Route path="/cudashboard" element={<CuDashboard/>} />}
-              {hasPermission('1') && <Route path="/dashboard/:projectId" element={<MainDashboard />} />}
+              {hasPermission('1') && <Route path="/dashboard/:encryptedProjectId" element={<MainDashboard />} />}
               {hasPermission('2') && <Route path="/master" element={<Masters />} />}
               {hasPermission('2.4') && <Route path="/AddProjectProcess/:projectId" element={<AddProjectProcess />} />}
               {hasPermission('2') && <Route path="/features" element={<Features />} />}
@@ -63,8 +63,8 @@ const Userlayout = () => {
 
 
 
-              {(hasPermission('2.4') ) && <Route path="/quantity-sheet-uploads/:projectId" element={<QtySheetUpload />} />}
-              {(hasPermission('2.4')) && <Route path="/project-details/:id/:lotNo" element={<ProcessTable />} />}
+              {(hasPermission('2.4') ) && <Route path="/quantity-sheet-uploads/:encryptedProjectId" element={<QtySheetUpload />} />}
+              {(hasPermission('2.4')) && <Route path="/project-details/:encryptedProjectId/:encryptedLotNo" element={<ProcessTable />} />}
               {(hasPermission('3') ) && <Route path="/message" element={<Message />} />}
               {(hasPermission('3')) && <Route path="/labels" element={<Labels />} />}
               {(hasPermission('3')) && <Route path="/reports" element={<Reports />} />}

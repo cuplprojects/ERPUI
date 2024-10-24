@@ -19,6 +19,7 @@ import { useStore } from 'zustand';
 import { IoMdArrowDroprightCircle } from "react-icons/io";
 import { IoMdArrowDropleftCircle } from "react-icons/io";
 import API from '../CustomHooks/MasterApiHooks/api';
+import { decrypt, encrypt } from "../Security/Security";
 
 Chart.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip);
 
@@ -64,7 +65,8 @@ const ProjectChart = ({ title, chartKey, chartdata, onClick, tCatch, type }) => 
 );
 
 const AllProjects = () => {
-  const { projectId } = useParams();
+  const { encryptedProjectId } = useParams();
+  const projectId = decrypt(encryptedProjectId);
   const [lotsData, setLotsData] = useState([]);
 
   const { getCssClasses } = useStore(themeStore);
@@ -117,7 +119,7 @@ const AllProjects = () => {
   };
 
   const handleTitleClick = (project) => {
-    navigate(`/project-details/${projectId}/${project.lotNumber}`, { state: { project, projectId } });
+    navigate(`/project-details/${encrypt(projectId)}/${encrypt(project.lotNumber)}`, { state: { project, projectId } });
   };
 
   const handleBarClick = (elements) => {
