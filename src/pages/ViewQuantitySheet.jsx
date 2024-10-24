@@ -32,10 +32,6 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [itemToDelete, setItemToDelete] = useState(null);
     const [showNewRow, setShowNewRow] = useState(false);
-    const [modalMessage, setModalMessage] = useState('');
-    const [CTP_ID, setCTP_ID] = useState(null);
-    const [OFFSET_PRINTING_ID, setOFFSET_PRINTING_ID] = useState(null);
-    const [DIGITAL_PRINTING_ID, setDIGITAL_PRINTING_ID] = useState(null);
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = getCssClasses();
     const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
