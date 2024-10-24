@@ -13,12 +13,14 @@ import { useMediaQuery } from 'react-responsive';
 import { AiFillCloseSquare } from 'react-icons/ai';
 import { BsFunnelFill } from "react-icons/bs";
 import { MdDeleteForever } from "react-icons/md";
+import { useTranslation } from 'react-i18next';
 const BaseUrl = import.meta.env.VITE_API_BASE_URL;
 
 const { Option } = Select;
 const { Title } = Typography;
 
 const AllUsers = () => {
+  const { t } = useTranslation();
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
   const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
@@ -49,7 +51,7 @@ const AllUsers = () => {
         const res = await fetchUsers();
         setUsers(res);
       } catch (error) {
-        console.error("Error fetching users:", error);
+        console.error(t("errorFetchingUsers"), error);
       }
     };
     getUsers();
@@ -59,11 +61,11 @@ const AllUsers = () => {
         const response = await API.get('/Roles');
         setRoles(response.data);
       } catch (error) {
-        console.error("Error fetching roles:", error);
+        console.error(t("errorFetchingRoles"), error);
       }
     };
     getRoles();
-  }, []);
+  }, [t]);
 
   const handleFilterChange = useCallback((value) => {
     setFilterType(value);
@@ -121,15 +123,15 @@ const AllUsers = () => {
         );
         setUsers(newData);
         setEditingUserId(null);
-        message.success('User updated successfully');
+        message.success(t('userUpdatedSuccessfully'));
       } else {
-        message.error('Failed to update user');
+        message.error(t('failedToUpdateUser'));
       }
     } catch (error) {
-      console.error("Error updating user:", error);
-      message.error('An error occurred while updating user');
+      console.error(t("errorUpdatingUser"), error);
+      message.error(t('errorOccurredWhileUpdatingUser'));
     }
-  }, [users, currentUserData]);
+  }, [users, currentUserData, t]);
 
   const handleCancel = useCallback(() => {
     setEditingUserId(null);
@@ -138,14 +140,14 @@ const AllUsers = () => {
   const columns = useMemo(() => [
     {
       align: "center",
-      title: 'Sr. No.',
+      title: t('srNo'),
       key: 'serial',
       render: (text, record, index) => index + 1,
       fixed: 'left',
       width: 70,
     },
     {
-      title: 'Full Name',
+      title: t('fullName'),
       key: 'fullName',
       render: (record) => `${record.firstName} ${record.middleName} ${record.lastName}`,
       fixed: 'left',
@@ -153,7 +155,7 @@ const AllUsers = () => {
       sorter: (a, b) => `${a.firstName} ${a.middleName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.middleName} ${b.lastName}`),
     },
     {
-      title: 'Role',
+      title: t('role'),
       dataIndex: 'roleId',
       key: 'roleId',
       render: (text, record) => {
@@ -162,7 +164,7 @@ const AllUsers = () => {
           <Select
             value={currentUserData.roleId}
             onChange={(value) => setCurrentUserData(prev => ({ ...prev, roleId: value }))}
-            style={{ width: '200px' }}  // Increased width of the dropdown
+            style={{ width: '200px' }}
           >
             {roles.map(role => (
               <Option key={role.roleId} value={role.roleId}>{role.roleName}</Option>
@@ -173,26 +175,26 @@ const AllUsers = () => {
         );
       },
       fixed: 'left',
-      width: 200,  // Increased width of the column to accommodate the wider dropdown
+      width: 200,
       sorter: (a, b) => a.roleId - b.roleId,
     },
     visibleColumns.profilePicture && {
       align: "center",
-      title: 'Profile Picture',
+      title: t('profilePicture'),
       dataIndex: 'profilePicturePath',
       key: 'profilePicturePath',
       render: (path) => {
         const fullPath = path ? `${BaseUrl}/${path}` : null;
         return isValidImageUrl(fullPath) ? (
-          <img src={fullPath} alt="Profile" width={50} height={50} className='rounded-circle' />
+          <img src={fullPath} alt={t("profile")} width={50} height={50} className='rounded-circle' />
         ) : (
-          <img src={SampleUser} alt="Sample User" width={50} height={50} className='rounded-circle' />
+          <img src={SampleUser} alt={t("sampleUser")} width={50} height={50} className='rounded-circle' />
         );
       },
       width: 120,
     },
     visibleColumns.address && {
-      title: 'Address',
+      title: t('address'),
       dataIndex: 'address',
       key: 'address',
       render: (text, record) => {
@@ -209,7 +211,7 @@ const AllUsers = () => {
       width: 200,
     },
     visibleColumns.mobileNo && {
-      title: 'Mobile No',
+      title: t('mobileNo'),
       dataIndex: 'mobileNo',
       key: 'mobileNo',
       render: (text, record) => {
@@ -226,7 +228,7 @@ const AllUsers = () => {
       width: 120,
     },
     {
-      title: 'Actions',
+      title: t('actions'),
       key: 'actions',
       fixed: '',
       width: 200,
@@ -239,14 +241,14 @@ const AllUsers = () => {
               onClick={() => handleSave(record)}
               className={`${customDark === "dark-dark" ? `${customMid} text-white border-1 ${customDarkBorder}` : `${customLight} border-1 ${customDarkText} `} ${customDarkBorder}`}
             >
-              Save
+              {t('save')}
             </Button>
             <Button
               icon={<CloseOutlined />}
               onClick={handleCancel}
               className={`${customDark === "dark-dark" ? `${customMid} text-white border-1 ${customDarkBorder}` : `${customLight} border-1 ${customDarkText} `} ${customDarkBorder}`}
             >
-              Cancel
+              {t('cancel')}
             </Button>
           </Space>
         ) : (
@@ -257,7 +259,7 @@ const AllUsers = () => {
               type="default"
               className={`${customDark === "dark-dark" ? `${customMid} text-white border-1 ${customDarkBorder}` : `${customLight} border-1 ${customDarkText} `} ${customDarkBorder}`}
             >
-              View
+              {t('view')}
             </Button>
             <Button
               icon={<EditOutlined />}
@@ -265,13 +267,13 @@ const AllUsers = () => {
               type="primary"
               className={`${customDark}  border-1 ${customLightText}  ${customDarkBorder}`}
             >
-              Edit
+              {t('edit')}
             </Button>
           </Space>
         );
       },
     },
-  ].filter(Boolean), [visibleColumns, isValidImageUrl, editingUserId, currentUserData, handleSave, handleCancel, customBtn, roles]);
+  ].filter(Boolean), [visibleColumns, isValidImageUrl, editingUserId, currentUserData, handleSave, handleCancel, customBtn, roles, t]);
 
   const showUserDetails = useCallback((user) => {
     setCurrentUser(user);
@@ -290,33 +292,33 @@ const AllUsers = () => {
       const response = await API.delete(`/User/delete/${userToDelete.userId}`);
       if (response.status === 200) {
         setUsers(users.filter(user => user.userId !== userToDelete.userId));
-        message.success('User deleted successfully');
+        message.success(t('userDeletedSuccessfully'));
       } else {
-        message.error('Failed to delete user');
+        message.error(t('failedToDeleteUser'));
       }
     } catch (error) {
-      console.error("Error deleting user:", error);
-      message.error('An error occurred while deleting user');
+      console.error(t("errorDeletingUser"), error);
+      message.error(t('errorOccurredWhileDeletingUser'));
     } finally {
       setDeleteModalOpen(false);
       setUserToDelete(null);
     }
-  }, [userToDelete, users]);
+  }, [userToDelete, users, t]);
 
   const menu = (
     <Menu onClick={({ key }) => handleFilterChange(key)}>
-      <Menu.Item key="none">No Filter</Menu.Item>
-      <Menu.Item key="name">Filter by Name</Menu.Item>
+      <Menu.Item key="none">{t('noFilter')}</Menu.Item>
+      <Menu.Item key="name">{t('filterByName')}</Menu.Item>
     </Menu>
   );
 
   return (
     <div style={{ padding: '20px' }}>
-      <h2 className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`}  text-start`}>View All Users</h2>
+      <h2 className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`}  text-start`}>{t('viewAllUsers')}</h2>
       <Row className="mb-2">
         <Col lg={2} md={1} xs={12} className="mb-3 mb-md-0">
           <div className="d-flex align-items-center h-100">
-            <Dropdown menu={{ items: menu.props.children }} trigger={['click']} className="border-0">
+            <Dropdown overlay={menu} trigger={['click']} className="border-0">
               <Button icon={<BsFunnelFill size={20} className={`${customDark === "dark-dark" ? "text-dark" : customDarkText} border-0`} />}>
               </Button>
             </Dropdown>
@@ -326,7 +328,7 @@ const AllUsers = () => {
           <div className="d-flex justify-content-start align-items-center h-100">
             {filterType === 'name' && (
               <Input.Search
-                placeholder="Search by Name"
+                placeholder={t("searchByName")}
                 value={filterValue}
                 onChange={(e) => setFilterValue(e.target.value)}
                 style={{ width: '100%' }}
@@ -343,7 +345,7 @@ const AllUsers = () => {
                 onChange={(e) => handleColumnVisibilityChange(e, column)}
                 className={`${customDark === "dark-dark" ? customDarkText : customDarkText} text-start `}
               >
-                {column.charAt(0).toUpperCase() + column.slice(1)}
+                {t(column)}
               </Checkbox>
             ))}
           </div>
@@ -358,9 +360,9 @@ const AllUsers = () => {
           pageSize: pageSize,
           showSizeChanger: true,
           pageSizeOptions: ['10', '20'],
-          showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
+          showTotal: (total, range) => `${range[0]}-${range[1]} ${t('of')} ${total} ${t('items')}`,
           style: { backgroundColor: 'white' },
-          className: 'custom-pagination p-2 rounded-3 rounded-top-0'
+          className: 'custom-pagination p-3 rounded-3 rounded-top-0'
         }}
         bordered
         rowKey="userId"
@@ -383,12 +385,12 @@ const AllUsers = () => {
         centered
       >
         <Modal.Header className={`${customDark} d-flex justify-content-between align-items-center`}>
-          <Modal.Title className={`${customLightText}`}>User's Details</Modal.Title>
+          <Modal.Title className={`${customLightText}`}>{t("userDetails")}</Modal.Title>
           <AiFillCloseSquare
             size={35}
             onClick={() => setModalOpen(false)}
             className={`rounded-2 ${customDark === "dark-dark" ? "text-dark bg-white " : `${customDark} custom-zoom-btn text-white  ${customDarkBorder}`}`}
-            aria-label="Close"
+            aria-label={t("close")}
             style={{ cursor: 'pointer', fontSize: '1.5rem' }}
           />
         </Modal.Header>
@@ -402,7 +404,7 @@ const AllUsers = () => {
                       ? `${BaseUrl}/${currentUser.profilePicturePath}`
                       : SampleUser
                   }
-                  alt={currentUser.profilePicturePath ? "Profile" : "Sample User"}
+                  alt={currentUser.profilePicturePath ? t("profile") : t("sampleUser")}
                   style={{ width: '100%', maxWidth: '200px', height: 'auto', objectFit: 'cover' }}
                   className="rounded-circle"
                 />
@@ -415,13 +417,13 @@ const AllUsers = () => {
                         const role = roles.find(r => r.roleId === value);
                         return (
                           <div key={key} className="mb-2">
-                            <strong>Role:</strong> {role ? role.roleName : value}
+                            <strong>{t('role')}:</strong> {role ? role.roleName : value}
                           </div>
                         );
                       }
                       return (
                         <div key={key} className="mb-2">
-                          <strong>{key.charAt(0).toUpperCase() + key.slice(1)}:</strong> {value}
+                          <strong>{t(key)}:</strong> {value}
                         </div>
                       );
                     }
@@ -435,14 +437,14 @@ const AllUsers = () => {
                           const role = roles.find(r => r.roleId === value);
                           return (
                             <React.Fragment key={key}>
-                              <dt className="col-sm-5">Role</dt>
+                              <dt className="col-sm-5">{t('role')}</dt>
                               <dd className="col-sm-7">{role ? role.roleName : value}</dd>
                             </React.Fragment>
                           );
                         }
                         return (
                           <React.Fragment key={key}>
-                            <dt className="col-sm-5">{key.charAt(0).toUpperCase() + key.slice(1)}</dt>
+                            <dt className="col-sm-5">{t(key)}</dt>
                             <dd className="col-sm-7">{value}</dd>
                           </React.Fragment>
                         );
@@ -463,7 +465,7 @@ const AllUsers = () => {
         className={` ${customLightText}`}
       >
         <Modal.Header closeButton={false} className={`${customDark} ${customLightText} d-flex justify-content-between`}>
-          <Modal.Title>Confirm Delete</Modal.Title>
+          <Modal.Title>{t('confirmDelete')}</Modal.Title>
           <Button
             variant="link"
             className={`close-button ${customDark} ${customLightText} border-0`}
@@ -482,11 +484,13 @@ const AllUsers = () => {
                     ? `${BaseUrl}/${userToDelete.profilePicturePath}`
                     : SampleUser
                 }
-                alt={userToDelete.profilePicturePath ? "Profile" : "Sample User"}
+                alt={userToDelete.profilePicturePath ? t("profile") : t("sampleUser")}
                 style={{ width: '100px', height: '100px', objectFit: 'cover' }}
                 className="rounded-circle mb-3"
               />
-              <p className={`${customDark === 'dark-dark' || customDark === 'blue-dark' ? customLightText : customDarkText}`}>Are you sure on deleting <span className="fw-bold">{userToDelete.firstName} {userToDelete.lastName}</span>? This cannot be undone.</p>
+              <p className={`${customDark === 'dark-dark' || customDark === 'blue-dark' ? customLightText : customDarkText}`}>
+                {t('confirmDeleteUser', { firstName: userToDelete.firstName, lastName: userToDelete.lastName })}
+              </p>
             </div>
           )}
         </Modal.Body>
@@ -495,13 +499,13 @@ const AllUsers = () => {
             className={`${customDark === "dark-dark" ? `${customMid} text-white` : `${customLight} border-1 ${customDarkText}`} ${customDarkBorder}`}
             onClick={() => setDeleteModalOpen(false)}
           >
-            Cancel
+            {t('cancel')}
           </Button>
           <Button 
              className={`${customDark === "dark-dark" ? `${customMid} text-white` : `${customLight} border-1 ${customDarkText}`} ${customDarkBorder}`}
             onClick={handleDelete}
           >
-            Delete
+            {t('delete')}
           </Button>
         </Modal.Footer>
       </Modal>

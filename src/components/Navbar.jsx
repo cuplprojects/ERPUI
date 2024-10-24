@@ -140,10 +140,11 @@ const Navbar = () => {
             </button>
           </Col>
           <Col xs={9} md={10} lg={10} className="d-flex align-items-center justify-content-center">
-            <Link to="/dashboard" className="ms-2 fw-bold fs-4 text-light " style={{textDecoration:"none"}}>CUPL | ApexERP</Link>
+            <Link to="/" className="ms-2 fw-bold fs-4 text-light " style={{textDecoration:"none"}}>CUPL | ApexERP</Link>
           </Col>
           <Col xs={2} md={1} lg={1} className="d-flex align-items-center justify-content-end">
-            <button
+          {/* used for notification */}
+            {/* <button
               onClick={toggleNotificationMenu}
               className="btn p-0 border-0 bg-transparent me-2"
               aria-label="Toggle notification menu"
@@ -157,7 +158,7 @@ const Navbar = () => {
               }}
             >
               <RiNotification2Fill className="text-light custom-zoom-btn" style={{ fontSize: '24px' }} />
-            </button>
+            </button> */}
             <button
               onClick={toggleUserMenu}
               className="btn p-0 border-0 bg-transparent"
@@ -174,7 +175,7 @@ const Navbar = () => {
                 alignItems: 'center',
                 flexShrink: 0
               }}
-            >
+              >
               <img
                 src={getProfileImageSrc()}
                 alt={`${userData?.firstName} ${userData?.lastName}`}
@@ -183,7 +184,7 @@ const Navbar = () => {
                   height: '100%',
                   objectFit: 'cover'
                 }}
-              />
+                />
             </button>
           </Col>
         </Row>
@@ -200,8 +201,8 @@ const Navbar = () => {
           opacity: showNav ? 1 : 0,
           // zIndex: 1,
         }}
-      >
-        <NavigationBar onLinkClick={closeNav} />
+        >
+        <NavigationBar onLinkClick={closeNav} onClose={closeNav} />
       </div>
 
       <div
@@ -217,11 +218,12 @@ const Navbar = () => {
           opacity: userMenu ? 1 : 0,
           // zIndex: 999,
         }}
-      >
+        >
         <UserMenu onClose={closeUserMenu} />
       </div>
 
-      <div
+      {/* used for notification */}
+      {/* <div
         ref={notificationRef}
         className='m-1'
         style={{
@@ -236,7 +238,7 @@ const Navbar = () => {
         }}
       >
         <Notification onClose={closeNotification} />
-      </div>
+      </div> */}
     </div>
   );
 };

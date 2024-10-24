@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import AddProjectProcess from './AddProjectProcess';
 import ProjectUserAllocation from './ProjectUserAllocation';
@@ -10,12 +11,12 @@ import { useNavigate } from 'react-router-dom';
 import API from '../CustomHooks/MasterApiHooks/api';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
-import { AiFillCloseSquare } from "react-icons/ai";
-import { SearchOutlined } from '@ant-design/icons';
+
 
 const { Option } = Select;
 
 const Project = () => {
+  const { t } = useTranslation();
 
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
@@ -52,7 +53,7 @@ const Project = () => {
       setProjects(response.data);
     } catch (error) {
       console.error('Failed to fetch projects', error);
-      message.error('Unable to fetch projects. Please try again later.');
+      message.error(t('unableToFetchProjects'));
     }
   };
 
@@ -62,7 +63,7 @@ const Project = () => {
       setGroups(response.data);
     } catch (error) {
       console.error('Failed to fetch groups', error);
-      message.error('Unable to fetch groups. Please try again later.');
+      message.error(t('unableToFetchGroups'));
     }
   };
 
@@ -72,7 +73,7 @@ const Project = () => {
       setTypes(response.data);
     } catch (error) {
       console.error('Failed to fetch types', error);
-      message.error('Unable to fetch types. Please try again later.');
+      message.error(t('unableToFetchTypes'));
     }
   };
 
@@ -89,7 +90,7 @@ const Project = () => {
       (project) => project.name.toLowerCase() === name.toLowerCase()
     );
     if (existingProject) {
-      message.error('Project name already exists!');
+      message.error(t('projectNameAlreadyExists'));
       return;
     }
 
@@ -108,12 +109,12 @@ const Project = () => {
       setProjects([...projects, response.data]);
       form.resetFields();
       setIsModalVisible(false);
-      message.success('Project added successfully!');
+      message.success(t('projectAddedSuccessfully'));
       setActiveTabKey("2"); // Switch to Select Process tab
       setSelectedProject(response.data.projectId); 
     } catch (error) {
       console.error('Error adding project:', error);
-      message.error('Error adding project. Please try again.');
+      message.error(t('errorAddingProject'));
     }
   };
 
@@ -133,10 +134,10 @@ const Project = () => {
       updatedProjects[index] = updatedProject;
       setProjects(updatedProjects);
       setEditingIndex(null);
-      message.success('Project updated successfully!');
+      message.success(t('projectUpdatedSuccessfully'));
     } catch (error) {
       console.error('Failed to update project:', error);
-      message.error('Failed to update project. Please try again.');
+      message.error(t('failedToUpdateProject'));
     }
   };
 
@@ -146,13 +147,13 @@ const Project = () => {
 
   const columns = [
     {
-      title: 'SN.',
+      title: t('sn'),
       dataIndex: 'serial',
       key: 'serial',
       render: (text, record, index) => (currentPage - 1) * pageSize + index + 1,
     },
     {
-      title: 'Project Name',
+      title: t('projectName'),
       dataIndex: 'name',
       key: 'name',
       sorter: (a, b) => a.name.localeCompare(b.name),
@@ -179,7 +180,7 @@ const Project = () => {
         ),
     },
     {
-      title: 'Project Description',
+      title: t('projectDescription'),
       dataIndex: 'description',
       key: 'description',
       render: (text, record, index) =>
@@ -195,7 +196,7 @@ const Project = () => {
         ),
     },
     {
-      title: 'Status',
+      title: t('status'),
       dataIndex: 'status',
       key: 'status',
       sorter: (a, b) => a.status - b.status,
@@ -205,29 +206,29 @@ const Project = () => {
           <Switch
             checked={editingStatus}
             onChange={(checked) => setEditingStatus(checked)}
-            checkedChildren="Active"
-            unCheckedChildren="Inactive"
+            checkedChildren={t('active')}
+            unCheckedChildren={t('inactive')}
           />
         ) : (
           <Switch
             checked={status}
             disabled
-            checkedChildren="Active"
-            unCheckedChildren="Inactive"
+            checkedChildren={t('active')}
+            unCheckedChildren={t('inactive')}
           />
         ),
     },
     {
-      title: 'Action',
+      title: t('action'),
       key: 'action',
       render: (_, record, index) =>
         editingIndex === index ? (
           <>
             <Button type="link" onClick={() => handleEditSave(index)}>
-              Save
+              {t('save')}
             </Button>
             <Button type="link" onClick={() => setEditingIndex(null)}>
-              Cancel
+              {t('cancel')}
             </Button>
           </>
         ) : (
@@ -240,7 +241,7 @@ const Project = () => {
               setEditingStatus(record.status);
             }}
           >
-            Edit
+            {t('edit')}
           </Button>
         ),
     },
@@ -283,16 +284,16 @@ const Project = () => {
   return (
  
     <Card
-      title="Projects"
+      title={t('projects')}
       bordered={true}
       style={{ padding: '20px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)' }}
     >
       <Tabs activeKey={activeTabKey} onChange={setActiveTabKey}>
-        <TabPane tab="Project List" key="1">
+        <TabPane tab={t('projectList')} key="1">
           <Row justify="end" style={{ marginBottom: '20px' }}>
             <Col>
               <Button type="primary" onClick={showModal}>
-                Add New Project
+                {t('addNewProject')}
               </Button>
             </Col>
           </Row>
@@ -304,7 +305,7 @@ const Project = () => {
             bordered
           />
           <Modal
-            title="Add New Project"
+            title={t('addNewProject')}
             visible={isModalVisible}
             onCancel={handleCancel}
             footer={null}
@@ -312,10 +313,10 @@ const Project = () => {
             <Form form={form} onFinish={handleAddProject} layout="vertical">
               <Form.Item
                 name="group"
-                label="Group"
-                rules={[{ required: true, message: 'Please select a group!' }]}
+                label={t('group')}
+                rules={[{ required: true, message: t('pleaseSelectGroup') }]}
               >
-                <Select onChange={handleGroupChange} placeholder="Select Group">
+                <Select onChange={handleGroupChange} placeholder={t('selectGroup')}>
                   {groups.map((group) => (
                     <Option key={group.id} value={group.id}>{group.name}</Option>
                   ))}
@@ -323,10 +324,10 @@ const Project = () => {
               </Form.Item>
               <Form.Item
                 name="type"
-                label={<span className={customDarkText}>Type</span>}
-                rules={[{ required: true, message: 'Please select a type!' }]}
+                label={<span className={customDarkText}>{t('type')}</span>}
+                rules={[{ required: true, message: t('pleaseSelectType') }]}
               >
-                <Select onChange={handleTypeChange} placeholder="Select Type">
+                <Select onChange={handleTypeChange} placeholder={t('selectType')}>
                   {types.map((type) => (
                     <Option key={type.typeId} value={type.typeId}>{type.types}</Option>
                   ))}
@@ -334,41 +335,41 @@ const Project = () => {
               </Form.Item>
               <Form.Item
                 name="name"
-                label={<span className={customDarkText}>Project Name</span>}
-                rules={[{ required: true, message: 'Please enter the project name!' }]}
+                label={<span className={customDarkText}>{t('projectName')}</span>}
+                rules={[{ required: true, message: t('pleaseEnterProjectName') }]}
               >
-                <Input placeholder="Enter project name" />
+                <Input placeholder={t('enterProjectName')} />
               </Form.Item>
               <Form.Item
                 name="description"
-                label={<span className={customDarkText}>Description</span>}
-                rules={[{ required: true, message: 'Please enter a description!' }]}
+                label={<span className={customDarkText}>{t('description')}</span>}
+                rules={[{ required: true, message: t('pleaseEnterDescription') }]}
               >
-                <Input.TextArea rows={4} placeholder="Enter description" />
+                <Input.TextArea rows={4} placeholder={t('enterDescription')} />
               </Form.Item>
               <Form.Item
                 name="status"
-                label="Status"
+                label={t('status')}
                 valuePropName="checked"
               >
                 <Switch />
               </Form.Item>
               <Form.Item>
                 <Button type="primary" htmlType="submit" style={{ marginRight: '10px' }}>
-                  Save
+                  {t('save')}
                 </Button>
-                <Button onClick={handleCancel}>Cancel</Button>
+                <Button onClick={handleCancel}>{t('cancel')}</Button>
               </Form.Item>
             </Form>
           </Modal>
         </TabPane>
-        <TabPane tab="Select Process" key="2" disabled>
+        <TabPane tab={t('selectProcess')} key="2" disabled>
           {/* Content for Select Process */}
           <div>
             <AddProjectProcess selectedProject={selectedProject}/>
           </div>
         </TabPane>
-        <TabPane tab="Allocate Process" key="3">
+        <TabPane tab={t('allocateProcess')} key="3">
           {/* Content for Allocate Process */}
           <div>
             <ProjectUserAllocation/>

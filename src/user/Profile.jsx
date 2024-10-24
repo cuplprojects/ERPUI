@@ -8,9 +8,10 @@ import SampleUser from "./../assets/sampleUsers/defaultUser.jpg";
 import "./../styles/Profile.css";
 import { useUserData, useUserDataActions } from '../store/userDataStore';
 import API from '../CustomHooks/MasterApiHooks/api';
-
+import { useTranslation } from 'react-i18next';
 
 const UserProfile = () => {
+  const { t } = useTranslation();
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
   const [customDark, customMid, customLight, customBtn, customDarkText, , customLightBorder, customDarkBorder] = cssClasses;
@@ -155,19 +156,20 @@ const UserProfile = () => {
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div>{t('loading')}</div>;
   }
 
   if (!userData) {
-    return <div>Error: Unable to load user data</div>;
+    return <div>{t('errorUnableToLoadUserData')}</div>;
   }
-
+  const welcomeLabel = t('welcome');
+const userName = userData.firstName;
   return (
     <Container className="my-4">
       <div className={`d-flex justify-content-between align-items-center ${customDark} ${customDark === 'dark-dark' ? `${customLightBorder} border-top border-start border-end border-light border-bottom-0` : ""} 
       ${customBtn === 'dark-dark' ? "" : ""} text-white p-3 rounded-top`}>
         <div className="greet">
-          <h2>Welcome, {userData.firstName}</h2>
+          <h2>{`${welcomeLabel} ${userName}`}</h2>
           <p className="mb-0 d-none d-md-block">
             {new Intl.DateTimeFormat('en-US', {
               day: '2-digit',
@@ -187,7 +189,7 @@ const UserProfile = () => {
           <Col xs={12} sm={3} md={2} className="text-center position-relative">
             <img
               src={getProfileImageUrl(userData.profilePicturePath)}
-              alt="Profile Picture"
+              alt={t('profilePicture')}
               width="100px"
               height="100px"
               className={`rounded-circle ${customDarkBorder}`}
@@ -228,10 +230,10 @@ const UserProfile = () => {
           <Row className="mb-3">
             <Col xs={12} sm={6} md={4} className="mb-3">
               <Form.Group controlId="formFirstName">
-                <Form.Label className={`${customDarkText}`}>First Name</Form.Label>
+                <Form.Label className={`${customDarkText}`}>{t('firstName')}</Form.Label>
                 <Form.Control
                   name="firstName"
-                  placeholder="Your First Name"
+                  placeholder={t('yourFirstName')}
                   value={userData.firstName}
                   onChange={handleChange}
                   disabled={!isEditing}
@@ -241,10 +243,10 @@ const UserProfile = () => {
             </Col>
             <Col xs={12} sm={6} md={4} className="mb-3">
               <Form.Group controlId="formMiddleName">
-                <Form.Label className={`${customDarkText}`}>Middle Name</Form.Label>
+                <Form.Label className={`${customDarkText}`}>{t('middleName')}</Form.Label>
                 <Form.Control
                   name="middleName"
-                  placeholder="Your Middle Name"
+                  placeholder={t('yourMiddleName')}
                   value={userData.middleName}
                   onChange={handleChange}
                   disabled={!isEditing}
@@ -254,10 +256,10 @@ const UserProfile = () => {
             </Col>
             <Col xs={12} sm={6} md={4}>
               <Form.Group controlId="formLastName">
-                <Form.Label className={`${customDarkText}`}>Last Name</Form.Label>
+                <Form.Label className={`${customDarkText}`}>{t('lastName')}</Form.Label>
                 <Form.Control
                   name="lastName"
-                  placeholder="Your Last Name"
+                  placeholder={t('yourLastName')}
                   value={userData.lastName}
                   className='rounded'
                   onChange={handleChange}
@@ -270,24 +272,24 @@ const UserProfile = () => {
           <Row className="mb-3">
             <Col xs={12} sm={6} md={4} className="mb-3">
               <Form.Group controlId="formGender">
-                <Form.Label className={`${customDarkText}`}>Gender</Form.Label>
+                <Form.Label className={`${customDarkText}`}>{t('gender')}</Form.Label>
                 <Form.Select
                   name="gender"
                   value={userData.gender}
                   onChange={handleChange}
                   disabled={!isEditing}
                 >
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
+                  <option value="male">{t('male')}</option>
+                  <option value="female">{t('female')}</option>
                 </Form.Select>
               </Form.Group>
             </Col>
             <Col xs={12} sm={6} md={4}>
               <Form.Group controlId="formRole">
-                <Form.Label className={`${customDarkText}`}>Role</Form.Label>
+                <Form.Label className={`${customDarkText}`}>{t('role')}</Form.Label>
                 <Form.Control
                   name="role"
-                  placeholder="Your Role"
+                  placeholder={t('yourRole')}
                   value={userRole}
                   className='rounded'
                   disabled
@@ -296,10 +298,10 @@ const UserProfile = () => {
             </Col>
             <Col xs={12} sm={6} md={4}>
               <Form.Group controlId="formMobile">
-                <Form.Label className={`${customDarkText}`}>Mobile Number</Form.Label>
+                <Form.Label className={`${customDarkText}`}>{t('mobileNumber')}</Form.Label>
                 <Form.Control
                   name="mobileNumber"
-                  placeholder="Your Mobile Number"
+                  placeholder={t('yourMobileNumber')}
                   value={userData.mobileNo}
                   className='rounded'
                   onChange={handleChange}
@@ -311,10 +313,10 @@ const UserProfile = () => {
           <Row className="mb-3">
             <Col xs={12}>
               <Form.Group controlId="formAddress">
-                <Form.Label className={`${customDarkText}`}>Address</Form.Label>
+                <Form.Label className={`${customDarkText}`}>{t('address')}</Form.Label>
                 <Form.Control
                   name="address"
-                  placeholder="Your Address"
+                  placeholder={t('yourAddress')}
                   value={userData.address}
                   className='rounded'
                   onChange={handleChange}

@@ -11,9 +11,8 @@ import AlertBadge from "./AlertBadge";
 import CatchDetailModal from '../menus/CatchDetailModal';
 import themeStore from '../store/themeStore';
 import { useStore } from 'zustand';
-import { MdPending } from "react-icons/md";
+import { MdPending, MdCloudUpload } from "react-icons/md";
 import { Link } from 'react-router-dom';
-import { MdCloudUpload } from "react-icons/md";
 import { FaRegHourglassHalf } from "react-icons/fa6";
 import API from '../CustomHooks/MasterApiHooks/api';
 import { useUserData } from '../store/userDataStore';
@@ -47,9 +46,11 @@ const ProcessTable = () => {
     const [catchDetailModalShow, setCatchDetailModalShow] = useState(false);
     const [catchDetailModalData, setCatchDetailModalData] = useState(null);
     const [previousProcessPercentage, setPreviousProcessPercentage] = useState(90);
+    const [selectedLot, setSelectedLot] = useState(null);
     const [projectName, setProjectName] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState(null);
+    const [projectLots, setProjectLots] = useState([]);
     
     const fetchData = useCallback(async () => {
         if (userData && userData.userId && id !== processId) {
@@ -79,7 +80,7 @@ const ProcessTable = () => {
     useEffect(() => {
         const fetchQuantitySheet = async () => {
             try {
-                const response = await API.get(`/QuantitySheet/Catch?ProjectId=${id}&lotNo=${lotNo}`);
+                const response = await API.get(`/QuantitySheet`);
                 const quantitySheetData = response.data;
                 
                 if (Array.isArray(quantitySheetData) && quantitySheetData.length > 0) {
@@ -103,14 +104,21 @@ const ProcessTable = () => {
                         remarks: "",
                         previousProcessStats: "",
                     }));
+                    console.log('Formatted data:', formDataGet);
                     setTableData(formDataGet);
+
+                    // Extract unique lot numbers
+                    const uniqueLots = [...new Set(formDataGet.map(item => item.lotNo))];
+                    setProjectLots(uniqueLots.map(lotNo => ({ lotNo })));
                 } else {
                     console.error("API response is not an array or is empty");
                     setTableData([]);
+                    setProjectLots([]);
                 }
             } catch (error) {
                 console.error("Error fetching quantity sheet data:", error);
                 setTableData([]);
+                setProjectLots([]);
             }
         };
 
@@ -130,6 +138,7 @@ const ProcessTable = () => {
 
         fetchProjectDetails();
     }, [id]);
+
 
     const handleToggleChange = () => {
         setShowBarChart(!showBarChart);
@@ -153,7 +162,15 @@ const ProcessTable = () => {
         setCatchDetailModalData(record);
     };
 
+    const handleLotClick = (lot) => {
+        setSelectedLot(lot);
+    };
+
     const catchNumbers = tableData.map((item) => item.catchNumber).sort((a, b) => a - b);
+
+    const filteredTableData = selectedLot
+        ? tableData.filter(item => item.lotNo === selectedLot)
+        : tableData;
 
     return (
         <div className="container-fluid" >
@@ -202,7 +219,9 @@ const ProcessTable = () => {
                                 <Col lg={6} md={4} xs={12} className='d-none d-lg-block d-md-block'>
                                     <div className="center-head ">
                                         <div className='text-center fs-4'>{projectName}</div>
-                                        <div className='text-center fs-4'>Lot - {lotNo}</div>
+                                        <div className='text-center fs-4'>
+                                            Lot - {selectedLot ? selectedLot : lotNo}
+                                        </div>
                                     </div>
                                 </Col>
                                 <Col lg={3} md={4} xs={12}>
@@ -244,12 +263,44 @@ const ProcessTable = () => {
                 </Col>
             </Row>
             <Row className='mb-2'>
-                <Col lg={12} md={12} >
-                    {tableData?.length > 0 && (
-                        <ProjectDetailsTable tableData={tableData} setTableData={setTableData} projectId={id} lotNo={lotNo} />
-                    )}
+                <Col lg={12} md={12}>
+                    <Row>
+                        <Col lg={3} md={12} className="pe-0">
+                            <h4 className={`${customDark} text-white p-2`}>Project Lots</h4>
+                            <div className="d-flex flex-column" style={{ width: '100%', maxHeight: '400px', overflowY: 'auto', overflowX: 'hidden', backgroundColor: '#f0f8ff' }}>
+                                {projectLots.map((lot, index) => (
+                                    <div
+                                        key={index}
+                                        className={`mb-2 p-2 rounded-1 ${customLight} ${customDarkText} ${selectedLot === lot.lotNo ? 'border border-primary shadow-lg' : 'border'}`}
+                                        onClick={() => handleLotClick(lot.lotNo)}
+                                        style={{ 
+                                            cursor: 'pointer', 
+                                            transition: 'all 0.3s',
+                                            transform: selectedLot === lot.lotNo ? 'scale(1.02)' : 'scale(1)',
+                                            backgroundColor: selectedLot === lot.lotNo ? '#e6f7ff' : '#ffffff'
+                                        }}
+                                    >
+                                        <div className="d-flex justify-content-between align-items-center">
+                                            <h5 className={`mb-0 ${selectedLot === lot.lotNo ? 'fw-bold text-dark' : ''}`} style={{ width: '90%' }}>
+                                                <span className="d-flex justify-content-start align-items-center" style={{ height: '100%' }}>
+                                                    Lot {lot.lotNo}
+                                                </span>
+                                            </h5>
+                                            {selectedLot === lot.lotNo && (
+                                                <span className="text-primary">✓</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </Col>
+                        <Col lg={9} md={8} className="ps-0">
+                            {tableData?.length > 0 && (
+                                <ProjectDetailsTable tableData={filteredTableData} setTableData={setTableData} projectId={id} lotNo={lotNo} />
+                            )}
+                        </Col>
+                    </Row>
                 </Col>
-                <Col lg={2} md={0} ></Col>
             </Row>
             <Row className='mb-4 d-flex justify-content-between'>
                 <Col lg={8} md={12} className='mb-1'>

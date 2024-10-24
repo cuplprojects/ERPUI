@@ -2,10 +2,12 @@ import React from 'react';
 import { Tree } from 'antd';
 import themeStore from './../../store/themeStore';
 import { useStore } from 'zustand';
+import { useTranslation } from 'react-i18next';
+
 const { TreeNode } = Tree;
 
 const permissionOptions = [
-  { title: 'Dashboard', key: '1' },
+  { title: 'dashboard', key: '1' },
   {
     title: 'Master Management',
     key: '2',
@@ -20,7 +22,7 @@ const permissionOptions = [
             children: [
               {
                 title: 'CRUD',
-                key: '2.1.1.0', // Unique key for CRUD
+                key: '2.1.1.0',
                 children: [
                   { title: 'create', key: '2.1.1.1' },
                   { title: 'read', key: '2.1.1.2' },
@@ -38,7 +40,7 @@ const permissionOptions = [
             children: [
               {
                 title: 'CRUD',
-                key: '2.1.2.0', // Unique key for CRUD
+                key: '2.1.2.0',
                 children: [
                   { title: 'create', key: '2.1.2.1' },
                   { title: 'read', key: '2.1.2.2' },
@@ -56,7 +58,7 @@ const permissionOptions = [
             children: [
               {
                 title: 'CRUD',
-                key: '2.1.3.0', // Unique key for CRUD
+                key: '2.1.3.0',
                 children: [
                   { title: 'create', key: '2.1.3.1' },
                   { title: 'read', key: '2.1.3.2' },
@@ -74,7 +76,7 @@ const permissionOptions = [
             children: [
               {
                 title: 'CRUD',
-                key: '2.1.4.0', // Unique key for CRUD
+                key: '2.1.4.0',
                 children: [
                   { title: 'create', key: '2.1.4.1' },
                   { title: 'read', key: '2.1.4.2' },
@@ -89,12 +91,12 @@ const permissionOptions = [
         ],
       },
       {
-        title: 'Group',
+        title: 'group',
         key: '2.2',
         children: [
           {
             title: 'CRUD',
-            key: '2.2.0', // Unique key for CRUD
+            key: '2.2.0',
             children: [
               { title: 'create', key: '2.2.1' },
               { title: 'read', key: '2.2.2' },
@@ -107,12 +109,12 @@ const permissionOptions = [
         ],
       },
       {
-        title: 'Type',
+        title: 'type',
         key: '2.3',
         children: [
           {
             title: 'CRUD',
-            key: '2.3.0', // Unique key for CRUD
+            key: '2.3.0',
             children: [
               { title: 'create', key: '2.3.1' },
               { title: 'read', key: '2.3.2' },
@@ -125,12 +127,12 @@ const permissionOptions = [
         ],
       },
       {
-        title: 'Project',
+        title: 'project',
         key: '2.4',
         children: [
           {
             title: 'CRUD',
-            key: '2.4.0', // Unique key for CRUD
+            key: '2.4.0',
             children: [
               { title: 'create', key: '2.4.1' },
               { title: 'read', key: '2.4.2' },
@@ -143,12 +145,12 @@ const permissionOptions = [
         ],
       },
       {
-        title: 'Zone',
+        title: 'zone',
         key: '2.5',
         children: [
           {
             title: 'CRUD',
-            key: '2.5.0', // Unique key for CRUD
+            key: '2.5.0',
             children: [
               { title: 'create', key: '2.5.1' },
               { title: 'read', key: '2.5.2' },
@@ -161,12 +163,12 @@ const permissionOptions = [
         ],
       },
       {
-        title: 'Camera',
+        title: 'camera',
         key: '2.6',
         children: [
           {
             title: 'CRUD',
-            key: '2.6.0', // Unique key for CRUD
+            key: '2.6.0',
             children: [
               { title: 'create', key: '2.6.1' },
               { title: 'read', key: '2.6.2' },
@@ -184,7 +186,7 @@ const permissionOptions = [
         children: [
           {
             title: 'CRUD',
-            key: '2.7.0', // Unique key for CRUD
+            key: '2.7.0',
             children: [
               { title: 'create', key: '2.7.1' },
               { title: 'read', key: '2.7.2' },
@@ -196,8 +198,8 @@ const permissionOptions = [
           },
         ],
       },
-      { title: 'Alarm', key: '2.8' },
-      { title: 'Team', key: '2.9' },
+      { title: 'alarm', key: '2.8' },
+      { title: 'team', key: '2.9' },
       { title: 'Process Settings', key: '2.10' },
     ],
   },
@@ -208,6 +210,7 @@ const permissionOptions = [
 ];
 
 const Permissions = ({ selectedPermissions = [], onChange }) => {
+  const { t } = useTranslation();
   const onCheck = (checkedKeys) => {
     onChange(checkedKeys);
   };
@@ -216,16 +219,24 @@ const Permissions = ({ selectedPermissions = [], onChange }) => {
     data.map((item) => {
       if (item.children) {
         return (
-          <TreeNode title={item.title} key={item.key}>
+          <TreeNode title={t(item.title)} key={item.key}>
             {renderTreeNodes(item.children)}
           </TreeNode>
         );
       }
-      return <TreeNode title={item.title} key={item.key} />;
+      return <TreeNode title={t(item.title)} key={item.key} />;
     });
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = getCssClasses();
     const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
+
+  const translateTreeData = (data) => {
+    return data.map(item => ({
+      ...item,
+      title: t(item.title),
+      children: item.children ? translateTreeData(item.children) : undefined
+    }));
+  };
 
   return (
     <div className={`${customLight} ${customDarkText}`} style={{ width: '100%', overflowX: 'auto' }}>
@@ -234,15 +245,15 @@ const Permissions = ({ selectedPermissions = [], onChange }) => {
         checkedKeys={selectedPermissions}
         onCheck={onCheck}
         selectable={false}
-        defaultExpandAll={false} // Set to false to keep all nodes collapsed
-        treeData={permissionOptions}
+        defaultExpandAll={false}
+        treeData={translateTreeData(permissionOptions)}
         className={`${customLight} ${customDarkText}`}
         style={{
           backgroundColor: customLight,
           color: customDarkText,
           borderColor: customLightBorder,
-          minWidth: '300px', // Ensures minimum width on small screens
-          fontSize: '14px' // Adjust font size for better readability on small screens
+          minWidth: '300px',
+          fontSize: '14px'
         }}
       />
     </div>
