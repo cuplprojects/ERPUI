@@ -141,7 +141,7 @@ const Type = () => {
         setRequiredEditingProcessIds(originalData.requiredProcessId)
         setEditingStatus(originalData.status);
     };
-
+console.log(originalData.requiredProcessIds)
     const handleSearch = (value) => {
         setSearchText(value);
     };
@@ -247,6 +247,30 @@ const Type = () => {
             ),
         },
         {
+            title: 'Required Process',
+            dataIndex: 'requiredProcessId',
+            key: 'requiredProcessId',
+            render: (ids, record, index) => (
+                editingIndex === index ? (
+                    <Select
+                        mode="multiple"
+                        value={requirededitingProcessIds}
+                        onChange={setRequiredEditingProcessIds}
+                        style={{ width: '100%' }}
+                    >
+                        {processes.map(proc => (
+                            <Option key={proc.id} value={proc.id}>
+                                {proc.name}
+                            </Option>
+                        ))}
+                    </Select>
+                ) : (
+                    ids.map(id => processMap[id]).join(', ')
+                )
+            ),
+        },
+        {
+
             align: 'center',
             title: (
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
