@@ -37,9 +37,10 @@ const CuDetailedAgGrid = ({ clickData }) => {
     },
     { field: 'processName', headerName: 'Processes', minWidth: 150, cellStyle: { borderRight: '1px solid #ccc' } },
     { field: 'totalCatch', headerName: 'Total Catch', minWidth: 100, cellStyle: { textAlign: 'center', borderRight: '1px solid #ccc' } },
+    { field: 'remainingCatch', headerName: 'Remaining Catch', minWidth: 100, cellStyle: { textAlign: 'center' } },
     { field: 'totalQuantity', headerName: 'Total Quantity', minWidth: 95, cellStyle: { textAlign: 'center', borderRight: '1px solid #ccc' } },
-    { field: 'remainingQuantity', headerName: 'Remaining Quantity', minWidth: 100, cellStyle: { textAlign: 'center', borderRight: '1px solid #ccc' } },
-    { field: 'remainingCatch', headerName: 'Remaining Catch', minWidth: 100, cellStyle: { textAlign: 'center' } }
+    { field: 'remainingQuantity', headerName: 'Remaining Quantity', minWidth: 100, cellStyle: { textAlign: 'center', borderRight: '1px solid #ccc' } }
+    
   ], []);
 
   const getRowClass = useCallback((params) => {
@@ -54,9 +55,9 @@ const CuDetailedAgGrid = ({ clickData }) => {
     const columnsToHide = [];
     let totalColsWidth = 0;
 
-    const allColumns = params.columnApi.getAllColumns();
-    if (allColumns && allColumns.length > 0) {
-      for (let i = 0; i < allColumns.length; i++) {
+    const allColumns = params?.columnApi?.getAllColumns();
+    if (allColumns && allColumns?.length > 0) {
+      for (let i = 0; i < allColumns?.length; i++) {
         const column = allColumns[i];
         totalColsWidth += column.getMinWidth();
         if (totalColsWidth > gridWidth) {
@@ -67,10 +68,10 @@ const CuDetailedAgGrid = ({ clickData }) => {
       }
     }
 
-    params.columnApi.setColumnsVisible(columnsToShow, true);
-    params.columnApi.setColumnsVisible(columnsToHide, false);
+    params?.columnApi?.setColumnsVisible(columnsToShow, true);
+    params?.columnApi?.setColumnsVisible(columnsToHide, false);
 
-    params.api.sizeColumnsToFit();
+    params?.api.sizeColumnsToFit();
   }, []);
 
   const onFirstDataRendered = useCallback((params) => {

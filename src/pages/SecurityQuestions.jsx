@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Input, Button, Table, message } from 'antd';
-import axios from 'axios';
 import API from '../CustomHooks/MasterApiHooks/api';
 
 const SecurityQuestions = () => {
