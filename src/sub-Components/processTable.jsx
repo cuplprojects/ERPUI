@@ -1,6 +1,4 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import React, { useState, useEffect } from 'react';
-
 import { useLocation, useParams } from 'react-router-dom';
 import { Card, Spinner, Row, Col } from 'react-bootstrap'; // Import Bootstrap components
 import ProjectDetailsTable from './projectDetailTable'; // Import the new component
@@ -19,8 +17,6 @@ import { MdPending, MdCloudUpload } from "react-icons/md";
 import { Link } from 'react-router-dom';
 import { FaRegHourglassHalf } from "react-icons/fa6";
 
-import { MdCloudUpload } from "react-icons/md";//upload icon
-import { FaRegHourglassHalf } from "react-icons/fa6";//pre process running
 import API from '../CustomHooks/MasterApiHooks/api';
 import { useUserData } from '../store/userDataStore';
 import { getProjectProcessAndFeature, getProjectProcessByProjectAndSequence } from '../CustomHooks/ApiServices/projectProcessAndFeatureService';
@@ -53,7 +49,7 @@ const ProcessTable = () => {
     const id = decrypt(encryptedProjectId);
     const lotNo = decrypt(encryptedLotNo);
 
-    const { id, lotNo } = useParams();
+
 
     const [tableData, setTableData] = useState([]);
     const [showBarChart, setShowBarChart] = useState(true);
@@ -116,7 +112,6 @@ const ProcessTable = () => {
         const fetchQuantitySheet = async () => {
             try {
                 const response = await API.get(`/QuantitySheet/CatchByproject?ProjectId=${id}`);
-                const response = await API.get(`/QuantitySheet/Catch?ProjectId=${id}&lotNo=${lotNo}`);
                 const quantitySheetData = response.data;
                 
                 if (Array.isArray(quantitySheetData) && quantitySheetData.length > 0) {
@@ -340,16 +335,10 @@ const ProcessTable = () => {
                         </Col>
                         <Col lg={9} md={8} className="ps-0">
                             {tableData?.length > 0 && (
-                                <ProjectDetailsTable tableData={filteredTableData} setTableData={setTableData} projectId={id} lotNo={lotNo} featureData={featureData} hasFeaturePermission={hasFeaturePermission}/>
+                                <ProjectDetailsTable tableData={tableData} setTableData={setTableData} projectId={id} lotNo={lotNo} featureData={featureData} hasFeaturePermission={hasFeaturePermission}/>
                             )}
                         </Col>
                     </Row>
-
-                <Col lg={12} md={12} >
-                    {tableData?.length > 0 && (
-                        <ProjectDetailsTable tableData={tableData} setTableData={setTableData} projectId={id} lotNo={lotNo} />
-                        
-                    )}
                 </Col>
                 <Col lg={2} md={0} ></Col>
 
@@ -381,6 +370,6 @@ const ProcessTable = () => {
             </CatchDetailModal>
         </div>
     );
-};
+}};
 
 export default ProcessTable;
