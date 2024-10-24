@@ -67,9 +67,9 @@ const Navbar = () => {
     if (
       containerRef.current &&
       !containerRef.current.contains(event.target) &&
-      !navRef.current.contains(event.target) &&
-      !userMenuRef.current.contains(event.target) &&
-      !notificationRef.current.contains(event.target)
+      navRef.current && !navRef.current.contains(event.target) &&
+      userMenuRef.current && !userMenuRef.current.contains(event.target) &&
+      notificationRef.current && !notificationRef.current.contains(event.target)
     ) {
       setShowNav(false);
       setUserMenu(false);
