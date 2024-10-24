@@ -77,7 +77,7 @@ const Type = () => {
     useEffect(() => {
         const filtered = types.filter(type =>
             type.types.toLowerCase().includes(searchText.toLowerCase()) ||
-            type.associatedProcessId.some(id => processMap[id].toLowerCase().includes(searchText.toLowerCase()))
+            type.associatedProcessId.some(id => processMap[id]?.toLowerCase().includes(searchText.toLowerCase()))
         );
         setFilteredTypes(filtered);
         setCurrentPage(1);
@@ -219,7 +219,30 @@ console.log(originalData.requiredProcessIds)
                         ))}
                     </Select>
                 ) : (
-                    ids.map(id => processMap[id]).join(', ')
+                    ids?.map(id => processMap[id]).join(', ') || ''
+                )
+            ),
+        },
+        {
+            title: 'Required Process',
+            dataIndex: 'requiredProcessId',
+            key: 'requiredProcessId',
+            render: (ids, record, index) => (
+                editingIndex === index ? (
+                    <Select
+                        mode="multiple"
+                        value={requirededitingProcessIds}
+                        onChange={setRequiredEditingProcessIds}
+                        style={{ width: '100%' }}
+                    >
+                        {processes.map(proc => (
+                            <Option key={proc.id} value={proc.id}>
+                                {proc.name}
+                            </Option>
+                        ))}
+                    </Select>
+                ) : (
+                    ids?.map(id => processMap[id]).join(', ') || ''
                 )
             ),
         },
@@ -247,6 +270,7 @@ console.log(originalData.requiredProcessIds)
             ),
         },
         {
+
             align: 'center',
             title: (
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

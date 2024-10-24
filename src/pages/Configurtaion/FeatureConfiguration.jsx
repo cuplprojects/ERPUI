@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Popconfirm, Select, Switch } from 'antd';
+import { Table, Button, Popconfirm, Select, Switch, message } from 'antd';
 import './FeatureConfiguration.css';
 import API from '../../CustomHooks/MasterApiHooks/api';
 
@@ -33,14 +33,39 @@ const FeatureConfiguration = () => {
         fetchFeatures();
     }, []);
 
-    const handleSwitchChange = (processId, featureId, checked) => {
-        setCheckedFeatures(prev => ({
-            ...prev,
-            [processId]: {
-                ...prev[processId],
-                [featureId]: checked
+    const handleSwitchChange = async (processId, featureId, checked) => {
+        try {
+            const process = processes.find(p => p.id === processId);
+            let updatedInstalledFeatures = [...(process.installedFeatures || [])];
+            
+            if (checked) {
+                updatedInstalledFeatures.push(featureId);
+            } else {
+                updatedInstalledFeatures = updatedInstalledFeatures.filter(id => id !== featureId);
             }
-        }));
+
+            await API.put(`/Processes/${processId}`, {
+                ...process,
+                installedFeatures: updatedInstalledFeatures
+            });
+
+            setProcesses(prevProcesses => prevProcesses.map(p => 
+                p.id === processId ? {...p, installedFeatures: updatedInstalledFeatures} : p
+            ));
+
+            setCheckedFeatures(prev => ({
+                ...prev,
+                [processId]: {
+                    ...prev[processId],
+                    [featureId]: checked
+                }
+            }));
+
+            message.success(`Feature ${checked ? 'enabled' : 'disabled'} successfully`);
+        } catch (error) {
+            console.error("Failed to update process", error);
+            message.error("Failed to update feature. Please try again.");
+        }
     };
 
     const columns = [

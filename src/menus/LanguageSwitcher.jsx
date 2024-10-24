@@ -4,13 +4,15 @@ import English from "./../assets/Icons/English.png";
 import { Form } from 'react-bootstrap';
 import './../styles/LanguageSwitcher.css'; // Custom styles
 import useLanguageStore from '../store/languageStore';
+import { useTranslation } from 'react-i18next';
 
 const LanguageSwitcher = () => {
     const { language, setLanguage } = useLanguageStore();
+    const { t } = useTranslation();
 
     return (
         <div className="language-switcher-container">
-            <Form.Label className="language-label">Change Language</Form.Label>
+            <Form.Label className="language-label">{t('changeLanguage')}</Form.Label>
             <div className="language-switcher">
                 {/* Hindi Button */}
                 <button

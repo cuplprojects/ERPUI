@@ -22,26 +22,26 @@ const Cards = ({ item, onclick, disableProject }) => {
 
   // Handle info button click
   const handleInfoClick = (e) => {
-    if(disableProject){
+    e.stopPropagation();
+    if(!disableProject){
       return;
     }
-    e.stopPropagation();
     onclick(item);
   };
 
   return (
     <StyledWrapper>
       <div className="card" onClick={handleCardClick}>
-        <div className="upload-button" onClick={handleUploadClick} >
+        <div className="upload-button ml-5" onClick={handleUploadClick} >
           <FaUpload />
         </div>
 
-        <h4>{item.name}</h4>
+        <h4 className="project-name">{item.name}</h4>
         <p>{item.completionPercentage}% Completed</p>
         <p>{item.remainingPercentage}% Remaining</p>
         
         <div
-          className={`info-button ${disableProject ? 'disabled' : ''}`}
+          className={`info-button ${!disableProject ? 'disabled' : ''}`}
           onClick={handleInfoClick}
         >
           <FaInfoCircle />
@@ -117,6 +117,13 @@ const StyledWrapper = styled.div`
 
   .info-button.disabled:hover {
     background-color: transparent;
+  }
+
+  .project-name {
+    white-space: normal;
+    word-wrap: break-word;
+    max-width: 90%;
+    margin: 10px 0;
   }
 `;
 

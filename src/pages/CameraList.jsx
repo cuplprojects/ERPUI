@@ -7,8 +7,10 @@ import themeStore from './../store/themeStore';
 import { useMediaQuery } from 'react-responsive';
 import { AiFillCloseSquare } from "react-icons/ai";
 import { SortAscendingOutlined, SortDescendingOutlined, EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 
 const CameraList = () => {
+  const { t } = useTranslation();
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
   const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
@@ -60,9 +62,9 @@ const CameraList = () => {
         setCameras([...cameras, response.data]);
         form.resetFields();
         setIsModalOpen(false);
-        message.success('Camera added successfully!');
+        message.success(t('Camera added successfully!'));
       } catch (error) {
-        message.error('Error adding camera');
+        message.error(t('Error adding camera'));
       }
     });
   };
@@ -80,9 +82,9 @@ const CameraList = () => {
       setCameras(updatedCameras);
       setEditingIndex(null);
       setEditingName('');
-      message.success('Camera updated successfully!');
+      message.success(t('Camera updated successfully!'));
     } catch (error) {
-      message.error('Failed to update camera');
+      message.error(t('Failed to update camera'));
     }
   };
 
@@ -108,7 +110,7 @@ const CameraList = () => {
 
   const columns = [
     {
-      title: 'SN.',
+      title: t('SN.'),
       dataIndex: 'serial',
       key: 'serial',
       render: (text, record, index) => (currentPage - 1) * pageSize + index + 1,
@@ -117,7 +119,7 @@ const CameraList = () => {
     {
       title: (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          Camera Name
+          {t('Camera Name')}
           <Button
             type="text"
             onClick={() => handleSort('name')}
@@ -142,25 +144,25 @@ const CameraList = () => {
       width: '70%',
     },
     {
-      title: 'Action',
+      title: t('actions'),
       key: 'action',
       render: (_, record, index) => (
         editingIndex === index ? (
           <div style={{ display: 'flex', justifyContent: '' }}>
             <Button type="link" onClick={() => handleEditSave(index)} className={`${customDark === "dark-dark" ? `${customMid} border` : `${customLight} ${customDarkBorder}`} text-white `}>
               <SaveOutlined className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}/> 
-              <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}>Save</span> 
+              <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}>{t('save')}</span> 
             </Button>
             <Button type="link" onClick={() => setEditingIndex(null)} className={`${customDark === "dark-dark" ? `${customMid} border` : `${customLight} ${customDarkBorder}`} text-white ms-3`}>
               <CloseOutlined className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}/> 
-              <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}>Cancel</span> 
+              <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}>{t('cancel')}</span> 
             </Button>
           </div>
         ) : (
           <Button type="link" icon={<EditOutlined />} onClick={() => {
             setEditingIndex(index);
             setEditingName(record.name);
-          }} className={`${customBtn} text-white me-1`}>Edit</Button>
+          }} className={`${customBtn} text-white me-1`}>{t('edit')}</Button>
         )
       ),
     },
@@ -181,7 +183,7 @@ const CameraList = () => {
       overflow: 'auto'
     }}
     className={`${customDark === "dark-dark" ? customDark : ``}`}>
-      <h2 className={`${customDarkText}`}>Camera List</h2>
+      <h2 className={`${customDarkText}`}>{t('Camera List')}</h2>
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
@@ -189,13 +191,13 @@ const CameraList = () => {
         marginBottom: isMobile ? '10px' : '20px'
       }}>
         <Input.Search
-          placeholder="Search cameras"
+          placeholder={t('Search cameras')}
           allowClear
           onChange={(e) => handleSearch(e.target.value)}
           style={{ width: 300 }}
         />
         <Button className={`${customBtn} ${customDark === "dark-dark" ? `` : `border-0`} custom-zoom-btn`} onClick={showModal}>
-          Add New Camera
+          {t('Add New Camera')}
         </Button>
       </div>
 
@@ -231,7 +233,7 @@ const CameraList = () => {
               }}
               showSizeChanger
               showQuickJumper
-              showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
+              showTotal={(total, range) => t('{{start}}-{{end}} of {{total}} items', { start: range[0], end: range[1], total })}
             />
           </div>
         </>
@@ -244,7 +246,7 @@ const CameraList = () => {
         size={isMobile ? 'sm' : 'md'}
       >
         <Modal.Header closeButton={false} className={`rounded-top-2 ${customDark} ${customLightText} ${customDark === "dark-dark" ? `border ` : `border-0`} border d-flex justify-content-between `}>
-          <Modal.Title>Add New Camera</Modal.Title>
+          <Modal.Title>{t('Add New Camera')}</Modal.Title>
           <AiFillCloseSquare
             size={30}
             onClick={handleCancel}
@@ -257,14 +259,14 @@ const CameraList = () => {
           <Form form={form} layout="vertical">
             <Form.Item
               name="name"
-              label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-6 `}>{"Camera Name"}</span>}
-              rules={[{ required: true, message: 'Please enter camera name' }]}
+              label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-6 `}>{t('Camera Name')}</span>}
+              rules={[{ required: true, message: t('Please enter camera name') }]}
             >
-              <Input placeholder="Enter camera name" />
+              <Input placeholder={t('Enter camera name')} />
             </Form.Item>
             <Form.Item>
               <Button type="primary" htmlType="submit" onClick={handleOk} className={`rounded-2 ${customBtn} ${customDark === "dark-dark" ? `` : `border-0`} custom-zoom-btn`} size="small">
-                Submit
+                {t('submit')}
               </Button>
             </Form.Item>
           </Form>
