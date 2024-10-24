@@ -1,0 +1,323 @@
+import React, { useEffect, useState } from "react";
+import { Button, message, Checkbox, Drawer } from "antd";
+import { DndProvider, useDrag, useDrop } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
+import { getProjectById } from "../CustomHooks/ApiServices/projectService";
+import API from "../CustomHooks/MasterApiHooks/api";
+import { MenuOutlined } from "@ant-design/icons";
+import Table from "react-bootstrap/Table";
+import { Card } from "react-bootstrap";
+import { useStore } from "zustand";
+import themeStore from "../store/themeStore";
+
+const DraggableRow = ({
+  process,
+  index,
+  moveProcess,
+  features,
+  checkedFeatures,
+  setCheckedFeatures,
+}) => {
+  if (!process) return null;
+
+  const [, ref] = useDrag({
+    type: "PROCESS",
+    item: { index },
+  });
+
+  const [, drop] = useDrop({
+    accept: "PROCESS",
+    hover(item) {
+      if (item.index !== index) {
+        moveProcess(item.index, index);
+        item.index = index;
+      }
+    },
+  });
+
+  const handleCheckboxChange = (featureId) => {
+    const updatedCheckedFeatures = checkedFeatures[process.id] || [];
+    if (updatedCheckedFeatures.includes(featureId)) {
+      updatedCheckedFeatures.splice(updatedCheckedFeatures.indexOf(featureId), 1);
+    } else {
+      updatedCheckedFeatures.push(featureId);
+    }
+    setCheckedFeatures((prev) => ({
+      ...prev,
+      [process.id]: updatedCheckedFeatures,
+    }));
+  };
+
+  return (
+    <tr ref={(node) => ref(drop(node))}>
+      <td style={{ textAlign: "center", width: "5%" }}>{index + 1}</td>
+      <td style={{ textAlign: "center", width: "20%" }}>
+        {process.name || "Unnamed Process"}
+      </td>
+      {features.map((feature) => {
+        const isChecked = (checkedFeatures[process.id] || []).includes(feature.featureId) ||
+          (process.installedFeatures && process.installedFeatures.includes(feature.featureId));
+        return (
+          <td
+            key={feature.featureId}
+            style={{
+              textAlign: "center",
+              width: `${(75 / features.length).toFixed(2)}%`,
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={isChecked}
+              onChange={() => handleCheckboxChange(feature.featureId)}
+            />
+          </td>
+        );
+      })}
+    </tr>
+  );
+};
+
+const AddProjectProcess = ({ selectedProject }) => {
+  const projectId = selectedProject;
+  const [processes, setProcesses] = useState([]);
+  const [allProcesses, setAllProcesses] = useState([]);
+  const [selectedProcesses, setSelectedProcesses] = useState([]);
+  const [features, setFeatures] = useState([]);
+  const [checkedFeatures, setCheckedFeatures] = useState({});
+  const [project, setProject] = useState("");
+  const [isDrawerVisible, setIsDrawerVisible] = useState(false);
+  const { getCssClasses } = useStore(themeStore);
+  const cssClasses = getCssClasses();
+  const [customDark, customLight, customLightBorder, customDarkBorder] = cssClasses;
+  const [requiredProcesses, setRequiredProcesses] = useState([]);
+
+  useEffect(() => {
+    fetchProjectData();
+    setSelectedProcesses([])
+  }, [selectedProject]);
+
+  const fetchUpdatedProcesses = async () => {
+    try {
+      const response = await API.get(`/Project/GetProjectProcesses/${projectId}`);
+      setProcesses(response.data.projectProcesses);
+      console.log(response.data.projectProcesses)
+      return response.data
+    } catch (error) {
+      message.error("Failed to fetch processes");
+    }
+  };
+
+  const fetchProjectData = async () => {
+    try {
+      const project = await getProjectById(projectId);
+      setProject(project);
+      var data = await fetchUpdatedProcesses();
+      console.log(data)
+      if (!data || data.length === 0) {
+        const res = await API.get(`/PaperTypes/${project.typeId}/Processes`)
+        data  = res.data;
+      }
+     
+      const requiredProcessesResponse = await API.get(`/PaperTypes/${project.typeId}/RequiredProcesses`);
+      setRequiredProcesses(requiredProcessesResponse.data.map(proc => proc.name));
+
+      const allProcessesResponse = await API.get("/Processes");
+      setAllProcesses(allProcessesResponse.data);
+      
+      const fetchedProcessNames = new Set(data?.map(proc => proc.name));
+      console.log(fetchedProcessNames)
+
+      console.log(data)
+      const markedProcesses = data.map(proc => ({
+        ...proc,
+        status: fetchedProcessNames.has(proc.name),
+      }));
+      console.log(markedProcesses)
+      setSelectedProcesses(markedProcesses.filter(proc => proc.status));
+
+      const featuresResponse = await API.get("/Features");
+      const fetchedFeatures = featuresResponse.data;
+      setFeatures(fetchedFeatures);
+
+      const defaultCheckedFeatures = {};
+      markedProcesses.forEach((proc) => {
+        defaultCheckedFeatures[proc.id] = proc.installedFeatures || [];
+      });
+      setCheckedFeatures(defaultCheckedFeatures);
+    } catch (error) {
+      message.error("Failed to fetch project data");
+    }
+  };
+
+  const handleCheckboxChange = (featureId, proc) => {
+    if (!proc || !proc.id) {
+      message.error("Process is undefined or does not have an id");
+      return;
+    }
+
+    if (requiredProcesses.includes(proc.name) && selectedProcesses.some(p => p.id === proc.id)) {
+      return;
+    }
+
+    setSelectedProcesses(prevSelectedProcesses => {
+      if (prevSelectedProcesses.some(selectedProc => selectedProc.id === proc.id)) {
+        return prevSelectedProcesses.filter(selectedProc => selectedProc.id !== proc.id);
+      } else {
+        return [...prevSelectedProcesses, proc];
+      }
+    });
+
+    setCheckedFeatures(prevCheckedFeatures => {
+      const updatedCheckedFeatures = [...(prevCheckedFeatures[proc.id] || [])];
+      if (updatedCheckedFeatures.includes(featureId)) {
+        updatedCheckedFeatures.splice(updatedCheckedFeatures.indexOf(featureId), 1);
+      } else {
+        updatedCheckedFeatures.push(featureId);
+      }
+      return {
+        ...prevCheckedFeatures,
+        [proc.id]: updatedCheckedFeatures,
+      };
+    });
+  };
+
+  const updateProcess = async (processId, featuresList) => {
+    try {
+      await API.post('/Project/AddProcessesToProject', {
+        projectProcesses: [{
+          projectId: parseInt(projectId),
+          processId,
+          weightage: 0,
+          sequence: selectedProcesses.findIndex(p => p.id === processId) + 1,
+          featuresList: featuresList.filter(feature => feature !== null),
+          userId: []
+        }]
+      });
+      message.success("Process updated successfully!");
+    } catch (error) {
+      message.error("Error updating process");
+    }
+  };
+
+  const moveProcess = (fromIndex, toIndex) => {
+    setSelectedProcesses(prevSelectedProcesses => {
+      const updatedProcesses = [...prevSelectedProcesses];
+      const [movedProcess] = updatedProcesses.splice(fromIndex, 1);
+      updatedProcesses.splice(toIndex, 0, movedProcess);
+      return updatedProcesses;
+    });
+  };
+
+  const handleSubmit = async () => {
+    const projectProcesses = selectedProcesses.map((proc, index) => {
+      const featuresList = checkedFeatures[proc.id] || [];
+      return {
+        projectId: parseInt(projectId),
+        processId: proc.id,
+        weightage: 0,
+        sequence: index + 1,
+        featuresList: featuresList.filter(feature => feature !== null && feature !== undefined),
+        userId: []
+      };
+    });
+
+    try {
+      await API.post("/Project/AddProcessesToProject", { projectProcesses });
+      message.success("Processes updated successfully!");
+      fetchProjectData();
+      fetchUpdatedProcesses();
+    } catch (error) {
+      message.error("Error adding processes");
+    }
+  };
+
+  return (
+    <DndProvider backend={HTML5Backend}>
+      <div className={`mb-4 shadow-lg p-0 border-0 ${customDark === "dark-dark" ? `${customLightBorder}` : "border-0"}`}>
+        <div className={`d-flex justify-content-between align-items-center ${customDark === "dark-dark" ? `${customDark} text-white ${customLightBorder}` : `text-white ${customDark}`}`}>
+          <div className="ms-2">
+            <Button 
+              icon={<MenuOutlined />}
+              onClick={() => setIsDrawerVisible(!isDrawerVisible)}
+              className="responsive-button"
+            />
+          </div>
+          <h5 className="text-center me-2 mt-2">Project: {project.name}</h5>
+        </div>
+
+        <Card.Body className={`${customDark === "dark-dark" ? `${customLightBorder}` : ""}`}>
+          <Drawer
+            title=""
+            placement="left"
+            closable
+            onClose={() => setIsDrawerVisible(false)}
+            open={isDrawerVisible}
+            width={250}
+          >
+            <p>Select The Process</p>
+            {allProcesses.map((proc) => (
+              <p key={proc.id}>
+                <Checkbox
+                  checked={selectedProcesses.some(selectedProc => selectedProc.id === proc.id)}
+                  onChange={() => handleCheckboxChange(undefined, proc)}
+                  disabled={requiredProcesses.includes(proc.name) && !selectedProcesses.some(selectedProc => selectedProc.id === proc.id)}
+                >
+                  {proc.name}
+                </Checkbox>
+              </p>
+            ))}
+          </Drawer>
+
+          <div className={`table-responsive ${customLight} ${customDark === 'dark-dark' ? `${customDarkBorder} border-1` : "border-light"}`}>
+            <Table striped bordered hover>
+              <thead>
+                <tr>
+                  <th style={{ textAlign: "center", width: "5%" }}>SN</th>
+                  <th style={{ textAlign: "center", width: "25%" }}>Process Name</th>
+                  {features.map((feature) => (
+                    <th
+                      key={feature.featureId}
+                      style={{
+                        textAlign: "center",
+                        width: `${(70 / features.length).toFixed(2)}%`,
+                      }}
+                    >
+                      {feature.features}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {selectedProcesses.map((process) => (
+                  <React.Fragment key={process.id}>
+                    <DraggableRow
+                      process={process}
+                      index={selectedProcesses.findIndex(p => p.id === process.id)}
+                      moveProcess={moveProcess}
+                      features={features}
+                      checkedFeatures={checkedFeatures}
+                      setCheckedFeatures={setCheckedFeatures}
+                    />
+                  </React.Fragment>
+                ))}
+              </tbody>
+            </Table>
+          </div>
+          <div className="d-flex justify-content-end">
+            <Button
+              type="primary"
+              onClick={handleSubmit}
+              disabled={selectedProcesses.length === 0}
+              style={{ marginTop: "20px", width: "25%" }}
+              className="responsive-submit-button"
+            >
+              Submit
+            </Button>
+          </div>
+        </Card.Body>
+      </div>
+    </DndProvider>
+  );
+};
+
+export default AddProjectProcess;

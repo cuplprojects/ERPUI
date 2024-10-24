@@ -1,7 +1,11 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
+
 import { useLocation, useParams } from 'react-router-dom';
-import { Card, Spinner, Row, Col } from 'react-bootstrap';
-import ProjectDetailsTable from './projectDetailTable';
+import { Card, Spinner, Row, Col } from 'react-bootstrap'; // Import Bootstrap components
+import ProjectDetailsTable from './projectDetailTable'; // Import the new component
+import dummyData from "../store/dd.json";
+
 import StatusPieChart from "./StatusPieChart";
 import StatusBarChart from "./StatusBarChart";
 import "./../styles/processTable.css";
@@ -14,11 +18,15 @@ import { useStore } from 'zustand';
 import { MdPending, MdCloudUpload } from "react-icons/md";
 import { Link } from 'react-router-dom';
 import { FaRegHourglassHalf } from "react-icons/fa6";
+
+import { MdCloudUpload } from "react-icons/md";//upload icon
+import { FaRegHourglassHalf } from "react-icons/fa6";//pre process running
 import API from '../CustomHooks/MasterApiHooks/api';
 import { useUserData } from '../store/userDataStore';
 import { getProjectProcessAndFeature, getProjectProcessByProjectAndSequence } from '../CustomHooks/ApiServices/projectProcessAndFeatureService';
 import useCurrentProcessStore from '../store/currentProcessStore';
 import { decrypt } from "../Security/Security";
+
 
 const ProcessTable = () => {
     const [featureData, setFeatureData] = useState(null);
@@ -44,12 +52,16 @@ const ProcessTable = () => {
     const { encryptedProjectId, encryptedLotNo } = useParams();
     const id = decrypt(encryptedProjectId);
     const lotNo = decrypt(encryptedLotNo);
+
+    const { id, lotNo } = useParams();
+
     const [tableData, setTableData] = useState([]);
     const [showBarChart, setShowBarChart] = useState(true);
     const [catchDetailModalShow, setCatchDetailModalShow] = useState(false);
     const [catchDetailModalData, setCatchDetailModalData] = useState(null);
     const [previousProcessPercentage, setPreviousProcessPercentage] = useState(90);
     const [selectedLot, setSelectedLot] = useState(lotNo);
+
     const [projectName, setProjectName] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState(null);
@@ -104,6 +116,7 @@ const ProcessTable = () => {
         const fetchQuantitySheet = async () => {
             try {
                 const response = await API.get(`/QuantitySheet/CatchByproject?ProjectId=${id}`);
+                const response = await API.get(`/QuantitySheet/Catch?ProjectId=${id}&lotNo=${lotNo}`);
                 const quantitySheetData = response.data;
                 
                 if (Array.isArray(quantitySheetData) && quantitySheetData.length > 0) {
@@ -115,10 +128,10 @@ const ProcessTable = () => {
                         subject: item?.subject,
                         outerEnvelope: item?.outerEnvelope,
                         innerEnvelope: item?.innerEnvelope,
-                        lotNo: item?.lotNo,
+                        lotNo:item?.lotNo,
                         quantity: item?.quantity,
                         percentageCatch: item?.percentageCatch,
-                        projectId: item?.projectId,
+                        projectId:item?.projectId,
                         isOverridden: item?.isOverridden,
                         processId: item?.processId || [],
                         status: item?.status || "Pending",
@@ -126,22 +139,21 @@ const ProcessTable = () => {
                         interimQuantity: "0",
                         remarks: "",
                         previousProcessStats: "",
+                        status: item?.status ||  "Pending",//to be fetched later from backend
+                        alerts: "",//to be fetched later from backend
+                        interimQuantity: "0",//to be fetched later from backend
+                        remarks: "",//to be fetched later from backend
+                        previousProcessStats: "",//to be fetched later from backend
                     }));
                     console.log('Formatted data:', formDataGet);
-                    setTableData(formDataGet);
-
-                    // Extract unique lot numbers
-                    const uniqueLots = [...new Set(formDataGet.map(item => item.lotNo))];
-                    setProjectLots(uniqueLots.map(lotNo => ({ lotNo })));
+                    setTableData(formDataGet); // Set the table data only here
                 } else {
                     console.error("API response is not an array or is empty");
-                    setTableData([]);
-                    setProjectLots([]);
+                    setTableData([]); // Set to empty only if there's no data
                 }
             } catch (error) {
                 console.error("Error fetching quantity sheet data:", error);
-                setTableData([]);
-                setProjectLots([]);
+                setTableData([]); // Set to empty on error
             }
         };
 
@@ -154,6 +166,7 @@ const ProcessTable = () => {
                 const response = await API.get(`/Project/${id}`);
                 const projectData = response.data;
                 setProjectName(projectData.name);
+                // You can set other project details here if needed
             } catch (error) {
                 console.error("Error fetching project details:", error);
             }
@@ -163,11 +176,17 @@ const ProcessTable = () => {
     }, [id]);
 
 
+
+
+    
     const handleToggleChange = () => {
         setShowBarChart(!showBarChart);
     };
 
     if (isLoading) {
+    // Render a loading state while fetching the project data
+    if (!projectName) {
+
         return (
             <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
                 <Spinner animation="border" variant="primary" />
@@ -182,14 +201,16 @@ const ProcessTable = () => {
     };
 
     const handleLotClick = (lot) => {
-        setSelectedLot(lot);
+        setSelectedLot(lot === selectedLot ? null : lot);
     };
 
     const catchNumbers = tableData.map((item) => item.catchNumber).sort((a, b) => a - b);
 
-    const filteredTableData = selectedLot
-        ? tableData.filter(item => item.lotNo === selectedLot)
-        : tableData;
+    // console.log(tableData);
+
+    let activeUser, activeUserProcess, currentIndex, currentProcess, previousProcess;
+
+
 
     return (
         <div className="container-fluid" >
@@ -200,8 +221,10 @@ const ProcessTable = () => {
                             <Row className='d-flex align-items-center'>
                                 <Col lg={6} md={4} xs={12} className=' d-lg-none d-md-none '>
                                     <div className="center-head d-flex justify-content-center">
+
                                         <span className='text-center fs-4 me-3'>{projectName}</span>
                                         <span className='text-center fs-4'>Lot - {lotNo}</span>
+
                                     </div>
                                 </Col>
                                 <div className="d-flex justify-content-center d-lg-none d-md-none ">
@@ -237,10 +260,10 @@ const ProcessTable = () => {
                                 </div>
                                 <Col lg={6} md={4} xs={12} className='d-none d-lg-block d-md-block'>
                                     <div className="center-head ">
+
                                         <div className='text-center fs-4'>{projectName}</div>
-                                        <div className='text-center fs-4'>
-                                            Lot - {selectedLot ? selectedLot : lotNo}
-                                        </div>
+                                        <div className='text-center fs-4'>Lot - {lotNo}</div>
+
                                     </div>
                                 </Col>
                                 <Col lg={3} md={4} xs={12}>
@@ -264,10 +287,12 @@ const ProcessTable = () => {
                         <marquee id="alert-marquee" behavior="scroll" direction="left" scrollamount="5" onMouseOver={(e) => e.target.stop()}
                             onMouseOut={(e) => e.target.start()}>
                             <div className="d-flex gap-4">
+
                                 {tableData.map((record, index) => (
                                     <React.Fragment key={index}>
                                         {record.alerts && record.alerts.length > 0 && (
                                             <AlertBadge catchNo={record.catchNumber} alerts={record.alerts} onClick={() => handleCatchClick(record)} status="level1" />
+
                                         )}
                                     </React.Fragment>
                                 ))}
@@ -319,7 +344,15 @@ const ProcessTable = () => {
                             )}
                         </Col>
                     </Row>
+
+                <Col lg={12} md={12} >
+                    {tableData?.length > 0 && (
+                        <ProjectDetailsTable tableData={tableData} setTableData={setTableData} projectId={id} lotNo={lotNo} />
+                        
+                    )}
                 </Col>
+                <Col lg={2} md={0} ></Col>
+
             </Row>
             <Row className='mb-4 d-flex justify-content-between'>
                 <Col lg={8} md={12} className='mb-1'>

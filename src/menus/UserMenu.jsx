@@ -62,22 +62,6 @@ const UserMenu = ({ onClose }) => {
 
   const isValidImageUrl = (url) => url && url.match(/\.(jpeg|jpg|gif|png)$/) != null;
 
-  const getEnglishRoute = (text) => {
-    switch (text) {
-      case 'profile':
-      case 'प्रोफ़ाइल':
-        return '/profile';
-      case 'mySettings':
-      case 'मेरी सेटिंग्स':
-        return '/settings';
-      case 'changePassword':
-      case 'पासवर्ड बदलें':
-        return '/change-password';
-      default:
-        return '/';
-    }
-  };
-
   return (
     <div
       ref={menuRef}
@@ -120,10 +104,10 @@ const UserMenu = ({ onClose }) => {
       </div>
       <ul className="list-unstyled">
         {[
-          { icon: <ImProfile />, text: t('profile'), onClick: handleProfileClick },
-          { icon: <IoSettingsSharp />, text: t('mySettings'), onClick: handleSettingsClick },
-          { icon: <RiLockPasswordFill />, text: t('changePassword'), onClick: handleChangePasswordClick },
-          { icon: <FaPowerOff />, text: t('logout'), onClick: handleLogoutClick },
+          { icon: <ImProfile />, text: 'profile', route: '/profile', onClick: handleProfileClick },
+          // { icon: <IoSettingsSharp />, text: 'mySettings', route: '/settings', onClick: handleSettingsClick },
+          { icon: <RiLockPasswordFill />, text: 'changePassword', route: '/change-password', onClick: handleChangePasswordClick },
+          { icon: <FaPowerOff />, text: 'logout', onClick: handleLogoutClick },
         ].map((item, index) => (
           <li key={index} className={`p-2 ${index !== 3 ? 'border-bottom' : ''} d-flex align-items-center custom-zoom-btn`}>
             <span className="me-2 text-light">{item.icon}</span>
@@ -133,11 +117,11 @@ const UserMenu = ({ onClose }) => {
                 className="btn text-decoration-none text-light d-block p-0 border-0 bg-transparent"
                 style={{ cursor: 'pointer' }}
               >
-                {item.text}
+                {t(item.text)}
               </button>
             ) : (
-              <Link to={getEnglishRoute(item.text)} className="text-decoration-none text-light d-block" onClick={item.onClick}>
-                {item.text}
+              <Link to={item.route} className="text-decoration-none text-light d-block" onClick={item.onClick}>
+                {t(item.text)}
               </Link>
             )}
           </li>
