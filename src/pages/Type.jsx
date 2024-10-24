@@ -8,10 +8,12 @@ import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import { AiFillCloseSquare } from "react-icons/ai";
 import { SortAscendingOutlined, SortDescendingOutlined, EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 const { Option } = Select;
 const { Search } = Input;
 
 const Type = () => {
+    const { t } = useTranslation();
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = getCssClasses();
     const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
@@ -90,7 +92,7 @@ const Type = () => {
             // Check if the type already exists
             const typeExists = types.some(type => type.types.toLowerCase() === values.types.toLowerCase());
             if (typeExists) {
-                message.error("This type already exists!");
+                message.error(t('thisTypeAlreadyExists'));
                 return;
             }
             const postData = {
@@ -101,13 +103,13 @@ const Type = () => {
             const response = await API.post('/PaperTypes', postData);
             setTypes(prev => [...prev, response.data]);
             setFilteredTypes(prev => [...prev, response.data]);
-            message.success("Type created successfully");
+            message.success(t('typeCreatedSuccessfully'));
             setIsModalVisible(false);
             form.resetFields();
             setRequiredProcessIds([])
         } catch (error) {
             console.error(error);
-            message.error("Failed to create type");
+            message.error(t('failedToCreateType'));
         }
     };
 
@@ -126,11 +128,11 @@ const Type = () => {
             updatedTypes[index] = updatedType;
             setTypes(updatedTypes);
             setFilteredTypes(updatedTypes);
-            message.success('Type updated successfully!');
+            message.success(t('typeUpdatedSuccessfully'));
             setEditingIndex(null);
         } catch (error) {
             console.error(error);
-            message.error('Failed to update Type');
+            message.error(t('failedToUpdateType'));
         }
     };
 
@@ -168,8 +170,9 @@ console.log(originalData.requiredProcessIds)
 
     const columns = [
         {
-            align: 'center',
-            title: 'SN.',
+          align:'center',
+            title: t('sn'),
+
             dataIndex: 'serial',
             key: 'serial',
             render: (text, record, index) => (currentPage - 1) * pageSize + index + 1,
@@ -178,7 +181,7 @@ console.log(originalData.requiredProcessIds)
         {
             title: (
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    Type
+                    {t('type')}
                     <Button
                         type="text"
                         onClick={() => handleSort('types')}
@@ -201,7 +204,7 @@ console.log(originalData.requiredProcessIds)
             ),
         },
         {
-            title: 'Associated Process',
+            title: t('associatedProcess'),
             dataIndex: 'associatedProcessId',
             key: 'associatedProcessId',
             render: (ids, record, index) => (
@@ -250,7 +253,7 @@ console.log(originalData.requiredProcessIds)
             align: 'center',
             title: (
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    Status
+                    {t('status')}
                     <Button
                         type="text"
                         onClick={() => handleSort('status')}
@@ -265,32 +268,36 @@ console.log(originalData.requiredProcessIds)
                     <Switch
                         checked={editingStatus}
                         onChange={setEditingStatus}
-                        checkedChildren="Active"
-                        unCheckedChildren="Inactive"
+                        checkedChildren={t('active')}
+                        unCheckedChildren={t('inactive')}
                     />
                 ) : (
-                    <Switch
-                        checked={status}
-                        disabled
-                        checkedChildren="Active"
-                        unCheckedChildren="Inactive"
+
+                    <Switch 
+                        checked={status} 
+                        disabled 
+                        checkedChildren={t('active')}
+                        unCheckedChildren={t('inactive')}
+
                     />
                 )
             ),
         },
         {
-            title: 'Action',
+            title: t('action'),
             key: 'action',
             render: (_, record, index) => (
                 editingIndex === index ? (
                     <div style={{ display: 'flex', justifyContent: '' }}>
                         <Button type="link" onClick={() => handleEditSave(index)} className={`${customDark === "dark-dark" ? `${customMid} border` : `${customLight} ${customDarkBorder}`} text-white `}>
-                            <SaveOutlined className={`${customDark === "dark-dark" ? `` : `${customDarkText}`} `} />
-                            <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}`} `}>Save</span>
+
+                            <SaveOutlined className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}/> 
+                            <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}>{t('save')}</span> 
                         </Button>
                         <Button type="link" onClick={handleCancelEdit} className={`${customDark === "dark-dark" ? `${customMid} border` : `${customLight} ${customDarkBorder}`} text-white ms-3`}>
-                            <CloseOutlined className={`${customDark === "dark-dark" ? `` : `${customDarkText}`} `} />
-                            <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}`} `}>Cancel</span>
+                            <CloseOutlined className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}/> 
+                            <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}>{t('cancel')}</span> 
+
                         </Button>
                     </div>
                 ) : (
@@ -301,7 +308,7 @@ console.log(originalData.requiredProcessIds)
                         setRequiredEditingProcessIds(record.requiredProcessId)
                         setEditingStatus(record.status);
                         setOriginalData(record);
-                    }} className={`${customBtn} text-white me-1`}>Edit</Button>
+                    }} className={`${customBtn} text-white me-1`}>{t('edit')}</Button>
                 )
             ),
         },
@@ -324,8 +331,9 @@ console.log(originalData.requiredProcessIds)
             boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
             overflow: 'auto'
         }}
-            className={`${customDark === "dark-dark" ? customDark : ``}`}>
-            <h2 className={`${customDarkText}`}>Project Type</h2>
+        className={`${customDark === "dark-dark" ? customDark : ``}`}>
+            <h2 className={`${customDarkText}`}>{t('projectType')}</h2>
+
             <div style={{
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -333,13 +341,13 @@ console.log(originalData.requiredProcessIds)
                 marginBottom: isMobile ? '10px' : '20px'
             }}>
                 <Search
-                    placeholder="Search types or processes"
+                    placeholder={t('searchTypesOrProcesses')}
                     allowClear
                     onChange={(e) => handleSearch(e.target.value)}
                     style={{ width: 300 }}
                 />
                 <Button className={`${customBtn} border-0 custom-zoom-btn`} onClick={() => setIsModalVisible(true)}>
-                    Add Type
+                    {t('addType')}
                 </Button>
             </div>
 
@@ -387,8 +395,10 @@ console.log(originalData.requiredProcessIds)
                 centered
                 size={isMobile ? 'sm' : 'lg'}
             >
-                <Modal.Header closeButton={false} className={`rounded-top-2 ${customDark} ${customLightText} ${customDark === "dark-dark" ? `border ` : `border-0`} w border d-flex justify-content-between `}>
-                    <Modal.Title>Add Type</Modal.Title>
+
+                <Modal.Header closeButton={false} className={`rounded-top-2 ${customDark} ${customLightText} ${customDark === "dark-dark" ? `border ` : `border-0`} border d-flex justify-content-between `}>
+                    <Modal.Title>{t('addType')}</Modal.Title>
+
                     <AiFillCloseSquare
                         size={35}
                         onClick={handleClose}
@@ -406,39 +416,33 @@ console.log(originalData.requiredProcessIds)
                     >
                         <Form.Item
                             name="types"
-                            label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-5 `}>{"Type"}</span>}
+                            label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-5 `}>{t('type')}</span>}
                             rules={[
-                                { required: true, message: 'Please input type!' },
+                                { required: true, message: t('pleaseInputType') },
                                 {
                                     validator: (_, value) => {
                                         const isNumeric = /^\d+$/;
                                         if (value && isNumeric.test(value)) {
-                                            return Promise.reject(new Error('Type cannot contain only numbers!'));
+                                            return Promise.reject(new Error(t('typeCannotContainOnlyNumbers')));
                                         }
                                         if (types.some(type => type.types.toLowerCase() === value.toLowerCase())) {
-                                            return Promise.reject(new Error('This type already exists!'));
+                                            return Promise.reject(new Error(t('thisTypeAlreadyExists')));
                                         }
                                         return Promise.resolve();
                                     }
                                 }
                             ]}
                         >
-                            <Input placeholder="Type" />
+                            <Input placeholder={t('type')} />
                         </Form.Item>
                         <Form.Item
                             name="associatedProcessId"
-                            label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-5 `}>{"Associated Process"}</span>}
-                            rules={[{ required: true, message: 'Please select a process!' }]}
+                            label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-5 `}>{t('associatedProcess')}</span>}
+                            rules={[{ required: true, message: t('pleaseSelectAProcess') }]}
                         >
-                            <Select
-                                mode="multiple"
-                                placeholder="Select Process"
-                                onChange={(selected) => {
-                                    setAssociatedProcessIds(selected); 
-                                    setRequiredProcessIds(selected); 
-                                }}
-                                style={{ width: '100%' }}
-                            >
+
+                            <Select mode="multiple" placeholder={t('selectProcess')}>
+
                                 {processes.map(proc => (
                                     <Option key={proc.id} value={proc.id}>
                                         {proc.name}
@@ -460,17 +464,17 @@ console.log(originalData.requiredProcessIds)
                             </div>
                         </Form.Item>
 
-                        <Form.Item name="status" label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-5 `}>{"Status"}</span>} valuePropName="checked" initialValue={true}>
+                        <Form.Item name="status" label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-5 `}>{t('status')}</span>} valuePropName="checked" initialValue={true}>
                             <Switch
-                                checkedChildren="Active"
-                                unCheckedChildren="Inactive"
+                                checkedChildren={t('active')}
+                                unCheckedChildren={t('inactive')}
                                 defaultChecked
                             />
                         </Form.Item>
 
                         <Form.Item>
                             <Button type="" htmlType="submit" className={`rounded-2 ${customBtn} ${customDark === "dark-dark" ? `` : `border-0`} custom-zoom-btn`}>
-                                Submit
+                                {t('submit')}
                             </Button>
                         </Form.Item>
                     </Form>

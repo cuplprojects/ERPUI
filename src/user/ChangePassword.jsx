@@ -7,6 +7,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { jwtDecode } from 'jwt-decode';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
@@ -14,6 +15,7 @@ import API from '../CustomHooks/MasterApiHooks/api';
 
 const ChangePassword = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   //Theme Change Section
   const { getCssClasses } = useStore(themeStore);
@@ -86,7 +88,7 @@ const ChangePassword = () => {
     event.preventDefault();
   
     if (formData.newPassword !== confirmPassword) {
-      toast.error('New passwords do not match!', {
+      toast.error(t('newPasswordsDoNotMatch'), {
         position: "top-right",
         autoClose: 3000,
         hideProgressBar: true,
@@ -98,7 +100,7 @@ const ChangePassword = () => {
     }
 
     if (formData.oldPassword === formData.newPassword) {
-      toast.error('New password cannot be the same as the old password!', {
+      toast.error(t('newPasswordCannotBeSameAsOld'), {
         position: "top-right",
         autoClose: 3000,
         hideProgressBar: true,
@@ -121,7 +123,7 @@ const ChangePassword = () => {
 
     API.put(apiUrl, payload)
       .then((response) => {
-        toast.success('Password changed successfully!', {
+        toast.success(t('passwordChangedSuccessfully'), {
           position: "top-right",
           autoClose: 1500,
           hideProgressBar: true,
@@ -134,7 +136,7 @@ const ChangePassword = () => {
         });
       })
       .catch((error) => {
-        toast.error('Error changing password: ' + error.message, {
+        toast.error(t('errorChangingPassword', { error: error.message }), {
           position: "top-right",
           autoClose: 3000,
           hideProgressBar: true,
@@ -164,7 +166,7 @@ const ChangePassword = () => {
               <FaLock size={25} className={`${customBtn === 'btn-dark' ? "text-white" : `${customDarkText}`}`} />
             </div>
             <h2 className={`text-center fw-bold ${customBtn === 'btn-dark' ? "text-white" : `${customDarkText}`}`}>
-              Change Password
+              {t('changePassword')}
             </h2>
           </div>
         </Col>
@@ -178,12 +180,12 @@ const ChangePassword = () => {
             {/* Old Password Field */}
             <Form.Group className="mb-3" controlId="formOldPassword">
               <Form.Label className={`${customBtn === 'btn-dark' ? "text-white" : `${customDarkText}`}`}>
-                Current Password
+                {t('currentPassword')}
               </Form.Label>
               <InputGroup>
                 <FormControl
                   type={showPasswords.showOldPassword ? 'text' : 'password'}
-                  placeholder="Enter current password"
+                  placeholder={t('enterCurrentPassword')}
                   name="oldPassword"
                   value={formData.oldPassword}
                   onChange={handleInputChange}
@@ -203,12 +205,12 @@ const ChangePassword = () => {
             {/* New Password Field */}
             <Form.Group className="mb-3" controlId="formNewPassword">
               <Form.Label className={`${customBtn === 'btn-dark' ? "text-white" : `${customDarkText}`}`}>
-                New Password
+                {t('newPassword')}
               </Form.Label>
               <InputGroup>
                 <FormControl
                   type={showPasswords.showNewPassword ? 'text' : 'password'}
-                  placeholder="Enter new password"
+                  placeholder={t('enterNewPassword')}
                   name="newPassword"
                   value={formData.newPassword}
                   onChange={handleInputChange}
@@ -228,12 +230,12 @@ const ChangePassword = () => {
             {/* Confirm New Password Field */}
             <Form.Group className="mb-3" controlId="formConfirmPassword">
               <Form.Label className={`${customBtn === 'btn-dark' ? "text-white" : `${customDarkText}`}`}>
-                Confirm New Password
+                {t('confirmNewPassword')}
               </Form.Label>
               <InputGroup>
                 <FormControl
                   type={showPasswords.showConfirmPassword ? 'text' : 'password'}
-                  placeholder="Confirm new password"
+                  placeholder={t('confirmNewPassword')}
                   value={confirmPassword}
                   onChange={handleConfirmPasswordChange}
                   required
@@ -255,7 +257,7 @@ const ChangePassword = () => {
               disabled={false} // No submission logic, so always enabled
               className={`${customBtn} ${customDark === "dark-dark" ? "border border-white" : "border-0"} custom-zoom-btn w-100`}
             >
-              Submit
+              {t('submit')}
             </Button>
           </Form>
           <ToastContainer style={{marginTop:"50px"}} autoClose={1500}/>

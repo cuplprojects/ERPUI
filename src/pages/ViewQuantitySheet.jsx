@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Select, Table, Input } from 'antd';
+import { Button, Select, Table, Input, Checkbox } from 'antd';
 import { useStore } from 'zustand';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Modal as BootstrapModal } from 'react-bootstrap';
@@ -7,14 +7,16 @@ import themeStore from './../store/themeStore';
 import API from '../CustomHooks/MasterApiHooks/api';
 import { EditOutlined, DeleteOutlined, StopOutlined } from '@ant-design/icons';
 import { useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
+    const { t } = useTranslation();
+    const [modalMessage, setModalMessage] = useState('');
     const { projectId } = useParams();
     const [process, setProcess] = useState([]);
     const [dataSource, setDataSource] = useState([]);
     const [editingRow, setEditingRow] = useState(null);
     const [selectedProcessIds, setSelectedProcessIds] = useState([]);
-    const [selectedAddProcessIds, setSelectedAddProcessIds] = useState([]);
     const [newRowData, setNewRowData] = useState({
         catchNo: '',
         paper: '',
@@ -37,64 +39,73 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = getCssClasses();
     const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
+    const [CTP_ID, setCTP_ID] = useState(null);
+    const [OFFSET_PRINTING_ID, setOFFSET_PRINTING_ID] = useState(null);
+    const [DIGITAL_PRINTING_ID, setDIGITAL_PRINTING_ID] = useState(null);
+    const [isConfirmed, setIsConfirmed] = useState(false);
+    const [searchText, setSearchText] = useState('');
+    const [pageSize, setPageSize] = useState(5);
 
     const columns = [
         {
-            title: 'Catch No',
+            title: t('catchNo'),
             dataIndex: 'catchNo',
             key: 'catchNo',
             width: 100,
+            filteredValue: [searchText],
+            onFilter: (value, record) => 
+                record.catchNo.toString().toLowerCase().includes(value.toLowerCase()),
         },
         {
-            title: 'Paper',
+            title: t('paper'),
             dataIndex: 'paper',
             key: 'paper',
             width: 100,
         },
         {
-            title: 'Course',
+            title: t('course'),
             dataIndex: 'course',
             key: 'course',
             width: 100,
         },
         {
-            title: 'Subject',
+            title: t('subject'),
             dataIndex: 'subject',
             key: 'subject',
             width: 100,
         },
         {
-            title: 'Inner Envelope',
+            title: t('innerEnvelope'),
             dataIndex: 'innerEnvelope',
             key: 'innerEnvelope',
             width: 100,
         },
         {
-            title: 'Outer Envelope',
+            title: t('outerEnvelope'),
             dataIndex: 'outerEnvelope',
             key: 'outerEnvelope',
             width: 100,
         },
         {
-            title: 'Quantity',
+            title: t('quantity'),
             dataIndex: 'quantity',
             key: 'quantity',
             width: 100,
             sorter: (a, b) => a.quantity - b.quantity,
         },
         {
-            title: 'Process',
+            title: t('process'),
             dataIndex: 'processId',
             key: 'processId',
             width: 100,
             render: (text) => (
                 Array.isArray(text)
-                    ? text.map(id => process.find(proc => proc.id === id)?.name).join(', ') || 'N/A'
-                    : 'N/A'
+                    ? text.map(id => process.find(proc => proc.id === id)?.name).join(', ') || t('notApplicable')
+                    : t('notApplicable')
             ),
         },
         {
-            title: 'Action',
+            title: t('action'),
             key: 'operation',
             fixed: 'right',
             width: 150,
@@ -131,7 +142,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
             }));
             setDataSource(dataWithKeys);
         } catch (error) {
-            console.error('Failed to fetch Quantity', error);
+            console.error(t('failedToFetchQuantity'), error);
         }
     };
 
@@ -157,33 +168,26 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
             setOFFSET_PRINTING_ID(offsetProcess ? offsetProcess.id : null);
             setDIGITAL_PRINTING_ID(digitalProcess ? digitalProcess.id : null);
         } catch (error) {
-            console.error('Failed to fetch Processes', error);
+            console.error(t('failedToFetchProcesses'), error);
         }
     };
-    
-    
+
     const handleSaveEdit = async () => {
         const updatedItem = dataSource.find(item => item.key === editingRow);
         if (!updatedItem) return;
-    
-        // Start with the existing process IDs
+
         let updatedProcessIds = [...updatedItem.processId];
-    
-        // Adjust process IDs based on the modal message
-        if (modalMessage === 'Do you want to switch to Digital Printing?') {
-            // Remove CTP and Offset Printing IDs
+
+        if (modalMessage === t('switchToDigitalPrintingQuestion')) {
             updatedProcessIds = updatedProcessIds.filter(id => id !== CTP_ID && id !== OFFSET_PRINTING_ID);
-            // Add Digital Printing ID
             updatedProcessIds.push(DIGITAL_PRINTING_ID);
-        } else if (modalMessage === 'Do you want to switch to Offset Printing?') {
-            // Remove Digital Printing ID
+        } else if (modalMessage === t('switchToOffsetPrintingQuestion')) {
             updatedProcessIds = updatedProcessIds.filter(id => id !== DIGITAL_PRINTING_ID);
-            // Add Offset Printing ID
             updatedProcessIds.push(CTP_ID);
             updatedProcessIds.push(OFFSET_PRINTING_ID);
         }
-    
-        // Prepare the payload
+
+
         const payload = {
             ...updatedItem,
             processId: updatedProcessIds,
@@ -194,7 +198,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
             setEditingRow(null);
             fetchQuantity(selectedLotNo);
         } catch (error) {
-            console.error('Failed to save changes', error);
+            console.error(t('failedToSaveChanges'), error);
         }
     };
     
@@ -215,7 +219,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
                 setShowDeleteModal(false);
                 setItemToDelete(null);
             } catch (error) {
-                console.error('Failed to delete item', error);
+                console.error(t('failedToDeleteItem'), error);
             }
         }
     };
@@ -225,31 +229,34 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
         setItemToDelete(null);
         setEditingRow(null);
         setSelectedProcessIds([]);
+        setIsConfirmed(false);
     };
 
     const handleEditButtonClick = (key) => {
         setEditingRow(key);
         const record = dataSource.find(item => item.key === key);
-        
+
+
         if (record) {
-            // Update selected process IDs
+
             if (Array.isArray(record.processId)) {
                 setSelectedProcessIds(record.processId.map(id => process.find(proc => proc.id === id)?.name).filter(Boolean));
             } else {
                 setSelectedProcessIds([]);
             }
 
-            // Check process IDs and set the modal message accordingly
+
             const hasCTP = record.processId.includes(CTP_ID);
             const hasOffsetPrinting = record.processId.includes(OFFSET_PRINTING_ID);
             const hasDigitalPrinting = record.processId.includes(DIGITAL_PRINTING_ID);
 
             if (hasCTP && hasOffsetPrinting) {
-                setModalMessage('Do you want to switch to Digital Printing?');
+                setModalMessage(t('switchToDigitalPrintingQuestion'));
             } else if (hasDigitalPrinting) {
-                setModalMessage('Do you want to switch to Offset Printing?');
+                setModalMessage(t('switchToOffsetPrintingQuestion'));
             } else {
-                setModalMessage('Do you want to switch processes?'); // Default message if none match
+                setModalMessage(t('switchProcessesQuestion'));
+
             }
         }
     };
@@ -264,7 +271,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
 
     const handleAddRow = async () => {
         if (!selectedLotNo) {
-            console.error('selectedLotNo is undefined');
+            console.error(t('selectedLotNoUndefined'));
             return;
         }
         const payload = [
@@ -280,7 +287,8 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
                 percentageCatch: 0,
                 projectId: projectId,
                 isOverridden: false,
-                processId:[],
+                processId: [],
+
             }
         ];
 
@@ -304,87 +312,106 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
             });
             fetchQuantity(selectedLotNo);
         } catch (error) {
-            console.error('Failed to add new row', error);
+            console.error(t('failedToAddNewRow'), error);
         }
     };
 
     const handleStopButtonClick = (key) => {
-        // Implement the logic for the stop button here
-        console.log('Stop button clicked for key:', key);
+        console.log(t('stopButtonClicked'), key);
+    };
+
+    const handlePageSizeChange = (current, size) => {
+        setPageSize(size);
     };
 
     return (
-        <div className='mt-3'>
-            <Table
-                className={cssClasses.customTable}
-                columns={columns}
-                dataSource={dataSource}
-                pagination={{
-                    pageSize: 10,
-                    showSizeChanger: true,
-                    pageSizeOptions: ['10', '20', '50', '100'],
-                    total: dataSource.length,
-                    showTotal: (total) => `Total ${total} items`,
-                }}
-                scroll={{ x: 'max-content' }}
-            />
 
-            <table>
-                <tbody>
-                    <tr>
-                        <td>
-                            <Input placeholder="Catch No" name="catchNo" value={newRowData.catchNo} onChange={handleNewRowChange} />
-                        </td>
-                        <td>
-                            <Input placeholder="Paper" name="paper" value={newRowData.paper} onChange={handleNewRowChange} />
-                        </td>
-                        <td>
-                            <Input placeholder="Course" name="course" value={newRowData.course} onChange={handleNewRowChange} />
-                        </td>
-                        <td>
-                            <Input placeholder="Subject" name="subject" value={newRowData.subject} onChange={handleNewRowChange} />
-                        </td>
-                        <td>
-                            <Input placeholder="Inner Envelope" name="innerEnvelope" value={newRowData.innerEnvelope} onChange={handleNewRowChange} />
-                        </td>
-                        <td>
-                            <Input placeholder="Outer Envelope" name="outerEnvelope" value={newRowData.outerEnvelope} onChange={handleNewRowChange} />
-                        </td>
-                        <td>
-                            <Input placeholder="Quantity" type="number" name="quantity" value={newRowData.quantity} onChange={handleNewRowChange} />
-                        </td>
-                        <td>
-                            <Select
-                                mode="multiple"
-                                value={selectedProcessIds}
-                                onChange={handleProcessChange}
-                                style={{ width: '100%' }}
-                            >
-                                {process.map(proc => (
-                                    <Select.Option key={proc.id} value={proc.name}>
-                                        {proc.name}
-                                    </Select.Option>
-                                ))}
-                            </Select>
-                        </td>
-                        <td>
-                            <Button type="primary" onClick={handleAddRow}>Add Row</Button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+        <div className='mt-'>
+            {showBtn && (
+                <>
+                    <div className="d-flex justify-content-between align-items-center mb-3 mt-3">
+                        <Input.Search
+                            placeholder={t('searchByCatchNo')}
+                            onChange={(e) => setSearchText(e.target.value)}
+                            style={{ width: '250px' }}
+                            allowClear
+                        />
+                        <Button onClick={() => setShowNewRow(prev => !prev)} type="primary" className={`${customBtn} ${customDark === "dark-dark" ? `border` : `border-0`}`}>
+                            {showNewRow ? t('cancel') : t('addNewCatch')}
+                        </Button>
+                    </div>
+                    {showNewRow && (
+                        <div className="mb-3">
+                            <table className='table table-bordered'>
+                                <tbody>
+                                    <tr>
+                                        <td><Input size="small" placeholder={t('catchNo')} name="catchNo" value={newRowData.catchNo} onChange={handleNewRowChange} /></td>
+                                        <td><Input size="small" placeholder={t('paper')} name="paper" value={newRowData.paper} onChange={handleNewRowChange} /></td>
+                                        <td><Input size="small" placeholder={t('course')} name="course" value={newRowData.course} onChange={handleNewRowChange} /></td>
+                                        <td><Input size="small" placeholder={t('subject')} name="subject" value={newRowData.subject} onChange={handleNewRowChange} /></td>
+                                        <td><Input size="small" placeholder={t('innerEnvelope')} name="innerEnvelope" value={newRowData.innerEnvelope} onChange={handleNewRowChange} /></td>
+                                        <td><Input size="small" placeholder={t('outerEnvelope')} name="outerEnvelope" value={newRowData.outerEnvelope} onChange={handleNewRowChange} /></td>
+                                        <td><Input size="small" placeholder={t('quantity')} type="number" name="quantity" value={newRowData.quantity} onChange={handleNewRowChange} /></td>
+                                        <td><Button size="small" onClick={handleAddRow} className={`${customDark === "dark-dark" ? `border` : ``}`}>{t('add')}</Button></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </>
+            )}
+
+            {showTable && (
+                <Table
+                    columns={columns}
+                    dataSource={dataSource}
+                    pagination={{
+                        pageSize: pageSize,
+                        showSizeChanger: true,
+                        pageSizeOptions: ['5', '10', '25', '50', '100'],
+                        total: dataSource.length,
+                        showTotal: (total, range) => `${range[0]}-${range[1]} ${t('of')} ${total} ${t('items')}`,
+                        onShowSizeChange: handlePageSizeChange,
+                        className: `p-2 rounded rounded-top-0 ${customDark === "dark-dark" ? `bg-white` : ``} mt`
+                    }}
+                    scroll={{ x: true }}
+                    className={`${
+                        customDark === "default-dark" ? "thead-default" :
+                        customDark === "red-dark" ? "thead-red" :
+                        customDark === "green-dark" ? "thead-green" :
+                        customDark === "blue-dark" ? "thead-blue" :
+                        customDark === "dark-dark" ? "thead-dark" :
+                        customDark === "pink-dark" ? "thead-pink" :
+                        customDark === "purple-dark" ? "thead-purple" :
+                        customDark === "light-dark" ? "thead-light" :
+                        customDark === "brown-dark" ? "thead-brown" : ""
+                    }`}
+                    size="small"
+                    tableLayout="auto"
+                    responsive={['sm', 'md', 'lg', 'xl']}
+                />
+            )}
+
 
             {editingRow !== null && (
                 <BootstrapModal show={true} onHide={handleModalClose}>
                     <BootstrapModal.Header closeButton>
-                        <BootstrapModal.Title>Edit Process</BootstrapModal.Title>
+                        <BootstrapModal.Title>{t('editProcess')}</BootstrapModal.Title>
                     </BootstrapModal.Header>
                     <BootstrapModal.Body>
-                        {modalMessage}
+                        {t(modalMessage)}
+                        <div className="mt-3">
+                            <Checkbox checked={isConfirmed} onChange={(e) => setIsConfirmed(e.target.checked)}>
+                                {modalMessage === "switchToDigitalPrintingQuestion" ? t('switchFromOffsetToDigital') :
+                                    modalMessage === "switchToOffsetPrintingQuestion" ? t('switchFromDigitalToOffset') :
+                                        t('confirmThisChange')}
+                            </Checkbox>
+                        </div>
+
                     </BootstrapModal.Body>
                     <BootstrapModal.Footer>
-                        <Button variant="secondary" onClick={handleModalClose}>Close</Button>
-                        <Button variant="primary" onClick={handleSaveEdit}>Save Changes</Button>
+                        <Button variant="secondary" onClick={handleModalClose}>{t('close')}</Button>
+                        <Button variant="primary" onClick={handleSaveEdit} disabled={!isConfirmed}>{t('saveChanges')}</Button>
                     </BootstrapModal.Footer>
                 </BootstrapModal>
             )}
@@ -392,14 +419,14 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
             {showDeleteModal && (
                 <BootstrapModal show={true} onHide={handleModalClose}>
                     <BootstrapModal.Header closeButton>
-                        <BootstrapModal.Title>Confirm Deletion</BootstrapModal.Title>
+                        <BootstrapModal.Title>{t('confirmDeletion')}</BootstrapModal.Title>
                     </BootstrapModal.Header>
                     <BootstrapModal.Body>
-                        Are you sure you want to delete the catch no: <strong>{itemToDelete?.catchNo}</strong>?
+                        {t('areYouSureDeleteCatchNo', { catchNo: itemToDelete?.catchNo })}
                     </BootstrapModal.Body>
                     <BootstrapModal.Footer>
-                        <Button variant="secondary" onClick={handleModalClose}>Cancel</Button>
-                        <Button variant="danger" onClick={handleConfirmDelete}>Delete</Button>
+                        <Button variant="secondary" onClick={handleModalClose}>{t('cancel')}</Button>
+                        <Button variant="danger" onClick={handleConfirmDelete}>{t('delete')}</Button>
                     </BootstrapModal.Footer>
                 </BootstrapModal>
             )}

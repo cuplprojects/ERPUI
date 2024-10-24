@@ -8,10 +8,12 @@ import { useStore } from 'zustand';
 import { FaSearch } from "react-icons/fa";
 import { AiFillCloseSquare } from "react-icons/ai";
 import { EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 
 const { Search } = Input;
 
 const Machine = () => {
+  const { t } = useTranslation();
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
   const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
@@ -62,7 +64,7 @@ const Machine = () => {
 
   const handleAddMachine = async () => {
     if (!newMachineName || !newMachineProcessId) {
-      message.error('Please fill in all fields!');
+      message.error(t('Please fill in all fields!'));
       return;
     }
 
@@ -80,16 +82,16 @@ const Machine = () => {
       setNewMachineStatus(true);
       setIsModalVisible(false);
       fetchMachines();
-      message.success('Machine added successfully!');
+      message.success(t('Machine added successfully!'));
     } catch (error) {
       console.error("Failed to add machine", error);
-      message.error('Failed to add machine');
+      message.error(t('Failed to add machine'));
     }
   };
 
   const handleEditSave = async (index) => {
     if (!editingValue || !editingProcessId) {
-      message.error('Please fill in all fields!');
+      message.error(t('Please fill in all fields!'));
       return;
     }
 
@@ -105,27 +107,27 @@ const Machine = () => {
       const updatedMachines = [...machines];
       updatedMachines[index] = updatedMachine;
       setMachines(updatedMachines);
-      message.success('Machine updated successfully!');
+      message.success(t('Machine updated successfully!'));
       setEditingIndex(null);
       setEditingValue('');
       setEditingProcessId(null);
       setEditingStatus(true);
     } catch (error) {
       console.error("Failed to update machine", error);
-      message.error('Failed to update machine');
+      message.error(t('Failed to update machine'));
     }
   };
 
   const columns = [
     {
-      title: 'SN.',
+      title: t('SN.'),
       dataIndex: 'serial',
       key: 'serial',
       render: (_, __, index) => index + 1,
       width: '10%',
     },
     {
-      title: 'Machine Name',
+      title: t('Machine Name'),
       dataIndex: 'machineName',
       key: 'machineName',
       sorter: (a, b) => a.machineName.localeCompare(b.machineName),
@@ -144,7 +146,7 @@ const Machine = () => {
       width: '30%',
     },
     {
-      title: 'Process',
+      title: t('Process'),
       dataIndex: 'processId',
       key: 'processId',
       sorter: (a, b) => a.processName.localeCompare(b.processName),
@@ -168,7 +170,7 @@ const Machine = () => {
       width: '30%',
     },
     {
-      title: 'Status',
+      title: t('Status'),
       dataIndex: 'status',
       key: 'status',
       sorter: (a, b) => a.status - b.status,
@@ -177,27 +179,27 @@ const Machine = () => {
           <Switch
             checked={editingStatus}
             onChange={setEditingStatus}
-            checkedChildren="Functional"
-            unCheckedChildren="Dysfunctional"
+            checkedChildren={t('Functional')}
+            unCheckedChildren={t('Dysfunctional')}
           />
         ) : (
-          <Switch checked={status} checkedChildren="Functional" unCheckedChildren="Dysfunctional" disabled />
+          <Switch checked={status} checkedChildren={t('Functional')} unCheckedChildren={t('Dysfunctional')} disabled />
         )
       ),
     },
     {
-      title: 'Action',
+      title: t('action'),
       key: 'action',
       render: (_, record, index) => (
         editingIndex === index ? (
           <div style={{ display: 'flex', justifyContent: '' }}>
             <Button type="link" onClick={() => handleEditSave(index)} className={`${customDark === "dark-dark" ? `${customMid} border` : `${customLight} ${customDarkBorder}`} text-white `}>
               <SaveOutlined className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } me-1`}/> 
-              <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}>Save</span> 
+              <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}>{t('save')}</span> 
             </Button>
             <Button type="link" onClick={() => setEditingIndex(null)} className={`${customDark === "dark-dark" ? `${customMid} border` : `${customLight} ${customDarkBorder}`} text-white ms-3`}>
               <CloseOutlined className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } me-1`}/> 
-              <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}>Cancel</span> 
+              <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}>{t('cancel')}</span> 
             </Button>
           </div>
         ) : (
@@ -206,7 +208,7 @@ const Machine = () => {
             setEditingValue(record.machineName);
             setEditingProcessId(record.processId);
             setEditingStatus(record.status);
-          }} className={`${customBtn} text-white me-1 border-0`}>Edit</Button>
+          }} className={`${customBtn} text-white me-1 border-0`}>{t('edit')}</Button>
         )
       ),
     },
@@ -219,22 +221,22 @@ const Machine = () => {
   const filteredMachines = machines.filter(machine =>
     machine.machineName.toLowerCase().includes(searchText.toLowerCase()) ||
     machine.processName.toLowerCase().includes(searchText.toLowerCase()) ||
-    (machine.status ? 'Functional' : 'Dysfunctional').includes(searchText.toLowerCase())
+    (machine.status ? t('Functional') : t('Dysfunctional')).toLowerCase().includes(searchText.toLowerCase())
   );
 
   return (
     <div className={`${customDark === "dark-dark" ? `${customDark} border` : `border-0`}`} style={{ padding: '20px', background: '#f9f9f9', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)' }}>
-      <h2 style={{ marginBottom: '20px', fontSize: 'clamp(1.5rem, 4vw, 2rem)' }} className={`${customDark === "dark-dark" ? ` text-white` : `${customDarkText}`}`}>Production Machines</h2>
+      <h2 style={{ marginBottom: '20px', fontSize: 'clamp(1.5rem, 4vw, 2rem)' }} className={`${customDark === "dark-dark" ? ` text-white` : `${customDarkText}`}`}>{t('Production Machines')}</h2>
 
       <div className="mb-3 d-flex flex-wrap justify-content-between align-items-center">
         <div style={{ marginBottom: '10px', marginRight: '10px' }}>
           <Button className={`rounded-2 ${customBtn} ${customDark === "dark-dark" ? `border-white` : `border-0`}`} onClick={() => setIsModalVisible(true)}>
-            Add Machine
+            {t('Add Machine')}
           </Button>
         </div>
         <div className="d-flex align-items-center justify-content-start" style={{ flex: '1', minWidth: '200px', maxWidth: '300px' }}>
           <Input
-            placeholder="Search machines"
+            placeholder={t('Search machines')}
             value={searchText}
             onChange={(e) => handleSearch(e.target.value)}
             style={{ width: '100%', height: '32px' }}
@@ -286,7 +288,7 @@ const Machine = () => {
               }}
               showSizeChanger
               showQuickJumper
-              showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
+              showTotal={(total, range) => t('{{range0}}-{{range1}} of {{total}} items', { range0: range[0], range1: range[1], total: total })}
             />
           </div>
         </div>
@@ -300,7 +302,7 @@ const Machine = () => {
         className={`rounded-2 ${customDark === "" ? `${customDark}` : ''}  `}
       >
         <Modal.Header closeButton={false} className={`rounded-top-2 ${customDark} ${customLightText} ${customDark === "dark-dark" ? `border ` : `border-0`} border d-flex justify-content-between `}>
-          <Modal.Title>Add Machine</Modal.Title>
+          <Modal.Title>{t('Add Machine')}</Modal.Title>
           <AiFillCloseSquare
             size={35}
             onClick={() => setIsModalVisible(false)}
@@ -312,11 +314,11 @@ const Machine = () => {
         <Modal.Body className={customMid}>
           <div style={{ marginBottom: '15px' }}>
             <label htmlFor="machineName" style={{ display: 'block', marginBottom: '5px' }} className={`${customDarkText}`}>
-              Machine Name <span style={{ color: 'red' }}>*</span>
+              {t('Machine Name')} <span style={{ color: 'red' }}>*</span>
             </label>
             <Input
               id="machineName"
-              placeholder="Enter Machine Name"
+              placeholder={t('Enter Machine Name')}
               value={newMachineName}
               onChange={(e) => setNewMachineName(e.target.value)}
               required
@@ -324,11 +326,11 @@ const Machine = () => {
           </div>
           <div style={{ marginBottom: '15px' }}>
             <label htmlFor="processSelect" style={{ display: 'block', marginBottom: '5px' }}>
-              Select Process <span style={{ color: 'red' }}>*</span>
+              {t('Select Process')} <span style={{ color: 'red' }}>*</span>
             </label>
             <Select
               id="processSelect"
-              placeholder="Select Process"
+              placeholder={t('Select Process')}
               value={newMachineProcessId}
               onChange={setNewMachineProcessId}
               style={{ width: '100%' }}
@@ -343,20 +345,20 @@ const Machine = () => {
           </div>
           <div>
             <label htmlFor="machineStatus" style={{ display: 'block', marginBottom: '5px' }}>
-              Machine Status
+              {t('Machine Status')}
             </label>
             <Switch
               id="machineStatus"
               checked={newMachineStatus}
-              checkedChildren="Functional"
-              unCheckedChildren="Dysfunctional"
+              checkedChildren={t('Functional')}
+              unCheckedChildren={t('Dysfunctional')}
               onChange={setNewMachineStatus}
             />
           </div>
         </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" className={`rounded-2 ${customBtn} ${customDark === "dark-dark" ? `border-white` : `border-0`}`} onClick={() => setIsModalVisible(false)}>Cancel</Button>
-          <Button variant="primary" className={`rounded-2 ${customBtn} ${customDark === "dark-dark" ? `border-white` : `border-0`}`} onClick={handleAddMachine}>Add</Button>
+        <Modal.Footer className={customMid}>
+          <Button variant="secondary" className={`rounded-2 ${customBtn} ${customDark === "dark-dark" ? `border-white` : `border-0`}`} onClick={() => setIsModalVisible(false)}>{t('cancel')}</Button>
+          <Button variant="primary" className={`rounded-2 ${customBtn} ${customDark === "dark-dark" ? `border-white` : `border-0`}`} onClick={handleAddMachine}>{t('add')}</Button>
         </Modal.Footer>
       </Modal>
     </div>
