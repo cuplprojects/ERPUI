@@ -119,8 +119,8 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
         onUpdateFeatures(features); // Call the parent update function
     };
 
-    // Handle 'Enter' key press in the Input
-    const handleKeyPress = (e) => {
+    // Handle key down event in the Input
+    const handleKeyDown = (e) => {
         if (e.key === 'Enter') {
             handleAddFeature();
         }
@@ -201,7 +201,7 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
                     placeholder="Enter feature name"
                     value={featureName}
                     onChange={e => setFeatureName(e.target.value)}
-                    onKeyPress={handleKeyPress}
+                    onKeyDown={handleKeyDown}
                 />
             </Modal>
         </div>

@@ -6,8 +6,6 @@ import { useStore } from 'zustand';
 const StatusBarChart = ({ data, catchNumbers }) => {
   const [currentPage, setCurrentPage] = useState(0);
 
-
-
   //Theme Change Section
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
@@ -16,7 +14,6 @@ const StatusBarChart = ({ data, catchNumbers }) => {
   const customLight = cssClasses[2];
   const customBtn = cssClasses[3];
   const customDarkText = cssClasses[4];
-
 
   const getItemsPerPage = () => {
     const width = window.innerWidth;
@@ -38,10 +35,6 @@ const StatusBarChart = ({ data, catchNumbers }) => {
     totalQuantity: item.quantity
   }));
 
-  // const calculateProgress = (interimQuantity, totalQuantity) => {
-  //   return (interimQuantity / totalQuantity) * 100;
-  // };
-
   // Custom tooltip
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
@@ -57,10 +50,9 @@ const StatusBarChart = ({ data, catchNumbers }) => {
     }
     return null;
   };
-  // const filteredData = data.filter(item => item.remainingQuantity > 0);
+
   return (
     <div style={{ position: "relative", zIndex: "1" }} className='bg-whit  rounded pb-'>
-
       <ResponsiveContainer width="100%" height={300}>
         <BarChart
           data={chartData}
@@ -68,7 +60,7 @@ const StatusBarChart = ({ data, catchNumbers }) => {
         >
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="catchNumber" />
-          <YAxis />
+          <YAxis width={40} />
           <Tooltip content={<CustomTooltip />} />
           <Legend />
           <Bar

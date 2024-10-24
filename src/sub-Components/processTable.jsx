@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
-import { Card, Spinner, Row, Col } from 'react-bootstrap'; // Import Bootstrap components
-import ProjectDetailsTable from './projectDetailTable'; // Import the new component
-import dummyData from "../store/dd.json";
+import { Card, Spinner, Row, Col } from 'react-bootstrap';
+import ProjectDetailsTable from './projectDetailTable';
 import StatusPieChart from "./StatusPieChart";
-import StatusBarChart from "./StatusBarChart"; // Import the updated bar chart component
+import StatusBarChart from "./StatusBarChart";
 import "./../styles/processTable.css";
 import { Switch } from 'antd';
 import CatchProgressBar from './catchProgressBar';
@@ -14,19 +13,22 @@ import themeStore from '../store/themeStore';
 import { useStore } from 'zustand';
 import { MdPending } from "react-icons/md";
 import { Link } from 'react-router-dom';
-import { MdCloudUpload } from "react-icons/md";//upload icon
-import { FaRegHourglassHalf } from "react-icons/fa6";//pre process running
+import { MdCloudUpload } from "react-icons/md";
+import { FaRegHourglassHalf } from "react-icons/fa6";
 import API from '../CustomHooks/MasterApiHooks/api';
 import { useUserData } from '../store/userDataStore';
 import { getProjectProcessAndFeature } from '../CustomHooks/ApiServices/projectProcessAndFeatureService';
+import useCurrentProcessStore from '../store/currentProcessStore';
 
 const ProcessTable = () => {
     const [featureData, setFeatureData] = useState(null);
-  const userData = useUserData();
+    const { processId, processName } = useCurrentProcessStore();
+    const { setProcess, clearProcess } = useCurrentProcessStore((state) => state.actions);
+    console.log(processId, processName);
+    const userData = useUserData();
 
-
-    //Theme Change Section
     const { getCssClasses } = useStore(themeStore);
+    const cssClasses = useMemo(() => getCssClasses(), [getCssClasses]);
     const [
       customDark,
       customMid, 
@@ -36,7 +38,7 @@ const ProcessTable = () => {
       customLightText,
       customLightBorder,
       customDarkBorder
-    ] = getCssClasses();
+    ] = cssClasses;
 
     const location = useLocation();
     const { id, lotNo } = useParams();
@@ -46,33 +48,39 @@ const ProcessTable = () => {
     const [catchDetailModalData, setCatchDetailModalData] = useState(null);
     const [previousProcessPercentage, setPreviousProcessPercentage] = useState(90);
     const [projectName, setProjectName] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [errorMessage, setErrorMessage] = useState(null);
     
-    useEffect(() => {
-        const fetchFeatureData = async () => {
-          try {
-            const projectId = id; // Replace with actual project ID
-            if (userData && userData.userId) {
-              const data = await getProjectProcessAndFeature(projectId, userData.userId);
-              setFeatureData(data);
-              console.log('Project Process and Feature Data:', data);
-            } else {
-              console.error('User data not available');
+    const fetchData = useCallback(async () => {
+        if (userData && userData.userId && id !== processId) {
+            setIsLoading(true);
+            try {
+                const data = await getProjectProcessAndFeature(id, userData.userId);
+                console.log(data);
+                if (Array.isArray(data) && data.length > 0) {
+                    const process = data[0];
+                    setProcess(process.processId, process.processName);
+                    setFeatureData(process.featuresList);
+                } else {
+                    console.error("Unexpected data format received");
+                }
+            } catch (error) {
+                setErrorMessage(error.message);
+            } finally {
+                setIsLoading(false);
             }
-          } catch (err) {
-            console.error('Error fetching data:', err.message);
-          }
-        };
-    
-        fetchFeatureData();
-      }, [userData]);
-    
+        }
+    }, [userData, id, processId, setProcess]);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
 
     useEffect(() => {
         const fetchQuantitySheet = async () => {
             try {
                 const response = await API.get(`/QuantitySheet/Catch?ProjectId=${id}&lotNo=${lotNo}`);
                 const quantitySheetData = response.data;
-                console.log('API response:', quantitySheetData);
                 
                 if (Array.isArray(quantitySheetData) && quantitySheetData.length > 0) {
                     const formDataGet = quantitySheetData.map((item) => ({
@@ -83,27 +91,26 @@ const ProcessTable = () => {
                         subject: item?.subject,
                         outerEnvelope: item?.outerEnvelope,
                         innerEnvelope: item?.innerEnvelope,
-                        lotNo:item?.lotNo,
+                        lotNo: item?.lotNo,
                         quantity: item?.quantity,
                         percentageCatch: item?.percentageCatch,
-                        projectId:item?.projectId,
+                        projectId: item?.projectId,
                         isOverridden: item?.isOverridden,
                         processId: item?.processId || [],
-                        status: item?.status ||  "Pending",//to be fetched later from backend
-                        alerts: "",//to be fetched later from backend
-                        interimQuantity: "0",//to be fetched later from backend
-                        remarks: "",//to be fetched later from backend
-                        previousProcessStats: "",//to be fetched later from backend
+                        status: item?.status || "Pending",
+                        alerts: "",
+                        interimQuantity: "0",
+                        remarks: "",
+                        previousProcessStats: "",
                     }));
-                    console.log('Formatted data:', formDataGet);
-                    setTableData(formDataGet); // Set the table data only here
+                    setTableData(formDataGet);
                 } else {
                     console.error("API response is not an array or is empty");
-                    setTableData([]); // Set to empty only if there's no data
+                    setTableData([]);
                 }
             } catch (error) {
                 console.error("Error fetching quantity sheet data:", error);
-                setTableData([]); // Set to empty on error
+                setTableData([]);
             }
         };
 
@@ -115,9 +122,7 @@ const ProcessTable = () => {
             try {
                 const response = await API.get(`/Project/${id}`);
                 const projectData = response.data;
-                console.log(projectData)
                 setProjectName(projectData.name);
-                // You can set other project details here if needed
             } catch (error) {
                 console.error("Error fetching project details:", error);
             }
@@ -129,8 +134,8 @@ const ProcessTable = () => {
     const handleToggleChange = () => {
         setShowBarChart(!showBarChart);
     };
-    // Render a loading state while fetching the project data
-    if (!projectName) {
+
+    if (isLoading) {
         return (
             <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
                 <Spinner animation="border" variant="primary" />
@@ -139,23 +144,19 @@ const ProcessTable = () => {
         );
     }
 
+    if (errorMessage) {
+        return <div>Error: {errorMessage}</div>;
+    }
+
     const handleCatchClick = (record) => {
-        console.log('handleCatchClick called', record);
         setCatchDetailModalShow(true);
         setCatchDetailModalData(record);
     };
 
-
-    // const catchNumbers = tableData.map((item) => item.catchNo).sort((a, b) => a - b);
     const catchNumbers = tableData.map((item) => item.catchNumber).sort((a, b) => a - b);
-    // console.log(tableData);
-    let activeUser, activeUserProcess, currentIndex, currentProcess, previousProcess;
-
-
 
     return (
         <div className="container-fluid" >
-            {/* ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
             <Row className="mb-  ">
                 <Col lg={12} md={12} xs={12} className=''>
                     <Card className="shadow-sm ">
@@ -171,7 +172,7 @@ const ProcessTable = () => {
                                     <hr className='w-100 center' />
                                 </div>
 
-                                {activeUserProcess === 'preProQC' ? (
+                                {processName === 'preProQC' ? (
                                     <Col lg={3} md={4} xs={12} className='d-flex justify-content-center'>
                                         <Link to="/quantity-sheet-uploads" className={`${customMid} ${customDarkText} ${customLightBorder} border-3 p1 rounded d-flex align-items-center p-1 text-decoration-none shadow-lg`}>
                                             <span>
@@ -187,8 +188,7 @@ const ProcessTable = () => {
                                         <div className={` align-items-center flex-column`}>
                                             <div className='text-center fs-5'>Previous Process </div>
                                             <div className={`p-1  fs-6 text-primary border ${customDarkBorder} rounded ms-1 d-flex justify-content-center align-items-center ${customDark === 'dark-dark' ? `${customBtn} text-white` : `${customLight} bg-light`}`} style={{ fontWeight: 900 }}> 
-                                                {previousProcess} - {previousProcessPercentage}%
-                                                {/* {previousProcessPercentage}% */}
+                                                {processName} - {previousProcessPercentage}%
                                                 <span className='ms-2'>
                                                     <FaRegHourglassHalf color='blue' size="20" />
                                                 </span>
@@ -208,10 +208,9 @@ const ProcessTable = () => {
                                 <Col lg={3} md={4} xs={12}>
                                     <div className={`align-items-center flex-column`}>
                                         <div className='text-center fs-5'>Current Process </div>
-                                        <div className={`p-1  fs-6 text-primary border ${customDarkBorder} rounded ms-1 d-flex justify-content-center align-items-center ${customDark === 'dark-dark' ? `${customBtn} text-white` : `${customLight} bg-light text-danger`}`} style={{ fontWeight: 900 }}>{currentProcess}
+                                        <div className={`p-1  fs-6 text-primary border ${customDarkBorder} rounded ms-1 d-flex justify-content-center align-items-center ${customDark === 'dark-dark' ? `${customBtn} text-white` : `${customLight} bg-light text-danger`}`} style={{ fontWeight: 900 }}>{processName}
                                             <span className='ms-2'>
                                                 <MdPending color='red' size="25" />
-                                                {/* pending icon here */}
                                             </span>
                                         </div>
                                     </div>
@@ -221,7 +220,6 @@ const ProcessTable = () => {
                     </Card>
                 </Col>
             </Row>
-            {/* ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ */}
             <Row>
                 <Col lg={12} md={12}>
                     <div className="marquee-container mt-2 mb-2">
@@ -249,7 +247,6 @@ const ProcessTable = () => {
                 <Col lg={12} md={12} >
                     {tableData?.length > 0 && (
                         <ProjectDetailsTable tableData={tableData} setTableData={setTableData} projectId={id} lotNo={lotNo} />
-                        
                     )}
                 </Col>
                 <Col lg={2} md={0} ></Col>

@@ -5,10 +5,13 @@ const getProjectProcessAndFeature = async (projectId, userId) => {
     throw new Error('User ID not provided');
   }
 
+  if (!projectId) {
+    throw new Error('Project ID not provided');
+  }
+
   try {
-    const response = await API.get(`/ProjectProcess/${userId}/${projectId}`);
+    const response = await API.get(`ProjectProcess?userId=${userId}&projectId=${projectId}`);
     if (response.status === 200) {
-      console.log(response.data)
       return response.data;
     } else {
       throw new Error('Failed to fetch project process and feature data');
