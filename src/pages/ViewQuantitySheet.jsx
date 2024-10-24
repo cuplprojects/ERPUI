@@ -32,6 +32,10 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [itemToDelete, setItemToDelete] = useState(null);
     const [showNewRow, setShowNewRow] = useState(false);
+    const [modalMessage, setModalMessage] = useState('');
+    const [CTP_ID, setCTP_ID] = useState(null);
+    const [OFFSET_PRINTING_ID, setOFFSET_PRINTING_ID] = useState(null);
+    const [DIGITAL_PRINTING_ID, setDIGITAL_PRINTING_ID] = useState(null);
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = getCssClasses();
     const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
@@ -130,7 +134,9 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
 
     const fetchQuantity = async (lotNo) => {
         try {
-            const response = await API.get(`/QuantitySheet/Catch?ProjectId=${projectId}&lotNo=${lotNo}`);
+
+            const response = await API.get(`/QuantitySheet?ProjectId=1&lotNo=${lotNo}`);
+
             const dataWithKeys = response.data.map(item => ({
                 ...item, key: item.quantitySheetId
             }));
@@ -166,7 +172,6 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
         }
     };
 
-
     const handleSaveEdit = async () => {
         const updatedItem = dataSource.find(item => item.key === editingRow);
         if (!updatedItem) return;
@@ -182,11 +187,12 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
             updatedProcessIds.push(OFFSET_PRINTING_ID);
         }
 
+
         const payload = {
             ...updatedItem,
             processId: updatedProcessIds,
         };
-
+    
         try {
             await API.put(`/QuantitySheet/${editingRow}`, payload);
             setEditingRow(null);
@@ -195,7 +201,8 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
             console.error(t('failedToSaveChanges'), error);
         }
     };
-
+    
+    
     const handleRemoveButtonClick = (key) => {
         const record = dataSource.find(item => item.key === key);
         if (record) {
@@ -229,12 +236,15 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
         setEditingRow(key);
         const record = dataSource.find(item => item.key === key);
 
+
         if (record) {
+
             if (Array.isArray(record.processId)) {
                 setSelectedProcessIds(record.processId.map(id => process.find(proc => proc.id === id)?.name).filter(Boolean));
             } else {
                 setSelectedProcessIds([]);
             }
+
 
             const hasCTP = record.processId.includes(CTP_ID);
             const hasOffsetPrinting = record.processId.includes(OFFSET_PRINTING_ID);
@@ -246,6 +256,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
                 setModalMessage(t('switchToOffsetPrintingQuestion'));
             } else {
                 setModalMessage(t('switchProcessesQuestion'));
+
             }
         }
     };
@@ -277,6 +288,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
                 projectId: projectId,
                 isOverridden: false,
                 processId: [],
+
             }
         ];
 
@@ -313,6 +325,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
     };
 
     return (
+
         <div className='mt-'>
             {showBtn && (
                 <>
@@ -379,6 +392,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
                 />
             )}
 
+
             {editingRow !== null && (
                 <BootstrapModal show={true} onHide={handleModalClose}>
                     <BootstrapModal.Header closeButton>
@@ -393,6 +407,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
                                         t('confirmThisChange')}
                             </Checkbox>
                         </div>
+
                     </BootstrapModal.Body>
                     <BootstrapModal.Footer>
                         <Button variant="secondary" onClick={handleModalClose}>{t('close')}</Button>

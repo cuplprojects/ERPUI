@@ -153,7 +153,7 @@ const AllProjects = () => {
       try {
         const response = await API.get(`/Project/${projectId}`);
         setProjectName(response.data.name);
-        setType(response.data.typeId);
+        setType(response.data.projectType);
       } catch (error) {
         console.error("Error fetching project name:", error);
       }
@@ -239,7 +239,7 @@ const AllProjects = () => {
                 onClick={() => handleTitleClick(selectedChart)}
                 className="btn btn-outline-info"
               >
-                More Info
+                Manage Process
               </button>
             </h4>
             <DashboardGrid projectId={projectId} />

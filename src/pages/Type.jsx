@@ -23,9 +23,12 @@ const Type = () => {
     const [processMap, setProcessMap] = useState({});
     const [loading, setLoading] = useState(false);
     const [isModalVisible, setIsModalVisible] = useState(false);
+    const [associatedProcessIds, setAssociatedProcessIds] = useState([]);
+    const [requiredProcessIds, setRequiredProcessIds] = useState([]);
     const [editingIndex, setEditingIndex] = useState(null);
     const [editingType, setEditingType] = useState('');
     const [editingProcessIds, setEditingProcessIds] = useState([]);
+    const [requirededitingProcessIds, setRequiredEditingProcessIds] = useState([]);
     const [editingStatus, setEditingStatus] = useState(true);
     const [originalData, setOriginalData] = useState({});
     const [form] = useForm();
@@ -83,6 +86,8 @@ const Type = () => {
     }, [searchText, types, processMap]);
 
     const handleAddType = async (values) => {
+        const { associatedProcessId,requiredProcessId } = values;
+
         try {
             // Check if the type already exists
             const typeExists = types.some(type => type.types.toLowerCase() === values.types.toLowerCase());
@@ -90,13 +95,18 @@ const Type = () => {
                 message.error(t('thisTypeAlreadyExists'));
                 return;
             }
-
-            const response = await API.post('/PaperTypes', values);
+            const postData = {
+                ...values,
+                associatedProcessId: associatedProcessIds, // Keep all selected for submission
+                requiredProcessId: requiredProcessIds // Only send the currently displayed required processes
+            };
+            const response = await API.post('/PaperTypes', postData);
             setTypes(prev => [...prev, response.data]);
             setFilteredTypes(prev => [...prev, response.data]);
             message.success(t('typeCreatedSuccessfully'));
             setIsModalVisible(false);
             form.resetFields();
+            setRequiredProcessIds([])
         } catch (error) {
             console.error(error);
             message.error(t('failedToCreateType'));
@@ -108,6 +118,7 @@ const Type = () => {
             ...types[index],
             types: editingType,
             associatedProcessId: editingProcessIds,
+            requiredProcessId:requirededitingProcessIds,
             status: editingStatus,
         };
 
@@ -129,9 +140,10 @@ const Type = () => {
         setEditingIndex(null);
         setEditingType(originalData.types);
         setEditingProcessIds(originalData.associatedProcessId);
+        setRequiredEditingProcessIds(originalData.requiredProcessId)
         setEditingStatus(originalData.status);
     };
-
+console.log(originalData.requiredProcessIds)
     const handleSearch = (value) => {
         setSearchText(value);
     };
@@ -158,8 +170,9 @@ const Type = () => {
 
     const columns = [
         {
-            align:'center',
+          align:'center',
             title: t('sn'),
+
             dataIndex: 'serial',
             key: 'serial',
             render: (text, record, index) => (currentPage - 1) * pageSize + index + 1,
@@ -214,7 +227,30 @@ const Type = () => {
             ),
         },
         {
-            align:'center',
+            title: 'Required Process',
+            dataIndex: 'requiredProcessId',
+            key: 'requiredProcessId',
+            render: (ids, record, index) => (
+                editingIndex === index ? (
+                    <Select
+                        mode="multiple"
+                        value={requirededitingProcessIds}
+                        onChange={setRequiredEditingProcessIds}
+                        style={{ width: '100%' }}
+                    >
+                        {processes.map(proc => (
+                            <Option key={proc.id} value={proc.id}>
+                                {proc.name}
+                            </Option>
+                        ))}
+                    </Select>
+                ) : (
+                    ids.map(id => processMap[id]).join(', ')
+                )
+            ),
+        },
+        {
+            align: 'center',
             title: (
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     {t('status')}
@@ -236,11 +272,13 @@ const Type = () => {
                         unCheckedChildren={t('inactive')}
                     />
                 ) : (
+
                     <Switch 
                         checked={status} 
                         disabled 
                         checkedChildren={t('active')}
                         unCheckedChildren={t('inactive')}
+
                     />
                 )
             ),
@@ -252,12 +290,14 @@ const Type = () => {
                 editingIndex === index ? (
                     <div style={{ display: 'flex', justifyContent: '' }}>
                         <Button type="link" onClick={() => handleEditSave(index)} className={`${customDark === "dark-dark" ? `${customMid} border` : `${customLight} ${customDarkBorder}`} text-white `}>
+
                             <SaveOutlined className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}/> 
                             <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}>{t('save')}</span> 
                         </Button>
                         <Button type="link" onClick={handleCancelEdit} className={`${customDark === "dark-dark" ? `${customMid} border` : `${customLight} ${customDarkBorder}`} text-white ms-3`}>
                             <CloseOutlined className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}/> 
                             <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}>{t('cancel')}</span> 
+
                         </Button>
                     </div>
                 ) : (
@@ -265,6 +305,7 @@ const Type = () => {
                         setEditingIndex(index);
                         setEditingType(record.types);
                         setEditingProcessIds(record.associatedProcessId);
+                        setRequiredEditingProcessIds(record.requiredProcessId)
                         setEditingStatus(record.status);
                         setOriginalData(record);
                     }} className={`${customBtn} text-white me-1`}>{t('edit')}</Button>
@@ -292,6 +333,7 @@ const Type = () => {
         }}
         className={`${customDark === "dark-dark" ? customDark : ``}`}>
             <h2 className={`${customDarkText}`}>{t('projectType')}</h2>
+
             <div style={{
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -353,8 +395,10 @@ const Type = () => {
                 centered
                 size={isMobile ? 'sm' : 'lg'}
             >
+
                 <Modal.Header closeButton={false} className={`rounded-top-2 ${customDark} ${customLightText} ${customDark === "dark-dark" ? `border ` : `border-0`} border d-flex justify-content-between `}>
                     <Modal.Title>{t('addType')}</Modal.Title>
+
                     <AiFillCloseSquare
                         size={35}
                         onClick={handleClose}
@@ -363,11 +407,12 @@ const Type = () => {
                         style={{ cursor: 'pointer', fontSize: '1.5rem' }}
                     />
                 </Modal.Header>
-                <Modal.Body className={`rounded-bottom-2 ${customMid} ${customDark === "dark-dark" ? `border border-top-0` : `border-0`}`}>
+                <Modal.Body className={`rounded-bottom-2 ${customMid} ${customDark === "dark-dark" ? `border border-top-0` : `border-0`} `}>
                     <Form
                         form={form}
                         onFinish={handleAddType}
                         layout="vertical"
+                    // className='w-50'
                     >
                         <Form.Item
                             name="types"
@@ -395,13 +440,28 @@ const Type = () => {
                             label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-5 `}>{t('associatedProcess')}</span>}
                             rules={[{ required: true, message: t('pleaseSelectAProcess') }]}
                         >
+
                             <Select mode="multiple" placeholder={t('selectProcess')}>
+
                                 {processes.map(proc => (
                                     <Option key={proc.id} value={proc.id}>
                                         {proc.name}
                                     </Option>
                                 ))}
                             </Select>
+                        </Form.Item>
+                        <Form.Item label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-5 `}>{"Required Process"}</span>}>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                {requiredProcessIds.map(id => (
+                                    <span key={id} style={{ border: '1px solid #ccc', borderRadius: '4px', padding: '4px 8px', display: 'flex', alignItems: 'center' }}>
+                                        {processMap[id]}
+                                        <AiFillCloseSquare
+                                            style={{ marginLeft: '8px', cursor: 'pointer' }}
+                                            onClick={() => setRequiredProcessIds(requiredProcessIds.filter(processId => processId !== id))}
+                                        />
+                                    </span>
+                                ))}
+                            </div>
                         </Form.Item>
 
                         <Form.Item name="status" label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-5 `}>{t('status')}</span>} valuePropName="checked" initialValue={true}>
