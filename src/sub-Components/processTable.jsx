@@ -16,14 +16,15 @@ import { Link } from 'react-router-dom';
 import { FaRegHourglassHalf } from "react-icons/fa6";
 import API from '../CustomHooks/MasterApiHooks/api';
 import { useUserData } from '../store/userDataStore';
-import { getProjectProcessAndFeature } from '../CustomHooks/ApiServices/projectProcessAndFeatureService';
+import { getProjectProcessAndFeature, getProjectProcessByProjectAndSequence } from '../CustomHooks/ApiServices/projectProcessAndFeatureService';
 import useCurrentProcessStore from '../store/currentProcessStore';
+import { decrypt } from "../Security/Security";
 
 const ProcessTable = () => {
     const [featureData, setFeatureData] = useState(null);
     const { processId, processName } = useCurrentProcessStore();
     const { setProcess, clearProcess } = useCurrentProcessStore((state) => state.actions);
-    console.log(processId, processName);
+    console.log(featureData);
     const userData = useUserData();
 
     const { getCssClasses } = useStore(themeStore);
@@ -40,33 +41,48 @@ const ProcessTable = () => {
     ] = cssClasses;
 
     const location = useLocation();
-    const { id, lotNo } = useParams();
+    const { encryptedProjectId, encryptedLotNo } = useParams();
+    const id = decrypt(encryptedProjectId);
+    const lotNo = decrypt(encryptedLotNo);
     const [tableData, setTableData] = useState([]);
     const [showBarChart, setShowBarChart] = useState(true);
     const [catchDetailModalShow, setCatchDetailModalShow] = useState(false);
     const [catchDetailModalData, setCatchDetailModalData] = useState(null);
     const [previousProcessPercentage, setPreviousProcessPercentage] = useState(90);
-    const [selectedLot, setSelectedLot] = useState(null);
+    const [selectedLot, setSelectedLot] = useState(lotNo);
     const [projectName, setProjectName] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState(null);
     const [projectLots, setProjectLots] = useState([]);
+    const [previousProcess, setPreviousProcess] = useState(null);
     
     const fetchData = useCallback(async () => {
         if (userData && userData.userId && id !== processId) {
             setIsLoading(true);
             try {
-                const data = await getProjectProcessAndFeature(id, userData.userId);
+                const data = await getProjectProcessAndFeature(userData.userId, id);
                 console.log(data);
                 if (Array.isArray(data) && data.length > 0) {
                     const process = data[0];
                     setProcess(process.processId, process.processName);
-                    setFeatureData(process.featuresList);
+                    setFeatureData(process);
+
+                    // Fetch previous process
+                    if (process.sequence > 1) {
+                        console.log(process.sequence);
+                        const previousProcessData = await getProjectProcessByProjectAndSequence(id, process.sequence - 1);
+                        setPreviousProcess(previousProcessData);
+                    }
                 } else {
-                    console.error("Unexpected data format received");
+                    console.warn("No process data available or unexpected data format received");
+                    setProcess(0, "Unknown Process");
+                    setFeatureData([]);
                 }
             } catch (error) {
-                setErrorMessage(error.message);
+                console.error("Error fetching project process data:", error);
+                setErrorMessage("Failed to load process data. Using default values.");
+                setProcess(0, "Unknown Process");
+                setFeatureData([]);
             } finally {
                 setIsLoading(false);
             }
@@ -77,10 +93,17 @@ const ProcessTable = () => {
         fetchData();
     }, [fetchData]);
 
+    const hasFeaturePermission = (featureId) => {
+        if (featureData && featureData?.featuresList) {
+            return featureData?.featuresList?.includes(featureId);
+        }
+        return false;
+    }
+
     useEffect(() => {
         const fetchQuantitySheet = async () => {
             try {
-                const response = await API.get(`/QuantitySheet`);
+                const response = await API.get(`/QuantitySheet/CatchByproject?ProjectId=${id}`);
                 const quantitySheetData = response.data;
                 
                 if (Array.isArray(quantitySheetData) && quantitySheetData.length > 0) {
@@ -153,10 +176,6 @@ const ProcessTable = () => {
         );
     }
 
-    if (errorMessage) {
-        return <div>Error: {errorMessage}</div>;
-    }
-
     const handleCatchClick = (record) => {
         setCatchDetailModalShow(true);
         setCatchDetailModalData(record);
@@ -205,7 +224,7 @@ const ProcessTable = () => {
                                         <div className={` align-items-center flex-column`}>
                                             <div className='text-center fs-5'>Previous Process </div>
                                             <div className={`p-1  fs-6 text-primary border ${customDarkBorder} rounded ms-1 d-flex justify-content-center align-items-center ${customDark === 'dark-dark' ? `${customBtn} text-white` : `${customLight} bg-light`}`} style={{ fontWeight: 900 }}> 
-                                                {processName} - {previousProcessPercentage}%
+                                                {previousProcess ? `${previousProcess.processName} - ${previousProcess.completionPercentage}%` : 'N/A'}
                                                 <span className='ms-2'>
                                                     <FaRegHourglassHalf color='blue' size="20" />
                                                 </span>
@@ -296,7 +315,7 @@ const ProcessTable = () => {
                         </Col>
                         <Col lg={9} md={8} className="ps-0">
                             {tableData?.length > 0 && (
-                                <ProjectDetailsTable tableData={filteredTableData} setTableData={setTableData} projectId={id} lotNo={lotNo} />
+                                <ProjectDetailsTable tableData={filteredTableData} setTableData={setTableData} projectId={id} lotNo={lotNo} featureData={featureData} hasFeaturePermission={hasFeaturePermission}/>
                             )}
                         </Col>
                     </Row>

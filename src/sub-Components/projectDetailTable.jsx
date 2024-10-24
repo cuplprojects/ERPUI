@@ -21,7 +21,7 @@ import { BiSolidFlag } from "react-icons/bi";
 import { MdPending } from "react-icons/md";// for pending
 import { IoCheckmarkDoneCircleSharp } from "react-icons/io5";// for completed
 const { Option } = Select;
-const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo}) => {
+const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo, featureData, hasFeaturePermission}) => {
 
     //Theme Change Section
     const { getCssClasses } = useStore(themeStore);
@@ -29,7 +29,6 @@ const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo}) => 
     const customDark = cssClasses[0];
     const customBtn = cssClasses[3];
     const customDarkText = cssClasses[4];
-    console.log(tableData);
 
     const [initialTableData, setInitialTableData] = useState(tableData);
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
@@ -134,6 +133,7 @@ const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo}) => 
                     }}
                 />
             ),
+            responsive: ['sm'],
         },
         {
             width: '10%',
@@ -141,6 +141,7 @@ const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo}) => 
             key: 'srNo',
             align: "center",
             render: (_, __, index) => index + 1,
+            responsive: ['sm'],
         },
         {
             width: '15%',
@@ -225,7 +226,7 @@ const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo}) => 
             align: 'center',
             sorter: (a, b) => a.quantity - b.quantity,
         },
-        ...(columnVisibility['Interim Quantity'] ? [{
+        ...(columnVisibility['Interim Quantity'] && hasFeaturePermission(7) ? [{
             title: 'Interim Quantity',
             dataIndex: 'interimQuantity',
             width: '20%',
@@ -310,20 +311,20 @@ const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo}) => 
     const handleDropdownSelect = (action) => {
         if (showOptions) {
             const selectedRow = tableData.find((row) => row.catchNumber === selectedRowKeys[0]);
-            if (action === 'Alarm') {
+            if (action === 'Alarm' && hasFeaturePermission(3)) {
                 setAlarmModalShow(true);
                 setAlarmModalData(selectedRow); // Pass the selected row's data to the alarm modal
-            } else if (action === 'Interim Quantity') {
+            } else if (action === 'Interim Quantity' && hasFeaturePermission(7)) {
                 setInterimQuantityModalShow(true);
                 setInterimQuantityModalData(selectedRow); // Pass the selected row's data to the interim quantity modal
             } else if (action === 'Remarks') {
                 setRemarksModalShow(true);
                 setRemarksModalData(selectedRow); // Pass the selected row's data to the remarks modal
             }
-            else if (action === 'Select Zone') {
+            else if (action === 'Select Zone' && hasFeaturePermission(4)) {
                 setSelectZoneModalShow(true);
                 setSelectZoneModalData(selectedRow); // Pass the selected row's data to the select zone modal
-            } else if (action === 'Assign Team') {
+            } else if (action === 'Assign Team' && hasFeaturePermission(5)) {
                 setAssignTeamModalShow(true);
                 setAssignTeamModalData(selectedRow); // Pass the selected row's data to the assign team modal
             }
@@ -389,18 +390,22 @@ const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo}) => 
     };
     const menu = (
         <Menu>
-            <Menu.Item
-                onClick={() => handleDropdownSelect('Alarm')}
-                disabled={!showOptions}
-            >
-                Alarm
-            </Menu.Item>
-            <Menu.Item
-                onClick={() => handleDropdownSelect('Interim Quantity')}
-                disabled={!showOptions}
-            >
-                Interim Quantity
-            </Menu.Item>
+            {hasFeaturePermission(3) && (
+                <Menu.Item
+                    onClick={() => handleDropdownSelect('Alarm')}
+                    disabled={!showOptions}
+                >
+                    Alarm
+                </Menu.Item>
+            )}
+            {hasFeaturePermission(7) && (
+                <Menu.Item
+                    onClick={() => handleDropdownSelect('Interim Quantity')}
+                    disabled={!showOptions}
+                >
+                    Interim Quantity
+                </Menu.Item>
+            )}
             <Menu.Item
                 onClick={() => handleDropdownSelect('Remarks')}
                 disabled={!showOptions}
@@ -408,8 +413,12 @@ const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo}) => 
                 Remarks
             </Menu.Item>
             <Menu.Item onClick={() => setColumnModalShow(true)}>Columns</Menu.Item>
-            <Menu.Item onClick={() => setSelectZoneModalShow(true)}>Select Zone</Menu.Item>
-            <Menu.Item onClick={() => setAssignTeamModalShow(true)}>Assign Team</Menu.Item>
+            {hasFeaturePermission(4) && (
+                <Menu.Item onClick={() => setSelectZoneModalShow(true)}>Select Zone</Menu.Item>
+            )}
+            {hasFeaturePermission(5) && (
+                <Menu.Item onClick={() => setAssignTeamModalShow(true)}>Assign Team</Menu.Item>
+            )}
         </Menu>
     );
     const customPagination = {
@@ -470,69 +479,71 @@ const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo}) => 
             <Row>
                 {/* filter button */}
                 <Col lg={1} md={1} sx={2} className='d-flex justify-content- mt-md-1 mt-xs-1 mb-md-1 mb-xs-1'>
-                    <Dropdown overlay={
-                        <Menu>
-                            <Menu.Item className='d-flex align-items-center'>
-                                <Switch
-                                    checked={hideCompleted}
-                                    onChange={handleToggleChange}
-                                />
-                                <span className='ms-2'>Hide Completed</span>
-                            </Menu.Item>
+                    {hasFeaturePermission(6) && (
+                        <Dropdown overlay={
+                            <Menu>
+                                <Menu.Item className='d-flex align-items-center'>
+                                    <Switch
+                                        checked={hideCompleted}
+                                        onChange={handleToggleChange}
+                                    />
+                                    <span className='ms-2'>Hide Completed</span>
+                                </Menu.Item>
 
-                            <Menu.Divider />
-                            <Menu.Item className='d-flex align-items-center'>
-                                <Switch
-                                    checked={showOnlyCompletedPreviousProcess}
-                                    onChange={() => setShowOnlyCompletedPreviousProcess(!showOnlyCompletedPreviousProcess)}
-                                />
-                                {/* <span className='ms-2'>{previousProcess} Completed</span> */}
-                                <span className='ms-2'>Previous  Completed</span>
-                            </Menu.Item>
-                            <Menu.Divider />
+                                <Menu.Divider />
+                                <Menu.Item className='d-flex align-items-center'>
+                                    <Switch
+                                        checked={showOnlyCompletedPreviousProcess}
+                                        onChange={() => setShowOnlyCompletedPreviousProcess(!showOnlyCompletedPreviousProcess)}
+                                    />
+                                    {/* <span className='ms-2'>{previousProcess} Completed</span> */}
+                                    <span className='ms-2'>Previous  Completed</span>
+                                </Menu.Item>
+                                <Menu.Divider />
 
-                            <Menu.Item className='d-flex align-items-center'>
-                                <Switch
-                                    checked={showOnlyAlerts}
-                                    onChange={() => setShowOnlyAlerts(!showOnlyAlerts)}
-                                />
-                                <span className='ms-2'>Catches With Alerts</span>
-                            </Menu.Item>
+                                <Menu.Item className='d-flex align-items-center'>
+                                    <Switch
+                                        checked={showOnlyAlerts}
+                                        onChange={() => setShowOnlyAlerts(!showOnlyAlerts)}
+                                    />
+                                    <span className='ms-2'>Catches With Alerts</span>
+                                </Menu.Item>
 
-                            <Menu.Divider />
-                            <Menu.Item className='d-flex align-items-center'>
-                                <Switch
-                                    checked={showOnlyRemarks}
-                                    onChange={() => setShowOnlyRemarks(!showOnlyRemarks)}
-                                />
-                                <span className='ms-2'>Catches With Remarks</span>
-                            </Menu.Item>
+                                <Menu.Divider />
+                                <Menu.Item className='d-flex align-items-center'>
+                                    <Switch
+                                        checked={showOnlyRemarks}
+                                        onChange={() => setShowOnlyRemarks(!showOnlyRemarks)}
+                                    />
+                                    <span className='ms-2'>Catches With Remarks</span>
+                                </Menu.Item>
 
-                            <Menu.Divider />
+                                <Menu.Divider />
 
-                            <Menu.Item onClick={(e) => e.stopPropagation()}> {/* Add this */}
-                                <span>Limit Rows:</span>
-                                <Select
-                                    value={pageSize}
-                                    style={{ width: 60 }}
-                                    onChange={(value) => setPageSize(value)}
-                                    className='ms-4'
-                                >
-                                    <Option value={5}>5</Option>
-                                    <Option value={10}>10</Option>
-                                    <Option value={25}>25</Option>
-                                    <Option value={50}>50</Option>
-                                    <Option value={100}>100</Option>
-                                </Select>
-                            </Menu.Item>
-                        </Menu>
-                    } trigger={['click']}>
-                        <Button style={{ backgroundColor: 'transparent', border: 'none', boxShadow: 'none', padding: 0 }} className={`p-1 border ${customDark === 'dark-dark' ? `${customDark} text-white` : 'bg-white'}`}>
-                            <FaFilter size={20} className={`${customDarkText}`} />
-                            {/* <span className='d-none d-lg-block d-md-none ms-1 fs-6 fw-bold'>Filter</span> */}
+                                <Menu.Item onClick={(e) => e.stopPropagation()}> {/* Add this */}
+                                    <span>Limit Rows:</span>
+                                    <Select
+                                        value={pageSize}
+                                        style={{ width: 60 }}
+                                        onChange={(value) => setPageSize(value)}
+                                        className='ms-4'
+                                    >
+                                        <Option value={5}>5</Option>
+                                        <Option value={10}>10</Option>
+                                        <Option value={25}>25</Option>
+                                        <Option value={50}>50</Option>
+                                        <Option value={100}>100</Option>
+                                    </Select>
+                                </Menu.Item>
+                            </Menu>
+                        } trigger={['click']}>
+                            <Button style={{ backgroundColor: 'transparent', border: 'none', boxShadow: 'none', padding: 0 }} className={`p-1 border ${customDark === 'dark-dark' ? `${customDark} text-white` : 'bg-white'}`}>
+                                <FaFilter size={20} className={`${customDarkText}`} />
+                                {/* <span className='d-none d-lg-block d-md-none ms-1 fs-6 fw-bold'>Filter</span> */}
 
-                        </Button>
-                    </Dropdown>
+                            </Button>
+                        </Dropdown>
+                    )}
                 </Col>
 
                 {/* update status button */}
@@ -630,11 +641,10 @@ const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo}) => 
                         // dataSource={tableData}
                         pagination={customPagination}
                         bordered
-                        scroll={{ y: 400 }}
+                        
                         style={{ position: "relative", zIndex: "900" }}
                         striped={true}
                         tableLayout="auto"
-                        responsive={true}
                     />
                 </Col>
             </Row>

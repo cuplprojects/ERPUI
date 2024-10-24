@@ -14,8 +14,10 @@ import statisticsImage from './../assets/images/statistics.png';
 import PieChartIcon from './../assets/images/pie-chart.png';
 import LineChartIcon from './../assets/images/line-chart.png';
 import Grid from './../assets/images/table.png';
+import { useUserData } from "../store/userDataStore";
 
 const CuDashboard = () => {
+  const userData = useUserData();
   const [selectedLots, setSelectedLots] = useState([]);
   const [pieData, setPieData] = useState([]);
   const [clickData, setClickData] = useState({});
@@ -82,7 +84,7 @@ const CuDashboard = () => {
 
   const fetchProject = async () => {
     try {
-      const response = await API.get('/Project/GetActiveProjects');
+      const response = await API.get(`/Project/GetDistinctProjectsForUser/${userData.userId}`);
       setData(response.data);
     } catch (error) {
       console.error("Error fetching projects:", error);
@@ -114,6 +116,15 @@ const CuDashboard = () => {
   };
 
   const renderCards = () => {
+    if (data.length === 0) {
+      return (
+        <div className="d-flex justify-content-center align-items-center flex-column" style={{ height: '200px' }}>
+          <h3 className="text-center mb-3">No active projects available.</h3>
+          <p>Contact admin for assistance.</p>
+        </div>
+      );
+    }
+
     const activeCards = Object.values(visibleCards).filter(Boolean).length;
     if (activeCards === 0) {
       return (

@@ -8,11 +8,13 @@ import API from '../CustomHooks/MasterApiHooks/api';
 import { EditOutlined, DeleteOutlined, StopOutlined } from '@ant-design/icons';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { decrypt } from '../Security/Security';
 
 const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
     const { t } = useTranslation();
     const [modalMessage, setModalMessage] = useState('');
-    const { projectId } = useParams();
+    const { encryptedProjectId } = useParams();
+    const projectId = decrypt(encryptedProjectId);
     const [process, setProcess] = useState([]);
     const [dataSource, setDataSource] = useState([]);
     const [editingRow, setEditingRow] = useState(null);
