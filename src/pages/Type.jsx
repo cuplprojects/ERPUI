@@ -79,7 +79,7 @@ const Type = () => {
     useEffect(() => {
         const filtered = types.filter(type =>
             type.types.toLowerCase().includes(searchText.toLowerCase()) ||
-            type.associatedProcessId.some(id => processMap[id].toLowerCase().includes(searchText.toLowerCase()))
+            type.associatedProcessId.some(id => processMap[id]?.toLowerCase().includes(searchText.toLowerCase()))
         );
         setFilteredTypes(filtered);
         setCurrentPage(1);
@@ -222,7 +222,7 @@ console.log(originalData.requiredProcessIds)
                         ))}
                     </Select>
                 ) : (
-                    ids.map(id => processMap[id]).join(', ')
+                    ids?.map(id => processMap[id]).join(', ') || ''
                 )
             ),
         },
@@ -245,7 +245,7 @@ console.log(originalData.requiredProcessIds)
                         ))}
                     </Select>
                 ) : (
-                    ids.map(id => processMap[id]).join(', ')
+                    ids?.map(id => processMap[id]).join(', ') || ''
                 )
             ),
         },

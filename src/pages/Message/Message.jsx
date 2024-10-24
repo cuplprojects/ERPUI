@@ -344,6 +344,15 @@ const Message = () => {
               pagination={false}
               scroll={{ x: true }}
               bordered
+              className={`${customDark === "default-dark" ? "thead-default" : ""}
+                        ${customDark === "red-dark" ? "thead-red" : ""}
+                        ${customDark === "green-dark" ? "thead-green" : ""}
+                        ${customDark === "blue-dark" ? "thead-blue" : ""}
+                        ${customDark === "dark-dark" ? "thead-dark" : ""}
+                        ${customDark === "pink-dark" ? "thead-pink" : ""}
+                        ${customDark === "purple-dark" ? "thead-purple" : ""}
+                        ${customDark === "light-dark" ? "thead-light" : ""}
+                        ${customDark === "brown-dark" ? "thead-brown" : ""} rounded-2`}
             />
             <div className="d-flex justify-content-end mt-3">
               <Pagination
