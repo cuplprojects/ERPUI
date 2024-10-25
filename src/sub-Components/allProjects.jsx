@@ -70,16 +70,17 @@ const AllProjects = () => {
   const [lotsData, setLotsData] = useState([]);
 
   const { getCssClasses } = useStore(themeStore);
-  const cssClasses = getCssClasses();
-  const customDark = cssClasses[0];
-  const customMid = cssClasses[1];
-  const customLight = cssClasses[2];
-  const customBtn = cssClasses[3];
-  const customDarkText = cssClasses[4];
-  const customLightText = cssClasses[5]
-  const customLightBorder = cssClasses[6]
-  const customDarkBorder = cssClasses[7]
-  const customThead = cssClasses[8]
+  const [
+    customDark,
+    customMid, 
+    customLight,
+    customBtn,
+    customDarkText,
+    customLightText,
+    customLightBorder,
+    customDarkBorder,
+    customThead
+  ] = getCssClasses();
 
   const [selectedChart, setSelectedChart] = useState({
     label: "",
