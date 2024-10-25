@@ -38,7 +38,7 @@ const ProjectUserAllocation = () => {
 
   const fetchProcessesWithUsers = async (projectId) => {
     try {
-      const response = await API.get(`/Project/GetProcessesWithUsers/${projectId}`);
+      const response = await API.get(`/ProjectProcess/GetProcessesWithUsers/${projectId}`);
       setProcesses(response.data.processes);
       setUserSelections({}); // Reset user selections when project changes
     } catch (error) {
@@ -71,7 +71,7 @@ const ProjectUserAllocation = () => {
         console.log(userAssignments); // Optional: Check the format before sending
 
         // Make a POST request with the selected user assignments
-        await API.post(`/Project/UpdateProcessUsers/${selectedProjectId}`, userAssignments);
+        await API.post(`/ProjectProcess/UpdateProcessUsers/${selectedProjectId}`, userAssignments);
         message.success("Users assigned successfully!");
         fetchProcessesWithUsers(selectedProjectId); // Refresh the process list
     } catch (error) {

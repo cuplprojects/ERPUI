@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
 import { useLocation, useParams } from 'react-router-dom';
@@ -30,9 +29,9 @@ import { decrypt } from "../Security/Security";
 
 const ProcessTable = () => {
     
-        const { encryptedProjectId, encryptedLotNo } = useParams();
-        const id = decrypt(encryptedProjectId);
-        const lotNo = decrypt(encryptedLotNo);
+    const { encryptedProjectId, encryptedLotNo } = useParams();
+    const id = decrypt(encryptedProjectId);
+    const lotNo = decrypt(encryptedLotNo);
     const [featureData, setFeatureData] = useState(null);
     const { processId, processName } = useCurrentProcessStore();
     const { setProcess, clearProcess } = useCurrentProcessStore((state) => state.actions);
@@ -131,7 +130,7 @@ const ProcessTable = () => {
                         subject: item?.subject,
                         outerEnvelope: item?.outerEnvelope,
                         innerEnvelope: item?.innerEnvelope,
-                        lotNo:item?.lotNo,
+                        lotNo: item?.lotNo,
                         quantity: item?.quantity,
                         percentageCatch: item?.percentageCatch,
                         projectId:item?.projectId,
@@ -204,7 +203,7 @@ const ProcessTable = () => {
     };
 
     const handleLotClick = (lot) => {
-        setSelectedLot(lot === selectedLot ? null : lot);
+        setSelectedLot(lot);
     };
 
     const catchNumbers = tableData.map((item) => item.catchNumber).sort((a, b) => a - b);
@@ -213,7 +212,20 @@ const ProcessTable = () => {
     const filteredTableData = selectedLot
         ? tableData.filter(item => item.lotNo === selectedLot)
         : tableData;
-console.log(filteredTableData);
+
+    // Combine entries with the same catch number and sum their quantities
+    const combinedTableData = filteredTableData.reduce((acc, item) => {
+        const existingItem = acc.find(i => i.catchNumber === item.catchNumber);
+        if (existingItem) {
+            existingItem.quantity += item.quantity;
+        } else {
+            acc.push({ ...item });
+        }
+        return acc;
+    }, []);
+
+    console.log(combinedTableData);
+
     return (
         <div className="container-fluid" >
             <Row className="mb-  ">
@@ -305,7 +317,7 @@ console.log(filteredTableData);
             </Row>
             <Row className='mb-5'>
                 <Col lg={12} md={12}>
-                    <CatchProgressBar data={tableData} />
+                    <CatchProgressBar data={combinedTableData} />
                 </Col>
             </Row>
             <Row className='mb-2'>
@@ -343,7 +355,7 @@ console.log(filteredTableData);
                         </Col>
                         <Col lg={9} md={8} className="ps-0">
                             {tableData?.length > 0 && (
-                                <ProjectDetailsTable tableData={filteredTableData} setTableData={setTableData} projectId={id} lotNo={selectedLot} featureData={featureData} hasFeaturePermission={hasFeaturePermission}/>
+                                <ProjectDetailsTable tableData={combinedTableData} setTableData={setTableData} projectId={id} lotNo={selectedLot} featureData={featureData} hasFeaturePermission={hasFeaturePermission}/>
                             )}
                         </Col>
                     </Row>
@@ -362,11 +374,11 @@ console.log(filteredTableData);
                 </Col>
                 {showBarChart ? (
                     <Col lg={12} md={12} sm={12} className='mt-1 d-fle justify-content-center'>
-                        <StatusBarChart data={tableData} catchNumbers={catchNumbers} />
+                        <StatusBarChart data={combinedTableData} catchNumbers={catchNumbers} />
                     </Col>
                 ) : (
                     <Col lg={12} md={12} sm={12} className='mt-1 d-fle justify-content-center ' >
-                        <StatusPieChart data={tableData} />
+                        <StatusPieChart data={combinedTableData} />
                     </Col>
                 )}
             </Row>

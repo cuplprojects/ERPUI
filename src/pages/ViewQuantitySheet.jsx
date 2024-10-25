@@ -175,10 +175,10 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
 
         let updatedProcessIds = [...updatedItem.processId];
 
-        if (modalMessage === t('switchToDigitalPrintingQuestion')) {
+        if (modalMessage === 'switchToDigitalPrintingQuestion') {
             updatedProcessIds = updatedProcessIds.filter(id => id !== CTP_ID && id !== OFFSET_PRINTING_ID);
             updatedProcessIds.push(DIGITAL_PRINTING_ID);
-        } else if (modalMessage === t('switchToOffsetPrintingQuestion')) {
+        } else if (modalMessage === 'switchToOffsetPrintingQuestion'){
             updatedProcessIds = updatedProcessIds.filter(id => id !== DIGITAL_PRINTING_ID);
             updatedProcessIds.push(CTP_ID);
             updatedProcessIds.push(OFFSET_PRINTING_ID);
@@ -243,11 +243,11 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
             const hasDigitalPrinting = record.processId.includes(DIGITAL_PRINTING_ID);
 
             if (hasCTP && hasOffsetPrinting) {
-                setModalMessage(t('switchToDigitalPrintingQuestion'));
+                setModalMessage('switchToDigitalPrintingQuestion');
             } else if (hasDigitalPrinting) {
-                setModalMessage(t('switchToOffsetPrintingQuestion'));
+                setModalMessage('switchToOffsetPrintingQuestion');
             } else {
-                setModalMessage(t('switchProcessesQuestion'));
+                setModalMessage('switchProcessesQuestion');
             }
         }
     };
