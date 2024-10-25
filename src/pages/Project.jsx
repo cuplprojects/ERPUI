@@ -287,6 +287,7 @@ const Project = () => {
       title={t('projects')}
       bordered={true}
       style={{ padding: '20px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)' }}
+      className={customDarkText}
     >
       <Tabs activeKey={activeTabKey} onChange={setActiveTabKey}>
         <TabPane tab={t('projectList')} key="1">
