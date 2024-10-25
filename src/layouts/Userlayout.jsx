@@ -21,7 +21,7 @@ import Labels from '../pages/Message/Labels';
 import Reports from '../pages/Reports';
 import { hasPermission } from '../CustomHooks/Services/permissionUtils';
 import CuDashboard from '../pages/CuDashboard';
-
+import SecurityQuestions from '../pages/SecurityQuestions';
 import AddProjectProcess from '../pages/AddProjectProcess';
 import Test from '../pages/Test';
 
@@ -51,7 +51,6 @@ const Userlayout = () => {
               {hasPermission('2') && <Route path="/master" element={<Masters />} />}
               {hasPermission('2.4') && <Route path="/AddProjectProcess/:projectId" element={<AddProjectProcess />} />}
               {hasPermission('2') && <Route path="/features" element={<Features />} />}
-
 
               {/* --------------- User Menu Routes -------------- */}
               <Route path="/profile" element={<Profile />} />

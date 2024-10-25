@@ -7,8 +7,9 @@ import {
 import { GiGears } from "react-icons/gi";
 import { RiMenuFold4Fill, RiUserSettingsFill } from "react-icons/ri";
 import { AiFillCloseSquare } from "react-icons/ai";
-import { FaBookOpenReader } from "react-icons/fa6";
+import { FaBookOpenReader, FaScrewdriverWrench } from "react-icons/fa6";
 import { BiSolidCctv } from "react-icons/bi";
+import { BsQuestionSquareFill } from "react-icons/bs";
 import GroupManager from './Group';
 import Project from './Project';
 import Zone from './Zone'
@@ -21,12 +22,11 @@ import AllUsers from '../sub-Components/allUsers';
 import CameraList from './CameraList';
 import RolesAndDepartments from './Roles/RolePage';
 import SystemSettings from  './Configurtaion/SystemSettings'; 
-
-
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import { hasPermission } from '../CustomHooks/Services/permissionUtils';
 import { useTranslation } from 'react-i18next';
+import SecurityQuestions from './SecurityQuestions';
 
 const Sidebar = () => {
   const { t } = useTranslation();
@@ -94,6 +94,15 @@ const Sidebar = () => {
     { key: 'machine', icon: <GiGears />, label: t('productionMachines'), permission: '2.7' },
     { key: 'alarm', icon: <FaBell />, label: t('alarm'), permission: '2.8' },
     { key: 'systemSettings', icon: <FaCog />, label: t('processSettings'), permission: '2.10' },
+    {
+      key: 'developerTools',
+      icon: <FaScrewdriverWrench />,
+      label: t('developerTools'),
+      permission: '2.11',
+      children: [
+        { key: 'questions', icon: <BsQuestionSquareFill />, label: t('questions'), permission: '2.1.4' },
+      ],
+    },
   ];
 
   const allowedMenuItems = menuItems.filter(menu => {
@@ -167,6 +176,7 @@ const Sidebar = () => {
           {hasPermission('2.1.1') && selectedMenu === 'RolePage' && <RolesAndDepartments />}
           {hasPermission('2.1.2') && selectedMenu === 'addUser' && <AddUsers />}
           {hasPermission('2.1.3') && selectedMenu === 'allUsers' && <AllUsers />}
+          {hasPermission('2.1.4') && selectedMenu === 'questions' && <SecurityQuestions />}
           {hasPermission('2.2') && selectedMenu === 'group' && <GroupManager />}
           {hasPermission('2.3') && selectedMenu === 'type' && <Type />}
           {hasPermission('2.4') && selectedMenu === 'project' && <Project />}
