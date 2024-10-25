@@ -223,29 +223,7 @@ console.log(originalData.requiredProcessIds)
                 )
             ),
         },
-        {
-            title: 'Required Process',
-            dataIndex: 'requiredProcessId',
-            key: 'requiredProcessId',
-            render: (ids, record, index) => (
-                editingIndex === index ? (
-                    <Select
-                        mode="multiple"
-                        value={requirededitingProcessIds}
-                        onChange={setRequiredEditingProcessIds}
-                        style={{ width: '100%' }}
-                    >
-                        {processes.map(proc => (
-                            <Option key={proc.id} value={proc.id}>
-                                {proc.name}
-                            </Option>
-                        ))}
-                    </Select>
-                ) : (
-                    ids?.map(id => processMap[id]).join(', ') || ''
-                )
-            ),
-        },
+      
         {
             title: 'Required Process',
             dataIndex: 'requiredProcessId',

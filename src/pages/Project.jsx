@@ -310,7 +310,7 @@ const Project = () => {
             onCancel={handleCancel}
             footer={null}
           >
-            <Form form={form} onFinish={handleAddProject} layout="vertical">
+            <Form form={form} onFinish={handleAddProject} layout="vertical" initialValues={{ status: true }}>
               <Form.Item
                 name="group"
                 label={t('group')}

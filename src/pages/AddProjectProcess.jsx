@@ -27,26 +27,30 @@ const AddProjectProcess = ({ selectedProject }) => {
   
     const fetchProcessesOfProject = async () => {
       try {
+        const projectResponse = await API.get(`/Project/${selectedProject}`);
+        const { typeId } = projectResponse.data; // Get typeId from project details
+        
         const response = await API.get(`/ProjectProcess/GetProjectProcesses/${selectedProject}`);
         if (response.data.length > 0) {
-          setProjectProcesses(response.data);
+          console.log(response.data);
+          await fetchRequiredProcesses(typeId);
+          setProjectProcesses(calculatedWeightage(response.data));
         } else {
-          const projectResponse = await API.get(`/Project/${selectedProject}`);
-          const { typeId } = projectResponse.data; // Get typeId from project details
-          fetchRequiredProcesses(typeId); // Fetch required processes with typeId
-          fetchProjectProcesses(typeId);
+          await fetchRequiredProcesses(typeId); // Fetch required processes with typeId
+          await fetchProjectProcesses(typeId);
         }
       } catch (error) {
         console.error('Failed to fetch project processes', error);
         message.error('Unable to fetch project processes. Please try again later.');
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
   
     const fetchProjectProcesses = async (typeId) => {
       try {
         const response = await API.get(`/PaperTypes/${typeId}/Processes`);
-        setProjectProcesses(response.data);
+        setProjectProcesses(calculatedWeightage(response.data));
       } catch (error) {
         console.error('Failed to fetch project processes', error);
         message.error('Unable to fetch project processes. Please try again later.');
@@ -103,13 +107,21 @@ const AddProjectProcess = ({ selectedProject }) => {
       const processesToRemove = projectProcesses.filter(p => !newSelection.includes(p.id));
 
       // Update project processes directly
-      setProjectProcesses((prev) => [
+      setProjectProcesses((prev) => calculatedWeightage([
         ...prev.filter(p => !processesToRemove.includes(p)),
         ...processesToAdd,
-      ]);
+      ]));
 
       return newSelection;
     });
+  };
+
+  const calculatedWeightage = (processes) => {
+    const totalWeightage = processes.reduce((sum, process) => sum + (process.weightage || 0), 0);
+    return processes.map(process => ({
+      ...process,
+      relativeWeightage: totalWeightage > 0 ? ((process.weightage || 0) / totalWeightage) * 100 : 0
+    }));
   };
 
   const handleSubmit = async () => {
@@ -121,9 +133,9 @@ const AddProjectProcess = ({ selectedProject }) => {
         projectId: selectedProject,
         processId: matchingProcess ? matchingProcess.id : 0,
         weightage: process.weightage,
-        sequence: 0,
+        sequence: process.id,
         featuresList: process.installedFeatures,
-        userId: [12] // Replace with actual user IDs if needed
+        userId: [] // Replace with actual user IDs if needed
       };
     });
 
@@ -168,21 +180,22 @@ const AddProjectProcess = ({ selectedProject }) => {
         </div>
       ),
     },
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status) => (status ? 'Active' : 'Inactive'),
-    },
+    // {
+    //   title: 'Status',
+    //   dataIndex: 'status',
+    //   key: 'status',
+    //   render: (status) => (status ? 'Active' : 'Inactive'),
+    // },
     {
       title: 'Weightage',
       dataIndex: 'weightage',
       key: 'weightage',
     },
     {
-      title: 'Actions',
-      dataIndex: 'weightage',
-      key: 'weightage',
+      title: 'Relative Weightage',
+      dataIndex: 'relativeWeightage',
+      key: 'relativeWeightage',
+      render: (relativeWeightage) => `${relativeWeightage.toFixed(2)}%`,
     },
   ];
 
