@@ -63,14 +63,13 @@ const QtySheetUpload = () => {
             course: item.Course || "",
             subject: item.Subject || "",
             innerEnvelope: item.InnerEnvelope || "",
-            outerEnvelope: item.OuterEnvelope || "",
-
+            outerEnvelope: item.OuterEnvelope || "",         
             lotNo: item.LotNo || "",
             quantity: Number(item.Quantity) || 0,
             percentageCatch: Number(item.percentageCatch) || 0,
             projectId: projectId,
-
-            isOverridden: item.isOverridden === 'true',
+            examDate:convertExcelDate(item.ExamDate),
+            examTime: item.ExamTime,
             processId: [0],
         }));
 
@@ -117,10 +116,7 @@ const QtySheetUpload = () => {
                             (property === 'quantity' ? parseFloat(row[index]) || 0 : String(row[index])) : '';
                     }
                     console.log(t('rowDataMapped'), rowData);
-
-                    rowData['projectId'] = projectId;
-
-                    rowData['isOverridden'] = 'false';
+                    rowData['projectId'] = projectId;                 
                     rowData['percentageCatch'] = '0';
                     return rowData;
                 });
@@ -129,6 +125,25 @@ const QtySheetUpload = () => {
             reader.readAsArrayBuffer(selectedFile);
         });
     };
+
+
+    const convertExcelDate = (value) => {
+        if (typeof value === 'number') {
+            // Excel serial date starts from 1900-01-01
+            const date = new Date((value - 25569) * 86400 * 1000);
+            if (!isNaN(date.getTime())) {
+                return date.toLocaleDateString('en-GB'); // Format to dd/mm/yyyy
+            }
+        } else if (typeof value === 'string') {
+            // If the value is a string, parse it as a date
+            const parsedDate = new Date(value);
+            if (!isNaN(parsedDate.getTime())) {
+                return parsedDate.toLocaleDateString('en-GB');
+            }
+        }
+        return value; // Return the original value if it's not a valid date
+    };
+     
 
     const getColumns = async () => {
         try {
@@ -210,10 +225,7 @@ const QtySheetUpload = () => {
 
     const fetchLots = async () => {
         try {
-
-
             const response = await API.get(`/QuantitySheet/Lots?ProjectId=${projectId}`)
-
             setLots(response.data)
         }
         catch (error) {

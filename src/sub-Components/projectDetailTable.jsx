@@ -20,16 +20,16 @@ import { useStore } from 'zustand';
 import { BiSolidFlag } from "react-icons/bi";
 import { MdPending } from "react-icons/md";// for pending
 import { IoCheckmarkDoneCircleSharp } from "react-icons/io5";// for completed
+import API from '../CustomHooks/MasterApiHooks/api';
 const { Option } = Select;
-const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo, featureData, hasFeaturePermission}) => {
-console.log(tableData);
+const ProjectDetailsTable = ({ tableData, setTableData, projectId, lotNo, featureData, hasFeaturePermission, processId }) => {
+    console.log(tableData);
     //Theme Change Section
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = getCssClasses();
     const customDark = cssClasses[0];
     const customBtn = cssClasses[3];
     const customDarkText = cssClasses[4];
-
     const [initialTableData, setInitialTableData] = useState(tableData);
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
     const [columnVisibility, setColumnVisibility] = useState({
@@ -65,10 +65,12 @@ console.log(tableData);
         // Update the initialTableData state whenever tableData changes
         setInitialTableData(tableData);
     }, [tableData]);
+
     useEffect(() => {
         const newVisibleKeys = filteredData.map(item => item.catchNumber);
         setVisibleRowKeys(newVisibleKeys);
     }, [searchText, hideCompleted]); // Add other dependencies if necessary
+
     const filteredData = tableData.filter(item =>
         Object.values(item).some(value =>
             value && value.toString().toLowerCase().includes(searchText.toLowerCase())
@@ -80,19 +82,76 @@ console.log(tableData);
         setShowOptions(selectedRowKeys.length === 1);
     }, [selectedRowKeys]);
 
-    const handleRowStatusChange = (catchNumber, newStatusIndex) => {
+    useEffect(() => {
+        fetchTransactions();
+    }, [projectId, processId]);
+
+
+    const fetchTransactions = async () => {
+        try {
+            const response = await API.get(`/Transactions?ProjectId=${projectId}&ProcessId=${processId}`);
+            const transactions = response.data || [];
+
+            // Create a mapping of quantitysheetId to status
+            const statusMap = transactions.reduce((acc, transaction) => {
+                acc[transaction.quantitysheetId] = {
+                    status: transaction.status,
+                    transactionId: transaction.transactionId // Store the transactionId
+                };
+                return acc;
+            }, {});
+
+            // Update tableData with the status from transactions
+            const updatedData = tableData.map(item => ({
+                ...item,
+                status: statusMap[item.srNo] ? statusMap[item.srNo].status : 0,
+                transactionId: statusMap[item.srNo] ? statusMap[item.srNo].transactionId : null, // Add transactionId to each item
+            }));
+
+            setTableData(updatedData);
+        } catch (error) {
+            console.error('Error fetching transactions:', error);
+        }
+    };
+
+    const handleRowStatusChange = async (catchNumber, newStatusIndex) => {
+        console.log(`Toggling status for catch number ${catchNumber} to index ${newStatusIndex}`);
         const statusSteps = ["Pending", "Started", "Completed"];
         const newStatus = statusSteps[newStatusIndex];
 
-        const updatedData = tableData.map((row) => {
-            if (row.catchNumber === catchNumber) {
-                return { ...row, status: newStatus };
-            }
-            return row;
-        });
+        const updatedRow = tableData.find(row => row.catchNumber === catchNumber);
 
-        setTableData(updatedData); // Update the table with the new status
+        const postData = {
+            transactionId: updatedRow?.transactionId || 0, // Use the transactionId from the updated row
+            quantity: 0,
+            remarks: updatedRow?.remarks || "",
+            projectId: projectId,
+            quantitysheetId: updatedRow?.srNo || 0,
+            processId: processId,
+            zoneId: 0,
+            status: newStatusIndex,
+            alarmId: 0,
+            lotNo: updatedRow?.lotNo || 0,
+            teamId: 0
+        };
+
+        try {
+            // Check if the quantitysheetId already exists
+            if (updatedRow.transactionId) {
+                // If it exists, update using PUT
+                const response = await API.put(`/Transactions/${updatedRow.transactionId}`, postData);
+                console.log('Update Response:', response.data);
+            } else {
+                // If it doesn't exist, create using POST
+                const response = await API.post('/Transactions', postData);
+                console.log('Create Response:', response.data);
+            }
+            fetchTransactions(); // Refresh data
+        } catch (error) {
+            console.error('Error updating status:', error);
+        }
     };
+
     const handleCatchClick = (record) => {
         console.log('handleCatchClick called', record);
         setCatchDetailModalShow(true);
@@ -166,7 +225,7 @@ console.log(tableData);
                             <div>
                                 <button
                                     className="rounded border fs-6 custom-zoom-btn bg-white position-relative "
-                                    onClick={() => handleCatchClick(record)}
+                                    onClick={() => console.log('Detail:', record)}
                                 >
                                     {text}
                                 </button>
@@ -248,8 +307,8 @@ console.log(tableData);
             width: '20%',
             align: 'center',
             render: (text, record) => {
-                const statusSteps = ["Pending", "Started", "Running", "Completed"];
-                const initialStatusIndex = statusSteps.indexOf(record.status);
+                const statusSteps = ["Pending", "Started", "Completed"];
+                const initialStatusIndex = text !== undefined ? text : 0;
                 return (
                     <>
                         <div className="d-flex justify-content-center">
@@ -259,7 +318,6 @@ console.log(tableData);
                                 statusSteps={[
                                     { status: "Pending", color: "red" },
                                     { status: "Started", color: "blue" },
-                                    { status: "Running", color: "orange" },
                                     { status: "Completed", color: "green" },
                                 ]}
                             />
@@ -270,40 +328,67 @@ console.log(tableData);
             sorter: (a, b) => a.status.localeCompare(b.status),
         }
     ];
-    const handleStatusChange = (newStatus) => {
-        const updatedData = tableData.map((row) => {
-            if (selectedRowKeys.includes(row.catchNumber)) {
-                let nextStatus;
-                switch (row.status) {
-                    case "Pending":
-                        nextStatus = "Started";
-                        break;
-                    case "Started":
-                        nextStatus = "Completed";
-                        break;
-                    default:
-                        nextStatus = row.status; // Don't update if already Completed
-                }
-                return { ...row, status: nextStatus };
-            }
-            return row;
-        });
-        setTableData(updatedData);
-        setSelectedRowKeys([]); // Clear selected row keys
-        setSelectAll(false); // Deselect all checkboxes
-        setShowOptions(false); // Reset options visibility
+    const clearSelections = () => {
+        setSelectedRowKeys([]);
+        setSelectAll(false);
+        setShowOptions(false);
     };
+
+    const handleStatusChange = async (newStatus) => {
+        const statusSteps = ["Pending", "Started", "Completed"];
+        const newStatusIndex = statusSteps.indexOf(newStatus);
+
+        // Iterate over selectedRowKeys and update status
+        const updates = selectedRowKeys.map(async (key) => {
+            const updatedRow = tableData.find(row => row.catchNumber === key);
+            if (updatedRow) {
+                const postData = {
+                    transactionId: updatedRow.transactionId || 0,
+                    quantity: 0,
+                    remarks: updatedRow?.remarks || "",
+                    projectId: projectId,
+                    quantitysheetId: updatedRow?.srNo || 0,
+                    processId: processId,
+                    zoneId: 0,
+                    status: newStatusIndex,
+                    alarmId: 0,
+                    lotNo: updatedRow?.lotNo || 0,
+                    teamId: 0
+                };
+
+                try {
+                    // Update or create based on existence of transactionId
+                    if (updatedRow.transactionId) {
+                        await API.put(`/Transactions/${updatedRow.transactionId}`, postData);
+                    } else {
+                        await API.post('/Transactions', postData);
+                    }
+                } catch (error) {
+                    console.error(`Error updating status for ${key}:`, error);
+                }
+            }
+        });
+
+        // Wait for all updates to finish
+        await Promise.all(updates);
+        clearSelections()
+        fetchTransactions();        
+    };
+
+
     const getSelectedStatus = () => {
         if (selectedRowKeys.length > 1) {
+            console.log(tableData)
             const selectedRows = tableData.filter((row) => selectedRowKeys.includes(row.catchNumber));
             const statuses = selectedRows.map((row) => row.status);
             const uniqueStatuses = [...new Set(statuses)];
             if (uniqueStatuses.length === 1) {
-                return uniqueStatuses[0]; // All statuses are the same, return the current status
+                return uniqueStatuses[0]; 
             }
         }
-        return null; // Return null if multiple rows are not selected or statuses are different
+        return null; 
     };
+
     const handleToggleChange = (checked) => {
         setHideCompleted(checked);
     };
@@ -442,6 +527,8 @@ console.log(tableData);
             return originalElement;
         },
     };
+
+
     const rowClassName = (record, index) => {
         if (record.status === 'Pending') {
             return 'pending-row';
@@ -453,6 +540,7 @@ console.log(tableData);
             return '';
         }
     };
+
     const getStatusIndex = (status) => {
         switch (status) {
             case "Pending":
@@ -462,11 +550,12 @@ console.log(tableData);
             case "Completed":
                 return 2;
             default:
-                return 0; // Return 0 if status is null or undefined
+                return 0;
         }
     };
+
     const filteredDataAlert = tableData.filter((item) =>
-        Object.values(item).some((value) => 
+        Object.values(item).some((value) =>
             value && value.toString().toLowerCase().includes(searchText.toLowerCase())
         )
         && (!hideCompleted || item.status !== 'Completed')
@@ -474,10 +563,10 @@ console.log(tableData);
         && (!showOnlyCompletedPreviousProcess || item.previousProcessStats === 'Completed')
         && (!showOnlyRemarks || item.remarks)
     );
+
     return (
         <>
             <Row>
-                {/* filter button */}
                 <Col lg={1} md={1} sx={2} className='d-flex justify-content- mt-md-1 mt-xs-1 mb-md-1 mb-xs-1'>
                     {hasFeaturePermission(6) && (
                         <Dropdown overlay={
@@ -564,6 +653,7 @@ console.log(tableData);
                     )}
                 </Col>
 
+
                 {/* search box */}
                 <Col lg={5} md={6} xs={12}>
                     <div className="d-flex justify-content-end align-items-center search-container">
@@ -641,7 +731,7 @@ console.log(tableData);
                         // dataSource={tableData}
                         pagination={customPagination}
                         bordered
-                        
+
                         style={{ position: "relative", zIndex: "900" }}
                         striped={true}
                         tableLayout="auto"

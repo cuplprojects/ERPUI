@@ -58,15 +58,13 @@ const ProcessTable = () => {
     const [showBarChart, setShowBarChart] = useState(true);
     const [catchDetailModalShow, setCatchDetailModalShow] = useState(false);
     const [catchDetailModalData, setCatchDetailModalData] = useState(null);
-    const [previousProcessPercentage, setPreviousProcessPercentage] = useState(90);
-
     const [selectedLot, setSelectedLot] = useState(lotNo);
     const [projectName, setProjectName] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState(null);
     const [projectLots, setProjectLots] = useState([]);
     const [previousProcess, setPreviousProcess] = useState(null);
-    
+   
     const fetchData = useCallback(async () => {
         if (userData && userData.userId && id !== processId) {
             setIsLoading(true);
@@ -117,7 +115,6 @@ const ProcessTable = () => {
             try {
 
                 const response = await API.get(`/QuantitySheet/CatchByproject?ProjectId=${id}`);
-
                 const quantitySheetData = response.data;
                 
                 if (Array.isArray(quantitySheetData) && quantitySheetData.length > 0) {
@@ -134,9 +131,7 @@ const ProcessTable = () => {
                         quantity: item?.quantity,
                         percentageCatch: item?.percentageCatch,
                         projectId:item?.projectId,
-                        isOverridden: item?.isOverridden,
                         processId: item?.processId || [],
-
                         status: item?.status || "Pending",
                         alerts: "",
                         interimQuantity: "0",
@@ -161,7 +156,6 @@ const ProcessTable = () => {
                 setProjectLots([]); // Set projectLots to empty array on error
             }
         };
-
         fetchQuantitySheet();
     }, [id, lotNo]);
       
@@ -355,7 +349,7 @@ const ProcessTable = () => {
                         </Col>
                         <Col lg={9} md={8} className="ps-0">
                             {tableData?.length > 0 && (
-                                <ProjectDetailsTable tableData={combinedTableData} setTableData={setTableData} projectId={id} lotNo={selectedLot} featureData={featureData} hasFeaturePermission={hasFeaturePermission}/>
+                                <ProjectDetailsTable tableData={combinedTableData} setTableData={setTableData} projectId={id} lotNo={selectedLot} featureData={featureData} hasFeaturePermission={hasFeaturePermission} processId={processId}/>
                             )}
                         </Col>
                     </Row>
