@@ -105,8 +105,11 @@ const ProcessTable = () => {
     }, [fetchData]);
 
     const hasFeaturePermission = (featureId) => {
-        if (featureData && featureData?.featuresList) {
-            return featureData?.featuresList?.includes(featureId);
+        if (userData?.role?.roleId === 1) {
+            return true;
+        }
+        if (featureData?.featuresList) {
+            return featureData.featuresList.includes(featureId);
         }
         return false;
     }

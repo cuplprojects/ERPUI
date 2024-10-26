@@ -14,15 +14,17 @@ import { PiDotsNineBold } from "react-icons/pi";
 import { RiSearchLine } from 'react-icons/ri';
 import { Col, Row } from 'react-bootstrap';
 import { FaEdit } from "react-icons/fa";
-import { FaFilter } from "react-icons/fa";//filter icon for table filter menu
+import { FaFilter } from "react-icons/fa";
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import { BiSolidFlag } from "react-icons/bi";
-import { MdPending } from "react-icons/md";// for pending
-import { IoCheckmarkDoneCircleSharp } from "react-icons/io5";// for completed
+import { MdPending } from "react-icons/md";
+import { IoCheckmarkDoneCircleSharp } from "react-icons/io5";
+
 const { Option } = Select;
-const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo, featureData, hasFeaturePermission}) => {
-    //Theme Change Section
+
+const ProjectDetailsTable = ({ tableData, setTableData, projectId, lotNo, featureData, hasFeaturePermission }) => {
+    // Theme Change Section
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = getCssClasses();
     const customDark = cssClasses[0];
@@ -31,11 +33,6 @@ const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo, feat
 
     const [initialTableData, setInitialTableData] = useState(tableData);
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
-    const [columnVisibility, setColumnVisibility] = useState({
-        Alerts: false,
-        'Interim Quantity': false,
-        Remarks: false,
-    });
     const [hideCompleted, setHideCompleted] = useState(false);
     const [columnModalShow, setColumnModalShow] = useState(false);
     const [alarmModalShow, setAlarmModalShow] = useState(false);
@@ -53,21 +50,28 @@ const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo, feat
     const [catchDetailModalShow, setCatchDetailModalShow] = useState(false);
     const [catchDetailModalData, setCatchDetailModalData] = useState(null);
     const [selectZoneModalShow, setSelectZoneModalShow] = useState(false);
-    const [assignTeamModalShow, setAssignTeamModalShow] = useState(false);
     const [selectZoneModalData, setSelectZoneModalData] = useState(null);
-    const [assignTeamModalData, setAssignTeamModalData] = useState(null);
     const [showOnlyAlerts, setShowOnlyAlerts] = useState(false);
     const [showOnlyCompletedPreviousProcess, setShowOnlyCompletedPreviousProcess] = useState(true);
     const [showOnlyRemarks, setShowOnlyRemarks] = useState(false);
+    const [columnVisibility, setColumnVisibility] = useState({
+        Alerts: false,
+        'Interim Quantity': false,
+        Remarks: false,
+        'Team Assigned': false,
+    });
+    const [assignTeamModalShow, setAssignTeamModalShow] = useState(false);
+    const [assignTeamModalData, setAssignTeamModalData] = useState([]);
 
     useEffect(() => {
-        // Update the initialTableData state whenever tableData changes
         setInitialTableData(tableData);
     }, [tableData]);
+
     useEffect(() => {
         const newVisibleKeys = filteredData.map(item => item.catchNumber);
         setVisibleRowKeys(newVisibleKeys);
-    }, [searchText, hideCompleted]); // Add other dependencies if necessary
+    }, [searchText, hideCompleted]);
+
     const filteredData = tableData.filter(item =>
         Object.values(item).some(value =>
             value && value.toString().toLowerCase().includes(searchText.toLowerCase())
@@ -76,7 +80,7 @@ const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo, feat
     );
 
     useEffect(() => {
-        setShowOptions(selectedRowKeys.length === 1);
+        setShowOptions(selectedRowKeys.length > 0);
     }, [selectedRowKeys]);
 
     const handleRowStatusChange = (catchNumber, newStatusIndex) => {
@@ -90,13 +94,15 @@ const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo, feat
             return row;
         });
 
-        setTableData(updatedData); // Update the table with the new status
+        setTableData(updatedData);
     };
+
+
     const handleCatchClick = (record) => {
-        console.log('handleCatchClick called', record);
         setCatchDetailModalShow(true);
         setCatchDetailModalData(record);
     };
+
 
     const columns = [
         {
@@ -240,6 +246,13 @@ const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo, feat
             align: 'center',
             sorter: (a, b) => a.remarks.localeCompare(b.remarks),
         }] : []),
+        ...(columnVisibility['Team Assigned'] ? [{
+            title: 'Team Assigned',
+            dataIndex: 'teamAssigned',
+            key: 'teamAssigned',
+            align: 'center',
+            sorter: (a, b) => (a.teamAssigned || '').localeCompare(b.teamAssigned || ''),
+        }] : []),
         {
             title: 'Status',
             dataIndex: 'status',
@@ -281,16 +294,16 @@ const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo, feat
                         nextStatus = "Completed";
                         break;
                     default:
-                        nextStatus = row.status; // Don't update if already Completed
+                        nextStatus = row.status;
                 }
                 return { ...row, status: nextStatus };
             }
             return row;
         });
         setTableData(updatedData);
-        setSelectedRowKeys([]); // Clear selected row keys
-        setSelectAll(false); // Deselect all checkboxes
-        setShowOptions(false); // Reset options visibility
+        setSelectedRowKeys([]);
+        setSelectAll(false);
+        setShowOptions(false);
     };
     const getSelectedStatus = () => {
         if (selectedRowKeys.length > 1) {
@@ -298,38 +311,54 @@ const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo, feat
             const statuses = selectedRows.map((row) => row.status);
             const uniqueStatuses = [...new Set(statuses)];
             if (uniqueStatuses.length === 1) {
-                return uniqueStatuses[0]; // All statuses are the same, return the current status
+                return uniqueStatuses[0];
             }
         }
-        return null; // Return null if multiple rows are not selected or statuses are different
+        return null;
     };
+
     const handleToggleChange = (checked) => {
         setHideCompleted(checked);
     };
 
+
     const handleDropdownSelect = (action) => {
-        console.log(hasFeaturePermission(3));
-        if (showOptions) {
-            const selectedRow = tableData.find((row) => row.catchNumber === selectedRowKeys[0]);
-            if (action === 'Alarm' && hasFeaturePermission(3)) {
-                setAlarmModalShow(true);
-                setAlarmModalData(selectedRow); // Pass the selected row's data to the alarm modal
-            } else if (action === 'Interim Quantity' && hasFeaturePermission(7)) {
-                setInterimQuantityModalShow(true);
-                setInterimQuantityModalData(selectedRow); // Pass the selected row's data to the interim quantity modal
-            } else if (action === 'Remarks') {
-                setRemarksModalShow(true);
-                setRemarksModalData(selectedRow); // Pass the selected row's data to the remarks modal
-            }
-            else if (action === 'Select Zone' && hasFeaturePermission(4)) {
-                setSelectZoneModalShow(true);
-                setSelectZoneModalData(selectedRow); // Pass the selected row's data to the select zone modal
-            } else if (action === 'Assign Team' && hasFeaturePermission(5)) {
-                setAssignTeamModalShow(true);
-                setAssignTeamModalData(selectedRow); // Pass the selected row's data to the assign team modal
-            }
+        if (selectedRowKeys.length > 0) {
+            const selectedRows = tableData.filter((row) => selectedRowKeys.includes(row.catchNumber));
+            switch (action) {
+                case 'Alarm':
+                    if (hasFeaturePermission(3)) {
+                        setAlarmModalShow(true);
+                        setAlarmModalData(selectedRows);
+                    }
+                    break;
+                case 'Interim Quantity':
+                    if (hasFeaturePermission(7)) {
+                        setInterimQuantityModalShow(true);
+                        setInterimQuantityModalData(selectedRows);
+                    }
+                    break;
+                case 'Remarks':
+                    setRemarksModalShow(true);
+                    setRemarksModalData(selectedRows);
+                    break;
+                case 'Select Zone':
+                    if (hasFeaturePermission(4)) {
+                        setSelectZoneModalShow(true);
+                        setSelectZoneModalData(selectedRows);
+                    }
+                    break;
+                case 'Assign Team':
+                    if (hasFeaturePermission(5) || true) {
+                        setAssignTeamModalShow(true);
+                        setAssignTeamModalData(selectedRows);
+                    }
+                    break;
+                default:
+                    break;
+            } 
         } else {
-            alert("Some error occurred.");
+            alert("Please select at least one row.");
         }
     };
     const handleSelectZoneSave = (zone) => {
@@ -340,42 +369,43 @@ const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo, feat
             return row;
         });
         setTableData(updatedData);
-        setSelectedRowKeys([]); // Deselect all rows
-        setShowOptions(false); // Reset options visibility
+        setSelectedRowKeys([]);
+        setShowOptions(false);
     };
     const handleAssignTeamSave = (team) => {
         const updatedData = tableData.map((row) => {
             if (selectedRowKeys.includes(row.catchNumber)) {
-                return { ...row, team };
+                return { ...row, teamAssigned: team };
             }
             return row;
         });
         setTableData(updatedData);
-        setSelectedRowKeys([]); // Deselect all rows
-        setShowOptions(false); // Reset options visibility
+        setSelectedRowKeys([]);
+        setShowOptions(false);
+        setAssignTeamModalShow(false);
     };
     const handleAlarmSave = (alarm) => {
         const updatedData = tableData.map((row) => {
-            if (selectedRowKeys.includes(row.catchNumber)) { // Use catchNumber for comparison
+            if (selectedRowKeys.includes(row.catchNumber)) {
                 return { ...row, alerts: alarm };
             }
             return row;
         });
         setTableData(updatedData);
-        setSelectedRowKeys([]); // Deselect all rows
-        setShowOptions(false); // Reset options visibility
+        setSelectedRowKeys([]);
+        setShowOptions(false);
     };
 
     const handleInterimQuantitySave = (interimQuantity) => {
         const updatedData = tableData.map((row) => {
-            if (selectedRowKeys.includes(row.catchNumber)) { // Use catchNumber for comparison
+            if (selectedRowKeys.includes(row.catchNumber)) {
                 return { ...row, interimQuantity };
             }
             return row;
         });
         setTableData(updatedData);
-        setSelectedRowKeys([]); // Deselect all rows
-        setShowOptions(false); // Reset options visibility
+        setSelectedRowKeys([]);
+        setShowOptions(false);
     };
     const handleRemarksSave = (remarks) => {
         const updatedData = tableData.map((row) => {
@@ -385,15 +415,15 @@ const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo, feat
             return row;
         });
         setTableData(updatedData);
-        setSelectedRowKeys([]); // Deselect all rows
-        setShowOptions(false); // Reset options visibility
+        setSelectedRowKeys([]);
+        setShowOptions(false);
     };
     const menu = (
         <Menu>
             {hasFeaturePermission(3) && (
                 <Menu.Item
                     onClick={() => handleDropdownSelect('Alarm')}
-                    disabled={!showOptions}
+                    disabled={selectedRowKeys.length === 0}
                 >
                     Alarm
                 </Menu.Item>
@@ -401,34 +431,43 @@ const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo, feat
             {hasFeaturePermission(7) && (
                 <Menu.Item
                     onClick={() => handleDropdownSelect('Interim Quantity')}
-                    disabled={!showOptions}
+                    disabled={selectedRowKeys.length === 0}
                 >
                     Interim Quantity
                 </Menu.Item>
             )}
             <Menu.Item
                 onClick={() => handleDropdownSelect('Remarks')}
-                disabled={!showOptions}
+                disabled={selectedRowKeys.length === 0}
             >
                 Remarks
             </Menu.Item>
             <Menu.Item onClick={() => setColumnModalShow(true)}>Columns</Menu.Item>
             {hasFeaturePermission(4) && (
-                <Menu.Item onClick={() => setSelectZoneModalShow(true)}>Select Zone</Menu.Item>
+                <Menu.Item
+                    onClick={() => handleDropdownSelect('Select Zone')}
+                    disabled={selectedRowKeys.length === 0}
+                >
+                    Select Zone
+                </Menu.Item>
             )}
-            {hasFeaturePermission(5) && (
-                <Menu.Item onClick={() => setAssignTeamModalShow(true)}>Assign Team</Menu.Item>
-            )}
+             {(hasFeaturePermission(5) || true) && (
+                <Menu.Item
+                    onClick={() => handleDropdownSelect('Assign Team')}
+                    disabled={selectedRowKeys.length === 0}
+                >
+                    Assign Team
+                </Menu.Item>
+             )}
         </Menu>
     );
     const customPagination = {
-
         pageSize,
         pageSizeOptions: [5, 10, 25, 50, 100],
         showSizeChanger: true,
         onShowSizeChange: (current, size) => setPageSize(size),
         showTotal: (total) => `Total ${total} items`,
-        locale: { items_per_page: "Rows" }, // Removes the "/page" text
+        locale: { items_per_page: "Rows" },
         pageSizeRender: (props) => (
             <div style={{ display: "flex", alignItems: "center" }}>
                 <span style={{ marginRight: 8 }} className=''>Limit Rows:</span>
@@ -442,6 +481,7 @@ const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo, feat
             return originalElement;
         },
     };
+
     const rowClassName = (record, index) => {
         if (record.status === 'Pending') {
             return 'pending-row';
@@ -462,11 +502,11 @@ const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo, feat
             case "Completed":
                 return 2;
             default:
-                return 0; // Return 0 if status is null or undefined
+                return 0;
         }
     };
     const filteredDataAlert = tableData.filter((item) =>
-        Object.values(item).some((value) => 
+        Object.values(item).some((value) =>
             value && value.toString().toLowerCase().includes(searchText.toLowerCase())
         )
         && (!hideCompleted || item.status !== 'Completed')
@@ -566,7 +606,7 @@ const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo, feat
 
                 {/* search box */}
                 <Col lg={5} md={6} xs={12}>
-                    <div className="d-flex justify-content-end align-items-center search-container">
+                    <div className="d-flex justify-content-end align-items-center search-container mb-2">
                         {searchVisible && (
                             <div className="search-box" style={{ position: 'relative', zIndex: "2" }}>
                                 {searchText && (
@@ -638,10 +678,8 @@ const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo, feat
                         rowKey="catchNumber"
                         columns={columns}
                         dataSource={filteredData}
-                        // dataSource={tableData}
                         pagination={customPagination}
                         bordered
-                        
                         style={{ position: "relative", zIndex: "900" }}
                         striped={true}
                         tableLayout="auto"
