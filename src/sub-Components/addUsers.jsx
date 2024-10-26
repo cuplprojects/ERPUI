@@ -229,7 +229,7 @@ const AddUsers = () => {
                 isInvalid={!isUsernameValid(formData.username) && formData.username.length > 0} // Conditional error styling
               />
               <Form.Control.Feedback type="invalid">
-                {t('usernameMustBe6To8CharactersLongContainAtLeast2NumbersAndNotBeEntirelyAlphabetic')}
+                {t('usernameValidationRule')}
               </Form.Control.Feedback>
             </Form.Group>
           </Col>
