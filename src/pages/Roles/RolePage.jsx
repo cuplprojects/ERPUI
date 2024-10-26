@@ -1,3 +1,5 @@
+// Updated by Shivom on 26/10/2023: Only developers can update developer permissions
+
 import React, { useEffect, useState } from 'react';
 import { Button, Card, Table, Input, Switch, message, Tabs } from 'antd';
 import { Modal } from 'react-bootstrap';
@@ -8,8 +10,7 @@ import Permissions from './Permissions';
 import API from '../../CustomHooks/MasterApiHooks/api';
 import { AiFillCloseSquare } from "react-icons/ai";
 import { useTranslation } from 'react-i18next';
-
-const { TabPane } = Tabs;
+import useUserDataStore from '../../store/userDataStore';
 
 const RolesAndDepartments = () => {
   const { t } = useTranslation();
@@ -19,6 +20,7 @@ const RolesAndDepartments = () => {
   const [roles, setRoles] = useState([]);
   const [newRole, setNewRole] = useState({ roleId: 0, roleName: '', priorityOrder: 0, status: true, permissions: [] });
   const [isRoleModalVisible, setIsRoleModalVisible] = useState(false);
+  const { userData } = useUserDataStore();
   
   const fetchRoles = async () => {
     try {
@@ -100,6 +102,10 @@ const RolesAndDepartments = () => {
   };
 
   const handleRoleStatusChange = async (checked, roleId) => {
+    if (roleId === 1 && userData?.role?.roleId !== 1) {
+      message.error(t('You do not have permission to change this role\'s status'));
+      return;
+    }
     try {
       const roleResponse = await API.get(`/Roles/${roleId}`);
       const roleData = roleResponse.data;
@@ -156,6 +162,7 @@ const RolesAndDepartments = () => {
           onChange={(checked) => handleRoleStatusChange(checked, record.roleId)}
           checkedChildren={t('active')}
           unCheckedChildren={t('inactive')}
+          disabled={record.roleId === 1 && userData?.role?.roleId !== 1}
         />
       ),
     },
@@ -170,6 +177,7 @@ const RolesAndDepartments = () => {
           icon={<EditOutlined />}
           onClick={() => handleEditRole(record)}
           className={`${customBtn}`}
+          disabled={record.roleId === 1 && userData?.role?.roleId !== 1}
         >
           {t('edit')}
         </Button>
