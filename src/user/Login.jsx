@@ -58,7 +58,7 @@ const Login = () => {
     if (isLoggedIn) {
       navigate('/cudashboard');
     }
-  }, [isLoggedIn, navigate]);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

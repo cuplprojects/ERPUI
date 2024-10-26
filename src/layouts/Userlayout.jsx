@@ -44,7 +44,7 @@ const Userlayout = () => {
           </div>
           <div className={`flex-grow-1 d-fle m-2 p-3 `} style={{ zIndex: "3" }}>
             <Routes>
-              <Route path="/" element={<ProtectedRoute component={CuDashboard} permission="5"/>} />
+              <Route path="/" element={<Navigate to="/cudashboard" replace />} />
               <Route path="/cudashboard" element={<ProtectedRoute component={CuDashboard} permission="5"/>} />
               <Route path="/dashboard/:encryptedProjectId" element={<ProtectedRoute component={MainDashboard} permission="1"/>} />
               <Route path="/master" element={<ProtectedRoute component={Masters} permission="2"/>} />

@@ -34,8 +34,6 @@ const AuthService = {
     
     clearToken();
     actions.clearUserData();
-    localStorage.removeItem('userData');
-    localStorage.clear();
   },
 
   isLoggedIn: () => {

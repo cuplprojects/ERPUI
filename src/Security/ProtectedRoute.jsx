@@ -25,7 +25,6 @@ const ProtectedRoute = ({ component: Component, permission }) => {
 
   if (!token || !isTokenValid(token)) {
     logout();
-    return <Navigate to="/login" replace />;
   }
 
   if (permission && !hasPermission(permission)) {
