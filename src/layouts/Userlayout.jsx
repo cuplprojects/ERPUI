@@ -1,8 +1,8 @@
 import React from 'react';
 import { Row, Col } from 'react-bootstrap';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './../components/Navbar';
 import MainDashboard from './../pages/MainDashboard';
-import { Routes, Route } from 'react-router-dom';
 import Footer from '../components/Footer';
 import Masters from './../pages/Masters';
 import Features from './../pages/Features'
@@ -22,11 +22,12 @@ import Reports from '../pages/Reports';
 import { hasPermission } from '../CustomHooks/Services/permissionUtils';
 import CuDashboard from '../pages/CuDashboard';
 import SecurityQuestions from '../pages/SecurityQuestions';
+
 import AddProjectProcess from '../pages/AddProjectProcess';
 import Test from '../pages/Test';
+import ProtectedRoute from '../Security/ProtectedRoute';
 
 const Userlayout = () => {
-  //Theme Change Section
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
   const customDark = cssClasses[0];
@@ -46,30 +47,29 @@ const Userlayout = () => {
           <div className={`flex-grow-1 d-fle m-2 p-3 `} style={{ zIndex: "3" }}>
             <Routes>
 
-              {hasPermission('5') && <Route path="/cudashboard" element={<CuDashboard/>} />}
-              {hasPermission('1') && <Route path="/dashboard/:encryptedProjectId" element={<MainDashboard />} />}
-              {hasPermission('2') && <Route path="/master" element={<Masters />} />}
-              {hasPermission('2.4') && <Route path="/AddProjectProcess/:projectId" element={<AddProjectProcess />} />}
-              {hasPermission('2') && <Route path="/features" element={<Features />} />}
+              <Route path="/" element={<Navigate to="/cudashboard" replace />} />
+              <Route path="/cudashboard" element={<ProtectedRoute component={CuDashboard} permission="5"/>} />
+              <Route path="/dashboard/:encryptedProjectId" element={<ProtectedRoute component={MainDashboard} permission="1"/>} />
+              <Route path="/master" element={<ProtectedRoute component={Masters} permission="2"/>} />
+              <Route path="/AddProjectProcess/:projectId" element={<ProtectedRoute component={AddProjectProcess} permission="2.4"/>} />
+              <Route path="/features" element={<ProtectedRoute component={Features} permission="2"/>} />
+
 
               {/* --------------- User Menu Routes -------------- */}
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/settings" element={<UserSettings />} />
-              <Route path="/change-password" element={<ChangePassword />} />
+              <Route path="/profile" element={<ProtectedRoute component={Profile} permission="3"/>} />
+              <Route path="/settings" element={<ProtectedRoute component={UserSettings} permission="3"/>} />
+              <Route path="/change-password" element={<ProtectedRoute component={ChangePassword} permission="3"/>} />
 
-              <Route path="/test" element={<Test />} />
+              <Route path="/test" element={<ProtectedRoute component={Test} permission="3"/>} />
 
+              <Route path="/quantity-sheet-uploads/:encryptedProjectId" element={<ProtectedRoute component={QtySheetUpload} permission="2.4"/>} />
+              <Route path="/project-details/:encryptedProjectId/:encryptedLotNo" element={<ProtectedRoute component={ProcessTable} permission="2.4"/>} />
+              <Route path="/message" element={<ProtectedRoute component={Message} permission="3"/>} />
+              <Route path="/labels" element={<ProtectedRoute component={Labels} permission="3"/>} />
+              <Route path="/reports" element={<ProtectedRoute component={Reports} permission="3"/>} />
 
-
-
-              {(hasPermission('2.4') ) && <Route path="/quantity-sheet-uploads/:encryptedProjectId" element={<QtySheetUpload />} />}
-              {(hasPermission('2.4')) && <Route path="/project-details/:encryptedProjectId/:encryptedLotNo" element={<ProcessTable />} />}
-              {(hasPermission('3') ) && <Route path="/message" element={<Message />} />}
-              {(hasPermission('3')) && <Route path="/labels" element={<Labels />} />}
-              {(hasPermission('3')) && <Route path="/reports" element={<Reports />} />}
-
-
-              <Route path="/*" element={<PageNotFound />} />
+              <Route path="/*" element={<Navigate to="/404" replace />} />
+              <Route path="/404" element={<ProtectedRoute component={PageNotFound} permission="*" />} />
             </Routes>
           </div>
           <div className={`${customDark === 'dark-dark' ? "d-none" : ""} fixed-bottom w-100 border ${customMid}`} style={{ zIndex: "1", height: "150px", borderRadius: "20%  ", borderStyle: "wavy" }}></div>

@@ -69,8 +69,6 @@ const QtySheetUpload = () => {
             quantity: Number(item.Quantity) || 0,
             percentageCatch: Number(item.percentageCatch) || 0,
             projectId: projectId,
-
-            isOverridden: item.isOverridden === 'true',
             processId: [0],
         }));
 
@@ -119,8 +117,6 @@ const QtySheetUpload = () => {
                     console.log(t('rowDataMapped'), rowData);
 
                     rowData['projectId'] = projectId;
-
-                    rowData['isOverridden'] = 'false';
                     rowData['percentageCatch'] = '0';
                     return rowData;
                 });

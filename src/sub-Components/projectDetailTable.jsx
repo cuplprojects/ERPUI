@@ -22,7 +22,6 @@ import { MdPending } from "react-icons/md";// for pending
 import { IoCheckmarkDoneCircleSharp } from "react-icons/io5";// for completed
 const { Option } = Select;
 const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo, featureData, hasFeaturePermission}) => {
-console.log(tableData);
     //Theme Change Section
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = getCssClasses();
@@ -309,6 +308,7 @@ console.log(tableData);
     };
 
     const handleDropdownSelect = (action) => {
+        console.log(hasFeaturePermission(3));
         if (showOptions) {
             const selectedRow = tableData.find((row) => row.catchNumber === selectedRowKeys[0]);
             if (action === 'Alarm' && hasFeaturePermission(3)) {
@@ -653,6 +653,8 @@ console.log(tableData);
                 handleClose={() => setColumnModalShow(false)}
                 columnVisibility={columnVisibility}
                 setColumnVisibility={setColumnVisibility}
+                featureData={featureData}
+                hasFeaturePermission={hasFeaturePermission}
             />
             <AlarmModal
                 show={alarmModalShow}
