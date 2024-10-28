@@ -1,12 +1,52 @@
 import React, { useState } from 'react';
 import { Modal, Button, Form } from 'react-bootstrap';
+import API from '../CustomHooks/MasterApiHooks/api';
 
-const RemarksModal = ({ show, handleClose, handleSave , data }) => {
+const statusMapping = {
+    0: 'Pending',
+    1: 'Started',
+    2: 'Completed',
+};
+
+const RemarksModal = ({ show, handleClose, data, processId }) => {
     const [remarks, setRemarks] = useState('');
 
-    const handleSubmit = () => {
-        handleSave(remarks);
-        handleClose();
+    const handleSubmit = async() => {
+        try {
+            let existingTransactionData;
+            if (data.transactionId) {
+                // Fetch existing transaction data if transactionId exists
+                const response = await API.get(`/Transactions/${data.transactionId}`);
+                existingTransactionData = response.data;
+            }
+
+            const postData = {
+                transactionId: data.transactionId || 0,
+                interimQuantity: existingTransactionData ? existingTransactionData.interimQuantity : 0, // Retain existing quantity
+                remarks: remarks, // Retain existing remarks
+                projectId: data.projectId,
+                quantitysheetId: data.srNo || 0,
+                processId: processId,
+                zoneId: existingTransactionData ? existingTransactionData.zoneId : 0,
+                status: existingTransactionData ? existingTransactionData.status : 0, // Retain existing status
+                alarmId: existingTransactionData ? existingTransactionData.alarmId : 0,
+                lotNo: data.lotNo,
+                teamId: existingTransactionData ? existingTransactionData.teamId : 0,               
+            };
+
+            if (data.transactionId) {
+                // Update existing transaction
+                const response = await API.put(`/Transactions/${data.transactionId}`, postData);
+                console.log('Update Response:', response.data);
+            } else {
+                // Create a new transaction
+                const response = await API.post('/Transactions', postData);
+                console.log('Create Response:', response.data);
+            }
+            handleClose(); // Close modal
+        } catch (error) {
+            console.error('Error updating remarks:', error);
+        }
     };
 
     return (
@@ -21,13 +61,17 @@ const RemarksModal = ({ show, handleClose, handleSave , data }) => {
                             <span className="fw-bold">Catch No </span>: {data.catchNumber}
                         </div>
                         <div>
-                            <span className="fw-bold ">Status </span>:
-                            <span
-                                className={`fw-bold ${data.status === 'Pending' ? 'text-danger' : data.status === 'Started' ? 'text-primary' : data.status === 'Completed' ? 'text-success' : ''}`}
-                            >
-                                {data.status}
-                            </span>
-                        </div>
+                                <span className="fw-bold">Status </span>:
+                                <span
+                                    className={`fw-bold ${
+                                        data.status === 0 ? 'text-danger' :
+                                        data.status === 1 ? 'text-primary' :
+                                        data.status === 2 ? 'text-success' : ''
+                                    }`}
+                                >
+                                    {statusMapping[data.status]}
+                                </span>
+                            </div>
                     </div>
                 ) : (
                     <div>No data available</div>
