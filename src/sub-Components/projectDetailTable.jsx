@@ -14,25 +14,29 @@ import { PiDotsNineBold } from "react-icons/pi";
 import { RiSearchLine } from 'react-icons/ri';
 import { Col, Row } from 'react-bootstrap';
 import { FaEdit } from "react-icons/fa";
-import { FaFilter } from "react-icons/fa";
+import { FaFilter } from "react-icons/fa";//filter icon for table filter menu
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import { BiSolidFlag } from "react-icons/bi";
-import { MdPending } from "react-icons/md";
-import { IoCheckmarkDoneCircleSharp } from "react-icons/io5";
-
+import { MdPending } from "react-icons/md";// for pending
+import { IoCheckmarkDoneCircleSharp } from "react-icons/io5";// for completed
+import API from '../CustomHooks/MasterApiHooks/api';
 const { Option } = Select;
-
-const ProjectDetailsTable = ({ tableData, setTableData, projectId, lotNo, featureData, hasFeaturePermission }) => {
-    // Theme Change Section
+const ProjectDetailsTable = ({ tableData, setTableData, projectId, lotNo, featureData, hasFeaturePermission, processId }) => {
+    console.log(tableData);
+    //Theme Change Section
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = getCssClasses();
     const customDark = cssClasses[0];
     const customBtn = cssClasses[3];
     const customDarkText = cssClasses[4];
-
     const [initialTableData, setInitialTableData] = useState(tableData);
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+    const [columnVisibility, setColumnVisibility] = useState({
+        Alerts: false,
+        'Interim Quantity': false,
+        Remarks: false,
+    });
     const [hideCompleted, setHideCompleted] = useState(false);
     const [columnModalShow, setColumnModalShow] = useState(false);
     const [alarmModalShow, setAlarmModalShow] = useState(false);
@@ -50,59 +54,126 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, lotNo, featur
     const [catchDetailModalShow, setCatchDetailModalShow] = useState(false);
     const [catchDetailModalData, setCatchDetailModalData] = useState(null);
     const [selectZoneModalShow, setSelectZoneModalShow] = useState(false);
+    const [assignTeamModalShow, setAssignTeamModalShow] = useState(false);
     const [selectZoneModalData, setSelectZoneModalData] = useState(null);
+    const [assignTeamModalData, setAssignTeamModalData] = useState(null);
     const [showOnlyAlerts, setShowOnlyAlerts] = useState(false);
     const [showOnlyCompletedPreviousProcess, setShowOnlyCompletedPreviousProcess] = useState(true);
     const [showOnlyRemarks, setShowOnlyRemarks] = useState(false);
-    const [columnVisibility, setColumnVisibility] = useState({
-        Alerts: false,
-        'Interim Quantity': false,
-        Remarks: false,
-        'Team Assigned': false,
-    });
-    const [assignTeamModalShow, setAssignTeamModalShow] = useState(false);
-    const [assignTeamModalData, setAssignTeamModalData] = useState([]);
 
     useEffect(() => {
+        // Update the initialTableData state whenever tableData changes
         setInitialTableData(tableData);
     }, [tableData]);
 
     useEffect(() => {
         const newVisibleKeys = filteredData.map(item => item.catchNumber);
         setVisibleRowKeys(newVisibleKeys);
-    }, [searchText, hideCompleted]);
+    }, [searchText, hideCompleted]); // Add other dependencies if necessary
 
     const filteredData = tableData.filter(item =>
         Object.values(item).some(value =>
             value && value.toString().toLowerCase().includes(searchText.toLowerCase())
         )
-        && (!hideCompleted || item.status !== 'Completed')
+        && (!hideCompleted || item.status !== 2)
+        
     );
 
     useEffect(() => {
-        setShowOptions(selectedRowKeys.length > 0);
+        setShowOptions(selectedRowKeys.length === 1);
     }, [selectedRowKeys]);
 
-    const handleRowStatusChange = (catchNumber, newStatusIndex) => {
+    useEffect(() => {
+        fetchTransactions();
+    }, [projectId, processId]);
+
+
+    const fetchTransactions = async () => {
+        try {
+            const response = await API.get(`/Transactions?ProjectId=${projectId}&ProcessId=${processId}`);
+            const transactions = response.data || [];
+    
+            // Create a mapping of quantitysheetId to status, interimQuantity, and remarks
+            const statusMap = transactions.reduce((acc, transaction) => {
+                acc[transaction.quantitysheetId] = {
+                    status: transaction.status,
+                    alarmId:transaction.alarmMessage,
+                    interimQuantity: transaction.interimQuantity, // Map interim quantity
+                    remarks: transaction.remarks, // Map remarks
+                    transactionId: transaction.transactionId // Store the transactionId
+                };
+                return acc;
+            }, {});
+    
+            // Update tableData with the status, interimQuantity, and remarks from transactions
+            const updatedData = tableData.map(item => ({
+                ...item,
+                status: statusMap[item.srNo] ? statusMap[item.srNo].status : 0,
+                alerts: statusMap[item.srNo] ? statusMap[item.srNo].alarmId : "",
+                interimQuantity: statusMap[item.srNo] ? statusMap[item.srNo].interimQuantity : 0, // Add interim quantity
+                remarks: statusMap[item.srNo] ? statusMap[item.srNo].remarks : "", // Add remarks
+                transactionId: statusMap[item.srNo] ? statusMap[item.srNo].transactionId : null, // Add transactionId to each item
+            }));
+    
+            setTableData(updatedData);
+        } catch (error) {
+            console.error('Error fetching transactions:', error);
+        }
+    };
+    
+
+    const handleRowStatusChange = async (catchNumber, newStatusIndex) => {
+        console.log(`Toggling status for catch number ${catchNumber} to index ${newStatusIndex}`);
         const statusSteps = ["Pending", "Started", "Completed"];
         const newStatus = statusSteps[newStatusIndex];
-
-        const updatedData = tableData.map((row) => {
-            if (row.catchNumber === catchNumber) {
-                return { ...row, status: newStatus };
+    
+        const updatedRow = tableData.find(row => row.catchNumber === catchNumber);
+    
+        try {
+            // Fetch the existing transaction data if transactionId exists
+            let existingTransactionData;
+            if (updatedRow.transactionId) {
+                const response = await API.get(`/Transactions/${updatedRow.transactionId}`);
+                existingTransactionData = response.data;
             }
-            return row;
-        });
-
-        setTableData(updatedData);
+    
+            const postData = {
+                transactionId: updatedRow?.transactionId || 0, // Use the transactionId from the updated row
+                quantity: existingTransactionData ? existingTransactionData.quantity : 0,
+                remarks: existingTransactionData ? existingTransactionData.remarks : "",
+                projectId: projectId,
+                quantitysheetId: updatedRow?.srNo || 0,
+                processId: processId,
+                zoneId: 0,
+                status: newStatusIndex, // Change only this field
+                alarmId: existingTransactionData ? existingTransactionData.alarmId : 0,
+                lotNo: existingTransactionData ? existingTransactionData.lotNo : 0,
+                teamId: existingTransactionData ? existingTransactionData.teamId : 0,
+            };
+    
+            // Update or create the transaction
+            if (updatedRow.transactionId) {
+                // If it exists, update using PUT
+                const response = await API.put(`/Transactions/${updatedRow.transactionId}`, postData);
+                console.log('Update Response:', response.data);
+            } else {
+                // If it doesn't exist, create using POST
+                const response = await API.post('/Transactions', postData);
+                console.log('Create Response:', response.data);
+            }
+    
+            fetchTransactions(); // Refresh data
+        } catch (error) {
+            console.error('Error updating status:', error);
+        }
     };
-
+    
 
     const handleCatchClick = (record) => {
+        console.log('handleCatchClick called', record);
         setCatchDetailModalShow(true);
         setCatchDetailModalData(record);
     };
-
 
     const columns = [
         {
@@ -171,7 +242,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, lotNo, featur
                             <div>
                                 <button
                                     className="rounded border fs-6 custom-zoom-btn bg-white position-relative "
-                                    onClick={() => handleCatchClick(record)}
+                                    onClick={() => console.log('Detail:', record)}
                                 >
                                     {text}
                                 </button>
@@ -246,13 +317,6 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, lotNo, featur
             align: 'center',
             sorter: (a, b) => a.remarks.localeCompare(b.remarks),
         }] : []),
-        ...(columnVisibility['Team Assigned'] ? [{
-            title: 'Team Assigned',
-            dataIndex: 'teamAssigned',
-            key: 'teamAssigned',
-            align: 'center',
-            sorter: (a, b) => (a.teamAssigned || '').localeCompare(b.teamAssigned || ''),
-        }] : []),
         {
             title: 'Status',
             dataIndex: 'status',
@@ -260,8 +324,8 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, lotNo, featur
             width: '20%',
             align: 'center',
             render: (text, record) => {
-                const statusSteps = ["Pending", "Started", "Running", "Completed"];
-                const initialStatusIndex = statusSteps.indexOf(record.status);
+                const statusSteps = ["Pending", "Started", "Completed"];
+                const initialStatusIndex = text !== undefined ? text : 0;
                 return (
                     <>
                         <div className="d-flex justify-content-center">
@@ -271,7 +335,6 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, lotNo, featur
                                 statusSteps={[
                                     { status: "Pending", color: "red" },
                                     { status: "Started", color: "blue" },
-                                    { status: "Running", color: "orange" },
                                     { status: "Completed", color: "green" },
                                 ]}
                             />
@@ -282,36 +345,66 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, lotNo, featur
             sorter: (a, b) => a.status.localeCompare(b.status),
         }
     ];
-    const handleStatusChange = (newStatus) => {
-        const updatedData = tableData.map((row) => {
-            if (selectedRowKeys.includes(row.catchNumber)) {
-                let nextStatus;
-                switch (row.status) {
-                    case "Pending":
-                        nextStatus = "Started";
-                        break;
-                    case "Started":
-                        nextStatus = "Completed";
-                        break;
-                    default:
-                        nextStatus = row.status;
-                }
-                return { ...row, status: nextStatus };
-            }
-            return row;
-        });
-        setTableData(updatedData);
+
+    const clearSelections = () => {
         setSelectedRowKeys([]);
         setSelectAll(false);
         setShowOptions(false);
     };
-    const getSelectedStatus = () => {
-        if (selectedRowKeys.length > 1) {
+
+    const handleStatusChange = async (newStatus) => {
+        const statusSteps = ["Pending", "Started", "Completed"];
+        const newStatusIndex = statusSteps.indexOf(newStatus);
+
+        // Iterate over selectedRowKeys and update status
+        const updates = selectedRowKeys.map(async (key) => {
+            const updatedRow = tableData.find(row => row.catchNumber === key);
+            if (updatedRow) {
+                const postData = {
+                    transactionId: updatedRow.transactionId || 0,
+                    quantity: 0,
+                    remarks: updatedRow?.remarks || "",
+                    projectId: projectId,
+                    quantitysheetId: updatedRow?.srNo || 0,
+                    processId: processId,
+                    zoneId: 0,
+                    status: newStatusIndex,
+                    alarmId: 0,
+                    lotNo: updatedRow?.lotNo || 0,
+                    teamId: 0
+                };
+
+                try {
+                    // Update or create based on existence of transactionId
+                    if (updatedRow.transactionId) {
+                        await API.put(`/Transactions/${updatedRow.transactionId}`, postData);
+                    } else {
+                        await API.post('/Transactions', postData);
+                    }
+                } catch (error) {
+                    console.error(`Error updating status for ${key}:`, error);
+                }
+            }
+        });
+
+        // Wait for all updates to finish
+        await Promise.all(updates);
+        clearSelections()
+        fetchTransactions();        
+    };
+
+
+   const getSelectedStatus = () => {
+        if (selectedRowKeys.length > 0) {
             const selectedRows = tableData.filter((row) => selectedRowKeys.includes(row.catchNumber));
             const statuses = selectedRows.map((row) => row.status);
             const uniqueStatuses = [...new Set(statuses)];
+
+            // Check if all selected rows have the same status
             if (uniqueStatuses.length === 1) {
-                return uniqueStatuses[0];
+                const status = uniqueStatuses[0];
+                // If status is 0 (Pending), return 0; if 1 (Started), return 1; if 2 (Completed), return null
+                return status < 2 ? status : null;
             }
         }
         return null;
@@ -321,46 +414,32 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, lotNo, featur
         setHideCompleted(checked);
     };
 
-
     const handleDropdownSelect = (action) => {
-        if (selectedRowKeys.length > 0) {
-            const selectedRows = tableData.filter((row) => selectedRowKeys.includes(row.catchNumber));
-            switch (action) {
-                case 'Alarm':
-                    if (hasFeaturePermission(3)) {
-                        setAlarmModalShow(true);
-                        setAlarmModalData(selectedRows);
-                    }
-                    break;
-                case 'Interim Quantity':
-                    if (hasFeaturePermission(7)) {
-                        setInterimQuantityModalShow(true);
-                        setInterimQuantityModalData(selectedRows);
-                    }
-                    break;
-                case 'Remarks':
+        if (showOptions) {
+            const selectedRow = tableData.find((row) => row.catchNumber === selectedRowKeys[0]);            
+                if (action === 'Alarm' && hasFeaturePermission(3)) {
+                    setAlarmModalShow(true);
+                    setAlarmModalData(selectedRow); // Pass the selected row's data to the alarm modal
+                } else if (action === 'Interim Quantity' && hasFeaturePermission(7)) {
+                    setInterimQuantityModalShow(true);
+                    setInterimQuantityModalData(selectedRow); // Pass the selected row's data to the interim quantity modal
+                } else if (action === 'Remarks') {
                     setRemarksModalShow(true);
-                    setRemarksModalData(selectedRows);
-                    break;
-                case 'Select Zone':
-                    if (hasFeaturePermission(4)) {
-                        setSelectZoneModalShow(true);
-                        setSelectZoneModalData(selectedRows);
-                    }
-                    break;
-                case 'Assign Team':
-                    if (hasFeaturePermission(5) || true) {
-                        setAssignTeamModalShow(true);
-                        setAssignTeamModalData(selectedRows);
-                    }
-                    break;
-                default:
-                    break;
-            } 
-        } else {
-            alert("Please select at least one row.");
-        }
+                    setRemarksModalData(selectedRow); // Pass the selected row's data to the remarks modal
+                } else if (action === 'Select Zone' && hasFeaturePermission(4)) {
+                    setSelectZoneModalShow(true);
+                    setSelectZoneModalData(selectedRow); // Pass the selected row's data to the select zone modal
+                } else if (action === 'Assign Team' && hasFeaturePermission(5)) {
+                    setAssignTeamModalShow(true);
+                    setAssignTeamModalData(selectedRow); // Pass the selected row's data to the assign team modal
+                }
+            } else {
+                alert("Selected row not found.");
+            
+            }
     };
+    
+
     const handleSelectZoneSave = (zone) => {
         const updatedData = tableData.map((row) => {
             if (selectedRowKeys.includes(row.catchNumber)) {
@@ -369,105 +448,65 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, lotNo, featur
             return row;
         });
         setTableData(updatedData);
-        setSelectedRowKeys([]);
-        setShowOptions(false);
+        setSelectedRowKeys([]); // Deselect all rows
+        setShowOptions(false); // Reset options visibility
     };
+
     const handleAssignTeamSave = (team) => {
         const updatedData = tableData.map((row) => {
             if (selectedRowKeys.includes(row.catchNumber)) {
-                return { ...row, teamAssigned: team };
+                return { ...row, team };
             }
             return row;
         });
         setTableData(updatedData);
-        setSelectedRowKeys([]);
-        setShowOptions(false);
-        setAssignTeamModalShow(false);
-    };
-    const handleAlarmSave = (alarm) => {
-        const updatedData = tableData.map((row) => {
-            if (selectedRowKeys.includes(row.catchNumber)) {
-                return { ...row, alerts: alarm };
-            }
-            return row;
-        });
-        setTableData(updatedData);
-        setSelectedRowKeys([]);
-        setShowOptions(false);
+        setSelectedRowKeys([]); // Deselect all rows
+        setShowOptions(false); // Reset options visibility
     };
 
-    const handleInterimQuantitySave = (interimQuantity) => {
-        const updatedData = tableData.map((row) => {
-            if (selectedRowKeys.includes(row.catchNumber)) {
-                return { ...row, interimQuantity };
-            }
-            return row;
-        });
-        setTableData(updatedData);
-        setSelectedRowKeys([]);
-        setShowOptions(false);
-    };
-    const handleRemarksSave = (remarks) => {
-        const updatedData = tableData.map((row) => {
-            if (selectedRowKeys.includes(row.catchNumber)) {
-                return { ...row, remarks };
-            }
-            return row;
-        });
-        setTableData(updatedData);
-        setSelectedRowKeys([]);
-        setShowOptions(false);
-    };
+
+    const selectedRow = tableData.find((row) => row.catchNumber === selectedRowKeys[0]);
+    const isCompleted = selectedRow && selectedRow.status === 2; // Check if the selected row is completed
+    
     const menu = (
         <Menu>
-            {hasFeaturePermission(3) && (
-                <Menu.Item
-                    onClick={() => handleDropdownSelect('Alarm')}
-                    disabled={selectedRowKeys.length === 0}
-                >
+            {hasFeaturePermission(3) && !isCompleted && (
+                <Menu.Item onClick={() => handleDropdownSelect('Alarm')}>
                     Alarm
                 </Menu.Item>
             )}
-            {hasFeaturePermission(7) && (
-                <Menu.Item
-                    onClick={() => handleDropdownSelect('Interim Quantity')}
-                    disabled={selectedRowKeys.length === 0}
-                >
+            {hasFeaturePermission(7) && !isCompleted && (
+                <Menu.Item onClick={() => handleDropdownSelect('Interim Quantity')}>
                     Interim Quantity
                 </Menu.Item>
             )}
-            <Menu.Item
-                onClick={() => handleDropdownSelect('Remarks')}
-                disabled={selectedRowKeys.length === 0}
-            >
-                Remarks
-            </Menu.Item>
-            <Menu.Item onClick={() => setColumnModalShow(true)}>Columns</Menu.Item>
-            {hasFeaturePermission(4) && (
-                <Menu.Item
-                    onClick={() => handleDropdownSelect('Select Zone')}
-                    disabled={selectedRowKeys.length === 0}
-                >
-                    Select Zone
+            {!isCompleted && (
+                <Menu.Item onClick={() => handleDropdownSelect('Remarks')}>
+                    Remarks
                 </Menu.Item>
             )}
-             {(hasFeaturePermission(5) || true) && (
-                <Menu.Item
-                    onClick={() => handleDropdownSelect('Assign Team')}
-                    disabled={selectedRowKeys.length === 0}
-                >
-                    Assign Team
-                </Menu.Item>
-             )}
+            <Menu.Item onClick={() => setColumnModalShow(true)}>Columns</Menu.Item>
+            {hasFeaturePermission(4) && (
+                <Menu.Item onClick={() => handleDropdownSelect('Select Zone')}
+
+                disabled={selectedRowKeys.length === 0}>Select Zone</Menu.Item>
+            )}
+            {hasFeaturePermission(5) && (
+                <Menu.Item onClick={() => handleDropdownSelect('Assign Team')}
+
+                    disabled={selectedRowKeys.length === 0}>Assign Team</Menu.Item>
+            )}
         </Menu>
     );
+    
     const customPagination = {
+
         pageSize,
         pageSizeOptions: [5, 10, 25, 50, 100],
         showSizeChanger: true,
         onShowSizeChange: (current, size) => setPageSize(size),
         showTotal: (total) => `Total ${total} items`,
-        locale: { items_per_page: "Rows" },
+        locale: { items_per_page: "Rows" }, // Removes the "/page" text
         pageSizeRender: (props) => (
             <div style={{ display: "flex", alignItems: "center" }}>
                 <span style={{ marginRight: 8 }} className=''>Limit Rows:</span>
@@ -482,6 +521,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, lotNo, featur
         },
     };
 
+
     const rowClassName = (record, index) => {
         if (record.status === 'Pending') {
             return 'pending-row';
@@ -493,6 +533,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, lotNo, featur
             return '';
         }
     };
+
     const getStatusIndex = (status) => {
         switch (status) {
             case "Pending":
@@ -505,19 +546,20 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, lotNo, featur
                 return 0;
         }
     };
+
     const filteredDataAlert = tableData.filter((item) =>
         Object.values(item).some((value) =>
             value && value.toString().toLowerCase().includes(searchText.toLowerCase())
         )
-        && (!hideCompleted || item.status !== 'Completed')
+        && (!hideCompleted || item.status !== 2)
         && (!showOnlyAlerts || item.alerts)
         && (!showOnlyCompletedPreviousProcess || item.previousProcessStats === 'Completed')
         && (!showOnlyRemarks || item.remarks)
     );
+
     return (
         <>
             <Row>
-                {/* filter button */}
                 <Col lg={1} md={1} sx={2} className='d-flex justify-content- mt-md-1 mt-xs-1 mb-md-1 mb-xs-1'>
                     {hasFeaturePermission(6) && (
                         <Dropdown overlay={
@@ -592,21 +634,22 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, lotNo, featur
                         <div className="mt-1 d-flex align-items-center">
                             <span className={`me-2 ${customDark === 'dark-dark' ? 'text-white' : 'custom-theme-dark-text'} fs-6 fw-bold`}>Update Status: </span>
                             <StatusToggle
-                                initialStatusIndex={getStatusIndex(getSelectedStatus())}
-                                onStatusChange={(newIndex) => handleStatusChange(["Pending", "Started", "Completed"][newIndex])}
-                                statusSteps={[
-                                    { status: "Pending", color: "red" },
-                                    { status: "Started", color: "blue" },
-                                    { status: "Completed", color: "green" },
-                                ]}
-                            />
+                            initialStatusIndex={getSelectedStatus()} // Use the index returned by getSelectedStatus
+                            onStatusChange={(newIndex) => handleStatusChange(["Pending", "Started", "Completed"][newIndex])}
+                            statusSteps={[
+                                { status: "Pending", color: "red" },
+                                { status: "Started", color: "blue" },
+                                { status: "Completed", color: "green" },
+                            ]}
+                        />
                         </div>
                     )}
                 </Col>
 
+
                 {/* search box */}
                 <Col lg={5} md={6} xs={12}>
-                    <div className="d-flex justify-content-end align-items-center search-container mb-2">
+                    <div className="d-flex justify-content-end align-items-center search-container">
                         {searchVisible && (
                             <div className="search-box" style={{ position: 'relative', zIndex: "2" }}>
                                 {searchText && (
@@ -680,6 +723,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, lotNo, featur
                         dataSource={filteredData}
                         pagination={customPagination}
                         bordered
+
                         style={{ position: "relative", zIndex: "900" }}
                         striped={true}
                         tableLayout="auto"
@@ -691,25 +735,23 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, lotNo, featur
                 handleClose={() => setColumnModalShow(false)}
                 columnVisibility={columnVisibility}
                 setColumnVisibility={setColumnVisibility}
-                featureData={featureData}
-                hasFeaturePermission={hasFeaturePermission}
             />
             <AlarmModal
                 show={alarmModalShow}
                 handleClose={() => setAlarmModalShow(false)}
-                handleSave={handleAlarmSave}
+                processId={processId}
                 data={alarmModalData} // Pass the alarm modal data as a prop
             />
             <InterimQuantityModal
                 show={interimQuantityModalShow}
                 handleClose={() => setInterimQuantityModalShow(false)}
-                handleSave={handleInterimQuantitySave}
+                processId={processId}
                 data={interimQuantityModalData} // Pass the interim quantity modal data as a prop
             />
             <RemarksModal
                 show={remarksModalShow}
                 handleClose={() => setRemarksModalShow(false)}
-                handleSave={handleRemarksSave}
+                processId={processId}
                 data={remarksModalData} // Pass the remarks modal data as a prop
             />
             <CatchDetailModal
@@ -722,12 +764,14 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, lotNo, featur
                 handleClose={() => setSelectZoneModalShow(false)}
                 handleSave={handleSelectZoneSave}
                 data={selectZoneModalData}
+                processId={processId}
             />
             <AssignTeamModal
                 show={assignTeamModalShow}
                 handleClose={() => setAssignTeamModalShow(false)}
                 handleSave={handleAssignTeamSave}
                 data={assignTeamModalData}
+                processId={processId}
             />
         </>
     );

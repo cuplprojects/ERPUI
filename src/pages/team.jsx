@@ -33,12 +33,32 @@ const Team = () => {
 
   const getTeams = async () => {
     try {
-      const response = await API.get('https://localhost:7212/api/Teams'); // Updated API endpoint
-      setTeams(response.data); // Set the teams data from the API response
+        const response = await API.get('/Teams'); // Updated API endpoint to fetch teams
+        setTeams(response.data); // Set the teams data from the API response
+
+        // Map userIds to userNames
+        const userMap = {};
+        teams.forEach(team => {
+            team.users.forEach(user => {
+                userMap[user.id] = user.name; // Map userId to userName
+            });
+        });
+
+        // Update teams with userNames
+        const updatedTeams = teams.map(team => ({
+            ...team,
+            userNames: team.users.map(user => userMap[user.id] || '').join(', '), // Construct userNames from userIds
+        }));
+
+        setTeams(updatedTeams); // Set the updated teams with userNames
     } catch (error) {
-      console.error("Failed to fetch Teams", error); // Log the error for debugging
+        console.error("Failed to fetch Teams", error); // Log the error for debugging
+        notification.error({
+            message: 'Error',
+            description: 'Failed to fetch teams or user details. Please check the API endpoints.',
+        });
     }
-  };
+};
 
   const handleOk = async () => {
     form
@@ -55,7 +75,7 @@ const Team = () => {
         };
 
         try {
-          await API.post('https://localhost:7212/api/Teams', newTeam); // Send the request to create the team
+          await API.post('/Teams', newTeam); // Send the request to create the team
           setTeams([...teams, newTeam]); // Update the state with the new team
           setIsModalVisible(false);
           form.resetFields(); // Reset the form fields after submitting
@@ -80,7 +100,7 @@ const Team = () => {
     form.setFieldsValue({
       teamName: team.teamName,
       description: team.description,
-      teamMembers: team.userIds,
+      teamMembers: team.users.map(user => user.id),
     });
     setIsModalVisible(true);
   };
@@ -95,7 +115,7 @@ const Team = () => {
     };
 
     try {
-        await API.put(`https://localhost:7212/api/Teams/${teamId}`, updatedTeam); // Ensure the correct API endpoint is used
+        await API.put(`/Teams/${teamId}`, updatedTeam); // Ensure the correct API endpoint is used
         // Update the local state to reflect the new status
         setTeams(prevTeams => 
             prevTeams.map(team => (team.teamId === teamId ? updatedTeam : team))
@@ -126,7 +146,7 @@ const Team = () => {
         };
 
         try {
-          await API.put(`https://localhost:7212/api/Teams/${editingTeam.teamId}`, updatedTeam);
+          await API.put(`/Teams/${editingTeam.teamId}`, updatedTeam);
           setTeams(teams.map(team => (team.teamId === editingTeam.teamId ? updatedTeam : team)));
           setIsModalVisible(false);
           form.resetFields();
@@ -165,13 +185,13 @@ const Team = () => {
         dataIndex: 'userNames', // Use userNames from the API response
         key: 'userNames',
         render: (userNames) => (
-          <>
-            {userNames.split(', ').map((name, index) => (
-              <Tag key={index}>{name}</Tag> // Render user names in tags
-            ))}
-          </>
+            <>
+                {userNames ? userNames.split(', ').map((name, index) => (
+                    <Tag key={index}>{name}</Tag> // Render user names in tags
+                )) : <span>No members</span>} 
+            </>
         ),
-      },
+    },
       {
         title: 'Status',
         dataIndex: 'status',
@@ -196,14 +216,14 @@ const Team = () => {
 
     if (showDescription) {
       baseColumns.splice(2, 0, {
-        title: 'Description',
-        dataIndex: 'description',
-        key: 'description',
+          title: 'Description',
+          dataIndex: 'description',
+          key: 'description',
       });
-    }
+  }
 
-    return baseColumns;
-  }, [showDescription]);
+  return baseColumns;
+}, [showDescription]);
   useEffect(() => {
     getUsers();
     getTeams(); // Fetch teams when the component mounts
