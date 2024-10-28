@@ -11,6 +11,7 @@ import API from '../../CustomHooks/MasterApiHooks/api';
 import { AiFillCloseSquare } from "react-icons/ai";
 import { useTranslation } from 'react-i18next';
 import useUserDataStore from '../../store/userDataStore';
+import { hasPermission, useUserPermissions } from '../../CustomHooks/Services/permissionUtils';
 
 const RolesAndDepartments = () => {
   const { t } = useTranslation();
@@ -20,13 +21,20 @@ const RolesAndDepartments = () => {
   const [roles, setRoles] = useState([]);
   const [newRole, setNewRole] = useState({ roleId: 0, roleName: '', priorityOrder: 0, status: true, permissions: [] });
   const [isRoleModalVisible, setIsRoleModalVisible] = useState(false);
+  const [availablePermissions, setAvailablePermissions] = useState([]);
   const { userData } = useUserDataStore();
+  const rolePriorityOrder = userData?.role?.priorityOrder;
   
   const fetchRoles = async () => {
     try {
       const response = await API.get('/Roles');
       setRoles(response.data);
-      console.log(response.data); 
+      
+      // Get union of permissions from roles with higher or equal priority order
+      const higherOrderRoles = response.data.filter(role => role.priorityOrder >= rolePriorityOrder);
+      const unionPermissions = [...new Set(higherOrderRoles.flatMap(role => role.permissionList || []))];
+      setAvailablePermissions(unionPermissions);
+      console.log(unionPermissions);
     } catch (error) {
       console.error('Failed to fetch roles');
     }
@@ -55,6 +63,13 @@ const RolesAndDepartments = () => {
     const isPriorityOrderExists = roles.some(role => role.priorityOrder === newRole.priorityOrder && role.roleId !== newRole.roleId);
     if (isPriorityOrderExists) {
       message.error(t('Priority order must be unique'));
+      return;
+    }
+
+    // Validate that only available permissions are selected
+    const invalidPermissions = newRole.permissions.filter(p => !availablePermissions.includes(p));
+    if (invalidPermissions.length > 0) {
+      message.error(t('Invalid permissions selected'));
       return;
     }
   
@@ -96,12 +111,21 @@ const RolesAndDepartments = () => {
   };
 
   const handleEditRole = (role) => {
+    if (rolePriorityOrder >= role.priorityOrder) {
+      message.error(t('You cannot edit roles with equal or higher priority order'));
+      return;
+    }
     const defaultCheckedPermissions = role.permissionList || [];
     setNewRole({ ...role, permissions: defaultCheckedPermissions });
     setIsRoleModalVisible(true);
   };
 
   const handleRoleStatusChange = async (checked, roleId) => {
+    const role = roles.find(r => r.roleId === roleId);
+    if (rolePriorityOrder >= role.priorityOrder) {
+      message.error(t('You cannot change status of roles with equal or higher priority order'));
+      return;
+    }
     if (roleId === 1 && userData?.role?.roleId !== 1) {
       message.error(t('You do not have permission to change this role\'s status'));
       return;
@@ -130,39 +154,38 @@ const RolesAndDepartments = () => {
   };
 
   const handlePermissionChange = (checkedKeys) => {
-    setNewRole({ ...newRole, permissions: checkedKeys });
+    // Only allow permissions that are in availablePermissions
+    const validCheckedKeys = checkedKeys.filter(key => availablePermissions.includes(key));
+    setNewRole({ ...newRole, permissions: validCheckedKeys });
   };
 
   const roleColumns = [
     {
       align: 'center',
-      title: t('SN.'),
-      dataIndex: 'roleId',
+      title: t('order'),
+      dataIndex: 'priorityOrder',
       width: '15%',
+      sorter: (a, b) => a.priorityOrder - b.priorityOrder,
     },
     {
       title: t('Role Name'),
       dataIndex: 'roleName',
       width: '30%',
-    },
-    {
-      align: 'center',
-      title: t('order'),
-      dataIndex: 'priorityOrder',
-      width: '20%',
+      sorter: (a, b) => a.roleName.localeCompare(b.roleName),
     },
     {
       title: t('status'),
       dataIndex: 'status',
       align: 'center',
       width: '15%',
+      sorter: (a, b) => Number(a.status) - Number(b.status),
       render: (status, record) => (
         <Switch
           checked={record.status}
           onChange={(checked) => handleRoleStatusChange(checked, record.roleId)}
           checkedChildren={t('active')}
           unCheckedChildren={t('inactive')}
-          disabled={record.roleId === 1 && userData?.role?.roleId !== 1}
+          disabled={record.roleId === 1 && userData?.role?.roleId !== 1 || rolePriorityOrder >= record.priorityOrder}
         />
       ),
     },
@@ -177,7 +200,7 @@ const RolesAndDepartments = () => {
           icon={<EditOutlined />}
           onClick={() => handleEditRole(record)}
           className={`${customBtn}`}
-          disabled={record.roleId === 1 && userData?.role?.roleId !== 1}
+          disabled={(record.roleId === 1 && userData?.role?.roleId !== 1) || rolePriorityOrder >= record.priorityOrder }
         >
           {t('edit')}
         </Button>
@@ -199,9 +222,11 @@ const RolesAndDepartments = () => {
     >
       <div className={`d-flex justify-content-between align-items-center mb-3`}>
         <h2 className={`${customDarkText} m-0`}>{t('Role List')}</h2>
-        <Button onClick={onCreateRole} className={`${customBtn}`}>
-          {t('New Role')}
-        </Button>
+        {hasPermission('2.1.1.1') && (
+          <Button onClick={onCreateRole} className={`${customBtn}`}>
+            {t('New Role')}
+          </Button>
+        )}
       </div>
       <Table
         rowKey="roleId"
@@ -266,7 +291,11 @@ const RolesAndDepartments = () => {
               unCheckedChildren={t('inactive')}
             />
           </div>
-          <Permissions selectedPermissions={newRole.permissions} onChange={handlePermissionChange} />
+          <Permissions 
+            selectedPermissions={newRole.permissions} 
+            onChange={handlePermissionChange}
+            availablePermissions={availablePermissions} 
+          />
         </Modal.Body>
         <Modal.Footer className={`${customLight} ${customDarkText} ${customDark === "dark-dark" ? 'border border-top-0' : ''}`}>
           <Button onClick={handleRoleCancel}>

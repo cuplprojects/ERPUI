@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Nav, Offcanvas } from 'react-bootstrap';
 import {
   FaUsers, FaProjectDiagram, FaBell, FaUserPlus, FaUserCog, FaListUl,
-  FaCamera, FaCog, FaCaretDown, FaCaretLeft
+  FaCamera, FaCog, FaCaretDown,
+  FaCaretUp
 } from 'react-icons/fa';
 import { GiGears } from "react-icons/gi";
 import { RiMenuFold4Fill, RiUserSettingsFill } from "react-icons/ri";
@@ -87,20 +88,20 @@ const Sidebar = () => {
       ],
     },
     { key: 'group', icon: <FaUsers />, label: t('group'), permission: '2.2' },
-    { key: 'type', icon: <FaBookOpenReader />, label: t('projectType'), permission: '2.3' },
     { key: 'project', icon: <FaProjectDiagram />, label: t('project'), permission: '2.4' },
+    { key: 'type', icon: <FaBookOpenReader />, label: t('projectType'), permission: '2.3' },
     { key: 'zone', icon: <BiSolidCctv />, label: t('zone'), permission: '2.5' },
     { key: 'camera', icon: <FaCamera />, label: t('camera'), permission: '2.6' },
     { key: 'machine', icon: <GiGears />, label: t('productionMachines'), permission: '2.7' },
     { key: 'alarm', icon: <FaBell />, label: t('alarm'), permission: '2.8' },
-    { key: 'systemSettings', icon: <FaCog />, label: t('processSettings'), permission: '2.10' },
+    { key: 'systemSettings', icon: <FaCog />, label: t('processSettings'), permission: '2.9' },
     {
       key: 'developerTools',
       icon: <FaScrewdriverWrench />,
       label: t('developerTools'),
-      permission: '2.11',
+      permission: '2.10',
       children: [
-        { key: 'questions', icon: <BsQuestionSquareFill />, label: t('questions'), permission: '2.1.4' },
+        { key: 'questions', icon: <BsQuestionSquareFill />, label: t('questions'), permission: '2.10.1' },
       ],
     },
   ];
@@ -118,13 +119,15 @@ const Sidebar = () => {
       <React.Fragment key={menu.key}>
         <Nav.Link
           onClick={() => menu.children ? toggleDropdown(menu.key) : handleMenuClick(menu.key)}
-          className={`d-flex align-items-center ${customDark === "dark-dark" ? `sidebar-item-dark` : `sidebar-item`} ${selectedMenu === menu.key ? `active rounded-start rounded-end-5 ${customMid}` : `rounded-start rounded-end-5 text-dark`} hover:bg-my-hover-bg hover:text-my-hover-text`}
+          className={`d-flex align-items-center justify-content-between ${customDark === "dark-dark" ? `sidebar-item-dark` : `sidebar-item`} ${selectedMenu === menu.key ? `active rounded-start rounded-end-5 ${customMid}` : `rounded-start rounded-end-5 text-dark`} hover:bg-my-hover-bg hover:text-my-hover-text`}
         >
-          {React.cloneElement(menu.icon, { className: `${customDark === "dark-dark" ? `text-white` : customDarkText} menu-icon` })}
-          <span className={`${customDark === "dark-dark" ? `text-white` : customDarkText} ml-3 ${isOffcanvas ? '' : 'd-none d-md-block d-lg-block'}`}>{menu.label}</span>
+          <div className="d-flex align-items-center">
+            {React.cloneElement(menu.icon, { className: `${customDark === "dark-dark" ? `text-white` : customDarkText} menu-icon` })}
+            <span className={`${customDark === "dark-dark" ? `text-white` : customDarkText} ml-3 ${isOffcanvas ? '' : 'd-none d-md-block d-lg-block'}`}>{menu.label}</span>
+          </div>
           {menu.children && (
-            <span className="ml-auto">
-              {expandedMenus[menu.key] ? <FaCaretDown className={customDark === "dark-dark" ? `text-white` : customDarkText} size={25} /> : <FaCaretLeft className={customDark === "dark-dark" ? 'text-white' : customDarkText} size={25} />}
+            <span className="ms-3">
+              {expandedMenus[menu.key] ? <FaCaretUp className={customDark === "dark-dark" ? `text-white` : customDarkText} size={25} /> : <FaCaretDown className={customDark === "dark-dark" ? 'text-white' : customDarkText} size={25} />}
             </span>
           )}
         </Nav.Link>
@@ -152,7 +155,7 @@ const Sidebar = () => {
         </Col>
         <div className="small-sidebar d-lg-none">
           <button className={`mt-2 ${customDark === "dark-dark" ? `${customDark} ${customLightText} ${customLightBorder}` : `${customDark} ${customLightText} border-0`} p-1 rounded`} onClick={() => setShow(true)}>
-            <RiMenuFold4Fill size={25} />
+            <RiMenuFold4Fill size={25} /> 
           </button>
           <Offcanvas show={show} onHide={() => setShow(false)} placement="start" className={customDark === "dark-dark" ? customDark : customLight} style={{ width: '80%', zIndex: "9999" }}>
             <Offcanvas.Header closeButton={false} className={`${customDark} ${customLightText} d-flex justify-content-between`}>
@@ -176,13 +179,13 @@ const Sidebar = () => {
           {hasPermission('2.1.1') && selectedMenu === 'RolePage' && <RolesAndDepartments />}
           {hasPermission('2.1.2') && selectedMenu === 'addUser' && <AddUsers />}
           {hasPermission('2.1.3') && selectedMenu === 'allUsers' && <AllUsers />}
-          {hasPermission('2.1.4') && selectedMenu === 'questions' && <SecurityQuestions />}
+          {hasPermission('2.10.1') && selectedMenu === 'questions' && <SecurityQuestions />}
           {hasPermission('2.2') && selectedMenu === 'group' && <GroupManager />}
-          {hasPermission('2.3') && selectedMenu === 'type' && <Type />}
           {hasPermission('2.4') && selectedMenu === 'project' && <Project />}
+          {hasPermission('2.3') && selectedMenu === 'type' && <Type />}
           {hasPermission('2.5') && selectedMenu === 'zone' && <Zone />}
           {hasPermission('2.6') && selectedMenu === 'camera' && <CameraList />}
-          {hasPermission('2.10') && selectedMenu === 'systemSettings' && <SystemSettings />}
+          {hasPermission('2.9') && selectedMenu === 'systemSettings' && <SystemSettings />}
           {hasPermission('2.7') && selectedMenu === 'machine' && <Machine />}
           {hasPermission('2.8') && selectedMenu === 'alarm' && <AlarmMaster />}
         </Col>

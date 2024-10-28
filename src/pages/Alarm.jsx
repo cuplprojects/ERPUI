@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Table, Input, Button, message, Modal, Spin } from 'antd';
 import { v4 as uuidv4 } from 'uuid'; 
 import API from '../CustomHooks/MasterApiHooks/api';
+import { hasPermission } from '../CustomHooks/Services/permissionUtils';
 
 const AlarmMaster = () => {
   const [alarms, setAlarms] = useState([]);
@@ -11,6 +12,10 @@ const AlarmMaster = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  
+  const canaddalarm = hasPermission('2.8.1');
+  const caneditalarm = hasPermission('2.8.3');
+
 
   const fetchAlarms = async () => {
     setLoading(true);
@@ -111,7 +116,6 @@ const AlarmMaster = () => {
             value={editingValue}
             onChange={(e) => setEditingValue(e.target.value)}
             onPressEnter={() => handleEditSave(index)}
-            onBlur={() => handleEditSave(index)}
           />
         ) : (
           <span key={`message-${record.alarmId}`}>{text}</span> // Unique key for message span
@@ -125,11 +129,17 @@ const AlarmMaster = () => {
       render: (_, record, index) => (
         editingIndex === index ? (
           <>
-            <Button type="link" onClick={() => handleEditSave(index)}>Save</Button>
+            <Button type="primary" onClick={() => handleEditSave(index)}>Save</Button>
             <Button type="link" onClick={() => setEditingIndex(null)}>Cancel</Button>
           </>
         ) : (
-          <Button type="link" onClick={() => { setEditingIndex(index); setEditingValue(record.message); }}>Edit</Button>
+          <Button 
+            type="primary" 
+            onClick={() => { setEditingIndex(index); setEditingValue(record.message); }}
+            disabled={!caneditalarm}
+          >
+            Edit
+          </Button>
         )
       ),
       width: '20%',
@@ -140,9 +150,11 @@ const AlarmMaster = () => {
   return (
     <div style={{ padding: '20px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)' }}>
       <h2 style={{ marginBottom: '20px', textAlign: 'center' }}>Alarm Master</h2>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
-        <Button type="primary" onClick={() => setIsModalVisible(true)}>Add New Alarm</Button>
-      </div>
+      {canaddalarm && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
+          <Button type="primary" onClick={() => setIsModalVisible(true)}>Add New Alarm</Button>
+        </div>
+      )}
 
       {loading ? (
         <Spin />
