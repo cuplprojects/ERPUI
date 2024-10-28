@@ -4,6 +4,7 @@ import {
   FaUsers, FaProjectDiagram, FaBell, FaUserPlus, FaUserCog, FaListUl,
   FaCamera, FaCog, FaCaretDown, FaCaretLeft
 } from 'react-icons/fa';
+import { RiTeamFill } from "react-icons/ri";
 import { GiGears } from "react-icons/gi";
 import { RiMenuFold4Fill, RiUserSettingsFill } from "react-icons/ri";
 import { AiFillCloseSquare } from "react-icons/ai";
@@ -16,6 +17,7 @@ import Zone from './Zone'
 import Type from './Type';
 import AlarmMaster from './Alarm';
 import Machine from './ProductionMachine';
+import Team from './team';
 import './../styles/Sidebar.css';
 import AddUsers from '../sub-Components/addUsers';
 import AllUsers from '../sub-Components/allUsers';
@@ -27,6 +29,7 @@ import { useStore } from 'zustand';
 import { hasPermission } from '../CustomHooks/Services/permissionUtils';
 import { useTranslation } from 'react-i18next';
 import SecurityQuestions from './SecurityQuestions';
+import Teams from './team';
 
 const Sidebar = () => {
   const { t } = useTranslation();
@@ -89,6 +92,7 @@ const Sidebar = () => {
     { key: 'group', icon: <FaUsers />, label: t('group'), permission: '2.2' },
     { key: 'type', icon: <FaBookOpenReader />, label: t('projectType'), permission: '2.3' },
     { key: 'project', icon: <FaProjectDiagram />, label: t('project'), permission: '2.4' },
+    { key: 'teams', icon: <RiTeamFill />, label: t('teams'), permission: '2.4' },
     { key: 'zone', icon: <BiSolidCctv />, label: t('zone'), permission: '2.5' },
     { key: 'camera', icon: <FaCamera />, label: t('camera'), permission: '2.6' },
     { key: 'machine', icon: <GiGears />, label: t('productionMachines'), permission: '2.7' },
@@ -180,6 +184,7 @@ const Sidebar = () => {
           {hasPermission('2.2') && selectedMenu === 'group' && <GroupManager />}
           {hasPermission('2.3') && selectedMenu === 'type' && <Type />}
           {hasPermission('2.4') && selectedMenu === 'project' && <Project />}
+          {hasPermission('2.4') && selectedMenu === 'teams' && <Teams />}
           {hasPermission('2.5') && selectedMenu === 'zone' && <Zone />}
           {hasPermission('2.6') && selectedMenu === 'camera' && <CameraList />}
           {hasPermission('2.10') && selectedMenu === 'systemSettings' && <SystemSettings />}
