@@ -165,7 +165,6 @@ const Project = () => {
             value={editingName}
             onChange={(e) => setEditingName(e.target.value)}
             onPressEnter={() => handleEditSave(index)}
-            onBlur={() => handleEditSave(index)}
           />
         ) : (
           <a 
@@ -189,7 +188,6 @@ const Project = () => {
             value={editingDescription}
             onChange={(e) => setEditingDescription(e.target.value)}
             onPressEnter={() => handleEditSave(index)}
-            onBlur={() => handleEditSave(index)}
           />
         ) : (
           <span>{text}</span>

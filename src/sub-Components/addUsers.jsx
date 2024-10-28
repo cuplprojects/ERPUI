@@ -9,8 +9,11 @@ import { useStore } from 'zustand';
 import SuccessModal from './../menus/addedUserModal.jsx';
 import API from '../CustomHooks/MasterApiHooks/api.jsx';
 import { useTranslation } from 'react-i18next';
+import useUserDataStore from '../store/userDataStore.jsx';
 
 const AddUsers = () => {
+  const { userData } = useUserDataStore();
+  const rolePriorityOrder = userData?.role?.priorityOrder;
   const { t } = useTranslation();
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
@@ -103,7 +106,8 @@ const AddUsers = () => {
         const response = await API.get('/Roles');
         // Filter out roles with status false
         const activeRoles = response.data.filter(role => role.status === true);
-        setRoles(activeRoles);
+        const filterdata = activeRoles.filter(role => role.priorityOrder > rolePriorityOrder);
+        setRoles(filterdata);
       } catch (error) {
         console.error(t('failedToFetchRoles'), error);
       }

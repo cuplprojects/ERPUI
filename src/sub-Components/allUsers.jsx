@@ -2,8 +2,6 @@ import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { Table, Select, Input, Space, Button, Typography, Row, Col, Checkbox, Form, Dropdown, Menu, message } from 'antd';
 import { Card, Modal } from 'react-bootstrap';
 import { EyeOutlined, EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
-import 'antd/dist/reset.css';
-import 'bootstrap/dist/css/bootstrap.min.css';
 import { fetchUsers } from '../CustomHooks/ApiServices/userService';
 import API from '../CustomHooks/MasterApiHooks/api';
 import SampleUser from "./../assets/sampleUsers/defaultUser.jpg";
@@ -14,12 +12,15 @@ import { AiFillCloseSquare } from 'react-icons/ai';
 import { BsFunnelFill } from "react-icons/bs";
 import { MdDeleteForever } from "react-icons/md";
 import { useTranslation } from 'react-i18next';
+import useUserDataStore from '../store/userDataStore';
 const BaseUrl = import.meta.env.VITE_API_BASE_URL;
 
 const { Option } = Select;
 const { Title } = Typography;
 
 const AllUsers = () => {
+  const { userData } = useUserDataStore();
+  const rolePriorityOrder = userData?.role?.priorityOrder;
   const { t } = useTranslation();
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
@@ -95,12 +96,30 @@ const AllUsers = () => {
   }, []);
 
   const handleEdit = useCallback((record) => {
+    // Check if current user's role priority allows editing this user
+    const userRole = roles.find(role => role.roleId === record.roleId);
+    if(!hasPermission('2.1.1.3')){
+      message.error(t('noPermission'));
+      return;
+    } 
+    if (userRole && userRole.priorityOrder <= rolePriorityOrder) {
+      message.error(t('cannotEditHigherOrEqualRoleUser'));
+      return;
+    }
+    
     setEditingUserId(record.userId);
     setCurrentUserData({ ...record });
-  }, []);
+  }, [roles, rolePriorityOrder, t]);
 
   const handleSave = useCallback(async (record) => {
     try {
+      // Double check role permissions before saving
+      const userRole = roles.find(role => role.roleId === record.roleId);
+      if (userRole && userRole.priorityOrder <= rolePriorityOrder) {
+        message.error(t('cannotEditHigherOrEqualRoleUser'));
+        return;
+      }
+
       const updatedUser = {
         userId: record.userId,
         userName: currentUserData.userName,
@@ -131,7 +150,7 @@ const AllUsers = () => {
       console.error(t("errorUpdatingUser"), error);
       message.error(t('errorOccurredWhileUpdatingUser'));
     }
-  }, [users, currentUserData, t]);
+  }, [users, currentUserData, roles, rolePriorityOrder, t]);
 
   const handleCancel = useCallback(() => {
     setEditingUserId(null);
@@ -156,7 +175,7 @@ const AllUsers = () => {
     },
     {
       title: t('role'),
-      dataIndex: 'roleId',
+      dataIndex: 'roleId', 
       key: 'roleId',
       render: (text, record) => {
         const editable = record.userId === editingUserId;
@@ -166,9 +185,11 @@ const AllUsers = () => {
             onChange={(value) => setCurrentUserData(prev => ({ ...prev, roleId: value }))}
             style={{ width: '200px' }}
           >
-            {roles.map(role => (
-              <Option key={role.roleId} value={role.roleId}>{role.roleName}</Option>
-            ))}
+            {roles
+              .filter(role => role.priorityOrder > rolePriorityOrder)
+              .map(role => (
+                <Option key={role.roleId} value={role.roleId}>{role.roleName}</Option>
+              ))}
           </Select>
         ) : (
           roles.find(role => role.roleId === text)?.roleName || text
@@ -234,6 +255,9 @@ const AllUsers = () => {
       width: 200,
       render: (text, record) => {
         const editable = record.userId === editingUserId;
+        const userRole = roles.find(role => role.roleId === record.roleId);
+        const canEdit = userRole && userRole.priorityOrder > rolePriorityOrder;
+
         return editable ? (
           <Space>
             <Button
@@ -261,19 +285,21 @@ const AllUsers = () => {
             >
               {t('view')}
             </Button>
-            <Button
-              icon={<EditOutlined />}
-              onClick={() => handleEdit(record)}
-              type="primary"
-              className={`${customDark}  border-1 ${customLightText}  ${customDarkBorder}`}
-            >
-              {t('edit')}
-            </Button>
+            {canEdit && (
+              <Button
+                icon={<EditOutlined />}
+                onClick={() => handleEdit(record)}
+                type="primary"
+                className={`${customDark}  border-1 ${customLightText}  ${customDarkBorder}`}
+              >
+                {t('edit')}
+              </Button>
+            )}
           </Space>
         );
       },
     },
-  ].filter(Boolean), [visibleColumns, isValidImageUrl, editingUserId, currentUserData, handleSave, handleCancel, customBtn, roles, t]);
+  ].filter(Boolean), [visibleColumns, isValidImageUrl, editingUserId, currentUserData, handleSave, handleCancel, customBtn, roles, rolePriorityOrder, t]);
 
   const showUserDetails = useCallback((user) => {
     setCurrentUser(user);
