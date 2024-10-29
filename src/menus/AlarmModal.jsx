@@ -9,7 +9,7 @@ const statusMapping = {
     2: 'Completed',
 };
 
-const AlarmModal = ({ show, handleClose, handleSave, data, processId }) => {
+const AlarmModal = ({ show, handleClose, data, processId, handleSave }) => {
     console.log(data);
     const [alarmType, setAlarmType] = useState('');
     const [alarmId, setAlarmId] = useState(null); // State to hold selected alarmId
@@ -54,7 +54,7 @@ const AlarmModal = ({ show, handleClose, handleSave, data, processId }) => {
                 projectId: data.projectId,
                 quantitysheetId: data.srNo || 0,
                 processId: processId,
-                zoneId: 0,
+                zoneId: existingTransactionData ? existingTransactionData.zoneId : 0,
                 status: existingTransactionData ? existingTransactionData.status : 0, // Retain existing status
                 alarmId: alarmId,
                 lotNo: data.lotNo,
@@ -70,8 +70,7 @@ const AlarmModal = ({ show, handleClose, handleSave, data, processId }) => {
                 const response = await API.post('/Transactions', postData);
                 console.log('Create Response:', response.data);
             }
-
-            handleSave(); // Call save function after successful API call
+            handleSave(alarmId)
             handleClose(); // Close modal
             setAlarmType('');
             setAlarmId(null); // Reset alarmId

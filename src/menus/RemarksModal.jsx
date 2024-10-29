@@ -8,8 +8,9 @@ const statusMapping = {
     2: 'Completed',
 };
 
-const RemarksModal = ({ show, handleClose, data, processId }) => {
+const RemarksModal = ({ show, handleClose, data, processId,handleSave }) => {
     const [remarks, setRemarks] = useState('');
+    
 
     const handleSubmit = async() => {
         try {
@@ -43,6 +44,7 @@ const RemarksModal = ({ show, handleClose, data, processId }) => {
                 const response = await API.post('/Transactions', postData);
                 console.log('Create Response:', response.data);
             }
+            handleSave(remarks)
             handleClose(); // Close modal
         } catch (error) {
             console.error('Error updating remarks:', error);

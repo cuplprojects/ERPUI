@@ -8,7 +8,7 @@ const statusMapping = {
     2: 'Completed',
 };
 
-const InterimQuantityModal = ({ show, handleClose, handleSave, data, processId }) => {
+const InterimQuantityModal = ({ show, handleClose, data, processId, handleSave }) => {
     const [interimQuantity, setInterimQuantity] = useState('');
 
     const handleSubmit = async () => {
@@ -49,8 +49,7 @@ const InterimQuantityModal = ({ show, handleClose, handleSave, data, processId }
                 const response = await API.post('/Transactions', postData);
                 console.log('Create Response:', response.data);
             }
-
-            handleSave(interimQuantity); // Call save function after successful API call
+            handleSave(interimQuantity);
             handleClose(); // Close modal
         } catch (error) {
             console.error('Error updating interim quantity:', error);
