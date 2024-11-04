@@ -22,7 +22,6 @@ import { MdPending } from "react-icons/md";// for pending
 import { IoCheckmarkDoneCircleSharp } from "react-icons/io5";// for completed
 import API from '../CustomHooks/MasterApiHooks/api';
 
-
 const { Option } = Select;
 const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePermission, processId }) => {
     console.log(tableData);
@@ -97,7 +96,6 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
         try {
             const response = await API.get(`/Transactions?ProjectId=${projectId}&ProcessId=${processId}`);
             const transactions = response.data || [];
-
             // Create a mapping of quantitysheetId to status, interimQuantity, and remarks
             const statusMap = transactions.reduce((acc, transaction) => {
                 acc[transaction.quantitysheetId] = {
@@ -119,7 +117,6 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                 remarks: statusMap[item.srNo] ? statusMap[item.srNo].remarks : "", // Add remarks
                 transactionId: statusMap[item.srNo] ? statusMap[item.srNo].transactionId : null, // Add transactionId to each item
             }));
-
             setTableData(updatedData);
         } catch (error) {
             console.error('Error fetching transactions:', error);
@@ -155,7 +152,6 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                 lotNo: existingTransactionData ? existingTransactionData.lotNo : 0,
                 teamId: existingTransactionData ? existingTransactionData.teamId : 0,
             };
-
             // Update or create the transaction
             if (updatedRow.transactionId) {
                 // If it exists, update using PUT
@@ -166,7 +162,6 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                 const response = await API.post('/Transactions', postData);
                 console.log('Create Response:', response.data);
             }
-
             fetchTransactions(); // Refresh data
         } catch (error) {
             console.error('Error updating status:', error);
@@ -331,7 +326,6 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
             render: (text, record) => {
                 const statusSteps = ["Pending", "Started", "Completed"];
                 const initialStatusIndex = text !== undefined ? text : 0;
-
                 // Check if the record has alerts
                 const hasAlerts = record.alerts && record.alerts.length > 0;
 
@@ -419,7 +413,6 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
             const selectedRows = tableData.filter((row) => selectedRowKeys.includes(row.catchNumber));
             const statuses = selectedRows.map((row) => row.status);
             const uniqueStatuses = [...new Set(statuses)];
-
             // Check if all selected rows have the same status
             if (uniqueStatuses.length === 1) {
                 const status = uniqueStatuses[0];
@@ -459,7 +452,6 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
         }
     };
 
-
     const handleSelectZoneSave = (zone) => {
         const updatedData = tableData.map((row) => {
             if (selectedRowKeys.includes(row.catchNumber)) {
@@ -488,7 +480,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
 
     const handleAlarmSave = (alarm) => {
         const updatedData = tableData.map((row) => {
-            if (selectedRowKeys.includes(row.catchNumber)) { // Use catchNumber for comparison
+            if (selectedRowKeys.includes(row.catchNumber)) {
                 return { ...row, alerts: alarm };
             }
             return row;
@@ -765,7 +757,6 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                         dataSource={filteredData}
                         pagination={customPagination}
                         bordered
-
                         style={{ position: "relative", zIndex: "900" }}
                         striped={true}
                         tableLayout="auto"
