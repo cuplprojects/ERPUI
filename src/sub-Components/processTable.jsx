@@ -140,7 +140,7 @@ const ProcessTable = () => {
                         isOverridden: item?.isOverridden,
                         processId: item?.processId || [],
 
-                        status: item?.status || "Pending",
+                        status: item?.status || 0,
                         alerts: "",
                         interimQuantity: "0",
                         remarks: "",
@@ -359,14 +359,13 @@ const ProcessTable = () => {
                         <Col lg={9} md={8} className="ps-0">
                             {tableData?.length > 0 && (
                                 <div className="table-container">
-                                    <ProjectDetailsTable tableData={combinedTableData} setTableData={setTableData} projectId={id} lotNo={selectedLot} featureData={featureData} hasFeaturePermission={hasFeaturePermission}/>
+                                    <ProjectDetailsTable tableData={combinedTableData} setTableData={setTableData} projectId={id} lotNo={selectedLot} featureData={featureData} hasFeaturePermission={hasFeaturePermission} projectLots={projectLots}/>
                                 </div>
                             )}
                         </Col>
                     </Row>
 
                 </Col>
-                <Col lg={2} md={0} ></Col>
 
             </Row>
             <Row className='mb-4 d-flex justify-content-between'>
