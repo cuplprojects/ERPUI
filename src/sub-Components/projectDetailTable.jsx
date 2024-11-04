@@ -23,6 +23,7 @@ import { IoCheckmarkDoneCircleSharp } from "react-icons/io5";// for completed
 import API from '../CustomHooks/MasterApiHooks/api';
 
 const { Option } = Select;
+
 const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePermission, processId }) => {
     console.log(tableData);
     //Theme Change Section
@@ -768,6 +769,8 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                 handleClose={() => setColumnModalShow(false)}
                 columnVisibility={columnVisibility}
                 setColumnVisibility={setColumnVisibility}
+                featureData={featureData}
+                hasFeaturePermission={hasFeaturePermission}
             />
             <AlarmModal
                 show={alarmModalShow}

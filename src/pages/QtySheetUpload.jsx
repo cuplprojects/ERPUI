@@ -116,7 +116,8 @@ const QtySheetUpload = () => {
                             (property === 'quantity' ? parseFloat(row[index]) || 0 : String(row[index])) : '';
                     }
                     console.log(t('rowDataMapped'), rowData);
-                    rowData['projectId'] = projectId;                 
+
+                    rowData['projectId'] = projectId;
                     rowData['percentageCatch'] = '0';
                     return rowData;
                 });

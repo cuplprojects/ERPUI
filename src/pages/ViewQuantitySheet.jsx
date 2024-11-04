@@ -31,7 +31,6 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
         quantity: 0,
         percentageCatch: 0,
         projectId: projectId,
-        isOverridden: false,
     });
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [itemToDelete, setItemToDelete] = useState(null);
@@ -293,7 +292,6 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
                 quantity: parseInt(newRowData.quantity, 10),
                 percentageCatch: 0,
                 projectId: projectId,
-                isOverridden: false,
                 processId: [],
             }
         ];
@@ -316,7 +314,6 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
                 quantity: 0,
                 percentageCatch: 0,
                 projectId: projectId,
-                isOverridden: false,
             });
             fetchQuantity(selectedLotNo);
         } catch (error) {
