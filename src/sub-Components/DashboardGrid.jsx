@@ -56,6 +56,8 @@ const DashboardGrid = () => {
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}
           onGridReady={onGridReady}
+          paginationPageSize={5}
+          pagination={true}
         />
       </div>
     </div>

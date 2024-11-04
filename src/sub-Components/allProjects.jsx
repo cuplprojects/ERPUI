@@ -19,6 +19,7 @@ import { useStore } from 'zustand';
 import { IoMdArrowDroprightCircle } from "react-icons/io";
 import { IoMdArrowDropleftCircle } from "react-icons/io";
 import API from '../CustomHooks/MasterApiHooks/api';
+import { decrypt, encrypt } from "../Security/Security";
 
 Chart.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip);
 
@@ -64,20 +65,22 @@ const ProjectChart = ({ title, chartKey, chartdata, onClick, tCatch, type }) => 
 );
 
 const AllProjects = () => {
-  const { projectId } = useParams();
+  const { encryptedProjectId } = useParams();
+  const projectId = decrypt(encryptedProjectId);
   const [lotsData, setLotsData] = useState([]);
 
   const { getCssClasses } = useStore(themeStore);
-  const cssClasses = getCssClasses();
-  const customDark = cssClasses[0];
-  const customMid = cssClasses[1];
-  const customLight = cssClasses[2];
-  const customBtn = cssClasses[3];
-  const customDarkText = cssClasses[4];
-  const customLightText = cssClasses[5]
-  const customLightBorder = cssClasses[6]
-  const customDarkBorder = cssClasses[7]
-  const customThead = cssClasses[8]
+  const [
+    customDark,
+    customMid, 
+    customLight,
+    customBtn,
+    customDarkText,
+    customLightText,
+    customLightBorder,
+    customDarkBorder,
+    customThead
+  ] = getCssClasses();
 
   const [selectedChart, setSelectedChart] = useState({
     label: "",
@@ -117,7 +120,7 @@ const AllProjects = () => {
   };
 
   const handleTitleClick = (project) => {
-    navigate(`/project-details/${projectId}/${project.lotNumber}`, { state: { project, projectId } });
+    navigate(`/project-details/${encrypt(projectId)}/${encrypt(project.lotNumber)}`, { state: { project, projectId } });
   };
 
   const handleBarClick = (elements) => {
@@ -152,6 +155,7 @@ const AllProjects = () => {
     const fetchProjectName = async () => {
       try {
         const response = await API.get(`/Project/${projectId}`);
+        console.log(response.data);
         setProjectName(response.data.name);
         setType(response.data.projectType);
       } catch (error) {

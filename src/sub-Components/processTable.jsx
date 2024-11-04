@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
 import { useLocation, useParams } from 'react-router-dom';
 import { Card, Spinner, Row, Col } from 'react-bootstrap'; // Import Bootstrap components
 import ProjectDetailsTable from './projectDetailTable'; // Import the new component
-import dummyData from "../store/dd.json";
+
 
 import StatusPieChart from "./StatusPieChart";
 import StatusBarChart from "./StatusBarChart";
@@ -14,16 +14,31 @@ import AlertBadge from "./AlertBadge";
 import CatchDetailModal from '../menus/CatchDetailModal';
 import themeStore from '../store/themeStore';
 import { useStore } from 'zustand';
-import { MdPending } from "react-icons/md";
+import { MdPending, MdCloudUpload } from "react-icons/md";
 import { Link } from 'react-router-dom';
 
-import { MdCloudUpload } from "react-icons/md";//upload icon
+
 import { FaRegHourglassHalf } from "react-icons/fa6";//pre process running
+
 import API from '../CustomHooks/MasterApiHooks/api';
+import { useUserData } from '../store/userDataStore';
+import { getProjectProcessAndFeature, getProjectProcessByProjectAndSequence } from '../CustomHooks/ApiServices/projectProcessAndFeatureService';
+import useCurrentProcessStore from '../store/currentProcessStore';
+import { decrypt } from "../Security/Security";
 
 
 const ProcessTable = () => {
+    
+    const { encryptedProjectId, encryptedLotNo } = useParams();
+    const id = decrypt(encryptedProjectId);
+    const lotNo = decrypt(encryptedLotNo);
+    const [featureData, setFeatureData] = useState(null);
+    const { processId, processName } = useCurrentProcessStore();
+    const { setProcess, clearProcess } = useCurrentProcessStore((state) => state.actions);
+    const userData = useUserData();
+
     const { getCssClasses } = useStore(themeStore);
+    const cssClasses = useMemo(() => getCssClasses(), [getCssClasses]);
     const [
       customDark,
       customMid, 
@@ -33,26 +48,71 @@ const ProcessTable = () => {
       customLightText,
       customLightBorder,
       customDarkBorder
-    ] = getCssClasses();
+    ] = cssClasses;
 
     const location = useLocation();
 
-    const { id, lotNo } = useParams();
 
     const [tableData, setTableData] = useState([]);
     const [showBarChart, setShowBarChart] = useState(true);
     const [catchDetailModalShow, setCatchDetailModalShow] = useState(false);
     const [catchDetailModalData, setCatchDetailModalData] = useState(null);
-    const [previousProcessPercentage, setPreviousProcessPercentage] = useState(90);
-
+    const [selectedLot, setSelectedLot] = useState(lotNo);
     const [projectName, setProjectName] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [errorMessage, setErrorMessage] = useState(null);
+    const [projectLots, setProjectLots] = useState([]);
+    const [previousProcess, setPreviousProcess] = useState(null);
+   
+    const fetchData = useCallback(async () => {
+        if (userData && userData.userId && id !== processId) {
+            setIsLoading(true);
+            try {
+                const data = await getProjectProcessAndFeature(userData.userId, id);
+                if (Array.isArray(data) && data.length > 0) {
+                    const process = data[0];
+                    setProcess(process.processId, process.processName);
+                    setFeatureData(process);
+
+                    // Fetch previous process
+                    if (process.sequence > 1) {
+                        const previousProcessData = await getProjectProcessByProjectAndSequence(id, process.sequence - 1);
+                        setPreviousProcess(previousProcessData);
+                    }
+                } else {
+                    console.warn("No process data available or unexpected data format received");
+                    setProcess(0, "Unknown Process");
+                    setFeatureData([]);
+                }
+            } catch (error) {
+                console.error("Error fetching project process data:", error);
+                setErrorMessage("Failed to load process data. Using default values.");
+                setProcess(0, "Unknown Process");
+                setFeatureData([]);
+            } finally {
+                setIsLoading(false);
+            }
+        }
+    }, [userData, id, processId, setProcess]);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
+
+    const hasFeaturePermission = (featureId) => {
+        if (featureData && featureData?.featuresList) {
+            return featureData?.featuresList?.includes(featureId);
+        }
+        return false;
+    }
+
 
     useEffect(() => {
         const fetchQuantitySheet = async () => {
             try {
-                const response = await API.get(`/QuantitySheet/Catch?ProjectId=${id}&lotNo=${lotNo}`);
+
+                const response = await API.get(`/QuantitySheet/CatchByproject?ProjectId=${id}`);
                 const quantitySheetData = response.data;
-                console.log('API response:', quantitySheetData);
                 
                 if (Array.isArray(quantitySheetData) && quantitySheetData.length > 0) {
                     const formDataGet = quantitySheetData.map((item) => ({
@@ -63,30 +123,34 @@ const ProcessTable = () => {
                         subject: item?.subject,
                         outerEnvelope: item?.outerEnvelope,
                         innerEnvelope: item?.innerEnvelope,
-                        lotNo:item?.lotNo,
+                        lotNo: item?.lotNo,
                         quantity: item?.quantity,
                         percentageCatch: item?.percentageCatch,
                         projectId:item?.projectId,
-                        isOverridden: item?.isOverridden,
                         processId: item?.processId || [],
-                        status: item?.status ||  "Pending",//to be fetched later from backend
-                        alerts: "",//to be fetched later from backend
-                        interimQuantity: "0",//to be fetched later from backend
-                        remarks: "",//to be fetched later from backend
-                        previousProcessStats: "",//to be fetched later from backend
+                        status: item?.status || "Pending",
+                        alerts: "",
+                        interimQuantity: "0",
+                        remarks: "",
+                        previousProcessStats: "",
+
                     }));
-                    console.log('Formatted data:', formDataGet);
                     setTableData(formDataGet); // Set the table data only here
+
+                    // Extract unique lot numbers and set projectLots
+                    const uniqueLots = [...new Set(formDataGet.map(item => item.lotNo))];
+                    setProjectLots(uniqueLots.map(lotNo => ({ lotNo })));
                 } else {
                     console.error("API response is not an array or is empty");
                     setTableData([]); // Set to empty only if there's no data
+                    setProjectLots([]); // Set projectLots to empty array
                 }
             } catch (error) {
                 console.error("Error fetching quantity sheet data:", error);
                 setTableData([]); // Set to empty on error
+                setProjectLots([]); // Set projectLots to empty array on error
             }
         };
-
         fetchQuantitySheet();
     }, [id, lotNo]);
       
@@ -95,7 +159,6 @@ const ProcessTable = () => {
             try {
                 const response = await API.get(`/Project/${id}`);
                 const projectData = response.data;
-                console.log(projectData)
                 setProjectName(projectData.name);
                 // You can set other project details here if needed
             } catch (error) {
@@ -107,13 +170,13 @@ const ProcessTable = () => {
     }, [id]);
 
 
-    
+
     const handleToggleChange = () => {
         setShowBarChart(!showBarChart);
     };
 
-    // Render a loading state while fetching the project data
-    if (!projectName) {
+
+    if (isLoading) {
 
         return (
             <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
@@ -124,22 +187,30 @@ const ProcessTable = () => {
     }
 
     const handleCatchClick = (record) => {
-        console.log('handleCatchClick called', record);
         setCatchDetailModalShow(true);
         setCatchDetailModalData(record);
     };
 
     const handleLotClick = (lot) => {
-        setSelectedLot(lot === selectedLot ? null : lot);
+        setSelectedLot(lot);
     };
 
     const catchNumbers = tableData.map((item) => item.catchNumber).sort((a, b) => a - b);
 
-    // console.log(tableData);
+    const filteredTableData = selectedLot
+        ? tableData.filter(item => item.lotNo === selectedLot)
+        : tableData;
 
-    let activeUser, activeUserProcess, currentIndex, currentProcess, previousProcess;
-
-
+    // Combine entries with the same catch number and sum their quantities
+    const combinedTableData = filteredTableData.reduce((acc, item) => {
+        const existingItem = acc.find(i => i.catchNumber === item.catchNumber);
+        if (existingItem) {
+            existingItem.quantity += item.quantity;
+        } else {
+            acc.push({ ...item });
+        }
+        return acc;
+    }, []);
 
     return (
         <div className="container-fluid" >
@@ -152,7 +223,7 @@ const ProcessTable = () => {
                                     <div className="center-head d-flex justify-content-center">
 
                                         <span className='text-center fs-4 me-3'>{projectName}</span>
-                                        <span className='text-center fs-4'>Lot - {lotNo}</span>
+                                        <span className='text-center fs-4'>Lot - {selectedLot}</span>
 
                                     </div>
                                 </Col>
@@ -160,7 +231,7 @@ const ProcessTable = () => {
                                     <hr className='w-100 center' />
                                 </div>
 
-                                {activeUserProcess === 'preProQC' ? (
+                                {processName === 'preProQC' ? (
                                     <Col lg={3} md={4} xs={12} className='d-flex justify-content-center'>
                                         <Link to="/quantity-sheet-uploads" className={`${customMid} ${customDarkText} ${customLightBorder} border-3 p1 rounded d-flex align-items-center p-1 text-decoration-none shadow-lg`}>
                                             <span>
@@ -176,7 +247,7 @@ const ProcessTable = () => {
                                         <div className={` align-items-center flex-column`}>
                                             <div className='text-center fs-5'>Previous Process </div>
                                             <div className={`p-1  fs-6 text-primary border ${customDarkBorder} rounded ms-1 d-flex justify-content-center align-items-center ${customDark === 'dark-dark' ? `${customBtn} text-white` : `${customLight} bg-light`}`} style={{ fontWeight: 900 }}> 
-                                                {previousProcess} - {previousProcessPercentage}%
+                                                {previousProcess ? `${previousProcess.processName} - ${previousProcess.completionPercentage}%` : 'N/A'}
                                                 <span className='ms-2'>
                                                     <FaRegHourglassHalf color='blue' size="20" />
                                                 </span>
@@ -191,14 +262,14 @@ const ProcessTable = () => {
                                     <div className="center-head ">
 
                                         <div className='text-center fs-4'>{projectName}</div>
-                                        <div className='text-center fs-4'>Lot - {lotNo}</div>
+                                        <div className='text-center fs-4'>Lot - {selectedLot}</div>
 
                                     </div>
                                 </Col>
                                 <Col lg={3} md={4} xs={12}>
                                     <div className={`align-items-center flex-column`}>
                                         <div className='text-center fs-5'>Current Process </div>
-                                        <div className={`p-1  fs-6 text-primary border ${customDarkBorder} rounded ms-1 d-flex justify-content-center align-items-center ${customDark === 'dark-dark' ? `${customBtn} text-white` : `${customLight} bg-light text-danger`}`} style={{ fontWeight: 900 }}>{currentProcess}
+                                        <div className={`p-1  fs-6 text-primary border ${customDarkBorder} rounded ms-1 d-flex justify-content-center align-items-center ${customDark === 'dark-dark' ? `${customBtn} text-white` : `${customLight} bg-light text-danger`}`} style={{ fontWeight: 900 }}>{processName}
                                             <span className='ms-2'>
                                                 <MdPending color='red' size="25" />
                                             </span>
@@ -232,16 +303,49 @@ const ProcessTable = () => {
             </Row>
             <Row className='mb-5'>
                 <Col lg={12} md={12}>
-                    <CatchProgressBar data={tableData} />
+                    <CatchProgressBar data={combinedTableData} />
                 </Col>
             </Row>
             <Row className='mb-2'>
 
-                <Col lg={12} md={12} >
-                    {tableData?.length > 0 && (
-                        <ProjectDetailsTable tableData={tableData} setTableData={setTableData} projectId={id} lotNo={lotNo} />
-                        
-                    )}
+                <Col lg={12} md={12}>
+                    <Row>
+                        <Col lg={3} md={12} className="pe-0">
+                            <h4 className={`${customDark} text-white p-2`}>Project Lots</h4>
+                            <div className="d-flex flex-column" style={{ width: '100%', maxHeight: '400px', overflowY: 'auto', overflowX: 'hidden', backgroundColor: '#f0f8ff' }}>
+                                {projectLots.map((lot, index) => (
+                                    <div
+                                        key={index}
+                                        className={`mb-2 p-2 rounded-1 ${customLight} ${customDarkText} ${selectedLot === lot.lotNo ? 'border border-primary shadow-lg' : 'border'}`}
+                                        onClick={() => handleLotClick(lot.lotNo)}
+                                        style={{ 
+                                            cursor: 'pointer', 
+                                            transition: 'all 0.3s',
+                                            transform: selectedLot === lot.lotNo ? 'scale(1.02)' : 'scale(1)',
+                                            backgroundColor: selectedLot === lot.lotNo ? '#e6f7ff' : '#ffffff'
+                                        }}
+                                    >
+                                        <div className="d-flex justify-content-between align-items-center">
+                                            <h5 className={`mb-0 ${selectedLot === lot.lotNo ? 'fw-bold text-dark' : ''}`} style={{ width: '90%' }}>
+                                                <span className="d-flex justify-content-start align-items-center" style={{ height: '100%' }}>
+                                                    Lot {lot.lotNo}
+                                                </span>
+                                            </h5>
+                                            {selectedLot === lot.lotNo && (
+                                                <span className="text-primary">✓</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </Col>
+                        <Col lg={9} md={8} className="ps-0">
+                            {tableData?.length > 0 && (
+                                <ProjectDetailsTable tableData={combinedTableData} setTableData={setTableData} projectId={id} lotNo={selectedLot} featureData={featureData} hasFeaturePermission={hasFeaturePermission} processId={processId}/>
+                            )}
+                        </Col>
+                    </Row>
+
                 </Col>
                 <Col lg={2} md={0} ></Col>
 
@@ -256,11 +360,11 @@ const ProcessTable = () => {
                 </Col>
                 {showBarChart ? (
                     <Col lg={12} md={12} sm={12} className='mt-1 d-fle justify-content-center'>
-                        <StatusBarChart data={tableData} catchNumbers={catchNumbers} />
+                        <StatusBarChart data={combinedTableData} catchNumbers={catchNumbers} />
                     </Col>
                 ) : (
                     <Col lg={12} md={12} sm={12} className='mt-1 d-fle justify-content-center ' >
-                        <StatusPieChart data={tableData} />
+                        <StatusPieChart data={combinedTableData} />
                     </Col>
                 )}
             </Row>
@@ -269,6 +373,7 @@ const ProcessTable = () => {
                 handleClose={() => setCatchDetailModalShow(false)}
                 data={catchDetailModalData}
             >
+                {/* modal content here */}
             </CatchDetailModal>
         </div>
     );

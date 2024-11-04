@@ -9,6 +9,7 @@ import { FaSearch } from "react-icons/fa";
 import { AiFillCloseSquare } from "react-icons/ai";
 import { EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
+import { hasPermission } from '../CustomHooks/Services/permissionUtils';
 
 const { Search } = Input;
 
@@ -32,6 +33,8 @@ const Machine = () => {
   const [searchText, setSearchText] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
+  const canaddmachine = hasPermission('2.7.1');
+  const caneditcamera = hasPermission('2.7.3');
 
   const fetchMachines = async () => {
     setLoading(true);
@@ -137,7 +140,6 @@ const Machine = () => {
             value={editingValue}
             onChange={(e) => setEditingValue(e.target.value)}
             onPressEnter={() => handleEditSave(index)}
-            onBlur={() => handleEditSave(index)}
           />
         ) : (
           <span>{text}</span>
@@ -177,13 +179,14 @@ const Machine = () => {
       render: (status, record, index) => (
         editingIndex === index ? (
           <Switch
+            disabled={!caneditcamera}
             checked={editingStatus}
             onChange={setEditingStatus}
             checkedChildren={t('Functional')}
             unCheckedChildren={t('Dysfunctional')}
           />
         ) : (
-          <Switch checked={status} checkedChildren={t('Functional')} unCheckedChildren={t('Dysfunctional')} disabled />
+          <Switch checked={status}   checkedChildren={t('Functional')} unCheckedChildren={t('Dysfunctional')} disabled />
         )
       ),
     },
@@ -203,7 +206,7 @@ const Machine = () => {
             </Button>
           </div>
         ) : (
-          <Button type="link" icon={<EditOutlined />} onClick={() => {
+          <Button type="link" disabled={!caneditcamera} icon={<EditOutlined />} onClick={() => {
             setEditingIndex(index);
             setEditingValue(record.machineName);
             setEditingProcessId(record.processId);
@@ -230,9 +233,11 @@ const Machine = () => {
 
       <div className="mb-3 d-flex flex-wrap justify-content-between align-items-center">
         <div style={{ marginBottom: '10px', marginRight: '10px' }}>
-          <Button className={`rounded-2 ${customBtn} ${customDark === "dark-dark" ? `border-white` : `border-0`}`} onClick={() => setIsModalVisible(true)}>
-            {t('Add Machine')}
-          </Button>
+          {canaddmachine && (
+            <Button className={`rounded-2 ${customBtn} ${customDark === "dark-dark" ? `border-white` : `border-0`}`} onClick={() => setIsModalVisible(true)}>
+              {t('Add Machine')}
+            </Button>
+          )}
         </div>
         <div className="d-flex align-items-center justify-content-start" style={{ flex: '1', minWidth: '200px', maxWidth: '300px' }}>
           <Input

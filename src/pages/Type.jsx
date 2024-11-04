@@ -10,7 +10,7 @@ import { AiFillCloseSquare } from "react-icons/ai";
 import { SortAscendingOutlined, SortDescendingOutlined, EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
 const { Option } = Select;
 const { Search } = Input;
-
+import { hasPermission } from '../CustomHooks/Services/permissionUtils';
 const Type = () => {
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = getCssClasses();
@@ -38,6 +38,9 @@ const Type = () => {
 
     const isMobile = useMediaQuery({ maxWidth: 767 });
     const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1023 });
+
+    const canaddtype = hasPermission('2.3.1');
+    const canedittype = hasPermission('2.3.3');
 
     const fetchTypes = async () => {
         setLoading(true);
@@ -141,7 +144,7 @@ const Type = () => {
         setRequiredEditingProcessIds(originalData.requiredProcessId)
         setEditingStatus(originalData.status);
     };
-
+console.log(originalData.requiredProcessIds)
     const handleSearch = (value) => {
         setSearchText(value);
     };
@@ -223,6 +226,7 @@ const Type = () => {
                 )
             ),
         },
+      
         {
             title: 'Required Process',
             dataIndex: 'requiredProcessId',
@@ -247,6 +251,7 @@ const Type = () => {
             ),
         },
         {
+
             align: 'center',
             title: (
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -293,8 +298,8 @@ const Type = () => {
                             <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}`} `}>Cancel</span>
                         </Button>
                     </div>
-                ) : (
-                    <Button type="link" icon={<EditOutlined />} onClick={() => {
+                ) : (           
+                    <Button type="link" disabled={!canedittype} icon={<EditOutlined />} onClick={() => {
                         setEditingIndex(index);
                         setEditingType(record.types);
                         setEditingProcessIds(record.associatedProcessId);
@@ -338,9 +343,11 @@ const Type = () => {
                     onChange={(e) => handleSearch(e.target.value)}
                     style={{ width: 300 }}
                 />
-                <Button className={`${customBtn} border-0 custom-zoom-btn`} onClick={() => setIsModalVisible(true)}>
-                    Add Type
-                </Button>
+                {canaddtype && (
+                    <Button className={`${customBtn} border-0 custom-zoom-btn`} onClick={() => setIsModalVisible(true)}>
+                        Add Type
+                    </Button>
+                )}
             </div>
 
             {loading ? (
@@ -448,7 +455,7 @@ const Type = () => {
                         </Form.Item>
                         <Form.Item label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-5 `}>{"Required Process"}</span>}>
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                                {requiredProcessIds.map(id => (
+                                {requiredProcessIds?.map(id => (
                                     <span key={id} style={{ border: '1px solid #ccc', borderRadius: '4px', padding: '4px 8px', display: 'flex', alignItems: 'center' }}>
                                         {processMap[id]}
                                         <AiFillCloseSquare

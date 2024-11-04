@@ -28,17 +28,16 @@ const StatusHorizontalBarChart = ({ data }) => {
         <ResponsiveContainer width="100%" height={360}>
             <BarChart
                 data={chartData}
-                layout="vertical" // Ensure this is set for horizontal bars
+                layout="vertical"
                 margin={{ top: 20, right: 30, left: 30, bottom: 5 }}
-                barSize={30} // Try a smaller value for thickness
-                barCategoryGap={2} // Adjust to further reduce gaps
+                barSize={30}
+                barCategoryGap={2}
             >
-                <CartesianGrid strokeDasharray="3  3" />
+                <CartesianGrid strokeDasharray="3 3" />
                 <XAxis type="number" />
-                <YAxis dataKey="name" type="category" />
+                <YAxis dataKey="name" type="category" width={100} />
                 <Tooltip />
                 <Legend />
-                {/* Individual bars with respective colors */}
                 <Bar dataKey="Pending" fill="#FF7D7D" label={{ position: 'insideRight' }} name="Pending" />
                 <Bar dataKey="Started" fill="#0099ff" label={{ position: 'insideRight' }} name="Started" />
                 <Bar dataKey="Completed" fill="#008000" label={{ position: 'insideRight' }} name="Completed" />
@@ -48,5 +47,3 @@ const StatusHorizontalBarChart = ({ data }) => {
 };
 
 export default StatusHorizontalBarChart;
-
-

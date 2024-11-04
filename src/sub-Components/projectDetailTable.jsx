@@ -20,17 +20,18 @@ import { useStore } from 'zustand';
 import { BiSolidFlag } from "react-icons/bi";
 import { MdPending } from "react-icons/md";// for pending
 import { IoCheckmarkDoneCircleSharp } from "react-icons/io5";// for completed
-const { Option } = Select;
-const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo}) => {
+import API from '../CustomHooks/MasterApiHooks/api';
 
+const { Option } = Select;
+
+const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePermission, processId }) => {
+    console.log(tableData);
     //Theme Change Section
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = getCssClasses();
     const customDark = cssClasses[0];
     const customBtn = cssClasses[3];
     const customDarkText = cssClasses[4];
-    console.log(tableData);
-
     const [initialTableData, setInitialTableData] = useState(tableData);
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
     const [columnVisibility, setColumnVisibility] = useState({
@@ -66,34 +67,109 @@ const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo}) => 
         // Update the initialTableData state whenever tableData changes
         setInitialTableData(tableData);
     }, [tableData]);
+
     useEffect(() => {
         const newVisibleKeys = filteredData.map(item => item.catchNumber);
         setVisibleRowKeys(newVisibleKeys);
     }, [searchText, hideCompleted]); // Add other dependencies if necessary
-    const filteredData = tableData.filter(item =>
-        Object.values(item).some(value =>
+
+    const filteredData = tableData.filter(item => {
+        const matchesSearchText = Object.values(item).some(value =>
             value && value.toString().toLowerCase().includes(searchText.toLowerCase())
-        )
-        && (!hideCompleted || item.status !== 'Completed')
-    );
+        );
+        const statusCondition = !hideCompleted || item.status !== 2;
+        const remarksCondition = showOnlyRemarks ? (item.remarks && item.remarks.trim() !== '') : true;
+        const alertsCondition = showOnlyAlerts ? (item.alerts && item.alerts.trim() !== '') : true;
+        return matchesSearchText && statusCondition && remarksCondition && alertsCondition;
+    });
+
 
     useEffect(() => {
         setShowOptions(selectedRowKeys.length === 1);
     }, [selectedRowKeys]);
 
-    const handleRowStatusChange = (catchNumber, newStatusIndex) => {
+    useEffect(() => {
+        fetchTransactions();
+    }, [projectId, processId]);
+
+
+    const fetchTransactions = async () => {
+        try {
+            const response = await API.get(`/Transactions?ProjectId=${projectId}&ProcessId=${processId}`);
+            const transactions = response.data || [];
+            // Create a mapping of quantitysheetId to status, interimQuantity, and remarks
+            const statusMap = transactions.reduce((acc, transaction) => {
+                acc[transaction.quantitysheetId] = {
+                    status: transaction.status,
+                    alarmId: transaction.alarmMessage,
+                    interimQuantity: transaction.interimQuantity, // Map interim quantity
+                    remarks: transaction.remarks, // Map remarks
+                    transactionId: transaction.transactionId // Store the transactionId
+                };
+                return acc;
+            }, {});
+
+            // Update tableData with the status, interimQuantity, and remarks from transactions
+            const updatedData = tableData.map(item => ({
+                ...item,
+                status: statusMap[item.srNo] ? statusMap[item.srNo].status : 0,
+                alerts: statusMap[item.srNo] ? statusMap[item.srNo].alarmId : "",
+                interimQuantity: statusMap[item.srNo] ? statusMap[item.srNo].interimQuantity : 0, // Add interim quantity
+                remarks: statusMap[item.srNo] ? statusMap[item.srNo].remarks : "", // Add remarks
+                transactionId: statusMap[item.srNo] ? statusMap[item.srNo].transactionId : null, // Add transactionId to each item
+            }));
+            setTableData(updatedData);
+        } catch (error) {
+            console.error('Error fetching transactions:', error);
+        }
+    };
+
+
+    const handleRowStatusChange = async (catchNumber, newStatusIndex) => {
+        console.log(`Toggling status for catch number ${catchNumber} to index ${newStatusIndex}`);
         const statusSteps = ["Pending", "Started", "Completed"];
         const newStatus = statusSteps[newStatusIndex];
 
-        const updatedData = tableData.map((row) => {
-            if (row.catchNumber === catchNumber) {
-                return { ...row, status: newStatus };
-            }
-            return row;
-        });
+        const updatedRow = tableData.find(row => row.catchNumber === catchNumber);
 
-        setTableData(updatedData); // Update the table with the new status
+        try {
+            // Fetch the existing transaction data if transactionId exists
+            let existingTransactionData;
+            if (updatedRow.transactionId) {
+                const response = await API.get(`/Transactions/${updatedRow.transactionId}`);
+                existingTransactionData = response.data;
+            }
+
+            const postData = {
+                transactionId: updatedRow?.transactionId || 0, // Use the transactionId from the updated row
+                quantity: existingTransactionData ? existingTransactionData.quantity : 0,
+                remarks: existingTransactionData ? existingTransactionData.remarks : "",
+                projectId: projectId,
+                quantitysheetId: updatedRow?.srNo || 0,
+                processId: processId,
+                zoneId: 0,
+                status: newStatusIndex, // Change only this field
+                alarmId: existingTransactionData ? existingTransactionData.alarmId : 0,
+                lotNo: existingTransactionData ? existingTransactionData.lotNo : 0,
+                teamId: existingTransactionData ? existingTransactionData.teamId : 0,
+            };
+            // Update or create the transaction
+            if (updatedRow.transactionId) {
+                // If it exists, update using PUT
+                const response = await API.put(`/Transactions/${updatedRow.transactionId}`, postData);
+                console.log('Update Response:', response.data);
+            } else {
+                // If it doesn't exist, create using POST
+                const response = await API.post('/Transactions', postData);
+                console.log('Create Response:', response.data);
+            }
+            fetchTransactions(); // Refresh data
+        } catch (error) {
+            console.error('Error updating status:', error);
+        }
     };
+
+
     const handleCatchClick = (record) => {
         console.log('handleCatchClick called', record);
         setCatchDetailModalShow(true);
@@ -134,6 +210,7 @@ const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo}) => 
                     }}
                 />
             ),
+            responsive: ['sm'],
         },
         {
             width: '10%',
@@ -141,6 +218,7 @@ const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo}) => 
             key: 'srNo',
             align: "center",
             render: (_, __, index) => index + 1,
+            responsive: ['sm'],
         },
         {
             width: '15%',
@@ -165,7 +243,7 @@ const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo}) => 
                             <div>
                                 <button
                                     className="rounded border fs-6 custom-zoom-btn bg-white position-relative "
-                                    onClick={() => handleCatchClick(record)}
+                                    onClick={() => console.log('Detail:', record)}
                                 >
                                     {text}
                                 </button>
@@ -225,7 +303,7 @@ const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo}) => 
             align: 'center',
             sorter: (a, b) => a.quantity - b.quantity,
         },
-        ...(columnVisibility['Interim Quantity'] ? [{
+        ...(columnVisibility['Interim Quantity'] && hasFeaturePermission(7) ? [{
             title: 'Interim Quantity',
             dataIndex: 'interimQuantity',
             width: '20%',
@@ -247,101 +325,148 @@ const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo}) => 
             width: '20%',
             align: 'center',
             render: (text, record) => {
-                const statusSteps = ["Pending", "Started", "Running", "Completed"];
-                const initialStatusIndex = statusSteps.indexOf(record.status);
+                const statusSteps = ["Pending", "Started", "Completed"];
+                const initialStatusIndex = text !== undefined ? text : 0;
+                // Check if the record has alerts
+                const hasAlerts = record.alerts && record.alerts.length > 0;
+
                 return (
-                    <>
-                        <div className="d-flex justify-content-center">
+                    <div className="d-flex justify-content-center">
+                        {hasAlerts ? (
+                            <span className="text-danger" title="Status cannot be changed due to alerts.">
+                                <StatusToggle
+                                    initialStatusIndex={initialStatusIndex}
+                                    statusSteps={statusSteps.map((status, index) => ({
+                                        status,
+                                        color: index === 0 ? "red" : index === 1 ? "blue" : "green"
+                                    }))}
+                                    disabled // Disable the toggle
+                                />
+                            </span>
+                        ) : (
                             <StatusToggle
                                 initialStatusIndex={initialStatusIndex}
                                 onStatusChange={(newIndex) => handleRowStatusChange(record.catchNumber, newIndex)}
-                                statusSteps={[
-                                    { status: "Pending", color: "red" },
-                                    { status: "Started", color: "blue" },
-                                    { status: "Running", color: "orange" },
-                                    { status: "Completed", color: "green" },
-                                ]}
+                                statusSteps={statusSteps.map((status, index) => ({
+                                    status,
+                                    color: index === 0 ? "red" : index === 1 ? "blue" : "green"
+                                }))}
                             />
-                        </div>
-                    </>
+                        )}
+                    </div>
                 );
             },
             sorter: (a, b) => a.status.localeCompare(b.status),
-        }
+        },
+
     ];
-    const handleStatusChange = (newStatus) => {
-        const updatedData = tableData.map((row) => {
-            if (selectedRowKeys.includes(row.catchNumber)) {
-                let nextStatus;
-                switch (row.status) {
-                    case "Pending":
-                        nextStatus = "Started";
-                        break;
-                    case "Started":
-                        nextStatus = "Completed";
-                        break;
-                    default:
-                        nextStatus = row.status; // Don't update if already Completed
-                }
-                return { ...row, status: nextStatus };
-            }
-            return row;
-        });
-        setTableData(updatedData);
-        setSelectedRowKeys([]); // Clear selected row keys
-        setSelectAll(false); // Deselect all checkboxes
-        setShowOptions(false); // Reset options visibility
+
+    const clearSelections = () => {
+        setSelectedRowKeys([]);
+        setSelectAll(false);
+        setShowOptions(false);
     };
+
+    const handleStatusChange = async (newStatus) => {
+        const statusSteps = ["Pending", "Started", "Completed"];
+        const newStatusIndex = statusSteps.indexOf(newStatus);
+
+        // Iterate over selectedRowKeys and update status
+        const updates = selectedRowKeys.map(async (key) => {
+            const updatedRow = tableData.find(row => row.catchNumber === key);
+            if (updatedRow) {
+                const postData = {
+                    transactionId: updatedRow.transactionId || 0,
+                    quantity: 0,
+                    remarks: updatedRow?.remarks || "",
+                    projectId: projectId,
+                    quantitysheetId: updatedRow?.srNo || 0,
+                    processId: processId,
+                    zoneId: 0,
+                    status: newStatusIndex,
+                    alarmId: 0,
+                    lotNo: updatedRow?.lotNo || 0,
+                    teamId: 0
+                };
+
+                try {
+                    // Update or create based on existence of transactionId
+                    if (updatedRow.transactionId) {
+                        await API.put(`/Transactions/${updatedRow.transactionId}`, postData);
+                    } else {
+                        await API.post('/Transactions', postData);
+                    }
+                } catch (error) {
+                    console.error(`Error updating status for ${key}:`, error);
+                }
+            }
+        });
+
+        // Wait for all updates to finish
+        await Promise.all(updates);
+        clearSelections()
+        fetchTransactions();
+    };
+
+
     const getSelectedStatus = () => {
-        if (selectedRowKeys.length > 1) {
+        if (selectedRowKeys.length > 0) {
             const selectedRows = tableData.filter((row) => selectedRowKeys.includes(row.catchNumber));
             const statuses = selectedRows.map((row) => row.status);
             const uniqueStatuses = [...new Set(statuses)];
+            // Check if all selected rows have the same status
             if (uniqueStatuses.length === 1) {
-                return uniqueStatuses[0]; // All statuses are the same, return the current status
+                const status = uniqueStatuses[0];
+                // If status is 0 (Pending), return 0; if 1 (Started), return 1; if 2 (Completed), return null
+                return status < 2 ? status : null;
             }
         }
-        return null; // Return null if multiple rows are not selected or statuses are different
+        return null;
     };
+
     const handleToggleChange = (checked) => {
         setHideCompleted(checked);
     };
 
     const handleDropdownSelect = (action) => {
-        if (showOptions) {
+        if (showOptions && selectedRowKeys.length > 0) {
             const selectedRow = tableData.find((row) => row.catchNumber === selectedRowKeys[0]);
-            if (action === 'Alarm') {
+            if (action === 'Alarm' && hasFeaturePermission(3)) {
                 setAlarmModalShow(true);
                 setAlarmModalData(selectedRow); // Pass the selected row's data to the alarm modal
-            } else if (action === 'Interim Quantity') {
+            } else if (action === 'Interim Quantity' && hasFeaturePermission(7)) {
                 setInterimQuantityModalShow(true);
                 setInterimQuantityModalData(selectedRow); // Pass the selected row's data to the interim quantity modal
             } else if (action === 'Remarks') {
                 setRemarksModalShow(true);
                 setRemarksModalData(selectedRow); // Pass the selected row's data to the remarks modal
-            }
-            else if (action === 'Select Zone') {
+            } else if (action === 'Select Zone' && hasFeaturePermission(4)) {
                 setSelectZoneModalShow(true);
                 setSelectZoneModalData(selectedRow); // Pass the selected row's data to the select zone modal
-            } else if (action === 'Assign Team') {
+            } else if (action === 'Assign Team' && hasFeaturePermission(5)) {
                 setAssignTeamModalShow(true);
                 setAssignTeamModalData(selectedRow); // Pass the selected row's data to the assign team modal
             }
         } else {
-            alert("Some error occurred.");
+            alert("Selected row not found.");
+
         }
     };
+
     const handleSelectZoneSave = (zone) => {
         const updatedData = tableData.map((row) => {
             if (selectedRowKeys.includes(row.catchNumber)) {
-                return { ...row, zone };
+                return { ...row, zone }; // Update the zone or any other necessary field
             }
             return row;
         });
         setTableData(updatedData);
         setSelectedRowKeys([]); // Deselect all rows
         setShowOptions(false); // Reset options visibility
+        fetchTransactions();
     };
+
+
     const handleAssignTeamSave = (team) => {
         const updatedData = tableData.map((row) => {
             if (selectedRowKeys.includes(row.catchNumber)) {
@@ -353,9 +478,10 @@ const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo}) => 
         setSelectedRowKeys([]); // Deselect all rows
         setShowOptions(false); // Reset options visibility
     };
+
     const handleAlarmSave = (alarm) => {
         const updatedData = tableData.map((row) => {
-            if (selectedRowKeys.includes(row.catchNumber)) { // Use catchNumber for comparison
+            if (selectedRowKeys.includes(row.catchNumber)) {
                 return { ...row, alerts: alarm };
             }
             return row;
@@ -363,6 +489,7 @@ const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo}) => 
         setTableData(updatedData);
         setSelectedRowKeys([]); // Deselect all rows
         setShowOptions(false); // Reset options visibility
+        fetchTransactions();
     };
 
     const handleInterimQuantitySave = (interimQuantity) => {
@@ -375,7 +502,9 @@ const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo}) => 
         setTableData(updatedData);
         setSelectedRowKeys([]); // Deselect all rows
         setShowOptions(false); // Reset options visibility
+        fetchTransactions();
     };
+
     const handleRemarksSave = (remarks) => {
         const updatedData = tableData.map((row) => {
             if (selectedRowKeys.includes(row.catchNumber)) {
@@ -386,32 +515,43 @@ const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo}) => 
         setTableData(updatedData);
         setSelectedRowKeys([]); // Deselect all rows
         setShowOptions(false); // Reset options visibility
+        fetchTransactions();
     };
+
+    const selectedRows = tableData.filter((row) => selectedRowKeys.includes(row.catchNumber));
+    const isCompleted = selectedRows.every(row => row.status === 2); // Check if the selected row is completed
+
     const menu = (
         <Menu>
-            <Menu.Item
-                onClick={() => handleDropdownSelect('Alarm')}
-                disabled={!showOptions}
-            >
-                Alarm
-            </Menu.Item>
-            <Menu.Item
-                onClick={() => handleDropdownSelect('Interim Quantity')}
-                disabled={!showOptions}
-            >
-                Interim Quantity
-            </Menu.Item>
-            <Menu.Item
-                onClick={() => handleDropdownSelect('Remarks')}
-                disabled={!showOptions}
-            >
-                Remarks
-            </Menu.Item>
+            {hasFeaturePermission(3) && !isCompleted && (
+                <Menu.Item onClick={() => handleDropdownSelect('Alarm')}>
+                    Alarm
+                </Menu.Item>
+            )}
+            {hasFeaturePermission(7) && !isCompleted && (
+                <Menu.Item onClick={() => handleDropdownSelect('Interim Quantity')}>
+                    Interim Quantity
+                </Menu.Item>
+            )}
+            {!isCompleted && (
+                <Menu.Item onClick={() => handleDropdownSelect('Remarks')}>
+                    Remarks
+                </Menu.Item>
+            )}
             <Menu.Item onClick={() => setColumnModalShow(true)}>Columns</Menu.Item>
-            <Menu.Item onClick={() => setSelectZoneModalShow(true)}>Select Zone</Menu.Item>
-            <Menu.Item onClick={() => setAssignTeamModalShow(true)}>Assign Team</Menu.Item>
+            {hasFeaturePermission(4) && (
+                <Menu.Item onClick={() => handleDropdownSelect('Select Zone')}
+
+                    disabled={selectedRowKeys.length === 0}>Select Zone</Menu.Item>
+            )}
+            {hasFeaturePermission(5) && (
+                <Menu.Item onClick={() => handleDropdownSelect('Assign Team')}
+
+                    disabled={selectedRowKeys.length === 0}>Assign Team</Menu.Item>
+            )}
         </Menu>
     );
+
     const customPagination = {
 
         pageSize,
@@ -433,6 +573,8 @@ const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo}) => 
             return originalElement;
         },
     };
+
+
     const rowClassName = (record, index) => {
         if (record.status === 'Pending') {
             return 'pending-row';
@@ -444,95 +586,77 @@ const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo}) => 
             return '';
         }
     };
-    const getStatusIndex = (status) => {
-        switch (status) {
-            case "Pending":
-                return 0;
-            case "Started":
-                return 1;
-            case "Completed":
-                return 2;
-            default:
-                return 0; // Return 0 if status is null or undefined
-        }
-    };
-    const filteredDataAlert = tableData.filter((item) =>
-        Object.values(item).some((value) => 
-            value && value.toString().toLowerCase().includes(searchText.toLowerCase())
-        )
-        && (!hideCompleted || item.status !== 'Completed')
-        && (!showOnlyAlerts || item.alerts)
-        && (!showOnlyCompletedPreviousProcess || item.previousProcessStats === 'Completed')
-        && (!showOnlyRemarks || item.remarks)
-    );
+
+
     return (
         <>
             <Row>
-                {/* filter button */}
                 <Col lg={1} md={1} sx={2} className='d-flex justify-content- mt-md-1 mt-xs-1 mb-md-1 mb-xs-1'>
-                    <Dropdown overlay={
-                        <Menu>
-                            <Menu.Item className='d-flex align-items-center'>
-                                <Switch
-                                    checked={hideCompleted}
-                                    onChange={handleToggleChange}
-                                />
-                                <span className='ms-2'>Hide Completed</span>
-                            </Menu.Item>
+                    {hasFeaturePermission(6) && (
+                        <Dropdown overlay={
+                            <Menu>
+                                <Menu.Item className='d-flex align-items-center'>
+                                    <Switch
+                                        checked={hideCompleted}
+                                        onChange={handleToggleChange}
+                                    />
+                                    <span className='ms-2'>Hide Completed</span>
+                                </Menu.Item>
 
-                            <Menu.Divider />
-                            <Menu.Item className='d-flex align-items-center'>
-                                <Switch
-                                    checked={showOnlyCompletedPreviousProcess}
-                                    onChange={() => setShowOnlyCompletedPreviousProcess(!showOnlyCompletedPreviousProcess)}
-                                />
-                                {/* <span className='ms-2'>{previousProcess} Completed</span> */}
-                                <span className='ms-2'>Previous  Completed</span>
-                            </Menu.Item>
-                            <Menu.Divider />
+                                <Menu.Divider />
+                                <Menu.Item className='d-flex align-items-center'>
+                                    <Switch
+                                        checked={showOnlyCompletedPreviousProcess}
+                                        onChange={() => setShowOnlyCompletedPreviousProcess(!showOnlyCompletedPreviousProcess)}
+                                    />
+                                    {/* <span className='ms-2'>{previousProcess} Completed</span> */}
+                                    <span className='ms-2'>Previous  Completed</span>
+                                </Menu.Item>
+                                <Menu.Divider />
 
-                            <Menu.Item className='d-flex align-items-center'>
-                                <Switch
-                                    checked={showOnlyAlerts}
-                                    onChange={() => setShowOnlyAlerts(!showOnlyAlerts)}
-                                />
-                                <span className='ms-2'>Catches With Alerts</span>
-                            </Menu.Item>
+                                <Menu.Item className='d-flex align-items-center'>
+                                    <Switch
+                                        checked={showOnlyAlerts}
+                                        onChange={() => setShowOnlyAlerts(!showOnlyAlerts)}
+                                    />
+                                    <span className='ms-2'>Catches With Alerts</span>
+                                </Menu.Item>
 
-                            <Menu.Divider />
-                            <Menu.Item className='d-flex align-items-center'>
-                                <Switch
-                                    checked={showOnlyRemarks}
-                                    onChange={() => setShowOnlyRemarks(!showOnlyRemarks)}
-                                />
-                                <span className='ms-2'>Catches With Remarks</span>
-                            </Menu.Item>
+                                <Menu.Divider />
+                                <Menu.Item className='d-flex align-items-center'>
+                                    <Switch
+                                        checked={showOnlyRemarks}
+                                        onChange={() => setShowOnlyRemarks(!showOnlyRemarks)}
+                                    />
+                                    <span className='ms-2'>Catches With Remarks</span>
+                                </Menu.Item>
 
-                            <Menu.Divider />
+                                <Menu.Divider />
 
-                            <Menu.Item onClick={(e) => e.stopPropagation()}> {/* Add this */}
-                                <span>Limit Rows:</span>
-                                <Select
-                                    value={pageSize}
-                                    style={{ width: 60 }}
-                                    onChange={(value) => setPageSize(value)}
-                                    className='ms-4'
-                                >
-                                    <Option value={5}>5</Option>
-                                    <Option value={10}>10</Option>
-                                    <Option value={25}>25</Option>
-                                    <Option value={50}>50</Option>
-                                    <Option value={100}>100</Option>
-                                </Select>
-                            </Menu.Item>
-                        </Menu>
-                    } trigger={['click']}>
-                        <Button style={{ backgroundColor: 'transparent', border: 'none', boxShadow: 'none', padding: 0 }} className={`p-1 border ${customDark === 'dark-dark' ? `${customDark} text-white` : 'bg-white'}`}>
-                            <FaFilter size={20} className={`${customDarkText}`} />
-                            {/* <span className='d-none d-lg-block d-md-none ms-1 fs-6 fw-bold'>Filter</span> */}
+                                <Menu.Item onClick={(e) => e.stopPropagation()}> {/* Add this */}
+                                    <span>Limit Rows:</span>
+                                    <Select
+                                        value={pageSize}
+                                        style={{ width: 60 }}
+                                        onChange={(value) => setPageSize(value)}
+                                        className='ms-4'
+                                    >
+                                        <Option value={5}>5</Option>
+                                        <Option value={10}>10</Option>
+                                        <Option value={25}>25</Option>
+                                        <Option value={50}>50</Option>
+                                        <Option value={100}>100</Option>
+                                    </Select>
+                                </Menu.Item>
+                            </Menu>
+                        } trigger={['click']}>
+                            <Button style={{ backgroundColor: 'transparent', border: 'none', boxShadow: 'none', padding: 0 }} className={`p-1 border ${customDark === 'dark-dark' ? `${customDark} text-white` : 'bg-white'}`}>
+                                <FaFilter size={20} className={`${customDarkText}`} />
+                                {/* <span className='d-none d-lg-block d-md-none ms-1 fs-6 fw-bold'>Filter</span> */}
 
-                        </Button>
-                    </Dropdown>
+                            </Button>
+                        </Dropdown>
+                    )}
                 </Col>
 
                 {/* update status button */}
@@ -541,17 +665,22 @@ const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo}) => 
                         <div className="mt-1 d-flex align-items-center">
                             <span className={`me-2 ${customDark === 'dark-dark' ? 'text-white' : 'custom-theme-dark-text'} fs-6 fw-bold`}>Update Status: </span>
                             <StatusToggle
-                                initialStatusIndex={getStatusIndex(getSelectedStatus())}
+                                initialStatusIndex={getSelectedStatus()} // Use the index returned by getSelectedStatus
                                 onStatusChange={(newIndex) => handleStatusChange(["Pending", "Started", "Completed"][newIndex])}
                                 statusSteps={[
                                     { status: "Pending", color: "red" },
                                     { status: "Started", color: "blue" },
                                     { status: "Completed", color: "green" },
                                 ]}
+                                disabled={selectedRowKeys.some(catchNumber => {
+                                    const row = tableData.find(item => item.catchNumber === catchNumber);
+                                    return row && row.alerts; // Check if this row has alerts
+                                })}
                             />
                         </div>
                     )}
                 </Col>
+
 
                 {/* search box */}
                 <Col lg={5} md={6} xs={12}>
@@ -627,14 +756,11 @@ const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo}) => 
                         rowKey="catchNumber"
                         columns={columns}
                         dataSource={filteredData}
-                        // dataSource={tableData}
                         pagination={customPagination}
                         bordered
-                        scroll={{ y: 400 }}
                         style={{ position: "relative", zIndex: "900" }}
                         striped={true}
                         tableLayout="auto"
-                        responsive={true}
                     />
                 </Col>
             </Row>
@@ -643,22 +769,27 @@ const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo}) => 
                 handleClose={() => setColumnModalShow(false)}
                 columnVisibility={columnVisibility}
                 setColumnVisibility={setColumnVisibility}
+                featureData={featureData}
+                hasFeaturePermission={hasFeaturePermission}
             />
             <AlarmModal
                 show={alarmModalShow}
                 handleClose={() => setAlarmModalShow(false)}
+                processId={processId}
                 handleSave={handleAlarmSave}
                 data={alarmModalData} // Pass the alarm modal data as a prop
             />
             <InterimQuantityModal
                 show={interimQuantityModalShow}
                 handleClose={() => setInterimQuantityModalShow(false)}
+                processId={processId}
                 handleSave={handleInterimQuantitySave}
                 data={interimQuantityModalData} // Pass the interim quantity modal data as a prop
             />
             <RemarksModal
                 show={remarksModalShow}
                 handleClose={() => setRemarksModalShow(false)}
+                processId={processId}
                 handleSave={handleRemarksSave}
                 data={remarksModalData} // Pass the remarks modal data as a prop
             />
@@ -672,12 +803,14 @@ const ProjectDetailsTable = ({ tableData, setTableData , projectId , lotNo}) => 
                 handleClose={() => setSelectZoneModalShow(false)}
                 handleSave={handleSelectZoneSave}
                 data={selectZoneModalData}
+                processId={processId}
             />
             <AssignTeamModal
                 show={assignTeamModalShow}
                 handleClose={() => setAssignTeamModalShow(false)}
                 handleSave={handleAssignTeamSave}
                 data={assignTeamModalData}
+                processId={processId}
             />
         </>
     );

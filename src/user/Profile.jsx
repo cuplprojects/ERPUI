@@ -290,7 +290,7 @@ const userName = userData.firstName;
                 <Form.Control
                   name="role"
                   placeholder={t('yourRole')}
-                  value={userRole}
+                  value={userData.role.roleName}
                   className='rounded'
                   disabled
                 />

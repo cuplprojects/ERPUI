@@ -8,11 +8,13 @@ import API from '../CustomHooks/MasterApiHooks/api';
 import { EditOutlined, DeleteOutlined, StopOutlined } from '@ant-design/icons';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { decrypt } from '../Security/Security';
 
 const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
     const { t } = useTranslation();
     const [modalMessage, setModalMessage] = useState('');
-    const { projectId } = useParams();
+    const { encryptedProjectId } = useParams();
+    const projectId = decrypt(encryptedProjectId);
     const [process, setProcess] = useState([]);
     const [dataSource, setDataSource] = useState([]);
     const [editingRow, setEditingRow] = useState(null);
@@ -22,22 +24,23 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
         paper: '',
         course: '',
         subject: '',
+        examDate: '',
+        examTime: '',
         innerEnvelope: '',
         outerEnvelope: '',
         quantity: 0,
         percentageCatch: 0,
         projectId: projectId,
-        isOverridden: false,
     });
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [itemToDelete, setItemToDelete] = useState(null);
     const [showNewRow, setShowNewRow] = useState(false);
-    const { getCssClasses } = useStore(themeStore);
-    const cssClasses = getCssClasses();
-    const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
     const [CTP_ID, setCTP_ID] = useState(null);
     const [OFFSET_PRINTING_ID, setOFFSET_PRINTING_ID] = useState(null);
     const [DIGITAL_PRINTING_ID, setDIGITAL_PRINTING_ID] = useState(null);
+    const { getCssClasses } = useStore(themeStore);
+    const cssClasses = getCssClasses();
+    const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
     const [isConfirmed, setIsConfirmed] = useState(false);
     const [searchText, setSearchText] = useState('');
     const [pageSize, setPageSize] = useState(5);
@@ -68,6 +71,18 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
             title: t('subject'),
             dataIndex: 'subject',
             key: 'subject',
+            width: 100,
+        },
+        {
+            title: 'ExamDate',
+            dataIndex: 'examDate',
+            key: 'examDate',
+            width: 100,
+        },
+        {
+            title: 'ExamTime',
+            dataIndex: 'examTime',
+            key: 'examTime',
             width: 100,
         },
         {
@@ -173,10 +188,10 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
 
         let updatedProcessIds = [...updatedItem.processId];
 
-        if (modalMessage === t('switchToDigitalPrintingQuestion')) {
+        if (modalMessage === 'switchToDigitalPrintingQuestion') {
             updatedProcessIds = updatedProcessIds.filter(id => id !== CTP_ID && id !== OFFSET_PRINTING_ID);
             updatedProcessIds.push(DIGITAL_PRINTING_ID);
-        } else if (modalMessage === t('switchToOffsetPrintingQuestion')) {
+        } else if (modalMessage === 'switchToOffsetPrintingQuestion'){
             updatedProcessIds = updatedProcessIds.filter(id => id !== DIGITAL_PRINTING_ID);
             updatedProcessIds.push(CTP_ID);
             updatedProcessIds.push(OFFSET_PRINTING_ID);
@@ -241,11 +256,11 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
             const hasDigitalPrinting = record.processId.includes(DIGITAL_PRINTING_ID);
 
             if (hasCTP && hasOffsetPrinting) {
-                setModalMessage(t('switchToDigitalPrintingQuestion'));
+                setModalMessage('switchToDigitalPrintingQuestion');
             } else if (hasDigitalPrinting) {
-                setModalMessage(t('switchToOffsetPrintingQuestion'));
+                setModalMessage('switchToOffsetPrintingQuestion');
             } else {
-                setModalMessage(t('switchProcessesQuestion'));
+                setModalMessage('switchProcessesQuestion');
             }
         }
     };
@@ -269,13 +284,14 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
                 paper: newRowData.paper,
                 course: newRowData.course,
                 subject: newRowData.subject,
+                examDate: newRowData.examDate,
+                examTime: newRowData.examTime,
                 innerEnvelope: newRowData.innerEnvelope,
                 outerEnvelope: newRowData.outerEnvelope,
                 lotNo: selectedLotNo,
                 quantity: parseInt(newRowData.quantity, 10),
                 percentageCatch: 0,
                 projectId: projectId,
-                isOverridden: false,
                 processId: [],
             }
         ];
@@ -291,12 +307,13 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
                 paper: '',
                 course: '',
                 subject: '',
+                examDate: '',
+                examTime: '',
                 innerEnvelope: '',
                 outerEnvelope: '',
                 quantity: 0,
                 percentageCatch: 0,
                 projectId: projectId,
-                isOverridden: false,
             });
             fetchQuantity(selectedLotNo);
         } catch (error) {
@@ -336,6 +353,8 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
                                         <td><Input size="small" placeholder={t('paper')} name="paper" value={newRowData.paper} onChange={handleNewRowChange} /></td>
                                         <td><Input size="small" placeholder={t('course')} name="course" value={newRowData.course} onChange={handleNewRowChange} /></td>
                                         <td><Input size="small" placeholder={t('subject')} name="subject" value={newRowData.subject} onChange={handleNewRowChange} /></td>
+                                        <td><Input size="small" placeholder={t('examDate')} name="examDate" value={newRowData.examDate} onChange={handleNewRowChange} /></td>
+                                        <td><Input size="small" placeholder={t('examTime')} name="examTime" value={newRowData.examTime} onChange={handleNewRowChange} /></td>
                                         <td><Input size="small" placeholder={t('innerEnvelope')} name="innerEnvelope" value={newRowData.innerEnvelope} onChange={handleNewRowChange} /></td>
                                         <td><Input size="small" placeholder={t('outerEnvelope')} name="outerEnvelope" value={newRowData.outerEnvelope} onChange={handleNewRowChange} /></td>
                                         <td><Input size="small" placeholder={t('quantity')} type="number" name="quantity" value={newRowData.quantity} onChange={handleNewRowChange} /></td>
