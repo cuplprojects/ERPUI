@@ -104,18 +104,24 @@ const QtySheetUpload = () => {
                 const firstSheetName = workbook.SheetNames[0];
                 const worksheet = workbook.Sheets[firstSheetName];
                 const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
+    
                 const rows = jsonData.slice(1);
                 const mappedData = rows.map((row) => {
                     const rowData = {};
                     for (let property in fieldMappings) {
                         const header = fieldMappings[property];
                         const index = jsonData[0].indexOf(header);
-                        rowData[property] = index !== -1 ?
+                        rowData[property] = index !== -1 ? 
                             (property === 'quantity' ? parseFloat(row[index]) || 0 : String(row[index])) : '';
+                        
+                        // Format date if it's the examdate column
+                        if (property === 'examdate' && rowData[property]) {
+                            const date = new Date(rowData[property]);
+                            rowData[property] = date.toLocaleDateString('en-GB'); // Converts to DD/MM/YYYY
+                        }
                     }
+                    
                     console.log(t('rowDataMapped'), rowData);
-
                     rowData['projectId'] = projectId;
                     rowData['percentageCatch'] = '0';
                     return rowData;
@@ -125,6 +131,7 @@ const QtySheetUpload = () => {
             reader.readAsArrayBuffer(selectedFile);
         });
     };
+    
 
     const getColumns = async () => {
         try {

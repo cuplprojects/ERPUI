@@ -384,7 +384,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
                         <BootstrapModal.Title>{t('editProcess')}</BootstrapModal.Title>
                     </BootstrapModal.Header>
                     <BootstrapModal.Body>
-                        {t(modalMessage)}
+                        {t(modalMessage) } 
                         <div className="mt-3">
                             <Checkbox checked={isConfirmed} onChange={(e) => setIsConfirmed(e.target.checked)}>
                                 {modalMessage === "switchToDigitalPrintingQuestion" ? t('switchFromOffsetToDigital') :
@@ -403,10 +403,10 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
             {showDeleteModal && (
                 <BootstrapModal show={true} onHide={handleModalClose}>
                     <BootstrapModal.Header closeButton>
-                        <BootstrapModal.Title>{t('confirmDeletion')}</BootstrapModal.Title>
+                        <BootstrapModal.Title>{t('confirmDeletion')}  {itemToDelete?.catchNo}</BootstrapModal.Title>
                     </BootstrapModal.Header>
                     <BootstrapModal.Body>
-                        {t('areYouSureDeleteCatchNo', { catchNo: itemToDelete?.catchNo })}
+                        {t('areYouSureDeleteCatchNo')}  ?
                     </BootstrapModal.Body>
                     <BootstrapModal.Footer>
                         <Button variant="secondary" onClick={handleModalClose}>{t('cancel')}</Button>
