@@ -24,12 +24,13 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
         paper: '',
         course: '',
         subject: '',
+        examDate: '',
+        examTime: '',
         innerEnvelope: '',
         outerEnvelope: '',
         quantity: 0,
         percentageCatch: 0,
         projectId: projectId,
-        isOverridden: false,
     });
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [itemToDelete, setItemToDelete] = useState(null);
@@ -70,6 +71,18 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
             title: t('subject'),
             dataIndex: 'subject',
             key: 'subject',
+            width: 100,
+        },
+        {
+            title: 'ExamDate',
+            dataIndex: 'examDate',
+            key: 'examDate',
+            width: 100,
+        },
+        {
+            title: 'ExamTime',
+            dataIndex: 'examTime',
+            key: 'examTime',
             width: 100,
         },
         {
@@ -271,13 +284,14 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
                 paper: newRowData.paper,
                 course: newRowData.course,
                 subject: newRowData.subject,
+                examDate: newRowData.examDate,
+                examTime: newRowData.examTime,
                 innerEnvelope: newRowData.innerEnvelope,
                 outerEnvelope: newRowData.outerEnvelope,
                 lotNo: selectedLotNo,
                 quantity: parseInt(newRowData.quantity, 10),
                 percentageCatch: 0,
                 projectId: projectId,
-                isOverridden: false,
                 processId: [],
             }
         ];
@@ -293,12 +307,13 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
                 paper: '',
                 course: '',
                 subject: '',
+                examDate: '',
+                examTime: '',
                 innerEnvelope: '',
                 outerEnvelope: '',
                 quantity: 0,
                 percentageCatch: 0,
                 projectId: projectId,
-                isOverridden: false,
             });
             fetchQuantity(selectedLotNo);
         } catch (error) {
@@ -338,6 +353,8 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
                                         <td><Input size="small" placeholder={t('paper')} name="paper" value={newRowData.paper} onChange={handleNewRowChange} /></td>
                                         <td><Input size="small" placeholder={t('course')} name="course" value={newRowData.course} onChange={handleNewRowChange} /></td>
                                         <td><Input size="small" placeholder={t('subject')} name="subject" value={newRowData.subject} onChange={handleNewRowChange} /></td>
+                                        <td><Input size="small" placeholder={t('examDate')} name="examDate" value={newRowData.examDate} onChange={handleNewRowChange} /></td>
+                                        <td><Input size="small" placeholder={t('examTime')} name="examTime" value={newRowData.examTime} onChange={handleNewRowChange} /></td>
                                         <td><Input size="small" placeholder={t('innerEnvelope')} name="innerEnvelope" value={newRowData.innerEnvelope} onChange={handleNewRowChange} /></td>
                                         <td><Input size="small" placeholder={t('outerEnvelope')} name="outerEnvelope" value={newRowData.outerEnvelope} onChange={handleNewRowChange} /></td>
                                         <td><Input size="small" placeholder={t('quantity')} type="number" name="quantity" value={newRowData.quantity} onChange={handleNewRowChange} /></td>

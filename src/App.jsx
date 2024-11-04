@@ -28,7 +28,7 @@ function App() {
     <>
       <HashRouter className="">
         <Routes>
-          <Route path="/" element={<Login />} />
+          <Route path="/login" element={<Login />} />
           <Route path="/setpassword" element={<Setpassword />} />
           <Route path="/forgotpassword" element={<Forgotpassword />} />
           <Route path="/server-error" element={<ErrorPage />} />

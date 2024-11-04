@@ -34,7 +34,12 @@ const AuthService = {
     
     clearToken();
     actions.clearUserData();
-    localStorage.removeItem('userData');
+  },
+
+  isLoggedIn: () => {
+    const { token } = useUserTokenStore.getState();
+    console.log('AuthService: Current token:', token);
+    return !!token;
   }
 };
 
