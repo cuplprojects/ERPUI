@@ -11,6 +11,8 @@ const StatusToggle = ({ initialStatusIndex, onStatusChange, disabled, statusStep
     const [statusIndex, setStatusIndex] = useState(
       Math.min(initialStatusIndex, statusSteps.length - 1)
     );
+
+    
     const [toggling, setToggling] = useState(false);
     const [statusChecked, setStatusChecked] = useState(false);
 
@@ -18,6 +20,7 @@ const StatusToggle = ({ initialStatusIndex, onStatusChange, disabled, statusStep
     const { status = "", color = "gray" } = statusSteps[statusIndex] || {};
 
     const handleToggle = () => {
+      if (disabled) return;
       if (statusIndex < statusSteps.length - 1 && !toggling) {
         setToggling(true);
         setStatusChecked(true); // Move the toggle temporarily
