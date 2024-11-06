@@ -20,7 +20,8 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
     const [dataSource, setDataSource] = useState([]);
     const [editingRow, setEditingRow] = useState(null);
     const [selectedProcessIds, setSelectedProcessIds] = useState([]);
-    const [selectedCatches, setSelectedCatches] = useState([]);
+    const [selectedCatches, setSelectedCatches] = useState([]); // Changed to store objects with id and catchNo
+    const [quantitySheetId, setQuantitySheetId] = useState(null);
     const [newRowData, setNewRowData] = useState({
         catchNo: '',
         paper: '',
@@ -31,6 +32,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
         quantity: 0,
         percentageCatch: 0,
         projectId: projectId,
+        quantitySheetId:quantitySheetId
     });
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [showTransferModal, setShowTransferModal] = useState(false);
@@ -54,12 +56,15 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
             width: '2%',
             render: (_, record) => (
                 <Checkbox
-                    checked={selectedCatches.includes(record.catchNo)}
+                    checked={selectedCatches.some(item => item.id === record.quantitySheetId)}
                     onChange={(e) => {
                         if (e.target.checked) {
-                            setSelectedCatches([...selectedCatches, record.catchNo]);
+                            setSelectedCatches([...selectedCatches, {
+                                id: record.quantitySheetId,
+                                catchNo: record.catchNo
+                            }]);
                         } else {
-                            setSelectedCatches(selectedCatches.filter(catchNo => catchNo !== record.catchNo));
+                            setSelectedCatches(selectedCatches.filter(item => item.id !== record.quantitySheetId));
                         }
                     }}
                 />
@@ -247,6 +252,8 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
         setEditingRow(null);
         setSelectedProcessIds([]);
         setIsConfirmed(false);
+        setSelectedCatches([]); // Clear selected catches
+        
     };
 
     const handleEditButtonClick = (key) => {

@@ -9,7 +9,7 @@ import { useStore } from 'zustand';
 import themeStore from '../store/themeStore';
 import { Modal as BootstrapModal } from 'react-bootstrap';
 
-const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots = [], selectedLotNo }) => {
+const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots = [], selectedLotNo, fetchQuantity }) => {
     const { t } = useTranslation();
     const [selectedLot, setSelectedLot] = useState(null);
     const { encryptedProjectId } = useParams();
@@ -41,14 +41,15 @@ const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots =
         if (!selectedLot) return;
         
         const payload = {
-            catches: catches,
-            targetLot: selectedLot,
             projectId: projectId,
+            sourceLotNo: selectedLotNo,
+            targetLotNo: selectedLot,
+            catchIds: catches.map(catch_ => catch_.id)
         };
 
         try {
-            // Implement your API call here
-            console.log('Transfer Payload:', payload);
+            await API.put('/QuantitySheet/transfer-catches', payload);
+            await fetchQuantity();
             onClose();
         } catch (error) {
             console.error('Transfer failed:', error);
@@ -56,7 +57,7 @@ const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots =
     };
 
     const handleTagClose = (catchItem) => {
-        const updatedCatches = catches.filter(item => item !== catchItem);
+        const updatedCatches = catches.filter(item => item.id !== catchItem.id);
         onCatchesChange(updatedCatches);
         if (updatedCatches.length === 0) {
             onClose();
@@ -81,17 +82,17 @@ const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots =
                     <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                         <div style={{ flex: 1 }}>
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                                {catches.map(catchNo => (
+                                {catches.map(catchItem => (
                                     <Tag 
-                                        key={catchNo} 
+                                        key={catchItem.id} 
                                         closable 
                                         onClose={(e) => {
                                             e.preventDefault();
-                                            handleTagClose(catchNo);
+                                            handleTagClose(catchItem);
                                         }}
                                         className={`${customMid} ${customDarkText} fs-6`}
                                     >
-                                        {catchNo}
+                                        {catchItem.catchNo}
                                     </Tag>
                                 ))}
                             </div>
@@ -117,8 +118,8 @@ const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots =
                 </div>
             </BootstrapModal.Body>
             <BootstrapModal.Footer className={customDark}>
-                <Button  onClick={onClose} className={`${customBtn}`}>{t('cancel')}</Button>
-                <Button  onClick={handleTransfer} disabled={!selectedLot} className={`${customBtn}`}>{t('transfer')}</Button>
+                <Button onClick={onClose} className={`${customBtn}`}>{t('cancel')}</Button>
+                <Button onClick={handleTransfer} disabled={!selectedLot} className={`${customBtn}`}>{t('transfer')}</Button>
             </BootstrapModal.Footer>
         </BootstrapModal>
     );
