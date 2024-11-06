@@ -34,10 +34,12 @@ const InterimQuantityModal = ({ show, handleClose, data, processId, handleSave }
                 quantitysheetId: data.srNo || 0,
                 processId: processId,
                 zoneId: existingTransactionData ? existingTransactionData.zoneId : 0,
+                machineId: existingTransactionData ? existingTransactionData.machineId : 0,
                 status: existingTransactionData ? existingTransactionData.status : 0, // Retain existing status
-                alarmId: existingTransactionData ? existingTransactionData.alarmId : 0,
+                alarmId: existingTransactionData ? existingTransactionData.alarmId : "",
                 lotNo: data.lotNo,
-                teamId: existingTransactionData ? existingTransactionData.teamId : 0,               
+                teamId: existingTransactionData ? existingTransactionData.teamId : 0,  
+                voiceRecording: existingTransactionData? existingTransactionData.voiceRecording : ""             
             };
 
             if (data.transactionId) {
