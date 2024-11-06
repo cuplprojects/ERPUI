@@ -24,8 +24,9 @@ import { IoCheckmarkDoneCircleSharp } from "react-icons/io5";// for completed
 import API from '../CustomHooks/MasterApiHooks/api';
 
 const { Option } = Select;
-const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePermission, processId, featureData ,lotNo , projectLots}) => {
-    console.log(projectLots);
+
+const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePermission, featureData, processId }) => {
+    console.log(tableData);
     //Theme Change Section
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = getCssClasses();
@@ -801,6 +802,8 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                 handleClose={() => setColumnModalShow(false)}
                 columnVisibility={columnVisibility}
                 setColumnVisibility={setColumnVisibility}
+                featureData={featureData}
+                hasFeaturePermission={hasFeaturePermission}
             />
             <AlarmModal
                 show={alarmModalShow}

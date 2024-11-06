@@ -3,10 +3,14 @@ import styled from "styled-components";
 import { FaUpload, FaInfoCircle } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { encrypt } from "../Security/Security";
+import useUserDataStore from "../store/userDataStore";
 
 const Cards = ({ item, onclick, disableProject }) => {
   const navigate = useNavigate();
-
+  const { userData } = useUserDataStore();
+  const role = userData?.role;
+  const supervisor = role.roleId === 5; 
+console.log(supervisor);
   // Navigate to quantity sheet uploads and send projectId
   const handleUploadClick = (e) => {
     e.stopPropagation();
@@ -18,7 +22,11 @@ const Cards = ({ item, onclick, disableProject }) => {
     if(!disableProject){
       return;
     }
-    navigate(`/dashboard/${encrypt(item.projectId)}`);
+    if (supervisor) {
+      navigate(`/project-details/${encrypt(item.projectId)}/${encrypt(1)}`);
+    } else {
+      navigate(`/dashboard/${encrypt(item.projectId)}`);
+    }
   };
 
   // Handle info button click

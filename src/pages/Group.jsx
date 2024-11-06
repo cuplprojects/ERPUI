@@ -10,6 +10,7 @@ import { SortAscendingOutlined, SortDescendingOutlined, EditOutlined, SaveOutlin
 import { Col, Row } from 'react-bootstrap';
 import { FaSearch } from "react-icons/fa";
 import { useTranslation } from 'react-i18next';
+import { hasPermission } from '../CustomHooks/Services/permissionUtils';
 
 const Group = () => {
   const { t } = useTranslation();
@@ -29,6 +30,9 @@ const Group = () => {
   const [sortField, setSortField] = useState('name');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
+
+  const canaddgroup = hasPermission('2.2.1');
+  const caneditgroup = hasPermission('2.2.3');
 
   const isMobile = useMediaQuery({ maxWidth: 767 });
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1023 });
@@ -231,6 +235,7 @@ const Group = () => {
               setOriginalData(record);
             }}
             className={`${customBtn}`}
+            disabled={!caneditgroup}
           >
             <EditOutlined className={`${customBtn} text-white me-1`} />
             {t('edit')}
@@ -271,9 +276,11 @@ const Group = () => {
         marginBottom: isMobile ? '10px' : '20px'
       }}
       >
-        <Button type="" className={`mb-2 rounded-2 ${customBtn} ${customDark === "dark-dark" ? `border-white` : `border-0`} custom-zoom-btn `} onClick={showModal}>
-          {t('addGroup')}
-        </Button>
+        { canaddgroup && (
+          <Button type="" className={`mb-2 rounded-2 ${customBtn} ${customDark === "dark-dark" ? `border-white` : `border-0`} custom-zoom-btn `} onClick={showModal}>
+            {t('addGroup')}
+          </Button>
+        )}
         <div className="d-flex align-items-center">
           <Input
             placeholder={t('searchGroups')}
