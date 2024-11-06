@@ -8,7 +8,6 @@ import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import { useTranslation } from 'react-i18next';
 import { SortAscendingOutlined, SortDescendingOutlined, EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
-import { hasPermission } from '../CustomHooks/Services/permissionUtils';
 
 const { Option } = Select;
 const { Search } = Input;
@@ -30,8 +29,6 @@ const Zone = () => {
   const [searchText, setSearchText] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const canaddzone = hasPermission('2.5.1');
-  const caneditzone = hasPermission('2.5.3');
 
   const isMobile = useMediaQuery({ maxWidth: 767 });
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1023 });
@@ -168,6 +165,7 @@ const Zone = () => {
             value={editingZone.zoneNo || record.zoneNo}
             onChange={(e) => setEditingZone({ ...editingZone, zoneNo: e.target.value })}
             onPressEnter={() => handleEditZone(index)}
+            onBlur={() => handleEditZone(index)}
           />
         ) : (
           <span onClick={() => {
@@ -188,6 +186,7 @@ const Zone = () => {
             value={editingZone.zoneDescription || record.zoneDescription}
             onChange={(e) => setEditingZone({ ...editingZone, zoneDescription: e.target.value })}
             onPressEnter={() => handleEditZone(index)}
+            onBlur={() => handleEditZone(index)}
             style={{ resize: 'none' }}
             rows={1}
             cols={1}
@@ -211,6 +210,7 @@ const Zone = () => {
             mode="multiple"
             value={editingZone.cameraIds || record.cameraIds}
             onChange={(value) => setEditingZone({ ...editingZone, cameraIds: value })}
+            onBlur={() => handleEditZone(index)}
           >
             {camera.map(cam => (
               <Option key={cam.cameraId} value={cam.cameraId} disabled={zones.some(zone => zone.zoneId !== record.zoneId && zone.cameraIds.includes(cam.cameraId))}>
@@ -237,7 +237,7 @@ const Zone = () => {
             mode="multiple"
             value={editingZone.machineId || record.machineId}
             onChange={(value) => setEditingZone({ ...editingZone, machineId: value })}
-
+            onBlur={() => handleEditZone(index)}
           >
             {machine.map(mach => (
               <Option key={mach.machineId} value={mach.machineId}>
@@ -264,7 +264,7 @@ const Zone = () => {
             <Button type="link" icon={<CloseOutlined />} onClick={handleCancelEdit} className={`${customBtn} ms-2`}>{t('cancel')}</Button>
           </>
         ) : (
-          <Button type="link" disabled={!caneditzone} icon={<EditOutlined />} onClick={() => {
+          <Button type="link" icon={<EditOutlined />} onClick={() => {
             setEditingIndex(index);
             setEditingZone({ 
               zoneNo: record.zoneNo, 
@@ -309,11 +309,9 @@ const Zone = () => {
           allowClear
         />
 
-        {canaddzone && (
-          <Button onClick={showModal} className={`${customBtn}`}>
-            {t('Add Zone')}
-          </Button>
-        )}
+        <Button onClick={showModal} className={`${customBtn}`}>
+          {t('Add Zone')}
+        </Button>
       </div>
 
       <Table

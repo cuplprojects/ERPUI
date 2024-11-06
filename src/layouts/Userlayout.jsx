@@ -1,4 +1,3 @@
-//updated by shivom on 26/10/24: only developer can add new labels
 import React from 'react';
 import { Row, Col } from 'react-bootstrap';
 import { Routes, Route, Navigate } from 'react-router-dom';
@@ -17,6 +16,7 @@ import ProcessTable from './../sub-Components/processTable';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import QtySheetUpload from '../pages/QtySheetUpload';
+import Message from '../pages/Message/Message';
 import Labels from '../pages/Message/Labels';
 import Reports from '../pages/Reports';
 import { hasPermission } from '../CustomHooks/Services/permissionUtils';
@@ -64,6 +64,7 @@ const Userlayout = () => {
 
               <Route path="/quantity-sheet-uploads/:encryptedProjectId" element={<ProtectedRoute component={QtySheetUpload} permission="2.4"/>} />
               <Route path="/project-details/:encryptedProjectId/:encryptedLotNo" element={<ProtectedRoute component={ProcessTable} permission="2.4"/>} />
+              <Route path="/message" element={<ProtectedRoute component={Message} permission="3"/>} />
               <Route path="/labels" element={<ProtectedRoute component={Labels} permission="3"/>} />
               <Route path="/reports" element={<ProtectedRoute component={Reports} permission="3"/>} />
 

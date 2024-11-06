@@ -107,6 +107,7 @@ const RemarksModal = ({ show, handleClose, handleSave, data, processId }) => {
                 })
                 .catch(reject);
         });
+
     };
 
     const toggleRecording = () => {
