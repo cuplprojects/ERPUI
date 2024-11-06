@@ -96,16 +96,19 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
     }, [projectId, processId]);
 
 
-    const fetchTransactions = async () => {
+     const fetchTransactions = async () => {
         try {
             const response = await API.get(`/Transactions?ProjectId=${projectId}&ProcessId=${processId}`);
             const transactions = response.data || [];
     
             // Create a mapping of quantitysheetId to status, alarmId (or alarmMessage), interimQuantity, and remarks
             const statusMap = transactions.reduce((acc, transaction) => {
+                // If alarmId is "0", treat it as invalid by setting it to an empty string or null
+                const alarmId = transaction.alarmMessage || (transaction.alarmId !== "0" ? transaction.alarmId : "");
+    
                 acc[transaction.quantitysheetId] = {
                     status: transaction.status,
-                    alarmId: transaction.alarmMessage ? transaction.alarmMessage : transaction.alarmId, // Use alarmMessage if available, otherwise fallback to alarmId
+                    alarmId: alarmId, // Use valid alarmId or an empty string if it's "0"
                     interimQuantity: transaction.interimQuantity, // Map interim quantity
                     remarks: transaction.remarks, // Map remarks
                     transactionId: transaction.transactionId // Store the transactionId
