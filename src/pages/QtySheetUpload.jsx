@@ -275,9 +275,10 @@ const QtySheetUpload = () => {
                                 }}
                                 beforeUpload={handleFileUpload}
                                 fileList={fileList}
+                                className=''
                             >
-                                <Button className='fs-5 custom-zoom-btn w-100'>
-                                    <UploadOutlined className='me-2' />
+                                <Button className='fs-4 custom-zoom-btn w-100 d-flex align-items-center p-3'>
+                                    <UploadOutlined className='' />
                                     <span className='d-none d-sm-inline'>{t('selectFile')}</span>
                                     <span className='d-inline d-sm-none'>{t('upload')}</span>
                                 </Button>
@@ -296,21 +297,20 @@ const QtySheetUpload = () => {
                             )}
                         </Form.Item>
                         <Form.Item>
-                            <div className="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 g-2">
+                            <div className="d-flex flex-wrap gap-2">
                                 {lots.map((lotNo, index) => (
-                                    <div key={index} className="col">
-                                        <Button
-                                            className={`${customBtn} w-100 ${customDark === "dark-dark" ? `border` : `border-0`}`}
-                                            type="primary"
-                                            onClick={() => handleLotClick(lotNo)}
-                                        >
-                                            {t('lot')} - {lotNo} <IoMdEye />
-                                        </Button>
-                                    </div>
+                                    <Button
+                                        key={index}
+                                        className={`${selectedLotNo === lotNo ? 'bg-white text-dark border-dark' : customBtn} ${customDark === "dark-dark" ? 'border' : 'custom-light-border'} d-flex align-items-center justify-content-center p-3 `}
+                                        type="primary"
+                                        onClick={() => handleLotClick(lotNo)}
+                                    >
+                                        {t('lot')} - {lotNo} <IoMdEye className={`ms-1 ${selectedLotNo === lotNo ? '' : ''} `}/>
+                                    </Button>
                                 ))}
                             </div>
                             <div className="">
-                                <ViewQuantitySheet project={projectId} selectedLotNo={selectedLotNo} showBtn={showBtn} showTable={showTable} />
+                                <ViewQuantitySheet project={projectId} selectedLotNo={selectedLotNo} showBtn={showBtn} showTable={showTable} lots={lots}/>
                             </div>
                         </Form.Item>
                     </Form>

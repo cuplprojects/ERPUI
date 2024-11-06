@@ -9,8 +9,9 @@ import { EditOutlined, DeleteOutlined, StopOutlined } from '@ant-design/icons';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { decrypt } from '../Security/Security';
+import CatchTransferModal from '../menus/CatchTransferModal';
 
-const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
+const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
     const { t } = useTranslation();
     const [modalMessage, setModalMessage] = useState('');
     const { encryptedProjectId } = useParams();
@@ -19,6 +20,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
     const [dataSource, setDataSource] = useState([]);
     const [editingRow, setEditingRow] = useState(null);
     const [selectedProcessIds, setSelectedProcessIds] = useState([]);
+    const [selectedCatches, setSelectedCatches] = useState([]);
     const [newRowData, setNewRowData] = useState({
         catchNo: '',
         paper: '',
@@ -31,6 +33,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
         projectId: projectId,
     });
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showTransferModal, setShowTransferModal] = useState(false);
     const [itemToDelete, setItemToDelete] = useState(null);
     const [showNewRow, setShowNewRow] = useState(false);
     const [CTP_ID, setCTP_ID] = useState(null);
@@ -44,6 +47,24 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
     const [pageSize, setPageSize] = useState(5);
 
     const columns = [
+        {
+            title: t('select'),
+            dataIndex: 'selection',
+            key: 'selection',
+            width: '2%',
+            render: (_, record) => (
+                <Checkbox
+                    checked={selectedCatches.includes(record.catchNo)}
+                    onChange={(e) => {
+                        if (e.target.checked) {
+                            setSelectedCatches([...selectedCatches, record.catchNo]);
+                        } else {
+                            setSelectedCatches(selectedCatches.filter(catchNo => catchNo !== record.catchNo));
+                        }
+                    }}
+                />
+            )
+        },
         {
             title: t('catchNo'),
             dataIndex: 'catchNo',
@@ -132,6 +153,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
     const fetchQuantity = async (lotNo) => {
         try {
             const response = await API.get(`/QuantitySheet/Catch?ProjectId=${projectId}&lotNo=${lotNo}`);
+            console.log("lot data in qty sheet",response.data);
             const dataWithKeys = response.data.map(item => ({
                 ...item, key: item.quantitySheetId
             }));
@@ -219,6 +241,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
     };
 
     const handleModalClose = () => {
+        setShowTransferModal(false);
         setShowDeleteModal(false);
         setItemToDelete(null);
         setEditingRow(null);
@@ -311,6 +334,10 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
         setPageSize(size);
     };
 
+    const handleCatchesChange = (updatedCatches) => {
+        setSelectedCatches(updatedCatches);
+    };
+
     return (
         <div className='mt-'>
             {showBtn && (
@@ -322,9 +349,20 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
                             style={{ width: '250px' }}
                             allowClear
                         />
-                        <Button onClick={() => setShowNewRow(prev => !prev)} type="primary" className={`${customBtn} ${customDark === "dark-dark" ? `border` : `border-0`}`}>
-                            {showNewRow ? t('cancel') : t('addNewCatch')}
-                        </Button>
+                        <div>
+                            {selectedCatches.length > 0 && (
+                                <Button 
+                                    type="primary" 
+                                    className={`${customBtn} ${customDark === "dark-dark" ? `border` : `border-0`} me-2`}
+                                    onClick={() => setShowTransferModal(true)}
+                                >
+                                    {t('transferCatch')}
+                                </Button>
+                            )}
+                            <Button onClick={() => setShowNewRow(prev => !prev)} type="primary" className={`${customBtn} ${customDark === "dark-dark" ? `border` : `border-0`}`}>
+                                {showNewRow ? t('cancel') : t('addNewCatch')}
+                            </Button>
+                        </div>
                     </div>
                     {showNewRow && (
                         <div className="mb-3">
@@ -381,7 +419,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
             {editingRow !== null && (
                 <BootstrapModal show={true} onHide={handleModalClose}>
                     <BootstrapModal.Header closeButton>
-                        <BootstrapModal.Title>{t('editProcess')}</BootstrapModal.Title>
+                        <BootstrapModal.Title>{t('editProcess')} - {t('catchNo')}: {dataSource.find(item => item.key === editingRow)?.catchNo}</BootstrapModal.Title>
                     </BootstrapModal.Header>
                     <BootstrapModal.Body>
                         {t(modalMessage) } 
@@ -414,6 +452,17 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable }) => {
                     </BootstrapModal.Footer>
                 </BootstrapModal>
             )}
+
+            <CatchTransferModal 
+                visible={showTransferModal}
+                onClose={handleModalClose}
+                catches={selectedCatches}
+                onCatchesChange={handleCatchesChange}
+                projectId={projectId}
+                fetchQuantity={fetchQuantity}
+                lots={lots}
+                selectedLotNo={selectedLotNo}
+            />
         </div>
     );
 };
