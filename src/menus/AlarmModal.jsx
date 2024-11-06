@@ -1,11 +1,16 @@
 import React, { useState } from 'react';
 import { Modal, Button, Form } from 'react-bootstrap';
+
 import { FaMicrophone } from 'react-icons/fa6';
+
+import API from '../CustomHooks/MasterApiHooks/api'; // Adjust import as necessary
+
 
 const AlarmModal = ({ show, handleClose, handleSave, data }) => {
     const [alarmType, setAlarmType] = useState('');
     const [customMessage, setCustomMessage] = useState('');
     const [showCustomInput, setShowCustomInput] = useState(false);
+
 
     const handleAlarmTypeChange = (e) => {
         const value = e.target.value;
@@ -13,12 +18,92 @@ const AlarmModal = ({ show, handleClose, handleSave, data }) => {
         setShowCustomInput(value === 'Other');
     };
 
-    const handleSubmit = () => {
-        const alarm = showCustomInput ? customMessage : alarmType;
-        handleSave(alarm);
-        handleClose();
-        setAlarmType();
+    const handleSubmit = async () => {
+        try {
+            let existingTransactionData;
+            if (data.transactionId) {
+                // Fetch existing transaction data if transactionId exists
+                const response = await API.get(`/Transactions/${data.transactionId}`);
+                existingTransactionData = response.data;
+            }
+
+            // If "Other" is selected, use customMessage as alarmId
+            const finalAlarmId = alarmType === 'Other' && customMessage.trim() !== "" ? customMessage : alarmId;
+
+            // Validate that alarmId is not null or empty
+            if (!finalAlarmId) {
+                alert("Alarm ID is required. Please select a valid alarm type or enter a custom message.");
+                return; // Prevent submission if alarmId is missing
+            }
+
+            // Convert alarmId to string if it's not already
+            const alarmIdString = String(finalAlarmId); // Ensure alarmId is always a string
+
+            // Ensure the `transaction` field is properly set. Assuming `transactionId` should be passed.
+            const postData = {
+                transactionId: data.transactionId || 0, // Transaction field as per the API requirement
+                interimQuantity: existingTransactionData ? existingTransactionData.interimQuantity : 0, // Retain existing quantity
+                remarks: existingTransactionData ? existingTransactionData.remarks : "", // Retain existing remarks
+                projectId: data.projectId,
+                quantitysheetId: data.srNo || 0,
+                processId: processId,
+                zoneId: existingTransactionData ? existingTransactionData.zoneId : 0,
+                machineId: existingTransactionData ? existingTransactionData.machineId : 0,
+                status: existingTransactionData ? existingTransactionData.status : 0, // Retain existing status
+                alarmId: alarmIdString,  // Ensure alarmId is a string
+                lotNo: data.lotNo,
+                teamId: existingTransactionData ? existingTransactionData.teamId : 0,
+                voiceRecording: existingTransactionData ? existingTransactionData.voiceRecording : ""
+            };
+
+            if (data.transactionId) {
+                // Update existing transaction
+                const response = await API.put(`/Transactions/${data.transactionId}`, postData);
+                console.log('Update Response:', response.data);
+            } else {
+                // Create a new transaction
+                const response = await API.post('/Transactions', postData);
+                console.log('Create Response:', response.data);
+            }
+
+            handleSave(alarmIdString); // Pass the final alarmId (custom or selected)
+            handleClose(); // Close modal
+            setAlarmType('');
+            setAlarmId(null); // Reset alarmId
+            setCustomMessage(''); // Reset custom message
+        } catch (error) {
+            console.error('Error saving alarm:', error);
+        }
+
     };
+
+    const handleAlarmTypeChange = (e) => {
+        const selectedOption = alarmOptions.find(option => option.message === e.target.value);
+
+        if (e.target.value === 'Other') {
+            // When "Other" is selected, the alarmId should be set to the custom message
+            setAlarmType('Other');
+            setShowCustomInput(true); // Show the custom input field
+        } else {
+            // When a valid alarm type is selected, set the corresponding alarmId
+            setAlarmType(selectedOption ? selectedOption.message : '');
+            setAlarmId(selectedOption ? selectedOption.alarmId : null); // Set the alarmId based on selected option
+            setShowCustomInput(false); // Hide the custom input field
+        }
+    };
+
+    const getAlarm = async () => {
+        try {
+            const response = await API.get('/alarms'); // Adjust endpoint as necessary
+            setAlarmOptions(response.data); // Set alarm options from API response
+        } catch (error) {
+            console.error("Failed to fetch alarm types", error);
+        }
+    };
+
+    useEffect(() => {
+        getAlarm();
+    }, []); // Add an empty dependency array to run once on mount
 
     return (
         <Modal show={show} onHide={handleClose}>
@@ -93,6 +178,7 @@ const AlarmModal = ({ show, handleClose, handleSave, data }) => {
                                     <FaMicrophone size={20} />
                                 </Button>
                             </div>
+
                         </div>
                     </Form.Group>
                 )}

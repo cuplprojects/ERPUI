@@ -7,9 +7,46 @@ const SelectZoneModal = ({ isOpen, onClose, onSelectZone }) => {
     setSelectedZone(zone);
   };
 
-  const handleConfirm = () => {
-    onSelectZone(selectedZone);
-    onClose();
+
+  useEffect(() => {
+    getZone();
+  }, []); 
+
+  const handleConfirm = async () => {
+    try {
+      let existingTransactionData;
+      if (data.transactionId) {
+        const response = await API.get(`/Transactions/${data.transactionId}`);
+        existingTransactionData = response.data;
+      }
+
+      const postData = {
+        transactionId: data.transactionId || 0,
+        interimQuantity: data.interimQuantity, // Adjust based on actual data
+        remarks: existingTransactionData ? existingTransactionData.remarks : '',
+        projectId: data.projectId,
+        quantitysheetId: data.srNo || 0,
+        processId: processId,
+        zoneId: zoneId, // Use the selected zone here
+        machineId: existingTransactionData ? existingTransactionData.machineId : 0,
+        status: existingTransactionData ? existingTransactionData.status : 0,
+        alarmId: existingTransactionData ? existingTransactionData.alarmId : "",
+        lotNo: data.lotNo,
+        teamId: existingTransactionData ? existingTransactionData.teamId : 0,
+        voiceRecording: existingTransactionData? existingTransactionData.voiceRecording : ""
+      };
+
+      if (data.transactionId) {
+        await API.put(`/Transactions/${data.transactionId}`, postData);
+      } else {
+        await API.post('/Transactions', postData);
+      }
+      handleSave(zoneId)
+      handleClose();
+    } catch (error) {
+      console.error('Error updating interim quantity:', error);
+    }
+
   };
 
   return (
