@@ -1,68 +1,15 @@
-
-import React, { useState } from 'react';
-import { Modal, Button, Form } from 'react-bootstrap';
-import API from '../CustomHooks/MasterApiHooks/api';
-
-const statusMapping = {
-    0: 'Pending',
-    1: 'Started',
-    2: 'Completed',
-};
-
-const RemarksModal = ({ show, handleClose, data, processId,handleSave }) => {
-    const [remarks, setRemarks] = useState('');
-    
-
-    const handleSubmit = async() => {
-        try {
-            let existingTransactionData;
-            if (data.transactionId) {
-                // Fetch existing transaction data if transactionId exists
-                const response = await API.get(`/Transactions/${data.transactionId}`);
-                existingTransactionData = response.data;
-            }
-
-            const postData = {
-                transactionId: data.transactionId || 0,
-                interimQuantity: existingTransactionData ? existingTransactionData.interimQuantity : 0, // Retain existing quantity
-                remarks: remarks, // Retain existing remarks
-                projectId: data.projectId,
-                quantitysheetId: data.srNo || 0,
-                processId: processId,
-                zoneId: existingTransactionData ? existingTransactionData.zoneId : 0,
-                status: existingTransactionData ? existingTransactionData.status : 0, // Retain existing status
-                alarmId: existingTransactionData ? existingTransactionData.alarmId : 0,
-                lotNo: data.lotNo,
-                teamId: existingTransactionData ? existingTransactionData.teamId : 0,               
-            };
-
-            if (data.transactionId) {
-                // Update existing transaction
-                const response = await API.put(`/Transactions/${data.transactionId}`, postData);
-                console.log('Update Response:', response.data);
-            } else {
-                // Create a new transaction
-                const response = await API.post('/Transactions', postData);
-                console.log('Create Response:', response.data);
-            }
-            handleSave(remarks)
-            handleClose(); // Close modal
-        } catch (error) {
-            console.error('Error updating remarks:', error);
-        }
-
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Form, Container, Row, Col } from 'react-bootstrap';
 import { useReactMediaRecorder } from "react-media-recorder";
 import { useStore } from 'zustand';
 import themeStore from './../store/themeStore';
 import { FaMicrophone } from 'react-icons/fa';
+import API from '../CustomHooks/MasterApiHooks/api';
 
-const RemarksModal = ({ show, handleClose, handleSave, data }) => {
+const RemarksModal = ({ show, handleClose, handleSave, data, processId }) => {
     const [remarks, setRemarks] = useState('');
     const [isRecording, setIsRecording] = useState(false);
     const [recordingTime, setRecordingTime] = useState(0);
-
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = getCssClasses();
     const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
@@ -71,11 +18,11 @@ const RemarksModal = ({ show, handleClose, handleSave, data }) => {
         status,
         startRecording,
         stopRecording,
-        mediaBlobUrl
+        mediaBlobUrl,
     } = useReactMediaRecorder({
         video: false,
         audio: true,
-        echoCancellation: true
+        echoCancellation: true,
     });
 
     useEffect(() => {
@@ -96,10 +43,70 @@ const RemarksModal = ({ show, handleClose, handleSave, data }) => {
         return `${minutes}:${seconds}`;
     };
 
-    const handleSubmit = () => {
-        handleSave(remarks, mediaBlobUrl);
-        handleClose();
+    const handleSubmit = async () => {
+        try {
+            let existingTransactionData;
+            if (data.transactionId) {
+                const response = await API.get(`/Transactions/${data.transactionId}`);
+                existingTransactionData = response.data;
+            }
 
+            // Ensure that the mediaBlobUrl is not null or empty
+            let base64Audio = null;
+            if (mediaBlobUrl) {
+                base64Audio = await convertToBase64(mediaBlobUrl);
+            }
+
+            const postData = {
+                transactionId: data.transactionId || 0,
+                interimQuantity: data.interimQuantity,
+                remarks: remarks,
+                projectId: data.projectId,
+                quantitysheetId: data.srNo || 0,
+                processId: processId,
+                zoneId: existingTransactionData ? existingTransactionData.zoneId : 0,
+                machineId: existingTransactionData ? existingTransactionData.machineId : 0,
+                status: existingTransactionData ? existingTransactionData.status : 0,
+                alarmId: existingTransactionData ? existingTransactionData.alarmId : "",
+                lotNo: data.lotNo,
+                teamId: existingTransactionData ? existingTransactionData.teamId : 0,
+                // Only include voice recording if there's an actual audio blob
+                voiceRecording: base64Audio || "", // If there's no audio, send an empty string
+            };
+
+            if (data.transactionId) {
+                await API.put(`/Transactions/${data.transactionId}`, postData);
+            } else {
+                await API.post('/Transactions', postData);
+            }
+
+            // Reset states after save
+            handleSave(remarks, mediaBlobUrl);
+            setRemarks('');  // Clear remarks input
+            setIsRecording(false);  // Reset recording state
+            setRecordingTime(0);  // Reset recording timer
+            handleClose();  // Close modal
+
+            // Clear the audio state after submitting
+            stopRecording(); // Stop recording if still active
+            setRecordingTime(0); // Reset the timer
+        } catch (error) {
+            console.error('Error updating interim quantity:', error);
+        }
+    };
+
+    const convertToBase64 = (mediaBlobUrl) => {
+        return new Promise((resolve, reject) => {
+            fetch(mediaBlobUrl)
+                .then(response => response.blob()) // Fetch the Blob from the media URL
+                .then(blob => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result.split(',')[1]); // Extract base64 string
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob); // Convert the Blob to a DataURL (base64)
+                })
+                .catch(reject);
+        });
     };
 
     const toggleRecording = () => {
@@ -114,45 +121,12 @@ const RemarksModal = ({ show, handleClose, handleSave, data }) => {
     const isSaveDisabled = remarks.trim() === '';
 
     return (
-        <Modal show={show} onHide={handleClose} className={``} size="md">
+        <Modal show={show} onHide={handleClose} size="md">
             <Modal.Header className={`${customDark === "dark-dark" ? `${customDark} border` : customDark}`}>
                 <Modal.Title className={`${customLightText}`}>Set Remarks</Modal.Title>
             </Modal.Header>
-
-            <Modal.Body>
-            {data ? (
-                    <div className="details mb-3 d-flex justify-content-between align-items-center">
-                        <div>
-                            <span className="fw-bold">Catch No </span>: {data.catchNumber}
-                        </div>
-                        <div>
-                                <span className="fw-bold">Status </span>:
-                                <span
-                                    className={`fw-bold ${
-                                        data.status === 0 ? 'text-danger' :
-                                        data.status === 1 ? 'text-primary' :
-                                        data.status === 2 ? 'text-success' : ''
-                                    }`}
-                                >
-                                    {statusMapping[data.status]}
-                                </span>
-                            </div>
-                    </div>
-                ) : (
-                    <div>No data available</div>
-                )}
-                <Form.Group controlId="formRemarks">
-                    <Form.Label>Remarks</Form.Label>
-                    <Form.Control
-                        type="text"
-                        placeholder="Enter remarks"
-                        value={remarks}
-                        onChange={(e) => setRemarks(e.target.value)}
-                    />
-                </Form.Group>
-
             <Modal.Body className={`${customLight} ${customDark === "dark-dark" ? `${customDark} border-top-0 border border-bottom-0` : customDark}`}>
-                <Container fluid className="">
+                <Container fluid>
                     <Row>
                         <Col xs={12} md={12}>
                             <Form.Group controlId="formRemarks" className="mb-3">
@@ -172,8 +146,8 @@ const RemarksModal = ({ show, handleClose, handleSave, data }) => {
                             <div className="voice-recording mb-3">
                                 <h5 className={`${customDarkText}`}>Voice Recording</h5>
                                 <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-2">
-                                    <Button 
-                                        variant={isRecording ? "danger" : "primary"} 
+                                    <Button
+                                        variant={isRecording ? "danger" : "primary"}
                                         onClick={toggleRecording}
                                         className={`${customBtn} ${customLightBorder} mb-2 mb-md-0`}
                                     >
@@ -196,15 +170,14 @@ const RemarksModal = ({ show, handleClose, handleSave, data }) => {
                         </Col>
                     </Row>
                 </Container>
-
             </Modal.Body>
             <Modal.Footer className={`${customDark === "dark-dark" ? `${customDark} border` : customDark}`}>
                 <Button variant="secondary" onClick={handleClose} className={`${customBtn} ${customLightBorder}`}>
                     Close
                 </Button>
-                <Button 
-                    variant="primary" 
-                    onClick={handleSubmit} 
+                <Button
+                    variant="primary"
+                    onClick={handleSubmit}
                     className={`${customBtn} ${customLightBorder}`}
                     disabled={isSaveDisabled}
                 >

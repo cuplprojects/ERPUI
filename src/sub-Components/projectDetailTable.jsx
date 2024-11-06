@@ -6,6 +6,7 @@ import InterimQuantityModal from './../menus/InterimQuantityModal';
 import RemarksModal from './../menus/RemarksModal';
 import CatchDetailModal from './../menus/CatchDetailModal';
 import SelectZoneModal from './../menus/SelectZoneModal';
+import SelectMachineModal from '../menus/SelectMachineModal';
 import AssignTeamModal from './../menus/AssignTeamModal';
 import './../styles/ProjectDetailsTable.css';
 import { IoCloseCircle } from "react-icons/io5";
@@ -56,8 +57,10 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
     const [catchDetailModalShow, setCatchDetailModalShow] = useState(false);
     const [catchDetailModalData, setCatchDetailModalData] = useState(null);
     const [selectZoneModalShow, setSelectZoneModalShow] = useState(false);
+    const [selectMachineModalShow, setSelectMachineModalShow] = useState(false);
     const [assignTeamModalShow, setAssignTeamModalShow] = useState(false);
     const [selectZoneModalData, setSelectZoneModalData] = useState(null);
+    const [selectMachineModalData, setSelectMachineModalData] = useState(null);
     const [assignTeamModalData, setAssignTeamModalData] = useState(null);
     const [showOnlyAlerts, setShowOnlyAlerts] = useState(false);
     const [showOnlyCompletedPreviousProcess, setShowOnlyCompletedPreviousProcess] = useState(true);
@@ -97,32 +100,35 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
         try {
             const response = await API.get(`/Transactions?ProjectId=${projectId}&ProcessId=${processId}`);
             const transactions = response.data || [];
-            // Create a mapping of quantitysheetId to status, interimQuantity, and remarks
+    
+            // Create a mapping of quantitysheetId to status, alarmId (or alarmMessage), interimQuantity, and remarks
             const statusMap = transactions.reduce((acc, transaction) => {
                 acc[transaction.quantitysheetId] = {
                     status: transaction.status,
-                    alarmId: transaction.alarmMessage,
+                    alarmId: transaction.alarmMessage ? transaction.alarmMessage : transaction.alarmId, // Use alarmMessage if available, otherwise fallback to alarmId
                     interimQuantity: transaction.interimQuantity, // Map interim quantity
                     remarks: transaction.remarks, // Map remarks
                     transactionId: transaction.transactionId // Store the transactionId
                 };
                 return acc;
             }, {});
-
-            // Update tableData with the status, interimQuantity, and remarks from transactions
+    
+            // Update tableData with the status, alarmId (or alarmMessage), interimQuantity, and remarks from transactions
             const updatedData = tableData.map(item => ({
                 ...item,
                 status: statusMap[item.srNo] ? statusMap[item.srNo].status : 0,
-                alerts: statusMap[item.srNo] ? statusMap[item.srNo].alarmId : "",
+                alerts: statusMap[item.srNo] ? statusMap[item.srNo].alarmId : "", // Use alarmId or alarmMessage
                 interimQuantity: statusMap[item.srNo] ? statusMap[item.srNo].interimQuantity : 0, // Add interim quantity
                 remarks: statusMap[item.srNo] ? statusMap[item.srNo].remarks : "", // Add remarks
                 transactionId: statusMap[item.srNo] ? statusMap[item.srNo].transactionId : null, // Add transactionId to each item
             }));
+    
             setTableData(updatedData);
         } catch (error) {
             console.error('Error fetching transactions:', error);
         }
     };
+    
 
 
     const handleRowStatusChange = async (catchNumber, newStatusIndex) => {
@@ -142,16 +148,18 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
 
             const postData = {
                 transactionId: updatedRow?.transactionId || 0, // Use the transactionId from the updated row
-                quantity: existingTransactionData ? existingTransactionData.quantity : 0,
+                interimQuantity: existingTransactionData ? existingTransactionData.interimQuantity : 0,
                 remarks: existingTransactionData ? existingTransactionData.remarks : "",
                 projectId: projectId,
                 quantitysheetId: updatedRow?.srNo || 0,
                 processId: processId,
-                zoneId: 0,
+                zoneId: existingTransactionData ? existingTransactionData.zoneId : 0,
+                machineId: existingTransactionData ? existingTransactionData.machineId : 0,
                 status: newStatusIndex, // Change only this field
-                alarmId: existingTransactionData ? existingTransactionData.alarmId : 0,
+                alarmId: existingTransactionData ? existingTransactionData.alarmId : "",
                 lotNo: existingTransactionData ? existingTransactionData.lotNo : 0,
                 teamId: existingTransactionData ? existingTransactionData.teamId : 0,
+                voiceRecording: existingTransactionData? existingTransactionData.voiceRecording : ""
             };
             // Update or create the transaction
             if (updatedRow.transactionId) {
@@ -327,7 +335,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
             render: (text, record) => {
                 const statusSteps = ["Pending", "Started", "Completed"];
                 const initialStatusIndex = text !== undefined ? text : 0;
-                // Check if the record has alerts
+
                 const hasAlerts = record.alerts && record.alerts.length > 0;
 
                 return (
@@ -377,16 +385,18 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
             if (updatedRow) {
                 const postData = {
                     transactionId: updatedRow.transactionId || 0,
-                    quantity: 0,
+                    interimQuantity: updatedRow?.interimQuantity || 0,
                     remarks: updatedRow?.remarks || "",
                     projectId: projectId,
                     quantitysheetId: updatedRow?.srNo || 0,
                     processId: processId,
-                    zoneId: 0,
+                    zoneId: updatedRow?.zoneId || "",
                     status: newStatusIndex,
-                    alarmId: 0,
+                    alarmId: updatedRow?.alarmId || "",
+                    machineId: updatedRow?.machineId || 0,
                     lotNo: updatedRow?.lotNo || 0,
-                    teamId: 0
+                    voiceRecording: updatedRow?.voiceRecording || "",
+                    teamId: updatedRow?.teamId || 0
                 };
 
                 try {
@@ -443,7 +453,12 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
             } else if (action === 'Select Zone' && hasFeaturePermission(4)) {
                 setSelectZoneModalShow(true);
                 setSelectZoneModalData(selectedRow); // Pass the selected row's data to the select zone modal
-            } else if (action === 'Assign Team' && hasFeaturePermission(5)) {
+            } 
+            else if (action === 'Select Machine' && hasFeaturePermission(10)) {
+                setSelectMachineModalShow(true);
+                setSelectMachineModalData(selectedRow);
+            }
+            else if (action === 'Assign Team' && hasFeaturePermission(5)) {
                 setAssignTeamModalShow(true);
                 setAssignTeamModalData(selectedRow); // Pass the selected row's data to the assign team modal
             }
@@ -457,6 +472,19 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
         const updatedData = tableData.map((row) => {
             if (selectedRowKeys.includes(row.catchNumber)) {
                 return { ...row, zone }; // Update the zone or any other necessary field
+            }
+            return row;
+        });
+        setTableData(updatedData);
+        setSelectedRowKeys([]); // Deselect all rows
+        setShowOptions(false); // Reset options visibility
+        fetchTransactions();
+    };
+
+    const handleSelectMachineSave = (machine) => {
+        const updatedData = tableData.map((row) => {
+            if (selectedRowKeys.includes(row.catchNumber)) {
+                return { ...row, machine }; // Update the zone or any other necessary field
             }
             return row;
         });
@@ -505,10 +533,10 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
         fetchTransactions();
     };
 
-    const handleRemarksSave = (remarks) => {
+    const handleRemarksSave = (remarks, mediaBlobUrl) => {
         const updatedData = tableData.map((row) => {
             if (selectedRowKeys.includes(row.catchNumber)) {
-                return { ...row, remarks };
+                return { ...row, remarks,mediaBlobUrl };
             }
             return row;
         });
@@ -543,6 +571,11 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                 <Menu.Item onClick={() => handleDropdownSelect('Select Zone')}
 
                     disabled={selectedRowKeys.length === 0}>Select Zone</Menu.Item>
+            )}
+            {hasFeaturePermission(10) && (
+                <Menu.Item onClick={() => handleDropdownSelect('Select Machine')}
+
+                    disabled={selectedRowKeys.length === 0}>Select Machine</Menu.Item>
             )}
             {hasFeaturePermission(5) && (
                 <Menu.Item onClick={() => handleDropdownSelect('Assign Team')}
@@ -803,6 +836,13 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                 handleClose={() => setSelectZoneModalShow(false)}
                 handleSave={handleSelectZoneSave}
                 data={selectZoneModalData}
+                processId={processId}
+            />
+            <SelectMachineModal
+                show={selectMachineModalShow}
+                handleClose={() => setSelectMachineModalShow(false)}
+                handleSave={handleSelectMachineSave}
+                data={selectMachineModalData}
                 processId={processId}
             />
             <AssignTeamModal
