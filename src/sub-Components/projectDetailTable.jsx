@@ -547,9 +547,6 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, lotNo, featur
     const selectedRows = tableData.filter((row) => selectedRowKeys.includes(row.catchNumber));
     const isCompleted = selectedRows.every(row => row.status === 2); // Check if the selected row is completed
 
-
-    const selectedRow = tableData.find((row) => row.catchNumber === selectedRowKeys[0]);
-    const isCompleted = selectedRow && selectedRow.status === 2; // Check if the selected row is completed
     
     const menu = (
         <Menu>
@@ -871,4 +868,5 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, lotNo, featur
         </>
     );
 };
+}
 export default ProjectDetailsTable;

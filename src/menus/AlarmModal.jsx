@@ -12,12 +12,6 @@ const AlarmModal = ({ show, handleClose, handleSave, data }) => {
     const [showCustomInput, setShowCustomInput] = useState(false);
 
 
-    const handleAlarmTypeChange = (e) => {
-        const value = e.target.value;
-        setAlarmType(value);
-        setShowCustomInput(value === 'Other');
-    };
-
     const handleSubmit = async () => {
         try {
             let existingTransactionData;
