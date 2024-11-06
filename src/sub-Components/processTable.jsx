@@ -29,6 +29,7 @@ const ProcessTable = () => {
     const [featureData, setFeatureData] = useState(null);
     const { processId, processName } = useCurrentProcessStore();
     const { setProcess, clearProcess } = useCurrentProcessStore((state) => state.actions);
+    console.log(featureData);
     const userData = useUserData();
 
     const { getCssClasses } = useStore(themeStore);
@@ -51,6 +52,8 @@ const ProcessTable = () => {
     const [showBarChart, setShowBarChart] = useState(true);
     const [catchDetailModalShow, setCatchDetailModalShow] = useState(false);
     const [catchDetailModalData, setCatchDetailModalData] = useState(null);
+    const [previousProcessPercentage, setPreviousProcessPercentage] = useState(90);
+
     const [selectedLot, setSelectedLot] = useState(lotNo);
     const [projectName, setProjectName] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -63,6 +66,7 @@ const ProcessTable = () => {
             setIsLoading(true);
             try {
                 const data = await getProjectProcessAndFeature(userData.userId, id);
+                console.log(data);
                 if (Array.isArray(data) && data.length > 0) {
                     const process = data[0];
                     setProcess(process.processId, process.processName);
@@ -70,6 +74,7 @@ const ProcessTable = () => {
 
                     // Fetch previous process
                     if (process.sequence > 1) {
+                        console.log(process.sequence);
                         const previousProcessData = await getProjectProcessByProjectAndSequence(id, process.sequence - 1);
                         setPreviousProcess(previousProcessData);
                     }
@@ -94,8 +99,11 @@ const ProcessTable = () => {
     }, [fetchData]);
 
     const hasFeaturePermission = (featureId) => {
-        if (featureData && featureData?.featuresList) {
-            return featureData?.featuresList?.includes(featureId);
+        if (userData?.role?.roleId === 1) {
+            return true;
+        }
+        if (featureData?.featuresList) {
+            return featureData.featuresList.includes(featureId);
         }
         return false;
     }
@@ -106,9 +114,11 @@ const ProcessTable = () => {
             try {
 
                 const response = await API.get(`/QuantitySheet/CatchByproject?ProjectId=${id}`);
+
                 const quantitySheetData = response.data;
 
                 if (Array.isArray(quantitySheetData) && quantitySheetData.length > 0) {
+                    console.log(quantitySheetData);
                     const formDataGet = quantitySheetData.map((item) => ({
                         srNo: item?.quantitySheetId || "",
                         catchNumber: item?.catchNo,
@@ -129,6 +139,7 @@ const ProcessTable = () => {
                         previousProcessStats: "",
                         voiceRecording: ""
                     }));
+                    console.log('Formatted data:', formDataGet);
                     setTableData(formDataGet); // Set the table data only here
 
                     // Extract unique lot numbers and set projectLots
@@ -145,6 +156,7 @@ const ProcessTable = () => {
                 setProjectLots([]); // Set projectLots to empty array on error
             }
         };
+
         fetchQuantitySheet();
     }, [id, lotNo]);
 
@@ -190,6 +202,7 @@ const ProcessTable = () => {
     };
 
     const catchNumbers = tableData.map((item) => item.catchNumber).sort((a, b) => a - b);
+    console.log(catchNumbers);
 
     const filteredTableData = selectedLot
         ? tableData.filter(item => item.lotNo === selectedLot)
@@ -205,6 +218,8 @@ const ProcessTable = () => {
         }
         return acc;
     }, []);
+
+    console.log(combinedTableData);
 
     return (
         <div className="container-fluid" >
@@ -335,13 +350,13 @@ const ProcessTable = () => {
                         </Col>
                         <Col lg={9} md={8} className="ps-0">
                             {tableData?.length > 0 && (
+
                                 <ProjectDetailsTable tableData={combinedTableData} setTableData={setTableData} projectId={id} lotNo={selectedLot} featureData={featureData} hasFeaturePermission={hasFeaturePermission} processId={processId} projectLots={projectLots} />
                             )}
                         </Col>
                     </Row>
 
                 </Col>
-                <Col lg={2} md={0} ></Col>
 
             </Row>
             <Row className='mb-4 d-flex justify-content-between'>

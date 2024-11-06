@@ -1,15 +1,9 @@
 import React, { useState } from 'react';
 import { Modal, Button, Form } from 'react-bootstrap';
-import API from '../CustomHooks/MasterApiHooks/api'; // Adjust import as necessary
 
-const statusMapping = {
-    0: 'Pending',
-    1: 'Started',
-    2: 'Completed',
-};
-
-const InterimQuantityModal = ({ show, handleClose, data, processId, handleSave }) => {
+const InterimQuantityModal = ({ show, handleClose, handleSave, data }) => {
     const [interimQuantity, setInterimQuantity] = useState('');
+
 
     const handleSubmit = async () => {
         // Ensure interim quantity is smaller than total quantity
@@ -56,6 +50,7 @@ const InterimQuantityModal = ({ show, handleClose, data, processId, handleSave }
         } catch (error) {
             console.error('Error updating interim quantity:', error);
         }
+
     };
 
     return (
@@ -71,15 +66,11 @@ const InterimQuantityModal = ({ show, handleClose, data, processId, handleSave }
                                 <span className="fw-bold">Catch No </span>: {data.catchNumber}
                             </div>
                             <div>
-                                <span className="fw-bold">Status </span>:
+                                <span className="fw-bold ">Status </span>:
                                 <span
-                                    className={`fw-bold ${
-                                        data.status === 0 ? 'text-danger' :
-                                        data.status === 1 ? 'text-primary' :
-                                        data.status === 2 ? 'text-success' : ''
-                                    }`}
+                                    className={`fw-bold ${data.status === 'Pending' ? 'text-danger' : data.status === 'Started' ? 'text-primary' : data.status === 'Completed' ? 'text-success' : ''}`}
                                 >
-                                    {statusMapping[data.status]}
+                                    {data.status}
                                 </span>
                             </div>
                         </div>
@@ -88,7 +79,7 @@ const InterimQuantityModal = ({ show, handleClose, data, processId, handleSave }
                                 <span className="fw-bold">Total Quantity </span>: {data.quantity}
                             </div>
                             <div>
-                                <span className="fw-bold">Interim Quantity </span>: {data.interimQuantity}
+                                <span className="fw-bold ">Interim Quantity </span>:{data.interimQuantity}
                             </div>
                         </div>
                     </>
@@ -109,11 +100,7 @@ const InterimQuantityModal = ({ show, handleClose, data, processId, handleSave }
                 <Button variant="danger" onClick={handleClose}>
                     Close
                 </Button>
-                <Button 
-                    className='custom-theme-dark-btn custom-theme-dark-border' 
-                    onClick={handleSubmit}
-                    disabled={!interimQuantity} // Disable if interimQuantity is empty
-                >
+                <Button className='custom-theme-dark-btn custom-theme-dark-border' onClick={handleSubmit}>
                     Save Changes
                 </Button>
             </Modal.Footer>
