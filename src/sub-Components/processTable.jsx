@@ -16,9 +16,7 @@ import themeStore from '../store/themeStore';
 import { useStore } from 'zustand';
 import { MdPending, MdCloudUpload } from "react-icons/md";
 import { Link } from 'react-router-dom';
-
-
-import { FaRegHourglassHalf } from "react-icons/fa6";//pre process running
+import { FaRegHourglassHalf } from "react-icons/fa6";  //pre process running 
 
 import API from '../CustomHooks/MasterApiHooks/api';
 import { useUserData } from '../store/userDataStore';
@@ -132,7 +130,6 @@ const ProcessTable = () => {
                         projectId:item?.projectId,
                         isOverridden: item?.isOverridden,
                         processId: item?.processId || [],
-
                         status: item?.status || "Pending",
                         alerts: "",
                         interimQuantity: "0",
