@@ -307,7 +307,6 @@ const Project = () => {
       title={t('projects')}
       bordered={true}
       style={{ padding: '20px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)' }}
-      className={customDarkText}
     >
       <Tabs activeKey={activeTabKey} onChange={setActiveTabKey}>
         <TabPane tab={t('projectList')} key="1">
@@ -416,16 +415,24 @@ const Project = () => {
             </Form>
           </Modal>
         </TabPane>
-        <TabPane tab={t('selectProcess')} key="2" disabled>
-          {/* Content for Select Process */}
-          <div>
-            <AddProjectProcess selectedProject={selectedProject}/>
-          </div>
-        </TabPane>
+        <TabPane tab={t('selectProcess')} key="2">
+  {/* Content for Select Process */}
+  <div>
+    <AddProjectProcess selectedProject={selectedProject} />
+    <Button 
+      type="primary" 
+      onClick={() => setActiveTabKey("3")} 
+      style={{ marginTop: '20px' }}
+    >
+      {t('next')}
+    </Button>
+  </div>
+</TabPane>
+
         <TabPane tab={t('allocateProcess')} key="3">
           {/* Content for Allocate Process */}
           <div>
-            <ProjectUserAllocation/>
+            <ProjectUserAllocation selectedProject={selectedProject}/>
           </div>
         </TabPane>
       </Tabs>
