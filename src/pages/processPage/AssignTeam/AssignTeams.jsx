@@ -10,7 +10,7 @@ import teamsService from '../../../CustomHooks/ApiServices/teamsService';
 
 const AssignTeams = () => {
   const [selectedProject, setSelectedProject] = useState({ projectid: 1, projectname: 'Project Alpha' });
-  const [assignmentType, setAssignmentType] = useState('project');
+  const [assignmentType, setAssignmentType] = useState('catch');
   const [showCreateTeamModal, setShowCreateTeamModal] = useState(false);
   const [showTeamsModal, setShowTeamsModal] = useState(false);
   const [teams, setTeams] = useState([]);
