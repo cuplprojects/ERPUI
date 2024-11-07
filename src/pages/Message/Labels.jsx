@@ -3,7 +3,6 @@
  * Created by Shivom on 2023-10-08
  * 
  * This component uses the textLabelService for API requests
- * Updated 26/10/24: Only developers can add new labels
  */
 
 import React, { useState, useEffect } from 'react';
@@ -16,7 +15,6 @@ import { useStore } from 'zustand';
 import useAlertMessage from '../../CustomHooks/Services/AlertMessage';
 import { fetchTextLabels, addTextLabel, updateTextLabel } from '../../CustomHooks/ApiServices/textLabelSevice';
 import { EditOutlined, CloseOutlined } from '@ant-design/icons';
-import useUserDataStore from '../../store/userDataStore';
 
 const Labels = () => {
   const [labels, setLabels] = useState([]);
@@ -38,9 +36,8 @@ const Labels = () => {
   const { getCssClasses } = useStore(themeStore);
     const cssClasses = getCssClasses();
     const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
-  
-  const { userData } = useUserDataStore();
-  const isDeveloper = userData?.role?.roleId === 1;
+  // Hardcoded developer flag
+  const isDeveloper = true;
 
   useEffect(() => {
     fetchLabels();

@@ -104,18 +104,24 @@ const QtySheetUpload = () => {
                 const firstSheetName = workbook.SheetNames[0];
                 const worksheet = workbook.Sheets[firstSheetName];
                 const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
+    
                 const rows = jsonData.slice(1);
                 const mappedData = rows.map((row) => {
                     const rowData = {};
                     for (let property in fieldMappings) {
                         const header = fieldMappings[property];
                         const index = jsonData[0].indexOf(header);
-                        rowData[property] = index !== -1 ?
+                        rowData[property] = index !== -1 ? 
                             (property === 'quantity' ? parseFloat(row[index]) || 0 : String(row[index])) : '';
+                        
+                        // Format date if it's the examdate column
+                        if (property === 'examdate' && rowData[property]) {
+                            const date = new Date(rowData[property]);
+                            rowData[property] = date.toLocaleDateString('en-GB'); // Converts to DD/MM/YYYY
+                        }
                     }
+                    
                     console.log(t('rowDataMapped'), rowData);
-
                     rowData['projectId'] = projectId;
                     rowData['percentageCatch'] = '0';
                     return rowData;
@@ -125,6 +131,7 @@ const QtySheetUpload = () => {
             reader.readAsArrayBuffer(selectedFile);
         });
     };
+    
 
     const getColumns = async () => {
         try {
@@ -268,9 +275,10 @@ const QtySheetUpload = () => {
                                 }}
                                 beforeUpload={handleFileUpload}
                                 fileList={fileList}
+                                className=''
                             >
-                                <Button className='fs-5 custom-zoom-btn w-100'>
-                                    <UploadOutlined className='me-2' />
+                                <Button className='fs-4 custom-zoom-btn w-100 d-flex align-items-center p-3'>
+                                    <UploadOutlined className='' />
                                     <span className='d-none d-sm-inline'>{t('selectFile')}</span>
                                     <span className='d-inline d-sm-none'>{t('upload')}</span>
                                 </Button>
@@ -289,21 +297,20 @@ const QtySheetUpload = () => {
                             )}
                         </Form.Item>
                         <Form.Item>
-                            <div className="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 g-2">
+                            <div className="d-flex flex-wrap gap-2">
                                 {lots.map((lotNo, index) => (
-                                    <div key={index} className="col">
-                                        <Button
-                                            className={`${customBtn} w-100 ${customDark === "dark-dark" ? `border` : `border-0`}`}
-                                            type="primary"
-                                            onClick={() => handleLotClick(lotNo)}
-                                        >
-                                            {t('lot')} - {lotNo} <IoMdEye />
-                                        </Button>
-                                    </div>
+                                    <Button
+                                        key={index}
+                                        className={`${selectedLotNo === lotNo ? 'bg-white text-dark border-dark' : customBtn} ${customDark === "dark-dark" ? 'border' : 'custom-light-border'} d-flex align-items-center justify-content-center p-3 `}
+                                        type="primary"
+                                        onClick={() => handleLotClick(lotNo)}
+                                    >
+                                        {t('lot')} - {lotNo} <IoMdEye className={`ms-1 ${selectedLotNo === lotNo ? '' : ''} `}/>
+                                    </Button>
                                 ))}
                             </div>
                             <div className="">
-                                <ViewQuantitySheet project={projectId} selectedLotNo={selectedLotNo} showBtn={showBtn} showTable={showTable} />
+                                <ViewQuantitySheet project={projectId} selectedLotNo={selectedLotNo} showBtn={showBtn} showTable={showTable} lots={lots}/>
                             </div>
                         </Form.Item>
                     </Form>
