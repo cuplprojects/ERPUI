@@ -74,7 +74,6 @@ const arrayMove = (array, from, to) => {
   return array;
 };
 
-
 const AddProjectProcess = ({ selectedProject }) => {
   const [projectProcesses, setProjectProcesses] = useState([]);
   const [features, setFeatures] = useState([]);
@@ -88,7 +87,6 @@ const AddProjectProcess = ({ selectedProject }) => {
   const [previousFeatures, setPreviousFeatures] = useState([]);
   const [independentProcesses, setIndependentProcesses] = useState([]);
   const [projectName, setProjectName] = useState('');
-
 
   useEffect(() => {
     const fetchRequiredProcesses = async (typeId) => {
@@ -198,7 +196,6 @@ const AddProjectProcess = ({ selectedProject }) => {
     });
   };
 
-
   const calculatedWeightage = (processes) => {
     const totalWeightage = processes.reduce((sum, process) => sum + (process.weightage || 0), 0);
     return processes.map(process => ({
@@ -217,7 +214,6 @@ const AddProjectProcess = ({ selectedProject }) => {
         processId: matchingProcess ? matchingProcess.id : process.id,
         weightage: process.relativeWeightage,
         sequence: index+1,
-
         featuresList: process.installedFeatures,
         userId: process.userId || []
       };
@@ -248,7 +244,6 @@ const AddProjectProcess = ({ selectedProject }) => {
   const handleCancelEdit = () => {
     setEditingProcessId(null);
     setEditingFeatures(previousFeatures);
-
   };
 
   const handleFeatureChange = (value) => {
@@ -282,7 +277,6 @@ const AddProjectProcess = ({ selectedProject }) => {
     }
   };
 
-
   const onSortEnd = useCallback(({ oldIndex, newIndex }) => {
     const process = projectProcesses[oldIndex];
     const processWithRange = independentProcesses.find(p => p.id === process.id);
@@ -301,14 +295,11 @@ const AddProjectProcess = ({ selectedProject }) => {
       const newProcesses = arrayMove(prevProcesses, oldIndex, newIndex);
       return calculatedWeightage(newProcesses);
     });
-
   }, [projectProcesses, independentProcesses]);
 
   if (loading || projectProcesses.length === 0) {
     return <Spin tip="Loading..." />;
   }
-
-  console.log('Rendering projectProcesses:', projectProcesses); // Log here
 
   return (
     <div>
@@ -328,25 +319,6 @@ const AddProjectProcess = ({ selectedProject }) => {
           ))}
         </Panel>
       </Collapse>
-      <DragDropContext onDragEnd={onDragEnd}>
-        <Droppable droppableId="processes">
-          {(provided) => (
-            <div ref={provided.innerRef} {...provided.droppableProps}>
-              <Table
-                columns={columns}
-                dataSource={projectProcesses}
-                rowKey="id"
-                pagination={false}
-                bordered
-                components={{
-                  body: {
-                    row: (props) => {
-                      const index = projectProcesses.findIndex(process => process.id === props['data-row-key']);
-                      return <DraggableRow index={index} {...props} />;
-                    },
-                  },
-                }}
-              />
 
       <div style={{ padding: '10px', overflowX: 'auto' }}>
         <table className="table table-striped table-bordered" style={{ minWidth: '800px', tableLayout: 'fixed', borderCollapse: 'collapse' }}>
@@ -387,7 +359,6 @@ const AddProjectProcess = ({ selectedProject }) => {
         </table>
       </div>
 
-
       <Button type="primary" onClick={handleSubmit} style={{ marginTop: '16px' }}>
         Submit Processes
       </Button>
@@ -411,7 +382,5 @@ const AddProjectProcess = ({ selectedProject }) => {
     </div>
   );
 };
-
-
 
 export default AddProjectProcess;

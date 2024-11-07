@@ -1,7 +1,13 @@
 import React, { useState } from 'react';
 import { Modal, Button, Form } from 'react-bootstrap';
+import API from '../CustomHooks/MasterApiHooks/api'; // Adjust import as necessary
 
-const InterimQuantityModal = ({ show, handleClose, handleSave, data }) => {
+const statusMapping = {
+    0: 'Pending',
+    1: 'Started',
+    2: 'Completed',
+};
+const InterimQuantityModal = ({ show, handleClose, handleSave, data, processId }) => {
     const [interimQuantity, setInterimQuantity] = useState('');
 
 
@@ -22,7 +28,7 @@ const InterimQuantityModal = ({ show, handleClose, handleSave, data }) => {
 
             const postData = {
                 transactionId: data.transactionId || 0,
-                interimQuantity: interimQuantity, // Retain existing quantity
+                interimQuantity: data.interimQuantity + parseFloat(interimQuantity), // Retain existing quantity
                 remarks: existingTransactionData ? existingTransactionData.remarks : "", // Retain existing remarks
                 projectId: data.projectId,
                 quantitysheetId: data.srNo || 0,
@@ -46,6 +52,7 @@ const InterimQuantityModal = ({ show, handleClose, handleSave, data }) => {
                 console.log('Create Response:', response.data);
             }
             handleSave(interimQuantity);
+            setInterimQuantity('');
             handleClose(); // Close modal
         } catch (error) {
             console.error('Error updating interim quantity:', error);
@@ -67,10 +74,11 @@ const InterimQuantityModal = ({ show, handleClose, handleSave, data }) => {
                             </div>
                             <div>
                                 <span className="fw-bold ">Status </span>:
-                                <span
-                                    className={`fw-bold ${data.status === 'Pending' ? 'text-danger' : data.status === 'Started' ? 'text-primary' : data.status === 'Completed' ? 'text-success' : ''}`}
-                                >
-                                    {data.status}
+                                <span className={`fw-bold ${data.status === 0 ? 'text-danger' :
+                                        data.status === 1 ? 'text-primary' :
+                                        data.status === 2 ? 'text-success' : ''
+                                    }`}>
+                                    {statusMapping[data.status]}
                                 </span>
                             </div>
                         </div>
