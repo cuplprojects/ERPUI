@@ -3,8 +3,11 @@ import { ProgressBar } from 'react-bootstrap';
 import './../styles/catchProgressBar.css'; // Assuming you use external CSS
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
+
 const CatchProgressBar = ({ data }) => {
 
+
+  console.log(data)
     //Theme Change Section
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = getCssClasses();
@@ -18,7 +21,7 @@ const CatchProgressBar = ({ data }) => {
       let completed = 0;
   
       jsonData.forEach((item) => {
-        if (item.status === 'Completed') {
+        if (item.status === 2) {
           completed += 1;
         }
       });

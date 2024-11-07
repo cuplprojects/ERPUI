@@ -74,6 +74,7 @@ const arrayMove = (array, from, to) => {
   return array;
 };
 
+
 const AddProjectProcess = ({ selectedProject }) => {
   const [projectProcesses, setProjectProcesses] = useState([]);
   const [features, setFeatures] = useState([]);
@@ -87,6 +88,7 @@ const AddProjectProcess = ({ selectedProject }) => {
   const [previousFeatures, setPreviousFeatures] = useState([]);
   const [independentProcesses, setIndependentProcesses] = useState([]);
   const [projectName, setProjectName] = useState('');
+
 
   useEffect(() => {
     const fetchRequiredProcesses = async (typeId) => {
@@ -102,6 +104,7 @@ const AddProjectProcess = ({ selectedProject }) => {
       try {
         const projectResponse = await API.get(`/Project/${selectedProject}`);
         const { typeId, name } = projectResponse.data;
+
         setProjectName(name);
         const response = await API.get(`/ProjectProcess/GetProjectProcesses/${selectedProject}`);
         if (response.data.length > 0) {
@@ -152,6 +155,7 @@ const AddProjectProcess = ({ selectedProject }) => {
         
         setAllProcesses(response.data);
         setIndependentProcesses(independentOnly);
+
       } catch (error) {
         message.error('Unable to fetch processes. Please try again later.');
       }
@@ -194,6 +198,7 @@ const AddProjectProcess = ({ selectedProject }) => {
     });
   };
 
+
   const calculatedWeightage = (processes) => {
     const totalWeightage = processes.reduce((sum, process) => sum + (process.weightage || 0), 0);
     return processes.map(process => ({
@@ -212,6 +217,7 @@ const AddProjectProcess = ({ selectedProject }) => {
         processId: matchingProcess ? matchingProcess.id : process.id,
         weightage: process.relativeWeightage,
         sequence: index+1,
+
         featuresList: process.installedFeatures,
         userId: process.userId || []
       };
@@ -242,6 +248,7 @@ const AddProjectProcess = ({ selectedProject }) => {
   const handleCancelEdit = () => {
     setEditingProcessId(null);
     setEditingFeatures(previousFeatures);
+
   };
 
   const handleFeatureChange = (value) => {
@@ -275,6 +282,7 @@ const AddProjectProcess = ({ selectedProject }) => {
     }
   };
 
+
   const onSortEnd = useCallback(({ oldIndex, newIndex }) => {
     const process = projectProcesses[oldIndex];
     const processWithRange = independentProcesses.find(p => p.id === process.id);
@@ -296,13 +304,16 @@ const AddProjectProcess = ({ selectedProject }) => {
 
   }, [projectProcesses, independentProcesses]);
 
-  if (loading) {
+  if (loading || projectProcesses.length === 0) {
     return <Spin tip="Loading..." />;
   }
+
+  console.log('Rendering projectProcesses:', projectProcesses); // Log here
 
   return (
     <div>
       <h4>Project: {projectName}</h4>
+
       <Collapse defaultActiveKey={['1']}>
         <Panel header="Manage Processes" key="1">
           {allProcesses.map(process => (
@@ -317,6 +328,25 @@ const AddProjectProcess = ({ selectedProject }) => {
           ))}
         </Panel>
       </Collapse>
+      <DragDropContext onDragEnd={onDragEnd}>
+        <Droppable droppableId="processes">
+          {(provided) => (
+            <div ref={provided.innerRef} {...provided.droppableProps}>
+              <Table
+                columns={columns}
+                dataSource={projectProcesses}
+                rowKey="id"
+                pagination={false}
+                bordered
+                components={{
+                  body: {
+                    row: (props) => {
+                      const index = projectProcesses.findIndex(process => process.id === props['data-row-key']);
+                      return <DraggableRow index={index} {...props} />;
+                    },
+                  },
+                }}
+              />
 
       <div style={{ padding: '10px', overflowX: 'auto' }}>
         <table className="table table-striped table-bordered" style={{ minWidth: '800px', tableLayout: 'fixed', borderCollapse: 'collapse' }}>
@@ -357,6 +387,7 @@ const AddProjectProcess = ({ selectedProject }) => {
         </table>
       </div>
 
+
       <Button type="primary" onClick={handleSubmit} style={{ marginTop: '16px' }}>
         Submit Processes
       </Button>
@@ -380,5 +411,7 @@ const AddProjectProcess = ({ selectedProject }) => {
     </div>
   );
 };
+
+
 
 export default AddProjectProcess;

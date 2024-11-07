@@ -8,28 +8,28 @@ const statusMapping = {
   2: 'Completed',
 };
 
-const SelectZoneModal = ({ show, handleClose, data, processId,handleSave}) => {
-  const [selectedZone, setSelectedZone] = useState('');
-  const [zoneOptions, setZoneOptions] = useState([]);
-  const [zoneId, setZoneId] = useState(null);
+const SelectMachineModal = ({ show, handleClose, data, processId,handleSave}) => {
+  const [selectedMachine, setSelectedMachine] = useState('');
+  const [machineOptions, setMachineOptions] = useState([]);
+  const [machineId, setMachineId] = useState(null);
 
-  const handleZoneChange = (e) => {
-    const selectedOption = zoneOptions.find(option => option.zoneNo === e.target.value);
-    setSelectedZone(selectedOption ? selectedOption.zoneNo : '');
-    setZoneId(selectedOption ? selectedOption.zoneId : null);
+  const handleMachineChange = (e) => {
+    const selectedOption = machineOptions.find(option => option.machineName === e.target.value);
+    setSelectedMachine(selectedOption ? selectedOption.machineName : '');
+    setMachineId(selectedOption ? selectedOption.machineId : null);
   };
 
-  const getZone = async () => {
+  const getMachine = async () => {
     try {
-      const response = await API.get('/Zones'); // Adjust endpoint as necessary
-      setZoneOptions(response.data); // Set zone options from API response
+      const response = await API.get('/Machines'); // Adjust endpoint as necessary
+      setMachineOptions(response.data); // Set zone options from API response
     } catch (error) {
       console.error("Failed to fetch zone options", error);
     }
   };
 
   useEffect(() => {
-    getZone();
+    getMachine();
   }, []); 
 
   const handleConfirm = async () => {
@@ -47,8 +47,8 @@ const SelectZoneModal = ({ show, handleClose, data, processId,handleSave}) => {
         projectId: data.projectId,
         quantitysheetId: data.srNo || 0,
         processId: processId,
-        zoneId: zoneId, // Use the selected zone here
-        machineId: existingTransactionData ? existingTransactionData.machineId : 0,
+        zoneId: existingTransactionData ? existingTransactionData.machineId : 0, // Use the selected zone here
+        machineId: machineId ,
         status: existingTransactionData ? existingTransactionData.status : 0,
         alarmId: existingTransactionData ? existingTransactionData.alarmId : "",
         lotNo: data.lotNo,
@@ -61,7 +61,7 @@ const SelectZoneModal = ({ show, handleClose, data, processId,handleSave}) => {
       } else {
         await API.post('/Transactions', postData);
       }
-      handleSave(zoneId)
+      handleSave(machineId)
       handleClose();
     } catch (error) {
       console.error('Error updating interim quantity:', error);
@@ -71,7 +71,7 @@ const SelectZoneModal = ({ show, handleClose, data, processId,handleSave}) => {
   return (
     <Modal show={show} onHide={handleClose}>
       <Modal.Header closeButton>
-        <Modal.Title>Select Zone</Modal.Title>
+        <Modal.Title>Select Machine</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         {data ? (
@@ -105,15 +105,15 @@ const SelectZoneModal = ({ show, handleClose, data, processId,handleSave}) => {
           <div>No data available</div>
         )}
         <Form.Group controlId="formZone">
-          <Form.Label>Select Zone</Form.Label>
+          <Form.Label>Select Machine</Form.Label>
           <Form.Control
             as="select"
-            value={selectedZone}
-            onChange={handleZoneChange}
+            value={selectedMachine}
+            onChange={handleMachineChange}
           >
-            <option value="">Select Zone</option>
-            {zoneOptions.map(option => (
-              <option key={option.zoneId} value={option.zoneNo}>{option.zoneNo}</option>
+            <option value="">Select Machine</option>
+            {machineOptions.map(option => (
+              <option key={option.machineId} value={option.machineName}>{option.machineName}</option>
             ))}
           </Form.Control>
         </Form.Group>
@@ -130,4 +130,4 @@ const SelectZoneModal = ({ show, handleClose, data, processId,handleSave}) => {
   );
 };
 
-export default SelectZoneModal;
+export default SelectMachineModal;

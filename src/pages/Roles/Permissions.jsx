@@ -6,7 +6,6 @@ import { useTranslation } from 'react-i18next';
 
 const { TreeNode } = Tree;
 
-// Updated by Shivom on 26/10/2023: Only developers can update developer permissions
 const permissionOptions = [
   { title: 'dashboard', key: '1' },
   {
@@ -206,29 +205,35 @@ const permissionOptions = [
   },
   { title: 'Message Management', key: '3' },
   { title: 'Reports', key: '4' },
+  { title: 'Cumulative Dashboard', key: '5' },
   { title: 'Quantity Sheet', key: '6' },
 ];
 
-const Permissions = ({ selectedPermissions = [], onChange, availablePermissions = [] }) => {
+const Permissions = ({ selectedPermissions = [], onChange }) => {
   const { t } = useTranslation();
-  const { getCssClasses } = useStore(themeStore);
-  const cssClasses = getCssClasses();
-  const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
-
-  // Always include cudashboard permission
   const onCheck = (checkedKeys) => {
-    const updatedKeys = [...checkedKeys];
-    if (!updatedKeys.includes('5')) {
-      updatedKeys.push('5');
-    }
-    onChange(updatedKeys);
+    onChange(checkedKeys);
   };
+
+  const renderTreeNodes = (data) =>
+    data.map((item) => {
+      if (item.children) {
+        return (
+          <TreeNode title={t(item.title)} key={item.key}>
+            {renderTreeNodes(item.children)}
+          </TreeNode>
+        );
+      }
+      return <TreeNode title={t(item.title)} key={item.key} />;
+    });
+    const { getCssClasses } = useStore(themeStore);
+    const cssClasses = getCssClasses();
+    const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
 
   const translateTreeData = (data) => {
     return data.map(item => ({
       ...item,
       title: t(item.title),
-      disabled: !availablePermissions.includes(item.key),
       children: item.children ? translateTreeData(item.children) : undefined
     }));
   };
@@ -237,7 +242,7 @@ const Permissions = ({ selectedPermissions = [], onChange, availablePermissions 
     <div className={`${customLight} ${customDarkText}`} style={{ width: '100%', overflowX: 'auto' }}>
       <Tree
         checkable
-        checkedKeys={[...selectedPermissions, '5']} // Always show cudashboard as checked
+        checkedKeys={selectedPermissions}
         onCheck={onCheck}
         selectable={false}
         defaultExpandAll={false}
@@ -254,7 +259,5 @@ const Permissions = ({ selectedPermissions = [], onChange, availablePermissions 
     </div>
   );
 };
-
-export { permissionOptions };
 
 export default Permissions;

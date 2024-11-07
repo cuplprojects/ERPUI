@@ -7,3 +7,4 @@ import './i18n'; // Import the i18n configuration
 createRoot(document.getElementById('root')).render(
     <App />
 )
+
