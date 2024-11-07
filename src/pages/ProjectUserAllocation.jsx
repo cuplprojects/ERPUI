@@ -197,7 +197,8 @@ const ProjectUserAllocation = ({ selectedProject }) => {
   const fetchUsers = async () => {
     try {
       const response = await API.get("/User");
-      setUsers(response.data);
+      const filteredUsers = response.data.filter(user => user.roleId === 4 || user.roleId === 1);
+      setUsers(filteredUsers);
     } catch (error) {
       console.error("Failed to fetch users", error);
       message.error("Failed to fetch users");
@@ -261,7 +262,7 @@ const ProjectUserAllocation = ({ selectedProject }) => {
           placeholder="Select Users"
           value={userSelections[record.processId] || []}
           onChange={(selectedUsers) => handleUserChange(record.processId, selectedUsers)}
-          style={{ width: '100%' }}
+          style={{  width: 400, whiteSpace: 'nowrap' }}
         >
           {users.map(user => (
             <Option key={user.userId} value={user.userId}>

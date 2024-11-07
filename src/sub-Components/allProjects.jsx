@@ -68,7 +68,7 @@ const AllProjects = () => {
   const { encryptedProjectId } = useParams();
   const projectId = decrypt(encryptedProjectId);
   const [lotsData, setLotsData] = useState([]);
-
+  const [catchesData, setCatchesData] = useState({}); // Added to store catches data
   const { getCssClasses } = useStore(themeStore);
   const [
     customDark,
@@ -87,7 +87,7 @@ const AllProjects = () => {
     lotNumber: "",
     barLabel: "",
   });
-
+  const [alerts,setAlerts] = useState([])// get data from transaction
   const navigate = useNavigate();
   const carouselRef = useRef(null);
 
@@ -110,6 +110,25 @@ const AllProjects = () => {
 
     fetchLotsData();
   }, [projectId]);
+
+  useEffect(() => {
+    const fetchCatchesData = async () => {
+      try {
+        const catchesResponses = await Promise.all(lotsData.map(async (lot) => {
+          const response = await API.get(`/QuantitySheet/Catch?ProjectId=${projectId}&lotNo=${lot}`);
+          return { lot, catches: response.data.length };
+        }));
+        setCatchesData(catchesResponses.reduce((acc, curr) => {
+          acc[curr.lot] = curr.catches;
+          return acc;
+        }, {}));
+      } catch (error) {
+        console.error("Error fetching catches data:", error);
+      }
+    };
+
+    fetchCatchesData();
+  }, [lotsData, projectId]);
 
   const handleCardClick = (lotNumber) => {
     setSelectedChart((prev) => ({
@@ -150,11 +169,13 @@ const AllProjects = () => {
   const carouselItems = [];
   const [projectName, setProjectName] = useState('');
   const [type, setType] = useState('');
+  
 
   useEffect(() => {
     const fetchProjectName = async () => {
       try {
         const response = await API.get(`/Project/${projectId}`);
+        console.log(response.data);
         setProjectName(response.data.name);
         setType(response.data.projectType);
       } catch (error) {
@@ -173,9 +194,9 @@ const AllProjects = () => {
             <ProjectChart
               key={idx}
               title={`${projectName}`}
-              chartdata={[{title: "Completed", value: 50}, {title: "Remaining", value: 50}]}
+              chartdata={[{title: "Completed", value: 10}, {title: "Remaining", value: 50}]}
               chartKey={lotNumber}
-              tCatch={0}
+              tCatch={catchesData[lotNumber] || 0} // Using catchesData to fetch total catches
               type={type}
               onClick={() => handleCardClick(lotNumber)}
             />
@@ -215,19 +236,23 @@ const AllProjects = () => {
         </Carousel>
       </div>
 
-      <marquee className="marquee" style={{ color: "red", fontWeight: "bold" }}>
-        <img
-          className="mb-3"
-          src={tractor}
-          alt="Tractor"
-          style={{
-            transform: "scaleX(-1)",
-            width: "80px",
-            marginRight: 10 + "px",
-          }}
-        />
-        Important: Please review the latest updates and alerts!
-      </marquee>
+      {alerts.length > 0 && (
+        <marquee className="marquee" style={{ color: "red", fontWeight: "bold" }}>
+          <img
+            className="mb-3"
+            src={tractor}
+            alt="Tractor"
+            style={{
+              transform: "scaleX(-1)",
+              width: "80px",
+              marginRight: 10 + "px",
+            }}
+          />
+          {alerts.map((alert, index) => (
+            <span key={index} className="ms-2">{alert}</span>
+          ))}
+        </marquee>
+      )}
 
       <Row>
         <Col xs={12} lg={8}>
@@ -245,7 +270,7 @@ const AllProjects = () => {
                 Manage Process
               </button>
             </h4>
-            <DashboardGrid projectId={projectId} />
+            <DashboardGrid projectId={projectId} lotNo={selectedChart.lotNumber} />
           </Card>
         </Col>
 

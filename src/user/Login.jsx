@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Container, Row, Col, Form, Button } from 'react-bootstrap';
 import { AiFillEye, AiFillEyeInvisible } from 'react-icons/ai';
 import BlueTheme from './../assets/bgImages/Factory.svg';
@@ -17,10 +17,10 @@ import { useStore } from 'zustand';
 import { useMediaQuery } from 'react-responsive';
 import { useTranslation } from 'react-i18next';
 import { toast, ToastContainer } from 'react-toastify';
-import { Link } from 'react-router-dom';
 import AuthService from '../CustomHooks/ApiServices/AuthService';
 
 const Login = () => {
+  const isLoggedIn = AuthService.isLoggedIn();
   const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -53,6 +53,12 @@ const Login = () => {
   });
 
   const appliedClass = !isMediumOrSmaller ? customDark : "";
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      navigate('/cudashboard');
+    }
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -139,7 +145,7 @@ const Login = () => {
         <img
           src={themeImages[customDark] || DefaultTheme}
           alt="Background Image"
-          className={`position-absolute w-100 h-100 `}
+          className="position-absolute w-100 h-100"
           style={{
             objectFit: "cover",
             zIndex: -1,

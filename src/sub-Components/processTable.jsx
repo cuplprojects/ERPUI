@@ -1,10 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-
 import { useLocation, useParams } from 'react-router-dom';
 import { Card, Spinner, Row, Col } from 'react-bootstrap'; // Import Bootstrap components
 import ProjectDetailsTable from './projectDetailTable'; // Import the new component
-
-
 import StatusPieChart from "./StatusPieChart";
 import StatusBarChart from "./StatusBarChart";
 import "./../styles/processTable.css";
@@ -16,10 +13,7 @@ import themeStore from '../store/themeStore';
 import { useStore } from 'zustand';
 import { MdPending, MdCloudUpload } from "react-icons/md";
 import { Link } from 'react-router-dom';
-
-
 import { FaRegHourglassHalf } from "react-icons/fa6";//pre process running
-
 import API from '../CustomHooks/MasterApiHooks/api';
 import { useUserData } from '../store/userDataStore';
 import { getProjectProcessAndFeature, getProjectProcessByProjectAndSequence } from '../CustomHooks/ApiServices/projectProcessAndFeatureService';
@@ -28,7 +22,7 @@ import { decrypt } from "../Security/Security";
 
 
 const ProcessTable = () => {
-    
+
     const { encryptedProjectId, encryptedLotNo } = useParams();
     const id = decrypt(encryptedProjectId);
     const lotNo = decrypt(encryptedLotNo);
@@ -41,14 +35,14 @@ const ProcessTable = () => {
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = useMemo(() => getCssClasses(), [getCssClasses]);
     const [
-      customDark,
-      customMid, 
-      customLight,
-      customBtn,
-      customDarkText,
-      customLightText,
-      customLightBorder,
-      customDarkBorder
+        customDark,
+        customMid,
+        customLight,
+        customBtn,
+        customDarkText,
+        customLightText,
+        customLightBorder,
+        customDarkBorder
     ] = cssClasses;
 
     const location = useLocation();
@@ -66,7 +60,7 @@ const ProcessTable = () => {
     const [errorMessage, setErrorMessage] = useState(null);
     const [projectLots, setProjectLots] = useState([]);
     const [previousProcess, setPreviousProcess] = useState(null);
-    
+
     const fetchData = useCallback(async () => {
         if (userData && userData.userId && id !== processId) {
             setIsLoading(true);
@@ -105,8 +99,11 @@ const ProcessTable = () => {
     }, [fetchData]);
 
     const hasFeaturePermission = (featureId) => {
-        if (featureData && featureData?.featuresList) {
-            return featureData?.featuresList?.includes(featureId);
+        if (userData?.role?.roleId === 1) {
+            return true;
+        }
+        if (featureData?.featuresList) {
+            return featureData.featuresList.includes(featureId);
         }
         return false;
     }
@@ -119,7 +116,7 @@ const ProcessTable = () => {
                 const response = await API.get(`/QuantitySheet/CatchByproject?ProjectId=${id}`);
 
                 const quantitySheetData = response.data;
-                
+
                 if (Array.isArray(quantitySheetData) && quantitySheetData.length > 0) {
                     console.log(quantitySheetData);
                     const formDataGet = quantitySheetData.map((item) => ({
@@ -133,16 +130,14 @@ const ProcessTable = () => {
                         lotNo: item?.lotNo,
                         quantity: item?.quantity,
                         percentageCatch: item?.percentageCatch,
-                        projectId:item?.projectId,
-                        isOverridden: item?.isOverridden,
+                        projectId: item?.projectId,
                         processId: item?.processId || [],
-
-                        status: item?.status || "Pending",
+                        status: item?.status || 0,
                         alerts: "",
                         interimQuantity: "0",
                         remarks: "",
                         previousProcessStats: "",
-
+                        voiceRecording: ""
                     }));
                     console.log('Formatted data:', formDataGet);
                     setTableData(formDataGet); // Set the table data only here
@@ -164,7 +159,7 @@ const ProcessTable = () => {
 
         fetchQuantitySheet();
     }, [id, lotNo]);
-      
+
     useEffect(() => {
         const fetchProjectDetails = async () => {
             try {
@@ -188,7 +183,6 @@ const ProcessTable = () => {
 
 
     if (isLoading) {
-
         return (
             <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
                 <Spinner animation="border" variant="primary" />
@@ -260,7 +254,7 @@ const ProcessTable = () => {
                                     <Col lg={3} md={4} xs={12}>
                                         <div className={` align-items-center flex-column`}>
                                             <div className='text-center fs-5'>Previous Process </div>
-                                            <div className={`p-1  fs-6 text-primary border ${customDarkBorder} rounded ms-1 d-flex justify-content-center align-items-center ${customDark === 'dark-dark' ? `${customBtn} text-white` : `${customLight} bg-light`}`} style={{ fontWeight: 900 }}> 
+                                            <div className={`p-1  fs-6 text-primary border ${customDarkBorder} rounded ms-1 d-flex justify-content-center align-items-center ${customDark === 'dark-dark' ? `${customBtn} text-white` : `${customLight} bg-light`}`} style={{ fontWeight: 900 }}>
                                                 {previousProcess ? `${previousProcess.processName} - ${previousProcess.completionPercentage}%` : 'N/A'}
                                                 <span className='ms-2'>
                                                     <FaRegHourglassHalf color='blue' size="20" />
@@ -332,8 +326,8 @@ const ProcessTable = () => {
                                         key={index}
                                         className={`mb-2 p-2 rounded-1 ${customLight} ${customDarkText} ${selectedLot === lot.lotNo ? 'border border-primary shadow-lg' : 'border'}`}
                                         onClick={() => handleLotClick(lot.lotNo)}
-                                        style={{ 
-                                            cursor: 'pointer', 
+                                        style={{
+                                            cursor: 'pointer',
                                             transition: 'all 0.3s',
                                             transform: selectedLot === lot.lotNo ? 'scale(1.02)' : 'scale(1)',
                                             backgroundColor: selectedLot === lot.lotNo ? '#e6f7ff' : '#ffffff'
@@ -355,13 +349,13 @@ const ProcessTable = () => {
                         </Col>
                         <Col lg={9} md={8} className="ps-0">
                             {tableData?.length > 0 && (
-                                <ProjectDetailsTable tableData={combinedTableData} setTableData={setTableData} projectId={id} lotNo={selectedLot} featureData={featureData} hasFeaturePermission={hasFeaturePermission}/>
+
+                                <ProjectDetailsTable tableData={combinedTableData} setTableData={setTableData} projectId={id} lotNo={selectedLot} featureData={featureData} hasFeaturePermission={hasFeaturePermission} processId={processId} projectLots={projectLots} />
                             )}
                         </Col>
                     </Row>
 
                 </Col>
-                <Col lg={2} md={0} ></Col>
 
             </Row>
             <Row className='mb-4 d-flex justify-content-between'>

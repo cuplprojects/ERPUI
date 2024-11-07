@@ -14,6 +14,7 @@ import SampleUser from "./../assets/sampleUsers/defaultUser.jpg";
 import { useUserData, useUserDataActions } from '../store/userDataStore';
 import { useMediaQuery } from 'react-responsive';
 import { useTranslation } from 'react-i18next';
+import AuthService from '../CustomHooks/ApiServices/AuthService';
 
 const UserMenu = ({ onClose }) => {
   const { t, i18n } = useTranslation();
@@ -51,8 +52,8 @@ const UserMenu = ({ onClose }) => {
 
   const handleLogoutConfirm = () => {
     clearUserData();
+    AuthService.logout();
     localStorage.setItem('loggedOut', 'true');
-    localStorage.setItem('authToken', null);
     navigate('/');
     setShowModal(false);
     onClose();
