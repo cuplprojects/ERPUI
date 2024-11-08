@@ -1,7 +1,7 @@
 import React from 'react';
 import { Modal, Button, Form } from 'react-bootstrap';
 
-const ColumnToggleModal = ({ show, handleClose, columnVisibility, setColumnVisibility }) => {
+const ColumnToggleModal = ({ show, handleClose, columnVisibility, setColumnVisibility, featureData,hasFeaturePermission }) => {
     const handleToggle = (column) => {
         setColumnVisibility((prevVisibility) => ({
             ...prevVisibility,
@@ -16,7 +16,7 @@ const ColumnToggleModal = ({ show, handleClose, columnVisibility, setColumnVisib
             </Modal.Header>
             <Modal.Body>
                 <Form>
-                    {['Interim Quantity', 'Remarks', 'Team Assigned'].map((column) => (
+                    {['Interim Quantity', 'Remarks', 'Team Assigned', 'Course', 'Subject', 'Paper'].map((column) => (
                         <Form.Group key={column} className="mb-3">
                             <Form.Check
                                 type="switch"

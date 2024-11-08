@@ -315,38 +315,6 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
             align: 'center',
             sorter: (a, b) => a.quantity - b.quantity,
         },
-        // {
-        //     width: '12%',
-        //     title: 'Transaction ID',
-        //     dataIndex: 'transactionId',
-        //     key: 'transactionId',
-        //     align: 'center',
-        //     sorter: (a, b) => (a.transactionId || 0) - (b.transactionId || 0),
-        // },
-        // {
-        //     width: '12%',
-        //     title: 'Lot',
-        //     dataIndex: 'lotNo',
-        //     key: 'lotNo',
-        //     align: 'center',
-        //     sorter: (a, b) => a.lotNo - b.lotNo,
-        // },
-        // {
-        //     width: '12%', 
-        //     title: 'Quantity Sheet ID',
-        //     dataIndex: 'srNo',
-        //     key: 'srNo',
-        //     align: 'center',
-        //     sorter: (a, b) => a.srNo - b.srNo,
-        // },
-        // {
-        //     title: 'Interim Quantity',
-        //     dataIndex: 'interimQuantity',
-        //     width: '12%',
-        //     align: 'center',
-        //     key: 'interimQuantity',
-        //     sorter: (a, b) => a.interimQuantity - b.interimQuantity,
-        // },
         ...(columnVisibility['Interim Quantity'] && hasFeaturePermission(7) ? [{
             title: 'Interim Quantity',
             dataIndex: 'interimQuantity',
@@ -362,6 +330,38 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
             align: 'center',
             sorter: (a, b) => a.remarks.localeCompare(b.remarks),
         }] : []),
+        ...(columnVisibility['Team Assigned'] && hasFeaturePermission(7) ? [{
+            title: 'Interim Quantity',
+            dataIndex: 'interimQuantity',
+            width: '20%',
+            align: 'center',
+            key: 'interimQuantity',
+            sorter: (a, b) => a.interimQuantity - b.interimQuantity,
+        }] : []),
+        ...(columnVisibility['Course'] && hasFeaturePermission(13) ? [{
+            title: 'Course',
+            dataIndex: 'course',
+            width: '20%',
+            align: 'center',
+            key: 'course',
+            sorter: (a, b) => a.course - b.course,
+        }] : []),
+        ...(columnVisibility['Subject'] && hasFeaturePermission(14) ? [{
+            title: 'Subject',
+            dataIndex: 'subject',
+            width: '20%',
+            align: 'center',
+            key: 'subject',
+            sorter: (a, b) => a.subject - b.subject,
+        }] : []),
+        ...(columnVisibility['Paper'] && hasFeaturePermission(15) ? [{
+            title: 'Paper',
+            dataIndex: 'paper',
+            width: '20%',
+            align: 'center',
+            key: 'paper',
+            sorter: (a, b) => a.paper - b.paper,
+        }] : []),
         {
             title: 'Status',
             dataIndex: 'status',
@@ -371,9 +371,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
             render: (text, record) => {
                 const statusSteps = ["Pending", "Started", "Completed"];
                 const initialStatusIndex = text !== undefined ? text : 0;
-
                 const hasAlerts = record.alerts && record.alerts.length > 0;
-
                 return (
                     <div className="d-flex justify-content-center">
                         {hasAlerts ? (
