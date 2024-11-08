@@ -1,14 +1,23 @@
 import React, { useState } from 'react';
 import { Modal, Button, Form } from 'react-bootstrap';
+import API from '../CustomHooks/MasterApiHooks/api'; // Adjust import as necessary
 
-const InterimQuantityModal = ({ show, handleClose, handleSave, data }) => {
+const statusMapping = {
+    0: 'Pending',
+    1: 'Started',
+    2: 'Completed',
+};
+const InterimQuantityModal = ({ show, handleClose, handleSave, data, processId }) => {
     const [interimQuantity, setInterimQuantity] = useState('');
 
 
     const handleSubmit = async () => {
-        // Ensure interim quantity is smaller than total quantity
-        if (parseFloat(interimQuantity) >= data.quantity) {
-            alert("Interim quantity must be smaller than total quantity.");
+        // Calculate total interim quantity including existing and new
+        const totalInterimQuantity = data.interimQuantity + parseFloat(interimQuantity);
+
+        // Ensure total interim quantity is not greater than total quantity
+        if (totalInterimQuantity > data.quantity) {
+            alert("Total interim quantity cannot be greater than total quantity.");
             return;
         }
 
@@ -22,14 +31,14 @@ const InterimQuantityModal = ({ show, handleClose, handleSave, data }) => {
 
             const postData = {
                 transactionId: data.transactionId || 0,
-                interimQuantity: interimQuantity, // Retain existing quantity
-                remarks: existingTransactionData ? existingTransactionData.remarks : "", // Retain existing remarks
+                interimQuantity: totalInterimQuantity,
+                remarks: existingTransactionData ? existingTransactionData.remarks : "", 
                 projectId: data.projectId,
                 quantitysheetId: data.srNo || 0,
                 processId: processId,
                 zoneId: existingTransactionData ? existingTransactionData.zoneId : 0,
                 machineId: existingTransactionData ? existingTransactionData.machineId : 0,
-                status: existingTransactionData ? existingTransactionData.status : 0, // Retain existing status
+                status: existingTransactionData ? existingTransactionData.status : 0,
                 alarmId: existingTransactionData ? existingTransactionData.alarmId : "",
                 lotNo: data.lotNo,
                 teamId: existingTransactionData ? existingTransactionData.teamId : 0,  
@@ -46,11 +55,11 @@ const InterimQuantityModal = ({ show, handleClose, handleSave, data }) => {
                 console.log('Create Response:', response.data);
             }
             handleSave(interimQuantity);
+            setInterimQuantity('');
             handleClose(); // Close modal
         } catch (error) {
             console.error('Error updating interim quantity:', error);
         }
-
     };
 
     return (
@@ -67,10 +76,11 @@ const InterimQuantityModal = ({ show, handleClose, handleSave, data }) => {
                             </div>
                             <div>
                                 <span className="fw-bold ">Status </span>:
-                                <span
-                                    className={`fw-bold ${data.status === 'Pending' ? 'text-danger' : data.status === 'Started' ? 'text-primary' : data.status === 'Completed' ? 'text-success' : ''}`}
-                                >
-                                    {data.status}
+                                <span className={`fw-bold ${data.status === 0 ? 'text-danger' :
+                                        data.status === 1 ? 'text-primary' :
+                                        data.status === 2 ? 'text-success' : ''
+                                    }`}>
+                                    {statusMapping[data.status]}
                                 </span>
                             </div>
                         </div>
