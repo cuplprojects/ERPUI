@@ -970,6 +970,9 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                         style={{ position: "relative", zIndex: "900" }}
                         striped={true}
                         tableLayout="auto"
+                        responsive={true}
+                        scroll={{ x: true }}
+                        size="middle"
                     />
                 </Col>
             </Row>
