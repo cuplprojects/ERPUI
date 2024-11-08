@@ -28,6 +28,7 @@ const { Option } = Select;
 const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePermission, featureData, processId, lotNo }) => {
     console.log(lotNo);
     console.log(tableData);
+    console.log(processId);
     //Theme Change Section
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = getCssClasses();
@@ -40,6 +41,9 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
         Alerts: false,
         'Interim Quantity': false,
         Remarks: false,
+        Paper: window.innerWidth >= 992, // Enable by default on large screens
+        Course: window.innerWidth >= 992,
+        Subject: window.innerWidth >= 992
     });
     const [hideCompleted, setHideCompleted] = useState(false);
     const [columnModalShow, setColumnModalShow] = useState(false);
@@ -49,6 +53,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
     const [searchText, setSearchText] = useState('');
     const [showOptions, setShowOptions] = useState(false);
     const [pageSize, setPageSize] = useState(5);
+    const [currentPage, setCurrentPage] = useState(1);
     const [alarmModalData, setAlarmModalData] = useState(null);
     const [interimQuantityModalData, setInterimQuantityModalData] = useState(null);
     const [remarksModalData, setRemarksModalData] = useState(null);
@@ -66,6 +71,42 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
     const [showOnlyAlerts, setShowOnlyAlerts] = useState(false);
     const [showOnlyCompletedPreviousProcess, setShowOnlyCompletedPreviousProcess] = useState(true);
     const [showOnlyRemarks, setShowOnlyRemarks] = useState(false);
+    const [paperData, setPaperData] = useState([]);
+    const [courseData, setCourseData] = useState([]);
+    const [subjectData, setSubjectData] = useState([]);
+
+    // Add resize listener for responsive column visibility
+    useEffect(() => {
+        const handleResize = () => {
+            setColumnVisibility(prev => ({
+                ...prev,
+                Paper: window.innerWidth >= 992,
+                Course: window.innerWidth >= 992,
+                Subject: window.innerWidth >= 992
+            }));
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    useEffect(() => {
+        const fetchCatchData = async () => {
+            try {
+                if (projectId && lotNo) {
+                    const response = await API.get(`/QuantitySheet/Catch?ProjectId=${projectId}&lotNo=${lotNo}`);
+                    const data = response.data || [];
+                    setPaperData(data.filter(item => item.paper).map(item => item.paper));
+                    setCourseData(data.filter(item => item.course).map(item => item.course));
+                    setSubjectData(data.filter(item => item.subject).map(item => item.subject));
+                }
+            } catch (error) {
+                console.error("Error fetching catch data:", error);
+            }
+        };
+
+        fetchCatchData();
+    }, [projectId, lotNo]);
 
     useEffect(() => {
         // Update the initialTableData state whenever tableData changes
@@ -76,6 +117,13 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
         const newVisibleKeys = filteredData.map(item => item.catchNumber);
         setVisibleRowKeys(newVisibleKeys);
     }, [searchText, hideCompleted]); // Add other dependencies if necessary
+
+    // Add effect to fetch transactions when processId changes
+    useEffect(() => {
+        if (projectId && processId) {
+            fetchTransactions();
+        }
+    }, [processId]); // Dependency on processId
 
     const filteredData = tableData.filter(item => {
         const matchesSearchText = Object.values(item).some(value =>
@@ -97,41 +145,84 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
         if (projectId && processId && lotNo) {
             fetchTransactions();
         }
-    }, [projectId, processId, lotNo]); 
+    }, [projectId, processId, lotNo]);
 
     const fetchTransactions = async () => {
         try {
             const response = await API.get(`/Transactions?ProjectId=${projectId}&ProcessId=${processId}`);
+            
+            // Check if response status is 404 or response data indicates "Not Found"
+            if (response.status === 404 || (response.data && response.data.status === 404)) {
+                // Handle as no transactions case
+                const updatedData = tableData.map(item => ({
+                    ...item,
+                    status: 0,
+                    alerts: "",
+                    interimQuantity: 0,
+                    remarks: "",
+                    transactionId: null,
+                    alarmId: "",
+                    zoneId: 0,
+                    machineId: 0,
+                    teamId: [],
+                    voiceRecording: ""
+                }));
+                setTableData(updatedData);
+                return;
+            }
+
             const transactions = response.data || [];
     
-            // Create a mapping of quantitysheetId to status, alarmId (or alarmMessage), interimQuantity, and remarks
+            // Create a mapping of quantitysheetId to all transaction fields
             const statusMap = transactions.reduce((acc, transaction) => {
-                // If alarmId is "0", treat it as invalid by setting it to an empty string or null
                 const alarmId = transaction.alarmMessage || (transaction.alarmId !== "0" ? transaction.alarmId : "");
     
                 acc[transaction.quantitysheetId] = {
                     status: transaction.status,
-                    alarmId: alarmId, // Use valid alarmId or an empty string if it's "0"
-                    interimQuantity: transaction.interimQuantity, // Map interim quantity
-                    remarks: transaction.remarks, // Map remarks
-                    transactionId: transaction.transactionId // Store the transactionId
+                    alarmId: alarmId,
+                    interimQuantity: transaction.interimQuantity,
+                    remarks: transaction.remarks,
+                    transactionId: transaction.transactionId,
+                    zoneId: transaction.zoneId || 0,
+                    machineId: transaction.machineId || 0,
+                    teamId: transaction.teamId || [],
+                    voiceRecording: transaction.voiceRecording || ""
                 };
                 return acc;
             }, {});
     
-            // Update tableData with the status, alarmId (or alarmMessage), interimQuantity, and remarks from transactions
+            // Update tableData with all transaction fields, using defaults if no transaction exists
             const updatedData = tableData.map(item => ({
                 ...item,
-                status: statusMap[item.srNo] ? statusMap[item.srNo].status : 0,
-                alerts: statusMap[item.srNo] ? statusMap[item.srNo].alarmId : "", // Use alarmId or alarmMessage
-                interimQuantity: statusMap[item.srNo] ? statusMap[item.srNo].interimQuantity : 0, // Add interim quantity
-                remarks: statusMap[item.srNo] ? statusMap[item.srNo].remarks : "", // Add remarks
-                transactionId: statusMap[item.srNo] ? statusMap[item.srNo].transactionId : null, // Add transactionId to each item
+                status: statusMap[item.srNo]?.status || 0,
+                alerts: statusMap[item.srNo]?.alarmId || "",
+                interimQuantity: statusMap[item.srNo]?.interimQuantity || 0,
+                remarks: statusMap[item.srNo]?.remarks || "",
+                transactionId: statusMap[item.srNo]?.transactionId || null,
+                zoneId: statusMap[item.srNo]?.zoneId || 0,
+                machineId: statusMap[item.srNo]?.machineId || 0,
+                teamId: statusMap[item.srNo]?.teamId || [],
+                voiceRecording: statusMap[item.srNo]?.voiceRecording || ""
             }));
     
             setTableData(updatedData);
         } catch (error) {
             console.error('Error fetching transactions:', error);
+            // On error, still map default values
+            const updatedData = tableData.map(item => ({
+                ...item,
+                status: 0,
+                alerts: "",
+                interimQuantity: 0,
+                remarks: "",
+                transactionId: null,
+                alarmId: "",
+                zoneId: 0,
+                machineId: 0,
+                teamId: [],
+                voiceRecording: ""
+            }));
+            setTableData(updatedData);
         }
     };
 
@@ -160,9 +251,9 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                 zoneId: existingTransactionData ? existingTransactionData.zoneId : 0,
                 machineId: existingTransactionData ? existingTransactionData.machineId : 0,
                 status: newStatusIndex, // Change only this field
-                alarmId: existingTransactionData ? existingTransactionData.alarmId : "",
-                lotNo: existingTransactionData ? existingTransactionData.lotNo : 0,
-                teamId: existingTransactionData ? existingTransactionData.teamId : 0,
+                alarmId: existingTransactionData ? existingTransactionData.alarmId : "",                
+                teamId: existingTransactionData ? existingTransactionData.teamId : [],
+                lotNo: existingTransactionData ? existingTransactionData.lotNo : lotNo,
                 voiceRecording: existingTransactionData? existingTransactionData.voiceRecording : ""
             };
             // Update or create the transaction
@@ -189,8 +280,8 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
     };
 
     const columns = [
+       
         {
-            width: '5%',
             title: (
                 <input
                     type="checkbox"
@@ -225,15 +316,13 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
             responsive: ['sm'],
         },
         {
-            width: '10%',
             title: 'Sr.No.',
             key: 'srNo',
             align: "center",
-            render: (_, __, index) => index + 1,
+            render: (_, __, index) => ((currentPage - 1) * pageSize) + index + 1,
             responsive: ['sm'],
         },
         {
-            width: '15%',
             title: 'Catch No.',
             dataIndex: 'catchNumber',
             key: 'catchNumber',
@@ -308,7 +397,6 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
             ),
         },
         {
-            width: '12%',
             title: 'Quantity',
             dataIndex: 'quantity',
             key: 'quantity',
@@ -318,7 +406,6 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
         ...(columnVisibility['Interim Quantity'] && hasFeaturePermission(7) ? [{
             title: 'Interim Quantity',
             dataIndex: 'interimQuantity',
-            width: '20%',
             align: 'center',
             key: 'interimQuantity',
             sorter: (a, b) => a.interimQuantity - b.interimQuantity,
@@ -366,7 +453,6 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
             title: 'Status',
             dataIndex: 'status',
             key: 'status',
-            width: '20%',
             align: 'center',
             render: (text, record) => {
                 const statusSteps = ["Pending", "Started", "Completed"];
@@ -428,9 +514,9 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                     status: newStatusIndex,
                     alarmId: updatedRow?.alarmId || "",
                     machineId: updatedRow?.machineId || 0,
-                    lotNo: updatedRow?.lotNo || 0,
+                    lotNo: updatedRow?.lotNo || lotNo,
                     voiceRecording: updatedRow?.voiceRecording || "",
-                    teamId: updatedRow?.teamId || 0
+                    teamId: updatedRow?.teamId || []
                 };
 
                 try {
@@ -620,11 +706,12 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
     );
 
     const customPagination = {
-
+        current: currentPage,
         pageSize,
         pageSizeOptions: [5, 10, 25, 50, 100],
         showSizeChanger: true,
         onShowSizeChange: (current, size) => setPageSize(size),
+        onChange: (page) => setCurrentPage(page),
         showTotal: (total) => `Total ${total} items`,
         locale: { items_per_page: "Rows" }, // Removes the "/page" text
         pageSizeRender: (props) => (
@@ -642,18 +729,18 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
     };
 
 
-    const rowClassName = (record, index) => {
-        if (record.status === 'Pending') {
-            return 'pending-row';
-        } else if (record.status === 'Started') {
-            return 'started-row';
-        } else if (record.status === 'Completed') {
-            return 'completed-row';
-        } else {
-            return '';
+    const rowClassName = (record) => {
+        switch (record.status) {
+            case 0:
+                return 'status-pending-row';
+            case 1:
+                return 'status-started-row';
+            case 2:
+                return 'status-completed-row';
+            default:
+                return '';
         }
     };
-
 
     return (
         <>
@@ -717,10 +804,20 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                                 </Menu.Item>
                             </Menu>
                         } trigger={['click']}>
-                            <Button style={{ backgroundColor: 'transparent', border: 'none', boxShadow: 'none', padding: 0 }} className={`p-1 border ${customDark === 'dark-dark' ? `${customDark} text-white` : 'bg-white'}`}>
-                                <FaFilter size={20} className={`${customDarkText}`} />
-                                {/* <span className='d-none d-lg-block d-md-none ms-1 fs-6 fw-bold'>Filter</span> */}
-
+                            <Button 
+                                style={{ 
+                                    backgroundColor: 'transparent', 
+                                    border: 'none', 
+                                    boxShadow: 'none', 
+                                    padding: 0 ,
+                                    width: '30px',
+                                }} 
+                                className={`p- border ${customDark === 'dark-dark' ? `${customDark} text-white` : 'bg-white'}`}
+                            >
+                                <FaFilter 
+                                    size={20} 
+                                    className={`${customDarkText}`} 
+                                />
                             </Button>
                         </Dropdown>
                     )}
@@ -758,7 +855,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                                     <Button
                                         className={`${customBtn}`}
                                         onClick={() => setSearchText('')}
-                                        icon={<IoCloseCircle size={20} className={`rounded-circle ${customBtn}`} />}
+                                        icon={<IoCloseCircle size={25} className={`rounded-circle ${customBtn}`} />}
                                         style={{
                                             position: 'absolute',
                                             top: '50%',
@@ -828,6 +925,9 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                         style={{ position: "relative", zIndex: "900" }}
                         striped={true}
                         tableLayout="auto"
+                        responsive={true}
+                        scroll={{ x: true }}
+                        size="middle"
                     />
                 </Col>
             </Row>

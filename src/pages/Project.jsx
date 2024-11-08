@@ -6,7 +6,7 @@ import ProjectUserAllocation from './ProjectUserAllocation';
 
 
 import { Table, Tabs, Button, Input, Switch, Form, message, Card, Row, Col, Select, Pagination } from 'antd';
-import { Modal } from 'antd'; // Change this import to use Ant Design's Modal
+import { Modal } from 'antd'; 
 import { useNavigate } from 'react-router-dom';
 import API from '../CustomHooks/MasterApiHooks/api';
 import themeStore from './../store/themeStore';
