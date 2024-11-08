@@ -3,9 +3,10 @@ import { Table, Dropdown, Menu, Button, Switch, Input, Select } from 'antd';
 import ColumnToggleModal from './../menus/ColumnToggleModal';
 import AlarmModal from './../menus/AlarmModal';
 import InterimQuantityModal from './../menus/InterimQuantityModal';
-//import RemarksModal from './../menus/RemarksModal';
+import RemarksModal from './../menus/RemarksModal';
 import CatchDetailModal from './../menus/CatchDetailModal';
 import SelectZoneModal from './../menus/SelectZoneModal';
+import SelectMachineModal from '../menus/SelectMachineModal';
 import AssignTeamModal from './../menus/AssignTeamModal';
 import './../styles/ProjectDetailsTable.css';
 import { IoCloseCircle } from "react-icons/io5";
@@ -24,8 +25,10 @@ import API from '../CustomHooks/MasterApiHooks/api';
 
 const { Option } = Select;
 
-const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePermission,featureData, processId }) => {
+const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePermission, featureData, processId, lotNo }) => {
+    console.log(lotNo);
     console.log(tableData);
+    console.log(processId);
     //Theme Change Section
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = getCssClasses();
@@ -38,6 +41,9 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
         Alerts: false,
         'Interim Quantity': false,
         Remarks: false,
+        Paper: window.innerWidth >= 992, // Enable by default on large screens
+        Course: window.innerWidth >= 992,
+        Subject: window.innerWidth >= 992
     });
     const [hideCompleted, setHideCompleted] = useState(false);
     const [columnModalShow, setColumnModalShow] = useState(false);
@@ -47,6 +53,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
     const [searchText, setSearchText] = useState('');
     const [showOptions, setShowOptions] = useState(false);
     const [pageSize, setPageSize] = useState(5);
+    const [currentPage, setCurrentPage] = useState(1);
     const [alarmModalData, setAlarmModalData] = useState(null);
     const [interimQuantityModalData, setInterimQuantityModalData] = useState(null);
     const [remarksModalData, setRemarksModalData] = useState(null);
@@ -56,12 +63,50 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
     const [catchDetailModalShow, setCatchDetailModalShow] = useState(false);
     const [catchDetailModalData, setCatchDetailModalData] = useState(null);
     const [selectZoneModalShow, setSelectZoneModalShow] = useState(false);
+    const [selectMachineModalShow, setSelectMachineModalShow] = useState(false);
     const [assignTeamModalShow, setAssignTeamModalShow] = useState(false);
     const [selectZoneModalData, setSelectZoneModalData] = useState(null);
+    const [selectMachineModalData, setSelectMachineModalData] = useState(null);
     const [assignTeamModalData, setAssignTeamModalData] = useState(null);
     const [showOnlyAlerts, setShowOnlyAlerts] = useState(false);
     const [showOnlyCompletedPreviousProcess, setShowOnlyCompletedPreviousProcess] = useState(true);
     const [showOnlyRemarks, setShowOnlyRemarks] = useState(false);
+    const [paperData, setPaperData] = useState([]);
+    const [courseData, setCourseData] = useState([]);
+    const [subjectData, setSubjectData] = useState([]);
+
+    // Add resize listener for responsive column visibility
+    useEffect(() => {
+        const handleResize = () => {
+            setColumnVisibility(prev => ({
+                ...prev,
+                Paper: window.innerWidth >= 992,
+                Course: window.innerWidth >= 992,
+                Subject: window.innerWidth >= 992
+            }));
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    useEffect(() => {
+        const fetchCatchData = async () => {
+            try {
+                if (projectId && lotNo) {
+                    const response = await API.get(`/QuantitySheet/Catch?ProjectId=${projectId}&lotNo=${lotNo}`);
+                    const data = response.data || [];
+                    setPaperData(data.filter(item => item.paper).map(item => item.paper));
+                    setCourseData(data.filter(item => item.course).map(item => item.course));
+                    setSubjectData(data.filter(item => item.subject).map(item => item.subject));
+                }
+            } catch (error) {
+                console.error("Error fetching catch data:", error);
+            }
+        };
+
+        fetchCatchData();
+    }, [projectId, lotNo]);
 
     useEffect(() => {
         // Update the initialTableData state whenever tableData changes
@@ -72,6 +117,13 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
         const newVisibleKeys = filteredData.map(item => item.catchNumber);
         setVisibleRowKeys(newVisibleKeys);
     }, [searchText, hideCompleted]); // Add other dependencies if necessary
+
+    // Add effect to fetch transactions when processId changes
+    useEffect(() => {
+        if (projectId && processId) {
+            fetchTransactions();
+        }
+    }, [processId]); // Dependency on processId
 
     const filteredData = tableData.filter(item => {
         const matchesSearchText = Object.values(item).some(value =>
@@ -88,42 +140,91 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
         setShowOptions(selectedRowKeys.length === 1);
     }, [selectedRowKeys]);
 
+    // Update useEffect to immediately fetch data when lotNo changes
     useEffect(() => {
-        fetchTransactions();
-    }, [projectId, processId]);
-
+        if (projectId && processId && lotNo) {
+            fetchTransactions();
+        }
+    }, [projectId, processId, lotNo]);
 
     const fetchTransactions = async () => {
         try {
             const response = await API.get(`/Transactions?ProjectId=${projectId}&ProcessId=${processId}`);
+            
+            // Check if response status is 404 or response data indicates "Not Found"
+            if (response.status === 404 || (response.data && response.data.status === 404)) {
+                // Handle as no transactions case
+                const updatedData = tableData.map(item => ({
+                    ...item,
+                    status: 0,
+                    alerts: "",
+                    interimQuantity: 0,
+                    remarks: "",
+                    transactionId: null,
+                    alarmId: "",
+                    zoneId: 0,
+                    machineId: 0,
+                    teamId: 0,
+                    voiceRecording: ""
+                }));
+                setTableData(updatedData);
+                return;
+            }
+
             const transactions = response.data || [];
-            // Create a mapping of quantitysheetId to status, interimQuantity, and remarks
+    
+            // Create a mapping of quantitysheetId to all transaction fields
             const statusMap = transactions.reduce((acc, transaction) => {
+                const alarmId = transaction.alarmMessage || (transaction.alarmId !== "0" ? transaction.alarmId : "");
+    
                 acc[transaction.quantitysheetId] = {
                     status: transaction.status,
-                    alarmId: transaction.alarmMessage,
-                    interimQuantity: transaction.interimQuantity, // Map interim quantity
-                    remarks: transaction.remarks, // Map remarks
-                    transactionId: transaction.transactionId // Store the transactionId
+                    alarmId: alarmId,
+                    interimQuantity: transaction.interimQuantity,
+                    remarks: transaction.remarks,
+                    transactionId: transaction.transactionId,
+                    zoneId: transaction.zoneId || 0,
+                    machineId: transaction.machineId || 0,
+                    teamId: transaction.teamId || 0,
+                    voiceRecording: transaction.voiceRecording || ""
                 };
                 return acc;
             }, {});
-
-            // Update tableData with the status, interimQuantity, and remarks from transactions
+    
+            // Update tableData with all transaction fields, using defaults if no transaction exists
             const updatedData = tableData.map(item => ({
                 ...item,
-                status: statusMap[item.srNo] ? statusMap[item.srNo].status : 0,
-                alerts: statusMap[item.srNo] ? statusMap[item.srNo].alarmId : "",
-                interimQuantity: statusMap[item.srNo] ? statusMap[item.srNo].interimQuantity : 0, // Add interim quantity
-                remarks: statusMap[item.srNo] ? statusMap[item.srNo].remarks : "", // Add remarks
-                transactionId: statusMap[item.srNo] ? statusMap[item.srNo].transactionId : null, // Add transactionId to each item
+                status: statusMap[item.srNo]?.status || 0,
+                alerts: statusMap[item.srNo]?.alarmId || "",
+                interimQuantity: statusMap[item.srNo]?.interimQuantity || 0,
+                remarks: statusMap[item.srNo]?.remarks || "",
+                transactionId: statusMap[item.srNo]?.transactionId || null,
+                zoneId: statusMap[item.srNo]?.zoneId || 0,
+                machineId: statusMap[item.srNo]?.machineId || 0,
+                teamId: statusMap[item.srNo]?.teamId || 0,
+                voiceRecording: statusMap[item.srNo]?.voiceRecording || ""
             }));
+    
             setTableData(updatedData);
         } catch (error) {
             console.error('Error fetching transactions:', error);
+            // On error, still map default values
+            const updatedData = tableData.map(item => ({
+                ...item,
+                status: 0,
+                alerts: "",
+                interimQuantity: 0,
+                remarks: "",
+                transactionId: null,
+                alarmId: "",
+                zoneId: 0,
+                machineId: 0,
+                teamId: 0,
+                voiceRecording: ""
+            }));
+            setTableData(updatedData);
         }
     };
-
 
     const handleRowStatusChange = async (catchNumber, newStatusIndex) => {
         console.log(`Toggling status for catch number ${catchNumber} to index ${newStatusIndex}`);
@@ -142,16 +243,18 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
 
             const postData = {
                 transactionId: updatedRow?.transactionId || 0, // Use the transactionId from the updated row
-                quantity: existingTransactionData ? existingTransactionData.quantity : 0,
+                interimQuantity: existingTransactionData ? existingTransactionData.interimQuantity : 0,
                 remarks: existingTransactionData ? existingTransactionData.remarks : "",
                 projectId: projectId,
                 quantitysheetId: updatedRow?.srNo || 0,
                 processId: processId,
-                zoneId: 0,
+                zoneId: existingTransactionData ? existingTransactionData.zoneId : 0,
+                machineId: existingTransactionData ? existingTransactionData.machineId : 0,
                 status: newStatusIndex, // Change only this field
-                alarmId: existingTransactionData ? existingTransactionData.alarmId : 0,
-                lotNo: existingTransactionData ? existingTransactionData.lotNo : 0,
+                alarmId: existingTransactionData ? existingTransactionData.alarmId : "",
+                lotNo: existingTransactionData ? existingTransactionData.lotNo : lotNo,
                 teamId: existingTransactionData ? existingTransactionData.teamId : 0,
+                voiceRecording: existingTransactionData? existingTransactionData.voiceRecording : ""
             };
             // Update or create the transaction
             if (updatedRow.transactionId) {
@@ -177,8 +280,8 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
     };
 
     const columns = [
+       
         {
-            width: '5%',
             title: (
                 <input
                     type="checkbox"
@@ -213,15 +316,13 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
             responsive: ['sm'],
         },
         {
-            width: '10%',
             title: 'Sr.No.',
             key: 'srNo',
             align: "center",
-            render: (_, __, index) => index + 1,
+            render: (_, __, index) => ((currentPage - 1) * pageSize) + index + 1,
             responsive: ['sm'],
         },
         {
-            width: '15%',
             title: 'Catch No.',
             dataIndex: 'catchNumber',
             key: 'catchNumber',
@@ -296,17 +397,47 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
             ),
         },
         {
-            width: '12%',
             title: 'Quantity',
             dataIndex: 'quantity',
             key: 'quantity',
             align: 'center',
             sorter: (a, b) => a.quantity - b.quantity,
         },
+        // {
+        //     width: '12%',
+        //     title: 'Transaction ID',
+        //     dataIndex: 'transactionId',
+        //     key: 'transactionId',
+        //     align: 'center',
+        //     sorter: (a, b) => (a.transactionId || 0) - (b.transactionId || 0),
+        // },
+        // {
+        //     width: '12%',
+        //     title: 'Lot',
+        //     dataIndex: 'lotNo',
+        //     key: 'lotNo',
+        //     align: 'center',
+        //     sorter: (a, b) => a.lotNo - b.lotNo,
+        // },
+        // {
+        //     width: '12%', 
+        //     title: 'Quantity Sheet ID',
+        //     dataIndex: 'srNo',
+        //     key: 'srNo',
+        //     align: 'center',
+        //     sorter: (a, b) => a.srNo - b.srNo,
+        // },
+        // {
+        //     title: 'Interim Quantity',
+        //     dataIndex: 'interimQuantity',
+        //     width: '12%',
+        //     align: 'center',
+        //     key: 'interimQuantity',
+        //     sorter: (a, b) => a.interimQuantity - b.interimQuantity,
+        // },
         ...(columnVisibility['Interim Quantity'] && hasFeaturePermission(7) ? [{
             title: 'Interim Quantity',
             dataIndex: 'interimQuantity',
-            width: '20%',
             align: 'center',
             key: 'interimQuantity',
             sorter: (a, b) => a.interimQuantity - b.interimQuantity,
@@ -318,16 +449,56 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
             align: 'center',
             sorter: (a, b) => a.remarks.localeCompare(b.remarks),
         }] : []),
+        ...(columnVisibility.Paper ? [{
+            title: 'Paper',
+            dataIndex: 'paper',
+            key: 'paper',
+            align: 'center',
+            sorter: (a, b) => a.paper.localeCompare(b.paper),
+            render: (text) => (
+                <div className={`${customDarkText}`}>
+                    {text}
+                </div>
+            ),
+            responsive: ['sm']
+        }] : []),
+        ...(columnVisibility.Course ? [{
+            title: 'Course',
+            dataIndex: 'course',
+            key: 'course',
+            align: 'center',
+            sorter: (a, b) => a.course.localeCompare(b.course),
+            render: (text) => (
+                <div className={`${customDarkText}`}>
+                    {text}
+                </div>
+            ),
+            responsive: ['sm'],
+            width: '20%'
+        }] : []),
+        ...(columnVisibility.Subject ? [{
+            title: 'Subject',
+            dataIndex: 'subject',
+            key: 'subject',
+            align: 'center',
+            sorter: (a, b) => a.subject.localeCompare(b.subject),
+            render: (text) => (
+                <div className={`${customDarkText}`}>
+                    {text}
+                </div>
+            ),
+            responsive: ['sm'],
+            width: '20%'
+        }] : []),
         {
             title: 'Status',
             dataIndex: 'status',
             key: 'status',
-            width: '20%',
             align: 'center',
             render: (text, record) => {
                 const statusSteps = ["Pending", "Started", "Completed"];
                 const initialStatusIndex = text !== undefined ? text : 0;
-                // Check if the record has alerts
+
                 const hasAlerts = record.alerts && record.alerts.length > 0;
 
                 return (
@@ -377,16 +548,18 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
             if (updatedRow) {
                 const postData = {
                     transactionId: updatedRow.transactionId || 0,
-                    quantity: 0,
+                    interimQuantity: updatedRow?.interimQuantity || 0,
                     remarks: updatedRow?.remarks || "",
                     projectId: projectId,
                     quantitysheetId: updatedRow?.srNo || 0,
                     processId: processId,
-                    zoneId: 0,
+                    zoneId: updatedRow?.zoneId || 0,
                     status: newStatusIndex,
-                    alarmId: 0,
-                    lotNo: updatedRow?.lotNo || 0,
-                    teamId: 0
+                    alarmId: updatedRow?.alarmId || "",
+                    machineId: updatedRow?.machineId || 0,
+                    lotNo: updatedRow?.lotNo || lotNo,
+                    voiceRecording: updatedRow?.voiceRecording || "",
+                    teamId: updatedRow?.teamId || 0
                 };
 
                 try {
@@ -443,7 +616,12 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
             } else if (action === 'Select Zone' && hasFeaturePermission(4)) {
                 setSelectZoneModalShow(true);
                 setSelectZoneModalData(selectedRow); // Pass the selected row's data to the select zone modal
-            } else if (action === 'Assign Team' && hasFeaturePermission(5)) {
+            } 
+            else if (action === 'Select Machine' && hasFeaturePermission(10)) {
+                setSelectMachineModalShow(true);
+                setSelectMachineModalData(selectedRow);
+            }
+            else if (action === 'Assign Team' && hasFeaturePermission(5)) {
                 setAssignTeamModalShow(true);
                 setAssignTeamModalData(selectedRow); // Pass the selected row's data to the assign team modal
             }
@@ -457,6 +635,19 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
         const updatedData = tableData.map((row) => {
             if (selectedRowKeys.includes(row.catchNumber)) {
                 return { ...row, zone }; // Update the zone or any other necessary field
+            }
+            return row;
+        });
+        setTableData(updatedData);
+        setSelectedRowKeys([]); // Deselect all rows
+        setShowOptions(false); // Reset options visibility
+        fetchTransactions();
+    };
+
+    const handleSelectMachineSave = (machine) => {
+        const updatedData = tableData.map((row) => {
+            if (selectedRowKeys.includes(row.catchNumber)) {
+                return { ...row, machine }; // Update the zone or any other necessary field
             }
             return row;
         });
@@ -505,10 +696,10 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
         fetchTransactions();
     };
 
-    const handleRemarksSave = (remarks) => {
+    const handleRemarksSave = (remarks, mediaBlobUrl) => {
         const updatedData = tableData.map((row) => {
             if (selectedRowKeys.includes(row.catchNumber)) {
-                return { ...row, remarks };
+                return { ...row, remarks,mediaBlobUrl };
             }
             return row;
         });
@@ -544,6 +735,11 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
 
                     disabled={selectedRowKeys.length === 0}>Select Zone</Menu.Item>
             )}
+            {hasFeaturePermission(10) && (
+                <Menu.Item onClick={() => handleDropdownSelect('Select Machine')}
+
+                    disabled={selectedRowKeys.length === 0}>Select Machine</Menu.Item>
+            )}
             {hasFeaturePermission(5) && (
                 <Menu.Item onClick={() => handleDropdownSelect('Assign Team')}
 
@@ -553,11 +749,12 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
     );
 
     const customPagination = {
-
+        current: currentPage,
         pageSize,
         pageSizeOptions: [5, 10, 25, 50, 100],
         showSizeChanger: true,
         onShowSizeChange: (current, size) => setPageSize(size),
+        onChange: (page) => setCurrentPage(page),
         showTotal: (total) => `Total ${total} items`,
         locale: { items_per_page: "Rows" }, // Removes the "/page" text
         pageSizeRender: (props) => (
@@ -586,7 +783,6 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
             return '';
         }
     };
-
 
     return (
         <>
@@ -786,7 +982,13 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                 handleSave={handleInterimQuantitySave}
                 data={interimQuantityModalData} // Pass the interim quantity modal data as a prop
             />
-            
+            <RemarksModal
+                show={remarksModalShow}
+                handleClose={() => setRemarksModalShow(false)}
+                processId={processId}
+                handleSave={handleRemarksSave}
+                data={remarksModalData} // Pass the remarks modal data as a prop
+            />
             <CatchDetailModal
                 show={catchDetailModalShow}
                 handleClose={() => setCatchDetailModalShow(false)}
@@ -797,6 +999,13 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                 handleClose={() => setSelectZoneModalShow(false)}
                 handleSave={handleSelectZoneSave}
                 data={selectZoneModalData}
+                processId={processId}
+            />
+            <SelectMachineModal
+                show={selectMachineModalShow}
+                handleClose={() => setSelectMachineModalShow(false)}
+                handleSave={handleSelectMachineSave}
+                data={selectMachineModalData}
                 processId={processId}
             />
             <AssignTeamModal

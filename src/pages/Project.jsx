@@ -6,7 +6,7 @@ import ProjectUserAllocation from './ProjectUserAllocation';
 
 
 import { Table, Tabs, Button, Input, Switch, Form, message, Card, Row, Col, Select, Pagination } from 'antd';
-import { Modal } from 'antd'; // Change this import to use Ant Design's Modal
+import { Modal } from 'antd'; 
 import { useNavigate } from 'react-router-dom';
 import API from '../CustomHooks/MasterApiHooks/api';
 import themeStore from './../store/themeStore';
@@ -22,6 +22,8 @@ const Project = () => {
   const cssClasses = getCssClasses();
   const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
 
+  const SERIES_1 = "ABCDEFGH";
+  const SERIES_2 = "PQRSTUVW";
 
   const [projects, setProjects] = useState([]);
   const [groups, setGroups] = useState([]);
@@ -34,6 +36,8 @@ const Project = () => {
   const [editingStatus, setEditingStatus] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [selectedType, setSelectedType] = useState(null);
+  const [showSeriesFields, setShowSeriesFields] = useState(false);
+  const [availableSeriesOptions, setAvailableSeriesOptions] = useState([]);
   const navigate = useNavigate();
 
   const { TabPane } = Tabs;
@@ -46,6 +50,17 @@ const Project = () => {
   const [searchText, setSearchText] = useState('');
   const [sortedInfo, setSortedInfo] = useState({});
 
+  const generateSeriesOptions = (count) => {
+    const series1 = SERIES_1.slice(0, count);
+    const series2 = SERIES_2.slice(0, count);
+    return [series1, series2];
+  };
+
+  const handleNumberOfSeriesChange = (value) => {
+    const [series1, series2] = generateSeriesOptions(value);
+    setAvailableSeriesOptions([series1, series2]);
+    form.setFieldsValue({ seriesName: '' }); // Reset series name when number changes
+  };
 
   const getProjects = async () => {
     try {
@@ -84,7 +99,7 @@ const Project = () => {
   }, []);
 
   const handleAddProject = async (values) => {
-    const { name, status, description } = values;
+    const { name, status, description, numberOfSeries, seriesName } = values;
 
     const existingProject = projects.find(
       (project) => project.name.toLowerCase() === name.toLowerCase()
@@ -100,6 +115,8 @@ const Project = () => {
       description,
       groupId: selectedGroup?.id || 0,
       typeId: selectedType?.typeId || 0,
+      noOfSeries: numberOfSeries,
+      seriesName
     };
 
     try {
@@ -165,6 +182,7 @@ const Project = () => {
             value={editingName}
             onChange={(e) => setEditingName(e.target.value)}
             onPressEnter={() => handleEditSave(index)}
+            onBlur={() => handleEditSave(index)}
           />
         ) : (
           <a 
@@ -188,6 +206,7 @@ const Project = () => {
             value={editingDescription}
             onChange={(e) => setEditingDescription(e.target.value)}
             onPressEnter={() => handleEditSave(index)}
+            onBlur={() => handleEditSave(index)}
           />
         ) : (
           <span>{text}</span>
@@ -254,6 +273,8 @@ const Project = () => {
     setIsModalVisible(false);
     setSelectedGroup(null);
     setSelectedType(null);
+    setShowSeriesFields(false);
+    setAvailableSeriesOptions([]);
   };
 
   const handleGroupChange = (value) => {
@@ -266,6 +287,7 @@ const Project = () => {
     const type = types.find((t) => t.typeId === value);
     setSelectedType(type);
     updateProjectName(selectedGroup, type);
+    setShowSeriesFields(type?.types?.toLowerCase() === 'booklet');
   };
 
   const updateProjectName = (group, type) => {
@@ -285,7 +307,6 @@ const Project = () => {
       title={t('projects')}
       bordered={true}
       style={{ padding: '20px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)' }}
-      className={customDarkText}
     >
       <Tabs activeKey={activeTabKey} onChange={setActiveTabKey}>
         <TabPane tab={t('projectList')} key="1">
@@ -332,6 +353,39 @@ const Project = () => {
                   ))}
                 </Select>
               </Form.Item>
+              {showSeriesFields && (
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Form.Item
+                      name="numberOfSeries"
+                      label={<span className={customDarkText}>{t('numberOfSeries')}</span>}
+                      rules={[{ required: true, message: t('pleaseEnterNumberOfSeries') }]}
+                    >
+                      <Select 
+                        placeholder={t('selectNumberOfSeries')}
+                        onChange={handleNumberOfSeriesChange}
+                      >
+                        {[1,2,3,4,5,6,7,8].map(num => (
+                          <Option key={num} value={num}>{num}</Option>
+                        ))}
+                      </Select>
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item
+                      name="seriesName"
+                      label={<span className={customDarkText}>{t('seriesName')}</span>}
+                      rules={[{ required: true, message: t('pleaseEnterSeriesName') }]}
+                    >
+                      <Select placeholder={t('selectSeriesName')}>
+                        {availableSeriesOptions.map((series, index) => (
+                          <Option key={index} value={series}>{series}</Option>
+                        ))}
+                      </Select>
+                    </Form.Item>
+                  </Col>
+                </Row>
+              )}
               <Form.Item
                 name="name"
                 label={<span className={customDarkText}>{t('projectName')}</span>}
@@ -342,7 +396,6 @@ const Project = () => {
               <Form.Item
                 name="description"
                 label={<span className={customDarkText}>{t('description')}</span>}
-                rules={[{ required: true, message: t('pleaseEnterDescription') }]}
               >
                 <Input.TextArea rows={4} placeholder={t('enterDescription')} />
               </Form.Item>
@@ -362,16 +415,24 @@ const Project = () => {
             </Form>
           </Modal>
         </TabPane>
-        <TabPane tab={t('selectProcess')} key="2" disabled>
-          {/* Content for Select Process */}
-          <div>
-            <AddProjectProcess selectedProject={selectedProject}/>
-          </div>
-        </TabPane>
+        <TabPane tab={t('selectProcess')} key="2">
+  {/* Content for Select Process */}
+  <div>
+    <AddProjectProcess selectedProject={selectedProject} />
+    <Button 
+      type="primary" 
+      onClick={() => setActiveTabKey("3")} 
+      style={{ marginTop: '20px' }}
+    >
+      {t('next')}
+    </Button>
+  </div>
+</TabPane>
+
         <TabPane tab={t('allocateProcess')} key="3">
           {/* Content for Allocate Process */}
           <div>
-            <ProjectUserAllocation/>
+            <ProjectUserAllocation selectedProject={selectedProject}/>
           </div>
         </TabPane>
       </Tabs>

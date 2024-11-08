@@ -10,7 +10,7 @@ import { AiFillCloseSquare } from "react-icons/ai";
 import { SortAscendingOutlined, SortDescendingOutlined, EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
 const { Option } = Select;
 const { Search } = Input;
-import { hasPermission } from '../CustomHooks/Services/permissionUtils';
+
 const Type = () => {
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = getCssClasses();
@@ -38,9 +38,6 @@ const Type = () => {
 
     const isMobile = useMediaQuery({ maxWidth: 767 });
     const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1023 });
-
-    const canaddtype = hasPermission('2.3.1');
-    const canedittype = hasPermission('2.3.3');
 
     const fetchTypes = async () => {
         setLoading(true);
@@ -298,8 +295,8 @@ console.log(originalData.requiredProcessIds)
                             <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}`} `}>Cancel</span>
                         </Button>
                     </div>
-                ) : (           
-                    <Button type="link" disabled={!canedittype} icon={<EditOutlined />} onClick={() => {
+                ) : (
+                    <Button type="link" icon={<EditOutlined />} onClick={() => {
                         setEditingIndex(index);
                         setEditingType(record.types);
                         setEditingProcessIds(record.associatedProcessId);
@@ -343,11 +340,9 @@ console.log(originalData.requiredProcessIds)
                     onChange={(e) => handleSearch(e.target.value)}
                     style={{ width: 300 }}
                 />
-                {canaddtype && (
-                    <Button className={`${customBtn} border-0 custom-zoom-btn`} onClick={() => setIsModalVisible(true)}>
-                        Add Type
-                    </Button>
-                )}
+                <Button className={`${customBtn} border-0 custom-zoom-btn`} onClick={() => setIsModalVisible(true)}>
+                    Add Type
+                </Button>
             </div>
 
             {loading ? (

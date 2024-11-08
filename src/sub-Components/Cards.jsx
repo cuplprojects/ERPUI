@@ -9,8 +9,9 @@ const Cards = ({ item, onclick, disableProject }) => {
   const navigate = useNavigate();
   const { userData } = useUserDataStore();
   const role = userData?.role;
-  const supervisor = role.roleId === 5; 
-console.log(supervisor);
+  const supervisor = role.roleId === 5;
+  console.log(supervisor);
+
   // Navigate to quantity sheet uploads and send projectId
   const handleUploadClick = (e) => {
     e.stopPropagation();

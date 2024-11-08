@@ -8,7 +8,6 @@ import { useMediaQuery } from 'react-responsive';
 import { AiFillCloseSquare } from "react-icons/ai";
 import { SortAscendingOutlined, SortDescendingOutlined, EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import { hasPermission } from '../CustomHooks/Services/permissionUtils';
 
 const CameraList = () => {
   const { t } = useTranslation();
@@ -29,9 +28,6 @@ const CameraList = () => {
 
   const isMobile = useMediaQuery({ maxWidth: 767 });
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1023 });
-
-  const canaddcamera = hasPermission('2.6.1');
-  const caneditcamera = hasPermission('2.6.3');
 
   const showModal = () => {
     setIsModalOpen(true);
@@ -139,6 +135,7 @@ const CameraList = () => {
             value={editingName}
             onChange={(e) => setEditingName(e.target.value)}
             onPressEnter={() => handleEditSave(index)}
+            onBlur={() => handleEditSave(index)}
           />
         ) : (
           <span>{text}</span>
@@ -162,7 +159,7 @@ const CameraList = () => {
             </Button>
           </div>
         ) : (
-          <Button type="link" disabled={!caneditcamera} icon={<EditOutlined />} onClick={() => {
+          <Button type="link" icon={<EditOutlined />} onClick={() => {
             setEditingIndex(index);
             setEditingName(record.name);
           }} className={`${customBtn} text-white me-1`}>{t('edit')}</Button>
@@ -199,11 +196,9 @@ const CameraList = () => {
           onChange={(e) => handleSearch(e.target.value)}
           style={{ width: 300 }}
         />
-        {canaddcamera && (
-          <Button className={`${customBtn} ${customDark === "dark-dark" ? `` : `border-0`} custom-zoom-btn`} onClick={showModal}>
-            {t('Add New Camera')}
-          </Button>
-        )}
+        <Button className={`${customBtn} ${customDark === "dark-dark" ? `` : `border-0`} custom-zoom-btn`} onClick={showModal}>
+          {t('Add New Camera')}
+        </Button>
       </div>
 
       {loading ? (
