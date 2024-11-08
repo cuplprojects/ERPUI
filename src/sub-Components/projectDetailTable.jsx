@@ -41,9 +41,9 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
         Alerts: false,
         'Interim Quantity': false,
         Remarks: false,
-        Paper: false,
-        Course: false,
-        Subject: false  
+        Paper: window.innerWidth >= 992, // Enable by default on large screens
+        Course: window.innerWidth >= 992,
+        Subject: window.innerWidth >= 992
     });
     const [hideCompleted, setHideCompleted] = useState(false);
     const [columnModalShow, setColumnModalShow] = useState(false);
@@ -74,6 +74,21 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
     const [paperData, setPaperData] = useState([]);
     const [courseData, setCourseData] = useState([]);
     const [subjectData, setSubjectData] = useState([]);
+
+    // Add resize listener for responsive column visibility
+    useEffect(() => {
+        const handleResize = () => {
+            setColumnVisibility(prev => ({
+                ...prev,
+                Paper: window.innerWidth >= 992,
+                Course: window.innerWidth >= 992,
+                Subject: window.innerWidth >= 992
+            }));
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     useEffect(() => {
         const fetchCatchData = async () => {
@@ -434,7 +449,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
             align: 'center',
             sorter: (a, b) => a.remarks.localeCompare(b.remarks),
         }] : []),
-        {
+        ...(columnVisibility.Paper ? [{
             title: 'Paper',
             dataIndex: 'paper',
             key: 'paper',
@@ -445,12 +460,11 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                     {text}
                 </div>
             ),
-            responsive: ['sm'],
-            hidden: !columnVisibility.Paper
-        },
-        {
+            responsive: ['sm']
+        }] : []),
+        ...(columnVisibility.Course ? [{
             title: 'Course',
-            dataIndex: 'course', 
+            dataIndex: 'course',
             key: 'course',
             align: 'center',
             sorter: (a, b) => a.course.localeCompare(b.course),
@@ -460,13 +474,12 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                 </div>
             ),
             responsive: ['sm'],
-            hidden: !columnVisibility.Course,
             width: '20%'
-        },
-        {
+        }] : []),
+        ...(columnVisibility.Subject ? [{
             title: 'Subject',
             dataIndex: 'subject',
-            key: 'subject', 
+            key: 'subject',
             align: 'center',
             sorter: (a, b) => a.subject.localeCompare(b.subject),
             render: (text) => (
@@ -475,9 +488,8 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                 </div>
             ),
             responsive: ['sm'],
-            hidden: !columnVisibility.Subject,
-             width: '20%'
-        },
+            width: '20%'
+        }] : []),
         {
             title: 'Status',
             dataIndex: 'status',
