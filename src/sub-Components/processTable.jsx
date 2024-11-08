@@ -20,6 +20,7 @@ import { useUserData } from '../store/userDataStore';
 import { getProjectProcessAndFeature, getProjectProcessByProjectAndSequence } from '../CustomHooks/ApiServices/projectProcessAndFeatureService';
 import useCurrentProcessStore from '../store/currentProcessStore';
 import { decrypt } from "../Security/Security";
+import { getCombinedPercentages } from '../CustomHooks/ApiServices/transacationService';
 
 const ProcessTable = () => {
     const { encryptedProjectId, encryptedLotNo } = useParams();
@@ -44,6 +45,12 @@ const ProcessTable = () => {
     const [projectLots, setProjectLots] = useState([]);
     const [previousProcess, setPreviousProcess] = useState(null);
     const [processes, setProcesses] = useState([]);
+    const [previousProcessCompletionPercentage, setPreviousProcessCompletionPercentage] = useState(0);
+
+
+    useEffect(() => {
+        fetchCombinedPercentages();
+    }, [selectedLot, previousProcess]);
 
     const handleProcessChange = async (value) => {
         const selectedProcess = processes.find(p => p.processId === value);
@@ -74,6 +81,20 @@ const ProcessTable = () => {
         }
     };
 
+    const fetchCombinedPercentages =async () => {
+        try {
+            const data = await getCombinedPercentages(id);
+            // Update state with combined percentages data
+            if (data && previousProcess) {
+                // Handle the combined percentages data
+                console.log("Combined percentages:", data?.lotProcessWeightageSum[selectedLot][previousProcess.processId]);
+                setPreviousProcessCompletionPercentage(data?.lotProcessWeightageSum[selectedLot][previousProcess.processId]);
+            }
+        } catch (error) {
+            console.error("Error fetching combined percentages:", error);
+        }
+    };
+    
     const hasFeaturePermission = useCallback((featureId) => {
         if (userData?.role?.roleId === 1) {
             return true;
@@ -128,6 +149,7 @@ const ProcessTable = () => {
                         processName: p.processName,
                         sequence: p.sequence
                     })));
+
                 }
             } catch (error) {
                 console.error("Error fetching project process data:", error);
@@ -263,7 +285,7 @@ const ProcessTable = () => {
                                         <div className={`align-items-center flex-column`}>
                                             <div className='text-center fs-5'>Previous Process</div>
                                             <div className={`p-1 fs-6 text-primary border ${customDarkBorder} rounded ms-1 d-flex justify-content-center align-items-center ${customDark === 'dark-dark' ? `${customBtn} text-white` : `${customLight} bg-light`}`} style={{ fontWeight: 900 }}>
-                                                {previousProcess ? `${previousProcess.processName} - ${previousProcess.completionPercentage}%` : 'N/A'}
+                                                {previousProcess ? `${previousProcess.processName} - ${previousProcessCompletionPercentage}%` : 'N/A'}
                                                 <span className='ms-2'><FaRegHourglassHalf color='blue' size="20" /></span>
                                             </div>
                                         </div>
