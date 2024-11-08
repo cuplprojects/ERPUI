@@ -64,12 +64,11 @@ const QtySheetUpload = () => {
             subject: item.Subject || "",
             innerEnvelope: item.InnerEnvelope || "",
             outerEnvelope: item.OuterEnvelope || "",
+
             lotNo: item.LotNo || "",
             quantity: Number(item.Quantity) || 0,
             percentageCatch: Number(item.percentageCatch) || 0,
             projectId: projectId,
-            examDate:item.ExamDate,
-            examTime: item.ExamTime,
             processId: [0],
         }));
 
