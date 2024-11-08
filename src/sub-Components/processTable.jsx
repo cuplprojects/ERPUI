@@ -349,7 +349,6 @@ const ProcessTable = () => {
 
             <Row>
                 <Col lg={12} md={12} className="pe-0">
-                    {/* <h4 className={`${customDark} text-white p-2 rounded rounded-bottom-0`}>Project Lots</h4> */}
                     <div className="d-flex flex-wrap gap-2 justify-content-center">
                         {projectLots.map((lot, index) => (
                             <button
@@ -366,6 +365,33 @@ const ProcessTable = () => {
                         ))}
                     </div>
                 </Col>
+                 {/* <Col lg={3} md={12} className="pe-0">
+                            <h4 className={`${customDark} text-white p-2`}>Project Lots</h4>
+                            <div className="d-flex flex-column" style={{ width: '100%', maxHeight: '400px', overflowY: 'auto', overflowX: 'hidden', backgroundColor: '#f0f8ff' }}>
+                                {projectLots.map((lot, index) => (
+                                    <div
+                                        key={index}
+                                        className={`mb-2 p-2 rounded-1 ${customLight} ${customDarkText} ${selectedLot === lot.lotNo ? 'border border-primary shadow-lg' : 'border'}`}
+                                        onClick={() => handleLotClick(lot.lotNo)}
+                                        style={{
+                                            cursor: 'pointer',
+                                            transition: 'all 0.3s',
+                                            transform: selectedLot === lot.lotNo ? 'scale(1.02)' : 'scale(1)',
+                                            backgroundColor: selectedLot === lot.lotNo ? '#e6f7ff' : '#ffffff'
+                                        }}
+                                    >
+                                        <div className="d-flex justify-content-between align-items-center">
+                                            <h5 className={`mb-0 ${selectedLot === lot.lotNo ? 'fw-bold text-dark' : ''}`} style={{ width: '90%' }}>
+                                                <span className="d-flex justify-content-start align-items-center" style={{ height: '100%' }}>
+                                                    Lot {lot.lotNo}
+                                                </span>
+                                            </h5>
+                                            {selectedLot === lot.lotNo && <span className="text-primary">✓</span>}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </Col> */}
             </Row>
 
             <Row className='mb-2 mt-1'>
