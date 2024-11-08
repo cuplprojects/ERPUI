@@ -28,6 +28,7 @@ const { Option } = Select;
 const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePermission, featureData, processId, lotNo }) => {
     console.log(lotNo);
     console.log(tableData);
+    console.log(processId);
     //Theme Change Section
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = getCssClasses();
@@ -49,6 +50,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
     const [searchText, setSearchText] = useState('');
     const [showOptions, setShowOptions] = useState(false);
     const [pageSize, setPageSize] = useState(5);
+    const [currentPage, setCurrentPage] = useState(1);
     const [alarmModalData, setAlarmModalData] = useState(null);
     const [interimQuantityModalData, setInterimQuantityModalData] = useState(null);
     const [remarksModalData, setRemarksModalData] = useState(null);
@@ -77,6 +79,13 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
         setVisibleRowKeys(newVisibleKeys);
     }, [searchText, hideCompleted]); // Add other dependencies if necessary
 
+    // Add effect to fetch transactions when processId changes
+    useEffect(() => {
+        if (projectId && processId) {
+            fetchTransactions();
+        }
+    }, [processId]); // Dependency on processId
+
     const filteredData = tableData.filter(item => {
         const matchesSearchText = Object.values(item).some(value =>
             value && value.toString().toLowerCase().includes(searchText.toLowerCase())
@@ -97,41 +106,84 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
         if (projectId && processId && lotNo) {
             fetchTransactions();
         }
-    }, [projectId, processId, lotNo]); 
+    }, [projectId, processId, lotNo]);
 
     const fetchTransactions = async () => {
         try {
             const response = await API.get(`/Transactions?ProjectId=${projectId}&ProcessId=${processId}`);
+            
+            // Check if response status is 404 or response data indicates "Not Found"
+            if (response.status === 404 || (response.data && response.data.status === 404)) {
+                // Handle as no transactions case
+                const updatedData = tableData.map(item => ({
+                    ...item,
+                    status: 0,
+                    alerts: "",
+                    interimQuantity: 0,
+                    remarks: "",
+                    transactionId: null,
+                    alarmId: "",
+                    zoneId: 0,
+                    machineId: 0,
+                    teamId: 0,
+                    voiceRecording: ""
+                }));
+                setTableData(updatedData);
+                return;
+            }
+
             const transactions = response.data || [];
     
-            // Create a mapping of quantitysheetId to status, alarmId (or alarmMessage), interimQuantity, and remarks
+            // Create a mapping of quantitysheetId to all transaction fields
             const statusMap = transactions.reduce((acc, transaction) => {
-                // If alarmId is "0", treat it as invalid by setting it to an empty string or null
                 const alarmId = transaction.alarmMessage || (transaction.alarmId !== "0" ? transaction.alarmId : "");
     
                 acc[transaction.quantitysheetId] = {
                     status: transaction.status,
-                    alarmId: alarmId, // Use valid alarmId or an empty string if it's "0"
-                    interimQuantity: transaction.interimQuantity, // Map interim quantity
-                    remarks: transaction.remarks, // Map remarks
-                    transactionId: transaction.transactionId // Store the transactionId
+                    alarmId: alarmId,
+                    interimQuantity: transaction.interimQuantity,
+                    remarks: transaction.remarks,
+                    transactionId: transaction.transactionId,
+                    zoneId: transaction.zoneId || 0,
+                    machineId: transaction.machineId || 0,
+                    teamId: transaction.teamId || 0,
+                    voiceRecording: transaction.voiceRecording || ""
                 };
                 return acc;
             }, {});
     
-            // Update tableData with the status, alarmId (or alarmMessage), interimQuantity, and remarks from transactions
+            // Update tableData with all transaction fields, using defaults if no transaction exists
             const updatedData = tableData.map(item => ({
                 ...item,
-                status: statusMap[item.srNo] ? statusMap[item.srNo].status : 0,
-                alerts: statusMap[item.srNo] ? statusMap[item.srNo].alarmId : "", // Use alarmId or alarmMessage
-                interimQuantity: statusMap[item.srNo] ? statusMap[item.srNo].interimQuantity : 0, // Add interim quantity
-                remarks: statusMap[item.srNo] ? statusMap[item.srNo].remarks : "", // Add remarks
-                transactionId: statusMap[item.srNo] ? statusMap[item.srNo].transactionId : null, // Add transactionId to each item
+                status: statusMap[item.srNo]?.status || 0,
+                alerts: statusMap[item.srNo]?.alarmId || "",
+                interimQuantity: statusMap[item.srNo]?.interimQuantity || 0,
+                remarks: statusMap[item.srNo]?.remarks || "",
+                transactionId: statusMap[item.srNo]?.transactionId || null,
+                zoneId: statusMap[item.srNo]?.zoneId || 0,
+                machineId: statusMap[item.srNo]?.machineId || 0,
+                teamId: statusMap[item.srNo]?.teamId || 0,
+                voiceRecording: statusMap[item.srNo]?.voiceRecording || ""
             }));
     
             setTableData(updatedData);
         } catch (error) {
             console.error('Error fetching transactions:', error);
+            // On error, still map default values
+            const updatedData = tableData.map(item => ({
+                ...item,
+                status: 0,
+                alerts: "",
+                interimQuantity: 0,
+                remarks: "",
+                transactionId: null,
+                alarmId: "",
+                zoneId: 0,
+                machineId: 0,
+                teamId: 0,
+                voiceRecording: ""
+            }));
+            setTableData(updatedData);
         }
     };
 
@@ -229,7 +281,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
             title: 'Sr.No.',
             key: 'srNo',
             align: "center",
-            render: (_, __, index) => index + 1,
+            render: (_, __, index) => ((currentPage - 1) * pageSize) + index + 1,
             responsive: ['sm'],
         },
         {
@@ -331,14 +383,14 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
         //     align: 'center',
         //     sorter: (a, b) => a.lotNo - b.lotNo,
         // },
-        // {
-        //     width: '12%', 
-        //     title: 'Quantity Sheet ID',
-        //     dataIndex: 'srNo',
-        //     key: 'srNo',
-        //     align: 'center',
-        //     sorter: (a, b) => a.srNo - b.srNo,
-        // },
+        {
+            width: '12%', 
+            title: 'Quantity Sheet ID',
+            dataIndex: 'srNo',
+            key: 'srNo',
+            align: 'center',
+            sorter: (a, b) => a.srNo - b.srNo,
+        },
         // {
         //     title: 'Interim Quantity',
         //     dataIndex: 'interimQuantity',
@@ -622,11 +674,12 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
     );
 
     const customPagination = {
-
+        current: currentPage,
         pageSize,
         pageSizeOptions: [5, 10, 25, 50, 100],
         showSizeChanger: true,
         onShowSizeChange: (current, size) => setPageSize(size),
+        onChange: (page) => setCurrentPage(page),
         showTotal: (total) => `Total ${total} items`,
         locale: { items_per_page: "Rows" }, // Removes the "/page" text
         pageSizeRender: (props) => (
@@ -655,7 +708,6 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
             return '';
         }
     };
-
 
     return (
         <>
