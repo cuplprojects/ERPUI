@@ -41,6 +41,9 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
         Alerts: false,
         'Interim Quantity': false,
         Remarks: false,
+        Paper: window.innerWidth >= 992, // Enable by default on large screens
+        Course: window.innerWidth >= 992,
+        Subject: window.innerWidth >= 992
     });
     const [hideCompleted, setHideCompleted] = useState(false);
     const [columnModalShow, setColumnModalShow] = useState(false);
@@ -68,6 +71,42 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
     const [showOnlyAlerts, setShowOnlyAlerts] = useState(false);
     const [showOnlyCompletedPreviousProcess, setShowOnlyCompletedPreviousProcess] = useState(true);
     const [showOnlyRemarks, setShowOnlyRemarks] = useState(false);
+    const [paperData, setPaperData] = useState([]);
+    const [courseData, setCourseData] = useState([]);
+    const [subjectData, setSubjectData] = useState([]);
+
+    // Add resize listener for responsive column visibility
+    useEffect(() => {
+        const handleResize = () => {
+            setColumnVisibility(prev => ({
+                ...prev,
+                Paper: window.innerWidth >= 992,
+                Course: window.innerWidth >= 992,
+                Subject: window.innerWidth >= 992
+            }));
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    useEffect(() => {
+        const fetchCatchData = async () => {
+            try {
+                if (projectId && lotNo) {
+                    const response = await API.get(`/QuantitySheet/Catch?ProjectId=${projectId}&lotNo=${lotNo}`);
+                    const data = response.data || [];
+                    setPaperData(data.filter(item => item.paper).map(item => item.paper));
+                    setCourseData(data.filter(item => item.course).map(item => item.course));
+                    setSubjectData(data.filter(item => item.subject).map(item => item.subject));
+                }
+            } catch (error) {
+                console.error("Error fetching catch data:", error);
+            }
+        };
+
+        fetchCatchData();
+    }, [projectId, lotNo]);
 
     useEffect(() => {
         // Update the initialTableData state whenever tableData changes
@@ -241,8 +280,8 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
     };
 
     const columns = [
+       
         {
-            width: '5%',
             title: (
                 <input
                     type="checkbox"
@@ -277,7 +316,6 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
             responsive: ['sm'],
         },
         {
-            width: '10%',
             title: 'Sr.No.',
             key: 'srNo',
             align: "center",
@@ -285,7 +323,6 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
             responsive: ['sm'],
         },
         {
-            width: '15%',
             title: 'Catch No.',
             dataIndex: 'catchNumber',
             key: 'catchNumber',
@@ -360,7 +397,6 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
             ),
         },
         {
-            width: '12%',
             title: 'Quantity',
             dataIndex: 'quantity',
             key: 'quantity',
@@ -402,7 +438,6 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
         ...(columnVisibility['Interim Quantity'] && hasFeaturePermission(7) ? [{
             title: 'Interim Quantity',
             dataIndex: 'interimQuantity',
-            width: '20%',
             align: 'center',
             key: 'interimQuantity',
             sorter: (a, b) => a.interimQuantity - b.interimQuantity,
@@ -414,11 +449,51 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
             align: 'center',
             sorter: (a, b) => a.remarks.localeCompare(b.remarks),
         }] : []),
+        ...(columnVisibility.Paper ? [{
+            title: 'Paper',
+            dataIndex: 'paper',
+            key: 'paper',
+            align: 'center',
+            sorter: (a, b) => a.paper.localeCompare(b.paper),
+            render: (text) => (
+                <div className={`${customDarkText}`}>
+                    {text}
+                </div>
+            ),
+            responsive: ['sm']
+        }] : []),
+        ...(columnVisibility.Course ? [{
+            title: 'Course',
+            dataIndex: 'course',
+            key: 'course',
+            align: 'center',
+            sorter: (a, b) => a.course.localeCompare(b.course),
+            render: (text) => (
+                <div className={`${customDarkText}`}>
+                    {text}
+                </div>
+            ),
+            responsive: ['sm'],
+            width: '20%'
+        }] : []),
+        ...(columnVisibility.Subject ? [{
+            title: 'Subject',
+            dataIndex: 'subject',
+            key: 'subject',
+            align: 'center',
+            sorter: (a, b) => a.subject.localeCompare(b.subject),
+            render: (text) => (
+                <div className={`${customDarkText}`}>
+                    {text}
+                </div>
+            ),
+            responsive: ['sm'],
+            width: '20%'
+        }] : []),
         {
             title: 'Status',
             dataIndex: 'status',
             key: 'status',
-            width: '20%',
             align: 'center',
             render: (text, record) => {
                 const statusSteps = ["Pending", "Started", "Completed"];

@@ -16,7 +16,7 @@ const ColumnToggleModal = ({ show, handleClose, columnVisibility, setColumnVisib
             </Modal.Header>
             <Modal.Body>
                 <Form>
-                    {['Interim Quantity', 'Remarks', 'Team Assigned'].map((column) => (
+                    {['Interim Quantity', 'Remarks', 'Team Assigned', 'Paper', 'Course', 'Subject'].map((column) => (
                         <Form.Group key={column} className="mb-3">
                             <Form.Check
                                 type="switch"
