@@ -213,7 +213,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                 machineId: existingTransactionData ? existingTransactionData.machineId : 0,
                 status: newStatusIndex, // Change only this field
                 alarmId: existingTransactionData ? existingTransactionData.alarmId : "",
-                lotNo: existingTransactionData ? existingTransactionData.lotNo : 0,
+                lotNo: existingTransactionData ? existingTransactionData.lotNo : lotNo,
                 teamId: existingTransactionData ? existingTransactionData.teamId : 0,
                 voiceRecording: existingTransactionData? existingTransactionData.voiceRecording : ""
             };
@@ -383,14 +383,14 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
         //     align: 'center',
         //     sorter: (a, b) => a.lotNo - b.lotNo,
         // },
-        {
-            width: '12%', 
-            title: 'Quantity Sheet ID',
-            dataIndex: 'srNo',
-            key: 'srNo',
-            align: 'center',
-            sorter: (a, b) => a.srNo - b.srNo,
-        },
+        // {
+        //     width: '12%', 
+        //     title: 'Quantity Sheet ID',
+        //     dataIndex: 'srNo',
+        //     key: 'srNo',
+        //     align: 'center',
+        //     sorter: (a, b) => a.srNo - b.srNo,
+        // },
         // {
         //     title: 'Interim Quantity',
         //     dataIndex: 'interimQuantity',
@@ -452,7 +452,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                     </div>
                 );
             },
-            sorter: (a, b) => (a.status || 0) - (b.status || 0), // Changed to numeric comparison
+            sorter: (a, b) => a.status.localeCompare(b.status),
         },
 
     ];
@@ -482,7 +482,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                     status: newStatusIndex,
                     alarmId: updatedRow?.alarmId || "",
                     machineId: updatedRow?.machineId || 0,
-                    lotNo: updatedRow?.lotNo || 0,
+                    lotNo: updatedRow?.lotNo || lotNo,
                     voiceRecording: updatedRow?.voiceRecording || "",
                     teamId: updatedRow?.teamId || 0
                 };
@@ -637,8 +637,6 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
     const selectedRows = tableData.filter((row) => selectedRowKeys.includes(row.catchNumber));
     const isCompleted = selectedRows.every(row => row.status === 2); // Check if the selected row is completed
 
-
-    
     const menu = (
         <Menu>
             {hasFeaturePermission(3) && !isCompleted && (
@@ -946,4 +944,3 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
     );
 };
 export default ProjectDetailsTable;
-
