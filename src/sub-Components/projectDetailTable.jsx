@@ -400,7 +400,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                     </div>
                 );
             },
-            sorter: (a, b) => a.status.localeCompare(b.status),
+            sorter: (a, b) => (a.status || 0) - (b.status || 0), // Changed to numeric comparison
         },
 
     ];
