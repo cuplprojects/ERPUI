@@ -52,7 +52,7 @@ const SelectZoneModal = ({ show, handleClose, data, processId,handleSave}) => {
         status: existingTransactionData ? existingTransactionData.status : 0,
         alarmId: existingTransactionData ? existingTransactionData.alarmId : "",
         lotNo: data.lotNo,
-        teamId: existingTransactionData ? existingTransactionData.teamId : 0,
+        teamId: existingTransactionData ? existingTransactionData.teamId : [],
         voiceRecording: existingTransactionData? existingTransactionData.voiceRecording : ""
       };
 

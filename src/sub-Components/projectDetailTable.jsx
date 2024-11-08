@@ -164,7 +164,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                     alarmId: "",
                     zoneId: 0,
                     machineId: 0,
-                    teamId: 0,
+                    teamId: [],
                     voiceRecording: ""
                 }));
                 setTableData(updatedData);
@@ -185,7 +185,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                     transactionId: transaction.transactionId,
                     zoneId: transaction.zoneId || 0,
                     machineId: transaction.machineId || 0,
-                    teamId: transaction.teamId || 0,
+                    teamId: transaction.teamId || [],
                     voiceRecording: transaction.voiceRecording || ""
                 };
                 return acc;
@@ -201,7 +201,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                 transactionId: statusMap[item.srNo]?.transactionId || null,
                 zoneId: statusMap[item.srNo]?.zoneId || 0,
                 machineId: statusMap[item.srNo]?.machineId || 0,
-                teamId: statusMap[item.srNo]?.teamId || 0,
+                teamId: statusMap[item.srNo]?.teamId || [],
                 voiceRecording: statusMap[item.srNo]?.voiceRecording || ""
             }));
     
@@ -219,7 +219,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                 alarmId: "",
                 zoneId: 0,
                 machineId: 0,
-                teamId: 0,
+                teamId: [],
                 voiceRecording: ""
             }));
             setTableData(updatedData);
@@ -251,9 +251,9 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                 zoneId: existingTransactionData ? existingTransactionData.zoneId : 0,
                 machineId: existingTransactionData ? existingTransactionData.machineId : 0,
                 status: newStatusIndex, // Change only this field
-                alarmId: existingTransactionData ? existingTransactionData.alarmId : "",
+                alarmId: existingTransactionData ? existingTransactionData.alarmId : "",                
+                teamId: existingTransactionData ? existingTransactionData.teamId : [],
                 lotNo: existingTransactionData ? existingTransactionData.lotNo : lotNo,
-                teamId: existingTransactionData ? existingTransactionData.teamId : 0,
                 voiceRecording: existingTransactionData? existingTransactionData.voiceRecording : ""
             };
             // Update or create the transaction
@@ -559,7 +559,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                     machineId: updatedRow?.machineId || 0,
                     lotNo: updatedRow?.lotNo || lotNo,
                     voiceRecording: updatedRow?.voiceRecording || "",
-                    teamId: updatedRow?.teamId || 0
+                    teamId: updatedRow?.teamId || []
                 };
 
                 try {
@@ -772,15 +772,16 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
     };
 
 
-    const rowClassName = (record, index) => {
-        if (record.status === 'Pending') {
-            return 'pending-row';
-        } else if (record.status === 'Started') {
-            return 'started-row';
-        } else if (record.status === 'Completed') {
-            return 'completed-row';
-        } else {
-            return '';
+    const rowClassName = (record) => {
+        switch (record.status) {
+            case 0:
+                return 'status-pending-row';
+            case 1:
+                return 'status-started-row';
+            case 2:
+                return 'status-completed-row';
+            default:
+                return '';
         }
     };
 
@@ -846,10 +847,20 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                                 </Menu.Item>
                             </Menu>
                         } trigger={['click']}>
-                            <Button style={{ backgroundColor: 'transparent', border: 'none', boxShadow: 'none', padding: 0 }} className={`p-1 border ${customDark === 'dark-dark' ? `${customDark} text-white` : 'bg-white'}`}>
-                                <FaFilter size={20} className={`${customDarkText}`} />
-                                {/* <span className='d-none d-lg-block d-md-none ms-1 fs-6 fw-bold'>Filter</span> */}
-
+                            <Button 
+                                style={{ 
+                                    backgroundColor: 'transparent', 
+                                    border: 'none', 
+                                    boxShadow: 'none', 
+                                    padding: 0 ,
+                                    width: '30px',
+                                }} 
+                                className={`p- border ${customDark === 'dark-dark' ? `${customDark} text-white` : 'bg-white'}`}
+                            >
+                                <FaFilter 
+                                    size={20} 
+                                    className={`${customDarkText}`} 
+                                />
                             </Button>
                         </Dropdown>
                     )}
@@ -887,7 +898,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                                     <Button
                                         className={`${customBtn}`}
                                         onClick={() => setSearchText('')}
-                                        icon={<IoCloseCircle size={20} className={`rounded-circle ${customBtn}`} />}
+                                        icon={<IoCloseCircle size={25} className={`rounded-circle ${customBtn}`} />}
                                         style={{
                                             position: 'absolute',
                                             top: '50%',
@@ -957,6 +968,9 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                         style={{ position: "relative", zIndex: "900" }}
                         striped={true}
                         tableLayout="auto"
+                        responsive={true}
+                        scroll={{ x: true }}
+                        size="middle"
                     />
                 </Col>
             </Row>

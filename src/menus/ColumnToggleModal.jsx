@@ -1,7 +1,13 @@
-import React from 'react';
-import { Modal, Button, Form } from 'react-bootstrap';
+import React, { useMemo } from 'react';
+import { Modal, Button, Form, Row, Col } from 'react-bootstrap';
+import themeStore from '../store/themeStore';
+import { useStore } from 'zustand';
 
 const ColumnToggleModal = ({ show, handleClose, columnVisibility, setColumnVisibility }) => {
+    const { getCssClasses } = useStore(themeStore);
+    const cssClasses = useMemo(() => getCssClasses(), [getCssClasses]);
+    const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
+
     const handleToggle = (column) => {
         setColumnVisibility((prevVisibility) => ({
             ...prevVisibility,
@@ -9,28 +15,38 @@ const ColumnToggleModal = ({ show, handleClose, columnVisibility, setColumnVisib
         }));
     };
 
+    const columns = ['Interim Quantity', 'Remarks', 'Team Assigned', 'Paper', 'Course', 'Subject'];
+
     return (
-        <Modal show={show} onHide={handleClose}>
-            <Modal.Header closeButton>
-                <Modal.Title>Toggle Columns</Modal.Title>
+        <Modal show={show} onHide={handleClose} centered>
+            <Modal.Header closeButton className={`${customDark} ${customDarkText}`}>
+                <Modal.Title className={`${customLightText} fs-4`}>Toggle Columns</Modal.Title>
             </Modal.Header>
-            <Modal.Body>
+            <Modal.Body className={`${customLight} ${customDarkText} p-4`}>
                 <Form>
-                    {['Interim Quantity', 'Remarks', 'Team Assigned', 'Paper', 'Course', 'Subject'].map((column) => (
-                        <Form.Group key={column} className="mb-3">
-                            <Form.Check
-                                type="switch"
-                                id={`custom-switch-${column}`}
-                                label={column}
-                                checked={columnVisibility[column]}
-                                onChange={() => handleToggle(column)}
-                            />
-                        </Form.Group>
-                    ))}
+                    <Row>
+                        {columns.map((column) => (
+                            <Col md={6} key={column}>
+                                <Form.Group className="mb-3 d-flex align-items-center">
+                                    <Form.Check
+                                        type="switch"
+                                        id={`custom-switch-${column}`}
+                                        label={column}
+                                        checked={columnVisibility[column]}
+                                        onChange={() => handleToggle(column)}
+                                        className={`${customDarkText} fs-5`}
+                                    />
+                                </Form.Group>
+                            </Col>
+                        ))}
+                    </Row>
                 </Form>
             </Modal.Body>
-            <Modal.Footer>
-                <Button className='custom-theme-dark-btn' onClick={handleClose}>
+            <Modal.Footer className={`${customLight} justify-content-center`}>
+                <Button 
+                    className={`${customBtn} border-0 px-4 py-2 fs-5`} 
+                    onClick={handleClose}
+                >
                     Close
                 </Button>
             </Modal.Footer>
