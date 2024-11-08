@@ -25,7 +25,8 @@ import API from '../CustomHooks/MasterApiHooks/api';
 
 const { Option } = Select;
 
-const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePermission, featureData, processId }) => {
+const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePermission, featureData, processId, lotNo }) => {
+    console.log(lotNo);
     console.log(tableData);
     //Theme Change Section
     const { getCssClasses } = useStore(themeStore);
@@ -91,28 +92,26 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
         setShowOptions(selectedRowKeys.length === 1);
     }, [selectedRowKeys]);
 
+    // Update useEffect to immediately fetch data when lotNo changes
     useEffect(() => {
-        fetchTransactions();
-    }, [projectId, processId]);
-
+        if (projectId && processId && lotNo) {
+            fetchTransactions();
+        }
+    }, [projectId, processId, lotNo]); 
 
     const fetchTransactions = async () => {
         try {
             const response = await API.get(`/Transactions?ProjectId=${projectId}&ProcessId=${processId}`);
             const transactions = response.data || [];
     
-
             // Create a mapping of quantitysheetId to status, alarmId (or alarmMessage), interimQuantity, and remarks
-
             const statusMap = transactions.reduce((acc, transaction) => {
                 // If alarmId is "0", treat it as invalid by setting it to an empty string or null
                 const alarmId = transaction.alarmMessage || (transaction.alarmId !== "0" ? transaction.alarmId : "");
     
                 acc[transaction.quantitysheetId] = {
                     status: transaction.status,
-
                     alarmId: alarmId, // Use valid alarmId or an empty string if it's "0"
-
                     interimQuantity: transaction.interimQuantity, // Map interim quantity
                     remarks: transaction.remarks, // Map remarks
                     transactionId: transaction.transactionId // Store the transactionId
@@ -120,9 +119,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                 return acc;
             }, {});
     
-
             // Update tableData with the status, alarmId (or alarmMessage), interimQuantity, and remarks from transactions
-
             const updatedData = tableData.map(item => ({
                 ...item,
                 status: statusMap[item.srNo] ? statusMap[item.srNo].status : 0,
@@ -137,8 +134,6 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
             console.error('Error fetching transactions:', error);
         }
     };
-    
-
 
     const handleRowStatusChange = async (catchNumber, newStatusIndex) => {
         console.log(`Toggling status for catch number ${catchNumber} to index ${newStatusIndex}`);
@@ -320,6 +315,38 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
             align: 'center',
             sorter: (a, b) => a.quantity - b.quantity,
         },
+        // {
+        //     width: '12%',
+        //     title: 'Transaction ID',
+        //     dataIndex: 'transactionId',
+        //     key: 'transactionId',
+        //     align: 'center',
+        //     sorter: (a, b) => (a.transactionId || 0) - (b.transactionId || 0),
+        // },
+        // {
+        //     width: '12%',
+        //     title: 'Lot',
+        //     dataIndex: 'lotNo',
+        //     key: 'lotNo',
+        //     align: 'center',
+        //     sorter: (a, b) => a.lotNo - b.lotNo,
+        // },
+        // {
+        //     width: '12%', 
+        //     title: 'Quantity Sheet ID',
+        //     dataIndex: 'srNo',
+        //     key: 'srNo',
+        //     align: 'center',
+        //     sorter: (a, b) => a.srNo - b.srNo,
+        // },
+        // {
+        //     title: 'Interim Quantity',
+        //     dataIndex: 'interimQuantity',
+        //     width: '12%',
+        //     align: 'center',
+        //     key: 'interimQuantity',
+        //     sorter: (a, b) => a.interimQuantity - b.interimQuantity,
+        // },
         ...(columnVisibility['Interim Quantity'] && hasFeaturePermission(7) ? [{
             title: 'Interim Quantity',
             dataIndex: 'interimQuantity',
@@ -399,7 +426,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                     projectId: projectId,
                     quantitysheetId: updatedRow?.srNo || 0,
                     processId: processId,
-                    zoneId: updatedRow?.zoneId || "",
+                    zoneId: updatedRow?.zoneId || 0,
                     status: newStatusIndex,
                     alarmId: updatedRow?.alarmId || "",
                     machineId: updatedRow?.machineId || 0,
@@ -866,5 +893,6 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
         </>
     );
 };
-}
+
 export default ProjectDetailsTable;
+

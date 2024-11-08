@@ -1,10 +1,78 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Table, Spin, message, Button, Collapse, Checkbox, Select } from 'antd';
 import API from '../CustomHooks/MasterApiHooks/api'; // Adjust the path as necessary
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { SortableContainer, SortableElement, SortableHandle } from 'react-sortable-hoc';
 
 const { Panel } = Collapse;
 const { Option } = Select;
+
+const DragHandle = SortableHandle(() => (
+  <span style={{ cursor: 'grab', marginRight: '8px', opacity: 1 }}>⣿</span>
+));
+
+const SortableRow = SortableElement(({ process, index, features, editingProcessId, editingFeatures, handleFeatureChange, handleSaveFeatures, handleCancelEdit, handleEdit, independentProcesses }) => {
+  return (
+    <tr style={{ opacity: 1, background: 'white', margin: '10px' }}>
+      <td>
+        {independentProcesses.some(p => p.id === process.id) && <DragHandle />}
+        {process.name}
+      </td>
+      <td>
+        {editingProcessId === process.id ? (
+          <Select
+            mode="multiple"
+            style={{ width: '100%' }}
+            value={editingFeatures}
+            onChange={handleFeatureChange}
+          >
+            {features.map(feature => (
+              <Option key={feature.featureId} value={feature.featureId}>
+                {feature.features}
+              </Option>
+            ))}
+          </Select>
+        ) : (
+          <div>
+            {features
+              .filter(feature => process.installedFeatures.includes(feature.featureId))
+              .map(feature => (
+                <div key={feature.featureId} style={{ display: 'flex', alignItems: 'center' }}>
+                  <span>{feature.features}</span>
+                  <span style={{ marginLeft: '8px', color: 'green' }}>✔️</span>
+                </div>
+              ))}
+          </div>
+        )}
+      </td>
+      <td>{process.weightage}</td>
+      <td>{process.relativeWeightage.toFixed(4)}%</td>
+      <td>
+        {editingProcessId === process.id ? (
+          <>
+            <Button onClick={() => handleSaveFeatures(process.id)} type="primary">Save</Button>
+            <Button onClick={handleCancelEdit}>Cancel</Button>
+          </>
+        ) : (
+          <Button onClick={() => handleEdit(process)}>Edit</Button>
+        )}
+      </td>
+    </tr>
+  );
+});
+
+const SortableBody = SortableContainer(({ children }) => {
+  return <tbody>{children}</tbody>;
+});
+
+const arrayMoveMutate = (array, from, to) => {
+  array.splice(to < 0 ? array.length + to : to, 0, array.splice(from, 1)[0]);
+};
+
+const arrayMove = (array, from, to) => {
+  array = array.slice();
+  arrayMoveMutate(array, from, to);
+  return array;
+};
 
 const AddProjectProcess = ({ selectedProject }) => {
   const [projectProcesses, setProjectProcesses] = useState([]);
@@ -13,20 +81,19 @@ const AddProjectProcess = ({ selectedProject }) => {
   const [allProcesses, setAllProcesses] = useState([]);
   const [selectedProcessIds, setSelectedProcessIds] = useState([]);
   const [removedProcessIds, setRemovedProcessIds] = useState([]);
-  const [requiredProcessIds, setRequiredProcessIds] = useState([]); // New state for required processes
+  const [requiredProcessIds, setRequiredProcessIds] = useState([]);
   const [editingProcessId, setEditingProcessId] = useState(null);
   const [editingFeatures, setEditingFeatures] = useState([]);
   const [previousFeatures, setPreviousFeatures] = useState([]);
   const [independentProcesses, setIndependentProcesses] = useState([]);
-const [projectName, setProjectName] = useState('');
+  const [projectName, setProjectName] = useState('');
 
   useEffect(() => {
     const fetchRequiredProcesses = async (typeId) => {
       try {
         const response = await API.get(`/PaperTypes/${typeId}/RequiredProcesses`);
-        setRequiredProcessIds(response.data.map(process => process.id)); // Set required process IDs
+        setRequiredProcessIds(response.data.map(process => process.id));
       } catch (error) {
-        console.error('Failed to fetch required processes', error);
         message.error('Unable to fetch required processes. Please try again later.');
       }
     };
@@ -34,19 +101,20 @@ const [projectName, setProjectName] = useState('');
     const fetchProcessesOfProject = async () => {
       try {
         const projectResponse = await API.get(`/Project/${selectedProject}`);
-        const { typeId,name } = projectResponse.data; // Get typeId from project details
+        const { typeId, name } = projectResponse.data;
+
         setProjectName(name);
         const response = await API.get(`/ProjectProcess/GetProjectProcesses/${selectedProject}`);
         if (response.data.length > 0) {
-          console.log(response.data);
           await fetchRequiredProcesses(typeId);
-          setProjectProcesses(calculatedWeightage(response.data));
+          const sortedProcesses = response.data.sort((a, b) => a.sequence - b.sequence);
+          const independentOnly = sortedProcesses.filter(process => process.processType !== "Dependent");
+          setProjectProcesses(calculatedWeightage(independentOnly));
         } else {
-          await fetchRequiredProcesses(typeId); // Fetch required processes with typeId
+          await fetchRequiredProcesses(typeId);
           await fetchProjectProcesses(typeId);
         }
       } catch (error) {
-        console.error('Failed to fetch project processes', error);
         message.error('Unable to fetch project processes. Please try again later.');
       } finally {
         setLoading(false);
@@ -56,9 +124,9 @@ const [projectName, setProjectName] = useState('');
     const fetchProjectProcesses = async (typeId) => {
       try {
         const response = await API.get(`/PaperTypes/${typeId}/Processes`);
-        setProjectProcesses(calculatedWeightage(response.data));
+        const independentOnly = response.data.filter(process => process.processType !== "Dependent");
+        setProjectProcesses(calculatedWeightage(independentOnly));
       } catch (error) {
-        console.error('Failed to fetch project processes', error);
         message.error('Unable to fetch project processes. Please try again later.');
       }
     };
@@ -68,7 +136,6 @@ const [projectName, setProjectName] = useState('');
         const response = await API.get('/Features');
         setFeatures(response.data);
       } catch (error) {
-        console.error('Failed to fetch features', error);
         message.error('Unable to fetch features. Please try again later.');
       }
     };
@@ -76,39 +143,43 @@ const [projectName, setProjectName] = useState('');
     const fetchAllProcesses = async () => {
       try {
         const response = await API.get('/Processes');
+        const independentOnly = response.data
+          .filter(process => process.processType === "Independent")
+          .map(process => ({
+            ...process,
+            rangeStart: process.rangeStart || 0,
+            rangeEnd: process.rangeEnd || 0
+          }));
+        
         setAllProcesses(response.data);
+        setIndependentProcesses(independentOnly);
 
-        // Filter independent processes
-        const independents = response.data.filter(process => process.processType === "Independent");
-        setIndependentProcesses(independents);
       } catch (error) {
-        console.error('Failed to fetch processes', error);
         message.error('Unable to fetch processes. Please try again later.');
       }
     };
 
     fetchFeatures();
-    fetchProcessesOfProject(); // Check project processes first
-    fetchAllProcesses(); // Fetch all processes
+    fetchProcessesOfProject();
+    fetchAllProcesses();
   }, [selectedProject]);
 
-
   useEffect(() => {
-    // Update selectedProcessIds based on projectProcesses
     setSelectedProcessIds(projectProcesses.map(process => process.id));
   }, [projectProcesses]);
 
   const handleProcessSelect = (processId) => {
+    const process = allProcesses.find(p => p.id === processId);
+
     setSelectedProcessIds((prev) => {
       const newSelection = prev.includes(processId)
-        ? prev.filter(id => id !== processId) // Uncheck
-        : [...prev, processId]; // Check
+        ? prev.filter(id => id !== processId)
+        : [...prev, processId];
 
-      // Update removedProcessIds
       if (prev.includes(processId)) {
-        setRemovedProcessIds((prevRemoved) => [...prevRemoved, processId]); // Add to removal list
+        setRemovedProcessIds((prevRemoved) => [...prevRemoved, processId]);
       } else {
-        setRemovedProcessIds((prevRemoved) => prevRemoved.filter(id => id !== processId)); // Remove from removal list
+        setRemovedProcessIds((prevRemoved) => prevRemoved.filter(id => id !== processId));
       }
 
       const updatedProcesses = allProcesses.filter(process => newSelection.includes(process.id));
@@ -116,7 +187,6 @@ const [projectName, setProjectName] = useState('');
       const processesToAdd = updatedProcesses.filter(p => !existingIds.has(p.id));
       const processesToRemove = projectProcesses.filter(p => !newSelection.includes(p.id));
 
-      // Update project processes directly
       setProjectProcesses((prev) => calculatedWeightage([
         ...prev.filter(p => !processesToRemove.includes(p)),
         ...processesToAdd,
@@ -125,7 +195,6 @@ const [projectName, setProjectName] = useState('');
       return newSelection;
     });
   };
-
 
   const calculatedWeightage = (processes) => {
     const totalWeightage = processes.reduce((sum, process) => sum + (process.weightage || 0), 0);
@@ -136,15 +205,15 @@ const [projectName, setProjectName] = useState('');
   };
 
   const handleSubmit = async () => {
-    const projectProcessesToSubmit = projectProcesses.map(process => {
+    const projectProcessesToSubmit = projectProcesses.map((process, index) => {
       const matchingProcess = allProcesses.find(p => p.name === process.name);
 
       return {
         id: process.id,
         projectId: selectedProject,
-        processId: matchingProcess ? matchingProcess.id : 0,
+        processId: matchingProcess ? matchingProcess.id : process.id,
         weightage: process.relativeWeightage,
-        sequence: process.id,
+        sequence: index+1,
         featuresList: process.installedFeatures,
         userId: process.userId || []
       };
@@ -160,14 +229,11 @@ const [projectName, setProjectName] = useState('');
       }
       message.success('Processes updated successfully!');
     } catch (error) {
-      console.error('Error updating processes:', error);
       message.error('Error updating processes. Please try again.');
     } finally {
-      // Reset the removal list
       setRemovedProcessIds([]);
     }
   };
-
 
   const handleEdit = (process) => {
     setEditingProcessId(process.id);
@@ -177,7 +243,7 @@ const [projectName, setProjectName] = useState('');
 
   const handleCancelEdit = () => {
     setEditingProcessId(null);
-    setEditingFeatures(previousFeatures); // Reset to previous features
+    setEditingFeatures(previousFeatures);
   };
 
   const handleFeatureChange = (value) => {
@@ -204,7 +270,6 @@ const [projectName, setProjectName] = useState('');
       });
       message.success('Features updated successfully!');
     } catch (error) {
-      console.error('Error updating features:', error);
       message.error('Error updating features. Please try again.');
     } finally {
       setEditingProcessId(null);
@@ -212,157 +277,34 @@ const [projectName, setProjectName] = useState('');
     }
   };
 
-  const onDragEnd = async (result) => {
-    if (!result.destination) return;
-
-    const reorderedProcesses = Array.from(projectProcesses);
-    const [removed] = reorderedProcesses.splice(result.source.index, 1);
-    reorderedProcesses.splice(result.destination.index, 0, removed);
-
-
-    // Check if the new index is valid based on the independent ranges
-    const newIndex = result.destination.index;
-    const { id: processId } = removed;
-
-    const isValid = independentProcesses.some(({ id, rangeStart, rangeEnd }) => {
-      const startIndex = reorderedProcesses.findIndex(p => p.id === rangeStart);
-      const endIndex = reorderedProcesses.findIndex(p => p.id === rangeEnd);
-
-      // Validate if the dragged process ID is within the start and end range
-      return (
-        (startIndex < newIndex && newIndex < endIndex) &&
-        (processId === rangeStart || processId === rangeEnd)
-      );
+  const onSortEnd = useCallback(({ oldIndex, newIndex }) => {
+    const process = projectProcesses[oldIndex];
+    const processWithRange = independentProcesses.find(p => p.id === process.id);
+    
+    if (processWithRange?.rangeStart && processWithRange?.rangeEnd) {
+      const rangeStartIndex = projectProcesses.findIndex(p => p.id === processWithRange.rangeStart);
+      const rangeEndIndex = projectProcesses.findIndex(p => p.id === processWithRange.rangeEnd);
+      
+      if (newIndex <= rangeStartIndex || newIndex >= rangeEndIndex) {
+        message.error(`This process must be positioned between ${projectProcesses[rangeStartIndex]?.name} and ${projectProcesses[rangeEndIndex]?.name}`);
+        return;
+      }
+    }
+    
+    setProjectProcesses(prevProcesses => {
+      const newProcesses = arrayMove(prevProcesses, oldIndex, newIndex);
+      return calculatedWeightage(newProcesses);
     });
-
-    if (!isValid) {
-      message.error('Invalid drag: Process must remain within defined independent ranges.');
-      return;
-    }
-
-    console.log('New Index:', newIndex);
-    console.log('Process ID:', processId);
-    console.log('Is Valid:', isValid);
-
-
-    const updatedProcesses = reorderedProcesses.map((process, index) => ({
-      ...process,
-      sequence: index + 1,
-    }));
-
-    setProjectProcesses(updatedProcesses);
-
-    // Prepare the data to send to the backend
-    const sequenceUpdates = updatedProcesses.map(process => ({
-      projectId: selectedProject, // Correctly reference the selected project ID
-      processId: process.id,
-      newSequence: process.sequence,
-    }));
-
-    try {
-      await API.post('/ProjectProcess/UpdateProcessSequence', sequenceUpdates);
-      message.success('Process sequence updated successfully!');
-    } catch (error) {
-      console.error('Error updating process sequence:', error);
-      message.error('Error updating process sequence. Please try again.');
-    }
-  };
-
-  const DraggableRow = ({ index, ...restProps }) => (
-    <Draggable key={restProps['data-row-key']} draggableId={restProps['data-row-key'].toString()} index={index}>
-      {(provided) => (
-        <tr
-          ref={provided.innerRef}
-          {...provided.draggableProps}
-          {...provided.dragHandleProps}
-          {...restProps}
-        />
-      )}
-    </Draggable>
-  );
-
-  const columns = [
-    {
-      title: 'S.No',
-      render: (text, process, index) => index + 1, // Adding serial number
-    },
-    {
-      title: 'Process Name',
-      dataIndex: 'name',
-      key: 'name',
-    },
-    {
-      title: 'Installed Features',
-      dataIndex: 'installedFeatures',
-      key: 'installedFeatures',
-      render: (installedFeatures, process) => (
-        editingProcessId === process.id ? (
-          <Select
-            mode="multiple"
-            style={{ width: '100%' }}
-            value={editingFeatures}
-            onChange={handleFeatureChange}
-          >
-            {features.map(feature => (
-              <Option key={feature.featureId} value={feature.featureId}>
-                {feature.features}
-              </Option>
-            ))}
-          </Select>
-        ) : (
-          <div>
-            {features
-              .filter(feature => installedFeatures.includes(feature.featureId))
-              .map(feature => (
-                <div key={feature.featureId} style={{ display: 'flex', alignItems: 'center' }}>
-                  <span>{feature.features}</span>
-                  <span style={{ marginLeft: '8px', color: 'green' }}>✔️</span>
-                </div>
-              ))}
-          </div>
-        )
-      ),
-    },
-
-    {
-      title: 'Weightage',
-      dataIndex: 'weightage',
-      key: 'weightage',
-    },
-    {
-      title: 'Relative Weightage',
-      dataIndex: 'relativeWeightage',
-      key: 'relativeWeightage',
-      render: (relativeWeightage) => `${relativeWeightage.toFixed(4)}%`,
-    },
-    {
-      title: 'Action',
-      key: 'action',
-      render: (text, process) => (
-        editingProcessId === process.id ? (
-          <>
-            <Button onClick={() => handleSaveFeatures(process.id)} type="primary">Save</Button>
-            <Button onClick={handleCancelEdit}>Cancel</Button>
-          </>
-
-        ) : (
-          <Button onClick={() => handleEdit(process)}>Edit</Button>
-        )
-      ),
-    },
-  ];
-
-
+  }, [projectProcesses, independentProcesses]);
 
   if (loading || projectProcesses.length === 0) {
     return <Spin tip="Loading..." />;
   }
 
-  console.log('Rendering projectProcesses:', projectProcesses); // Log here
-
   return (
     <div>
-      <h4>Project : {projectName} </h4>
+      <h4>Project: {projectName}</h4>
+
       <Collapse defaultActiveKey={['1']}>
         <Panel header="Manage Processes" key="1">
           {allProcesses.map(process => (
@@ -370,45 +312,75 @@ const [projectName, setProjectName] = useState('');
               key={process.id}
               checked={selectedProcessIds.includes(process.id)}
               onChange={() => handleProcessSelect(process.id)}
-              disabled={requiredProcessIds.includes(process.id)} // Disable checkbox if it's a required process
+              disabled={requiredProcessIds.includes(process.id)}
             >
               {process.name}
             </Checkbox>
           ))}
         </Panel>
       </Collapse>
-      <DragDropContext onDragEnd={onDragEnd}>
-        <Droppable droppableId="processes">
-          {(provided) => (
-            <div ref={provided.innerRef} {...provided.droppableProps}>
-              <Table
-                columns={columns}
-                dataSource={projectProcesses}
-                rowKey="id"
-                pagination={false}
-                bordered
-                components={{
-                  body: {
-                    row: (props) => {
-                      const index = projectProcesses.findIndex(process => process.id === props['data-row-key']);
-                      return <DraggableRow index={index} {...props} />;
-                    },
-                  },
-                }}
-              />
 
-              {provided.placeholder}
-            </div>
-          )}
-        </Droppable>
-      </DragDropContext>
+      <div style={{ padding: '10px', overflowX: 'auto' }}>
+        <table className="table table-striped table-bordered" style={{ minWidth: '800px', tableLayout: 'fixed', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr>
+              <th style={{ padding: '5px', textAlign: 'left', width: '20%' }}>Process Name</th>
+              <th style={{ padding: '5px', textAlign: 'left', width: '30%' }}>Installed Features</th>
+              <th style={{ padding: '5px', textAlign: 'left', width: '15%' }}>Weightage</th>
+              <th style={{ padding: '5px', textAlign: 'left', width: '15%' }}>Relative Weightage</th>
+              <th style={{ padding: '5px', textAlign: 'left', width: '20%' }}>Action</th>
+            </tr>
+          </thead>
+          <SortableBody
+            onSortEnd={onSortEnd}
+            axis="y"
+            lockAxis="y"
+            lockToContainerEdges={true}
+            lockOffset={["30%", "50%"]}
+            useDragHandle={true}
+            helperClass="row-dragging"
+          >
+            {projectProcesses.map((process, index) => (
+              <SortableRow
+                key={process.id}
+                index={index}
+                process={process}
+                features={features}
+                editingProcessId={editingProcessId}
+                editingFeatures={editingFeatures}
+                handleFeatureChange={handleFeatureChange}
+                handleSaveFeatures={handleSaveFeatures}
+                handleCancelEdit={handleCancelEdit}
+                handleEdit={handleEdit}
+                independentProcesses={independentProcesses}
+              />
+            ))}
+          </SortableBody>
+        </table>
+      </div>
+
       <Button type="primary" onClick={handleSubmit} style={{ marginTop: '16px' }}>
         Submit Processes
       </Button>
+
+      <style>
+        {`
+          .row-dragging {
+            background: #fafafa;
+            border: 1px solid #ccc;
+            z-index: 9999;
+          }
+          .row-dragging td {
+            padding: 16px;
+            visibility: visible !important;
+          }
+          .row-dragging .drag-visible {
+            visibility: visible !important;
+          }
+        `}
+      </style>
     </div>
   );
 };
-
-
 
 export default AddProjectProcess;
