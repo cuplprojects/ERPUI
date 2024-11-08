@@ -322,40 +322,35 @@ const ProcessTable = () => {
             <Row className='mb-5'>
                 <Col lg={12} md={12}>
                     <CatchProgressBar data={combinedTableData} />
-                </Col>
+                </Col> 
             </Row>
 
-            <Row className='mb-2'>
-
-                <Col lg={2} md={12} className="pe-0">
-                    <h4 className={`${customDark} text-white p-2`}>Project Lots</h4>
-                    <div className="d-flex flex-column" style={{ width: '100%', maxHeight: '400px', overflowY: 'auto', overflowX: 'hidden', backgroundColor: '#f0f8ff' }}>
+            <Row>
+                <Col lg={12} md={12} className="pe-0">
+                    {/* <h4 className={`${customDark} text-white p-2 rounded rounded-bottom-0`}>Project Lots</h4> */}
+                    <div className="d-flex flex-wrap gap-2 justify-content-center">
                         {projectLots.map((lot, index) => (
-                            <div
+                            <button
                                 key={index}
-                                className={`mb-2 p-2 rounded-1 ${customLight} ${customDarkText} ${selectedLot === lot.lotNo ? 'border border-primary shadow-lg' : 'border'}`}
+                                className={`${selectedLot === lot.lotNo ? 'bg-white text-dark border-dark' : customBtn} ${customDark === "dark-dark" ? 'border' : 'custom-light-border'} d-flex align-items-center justify-content-center p-2 rounded-2 ${customDark === "dark-dark" ? 'text-dark border-dark' : 'text-dark'} ${customDarkBorder}`}
                                 onClick={() => handleLotClick(lot.lotNo)}
                                 style={{
-                                    cursor: 'pointer',
-                                    transition: 'all 0.3s',
-                                    transform: selectedLot === lot.lotNo ? 'scale(1.02)' : 'scale(1)',
-                                    backgroundColor: selectedLot === lot.lotNo ? '#e6f7ff' : '#ffffff'
+                                    minWidth: '100px',
+                                    transition: 'all 0.2s'
                                 }}
                             >
-                                <div className="d-flex justify-content-between align-items-center">
-                                    <h5 className={`mb-0 ${selectedLot === lot.lotNo ? 'fw-bold text-dark' : ''}`} style={{ width: '90%' }}>
-                                        <span className="d-flex justify-content-start align-items-center" style={{ height: '100%' }}>
-                                            Lot {lot.lotNo}
-                                        </span>
-                                    </h5>
-                                    {selectedLot === lot.lotNo && <span className="text-primary">✓</span>}
-                                </div>
-                            </div>
+                                Lot {lot.lotNo}
+                            </button>
                         ))}
                     </div>
                 </Col>
+            </Row>
 
-                <Col lg={10} md={12} className="">
+            <Row className='mb-2 mt-1'>
+
+
+
+                <Col lg={12} md={12} className="">
                     {tableData?.length > 0 && (
                         <ProjectDetailsTable
                             tableData={combinedTableData}

@@ -774,15 +774,16 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
     };
 
 
-    const rowClassName = (record, index) => {
-        if (record.status === 'Pending') {
-            return 'pending-row';
-        } else if (record.status === 'Started') {
-            return 'started-row';
-        } else if (record.status === 'Completed') {
-            return 'completed-row';
-        } else {
-            return '';
+    const rowClassName = (record) => {
+        switch (record.status) {
+            case 0:
+                return 'status-pending-row';
+            case 1:
+                return 'status-started-row';
+            case 2:
+                return 'status-completed-row';
+            default:
+                return '';
         }
     };
 
@@ -848,10 +849,20 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                                 </Menu.Item>
                             </Menu>
                         } trigger={['click']}>
-                            <Button style={{ backgroundColor: 'transparent', border: 'none', boxShadow: 'none', padding: 0 }} className={`p-1 border ${customDark === 'dark-dark' ? `${customDark} text-white` : 'bg-white'}`}>
-                                <FaFilter size={20} className={`${customDarkText}`} />
-                                {/* <span className='d-none d-lg-block d-md-none ms-1 fs-6 fw-bold'>Filter</span> */}
-
+                            <Button 
+                                style={{ 
+                                    backgroundColor: 'transparent', 
+                                    border: 'none', 
+                                    boxShadow: 'none', 
+                                    padding: 0 ,
+                                    width: '30px',
+                                }} 
+                                className={`p- border ${customDark === 'dark-dark' ? `${customDark} text-white` : 'bg-white'}`}
+                            >
+                                <FaFilter 
+                                    size={20} 
+                                    className={`${customDarkText}`} 
+                                />
                             </Button>
                         </Dropdown>
                     )}
@@ -889,7 +900,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                                     <Button
                                         className={`${customBtn}`}
                                         onClick={() => setSearchText('')}
-                                        icon={<IoCloseCircle size={20} className={`rounded-circle ${customBtn}`} />}
+                                        icon={<IoCloseCircle size={25} className={`rounded-circle ${customBtn}`} />}
                                         style={{
                                             position: 'absolute',
                                             top: '50%',
