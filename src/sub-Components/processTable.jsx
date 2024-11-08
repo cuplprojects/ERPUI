@@ -128,7 +128,7 @@ const ProcessTable = () => {
                         percentageCatch: item?.percentageCatch,
                         projectId:item?.projectId,
                         processId: item?.processId || [],
-                        status: item?.status || "Pending",
+                        status: item?.status || 0,
                         alerts: "",
                         interimQuantity: "0",
                         remarks: "",
@@ -341,7 +341,7 @@ const ProcessTable = () => {
                         </Col>
                         <Col lg={9} md={8} className="ps-0">
                             {tableData?.length > 0 && (
-                                <ProjectDetailsTable tableData={combinedTableData} setTableData={setTableData} projectId={id} lotNo={selectedLot} featureData={featureData} hasFeaturePermission={hasFeaturePermission} processId={processId}/>
+                                <ProjectDetailsTable tableData={combinedTableData} setTableData={setTableData} projectId={id} lotNo={selectedLot} featureData={featureData} hasFeaturePermission={hasFeaturePermission} processId={processId} projectLots={projectLots}/>
                             )}
                         </Col>
                     </Row>

@@ -3,7 +3,7 @@ import { Table, Dropdown, Menu, Button, Switch, Input, Select } from 'antd';
 import ColumnToggleModal from './../menus/ColumnToggleModal';
 import AlarmModal from './../menus/AlarmModal';
 import InterimQuantityModal from './../menus/InterimQuantityModal';
-import RemarksModal from './../menus/RemarksModal';
+//import RemarksModal from './../menus/RemarksModal';
 import CatchDetailModal from './../menus/CatchDetailModal';
 import SelectZoneModal from './../menus/SelectZoneModal';
 import AssignTeamModal from './../menus/AssignTeamModal';
@@ -24,7 +24,7 @@ import API from '../CustomHooks/MasterApiHooks/api';
 
 const { Option } = Select;
 
-const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePermission, processId }) => {
+const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePermission,featureData, processId }) => {
     console.log(tableData);
     //Theme Change Section
     const { getCssClasses } = useStore(themeStore);
@@ -786,13 +786,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                 handleSave={handleInterimQuantitySave}
                 data={interimQuantityModalData} // Pass the interim quantity modal data as a prop
             />
-            <RemarksModal
-                show={remarksModalShow}
-                handleClose={() => setRemarksModalShow(false)}
-                processId={processId}
-                handleSave={handleRemarksSave}
-                data={remarksModalData} // Pass the remarks modal data as a prop
-            />
+            
             <CatchDetailModal
                 show={catchDetailModalShow}
                 handleClose={() => setCatchDetailModalShow(false)}
