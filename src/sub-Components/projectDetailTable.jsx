@@ -452,7 +452,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                     </div>
                 );
             },
-            sorter: (a, b) => a.status.localeCompare(b.status),
+            sorter: (a, b) => (a.status || 0) - (b.status || 0), // Changed to numeric comparison
         },
 
     ];
@@ -637,6 +637,8 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
     const selectedRows = tableData.filter((row) => selectedRowKeys.includes(row.catchNumber));
     const isCompleted = selectedRows.every(row => row.status === 2); // Check if the selected row is completed
 
+
+    
     const menu = (
         <Menu>
             {hasFeaturePermission(3) && !isCompleted && (
@@ -944,3 +946,4 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
     );
 };
 export default ProjectDetailsTable;
+
