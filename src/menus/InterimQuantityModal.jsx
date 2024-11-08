@@ -12,9 +12,12 @@ const InterimQuantityModal = ({ show, handleClose, handleSave, data, processId }
 
 
     const handleSubmit = async () => {
-        // Ensure interim quantity is smaller than total quantity
-        if (parseFloat(interimQuantity) >= data.quantity) {
-            alert("Interim quantity must be smaller than total quantity.");
+        // Calculate total interim quantity including existing and new
+        const totalInterimQuantity = data.interimQuantity + parseFloat(interimQuantity);
+
+        // Ensure total interim quantity is not greater than total quantity
+        if (totalInterimQuantity > data.quantity) {
+            alert("Total interim quantity cannot be greater than total quantity.");
             return;
         }
 
@@ -28,14 +31,14 @@ const InterimQuantityModal = ({ show, handleClose, handleSave, data, processId }
 
             const postData = {
                 transactionId: data.transactionId || 0,
-                interimQuantity: data.interimQuantity + parseFloat(interimQuantity), // Retain existing quantity
-                remarks: existingTransactionData ? existingTransactionData.remarks : "", // Retain existing remarks
+                interimQuantity: totalInterimQuantity,
+                remarks: existingTransactionData ? existingTransactionData.remarks : "", 
                 projectId: data.projectId,
                 quantitysheetId: data.srNo || 0,
                 processId: processId,
                 zoneId: existingTransactionData ? existingTransactionData.zoneId : 0,
                 machineId: existingTransactionData ? existingTransactionData.machineId : 0,
-                status: existingTransactionData ? existingTransactionData.status : 0, // Retain existing status
+                status: existingTransactionData ? existingTransactionData.status : 0,
                 alarmId: existingTransactionData ? existingTransactionData.alarmId : "",
                 lotNo: data.lotNo,
                 teamId: existingTransactionData ? existingTransactionData.teamId : 0,  
@@ -57,7 +60,6 @@ const InterimQuantityModal = ({ show, handleClose, handleSave, data, processId }
         } catch (error) {
             console.error('Error updating interim quantity:', error);
         }
-
     };
 
     return (
