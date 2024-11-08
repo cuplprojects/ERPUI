@@ -164,7 +164,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                     alarmId: "",
                     zoneId: 0,
                     machineId: 0,
-                    teamId: 0,
+                    teamId: [],
                     voiceRecording: ""
                 }));
                 setTableData(updatedData);
@@ -185,7 +185,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                     transactionId: transaction.transactionId,
                     zoneId: transaction.zoneId || 0,
                     machineId: transaction.machineId || 0,
-                    teamId: transaction.teamId || 0,
+                    teamId: transaction.teamId || [],
                     voiceRecording: transaction.voiceRecording || ""
                 };
                 return acc;
@@ -201,7 +201,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                 transactionId: statusMap[item.srNo]?.transactionId || null,
                 zoneId: statusMap[item.srNo]?.zoneId || 0,
                 machineId: statusMap[item.srNo]?.machineId || 0,
-                teamId: statusMap[item.srNo]?.teamId || 0,
+                teamId: statusMap[item.srNo]?.teamId || [],
                 voiceRecording: statusMap[item.srNo]?.voiceRecording || ""
             }));
     
@@ -219,7 +219,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                 alarmId: "",
                 zoneId: 0,
                 machineId: 0,
-                teamId: 0,
+                teamId: [],
                 voiceRecording: ""
             }));
             setTableData(updatedData);
@@ -253,7 +253,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                 status: newStatusIndex, // Change only this field
                 alarmId: existingTransactionData ? existingTransactionData.alarmId : "",
                 lotNo: existingTransactionData ? existingTransactionData.lotNo : 0,
-                teamId: existingTransactionData ? existingTransactionData.teamId : 0,
+                teamId: existingTransactionData ? existingTransactionData.teamId : [],
                 voiceRecording: existingTransactionData? existingTransactionData.voiceRecording : ""
             };
             // Update or create the transaction
@@ -559,7 +559,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                     machineId: updatedRow?.machineId || 0,
                     lotNo: updatedRow?.lotNo || 0,
                     voiceRecording: updatedRow?.voiceRecording || "",
-                    teamId: updatedRow?.teamId || 0
+                    teamId: updatedRow?.teamId || []
                 };
 
                 try {
