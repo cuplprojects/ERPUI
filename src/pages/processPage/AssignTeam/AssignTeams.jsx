@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Form, Button, Card } from 'react-bootstrap';
 import CatchTeamAssignment from './Components/CatchTeamAssignment';
-import LotTeamAssignment from './Components/LotTeamAssignment';
-import ProjectTeamAssignment from './Components/ProjectTeamAssignment';
 import quantitySheetService from '../../../CustomHooks/ApiServices/quantitySheetService';
 import teamsService from '../../../CustomHooks/ApiServices/teamsService';
 import API from '../../../CustomHooks/MasterApiHooks/api';

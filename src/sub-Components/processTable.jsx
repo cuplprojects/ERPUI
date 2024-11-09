@@ -198,9 +198,10 @@ const ProcessTable = () => {
                     transactionId: item.transactions[0]?.transactionId || null,
                     zoneId: item.transactions[0]?.zoneId || 0,
                     machineId: item.transactions[0]?.machineId || 0,
-                    teamId: item.transactions[0]?.teamId || 0
+                    teamId: item.transactions[0]?.teamId || [],
+                    teamUserNames: item.transactions[0]?.teamUserNames || [],
+                    alarmMessage: item.transactions[0]?.alarmMessage || null
                 }));
-                
                 // Filter data for selected lot if one is selected
                 const filteredData = selectedLot
                     ? formDataGet.filter(item => Number(item.lotNo) === Number(selectedLot))
@@ -362,8 +363,8 @@ const ProcessTable = () => {
                         <marquee id="alert-marquee" behavior="scroll" direction="left" scrollamount="5" onMouseOver={(e) => e.target.stop()} onMouseOut={(e) => e.target.start()}>
                             <div className="d-flex gap-4">
                                 {tableData.map((record, index) => (
-                                    record.alerts && record.alerts.length > 0 && (
-                                        <AlertBadge key={index} catchNo={record.catchNumber} alerts={record.alerts} onClick={() => handleCatchClick(record)} status="level1" />
+                                    record.alerts && record.alerts.length > 0 && record?.alerts !== "0" && record?.alerts !== "" && (
+                                        <AlertBadge key={index} catchNo={record.catchNumber} alerts={record.alarmMessage} onClick={() => handleCatchClick(record)} status="level1" />
                                     )
                                 ))}
                             </div>
