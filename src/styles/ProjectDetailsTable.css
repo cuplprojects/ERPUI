@@ -54,3 +54,16 @@
   /* .custom-table-header .ant-table-thead > tr > th {
     background: #456d42;
   } */
+
+/* Simple status colors */
+.status-pending-row {
+    background-color: rgba(255, 0, 0, 0.1) !important; /* Light red */
+}
+
+.status-started-row {
+    background-color: rgba(0, 0, 255, 0.1) !important; /* Light blue */
+}
+
+.status-completed-row {
+    background-color: rgba(0, 255, 0, 0.1) !important; /* Light green */
+}

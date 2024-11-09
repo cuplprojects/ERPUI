@@ -1,11 +1,25 @@
-import React from 'react';
-import { Modal, Button, Table, Input, Typography } from 'antd';
-import { AudioOutlined } from '@ant-design/icons';
+import React, { useState, useEffect } from 'react';
+import { Modal, Button, Table, Input, Typography, message } from 'antd';
+import { AudioOutlined, AudioMutedOutlined } from '@ant-design/icons';
+import API from '../CustomHooks/MasterApiHooks/api';
+import { hasPermission } from '../CustomHooks/Services/permissionUtils';
 
 const { TextArea } = Input;
 const { Text } = Typography;
 
-const CatchDetailModal = ({ show, handleClose, data }) => {
+const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) => {
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [audioElement, setAudioElement] = useState(null);
+
+    // Clean up audio when modal closes
+    useEffect(() => {
+        if (!show && audioElement) {
+            audioElement.pause();
+            setIsPlaying(false);
+            setAudioElement(null);
+        }
+    }, [show, audioElement]);
+
     if (!show) return null;
 
     // Capitalize and format keys for better display
@@ -15,11 +29,138 @@ const CatchDetailModal = ({ show, handleClose, data }) => {
     };
 
     // Prepare data for the table
-    const tableData = Object.keys(data).filter(key => key !== 'serialNumber').map((key, index) => ({
-        key: index,
-        label: formatKey(key),
-        value: data[key] || 'No Remarks', // Ensure value is always provided
-    }));
+    const tableData = Object.keys(data || {})
+        .filter(key => key !== 'serialNumber' && key !== 'voiceRecording')
+        .map((key, index) => ({
+            key: index,
+            label: formatKey(key),
+            value: data[key] || 'No Remarks',
+        }));
+
+    // Update handleAudioPlay function
+    const handleAudioPlay = async (audioData) => {
+        if (!audioData) {
+            message.info('No audio recording available');
+            return;
+        }
+
+        try {
+            if (isPlaying && audioElement) {
+                audioElement.pause();
+                setIsPlaying(false);
+                return;
+            }
+
+            // Convert base64 to blob
+            const byteCharacters = atob(audioData);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: 'audio/wav' });
+
+            // Create audio URL and play
+            const audioUrl = URL.createObjectURL(blob);
+            const audio = new Audio(audioUrl);
+            
+            // Add event listeners
+            audio.onplay = () => setIsPlaying(true);
+            audio.onpause = () => setIsPlaying(false);
+            audio.onended = () => {
+                setIsPlaying(false);
+                URL.revokeObjectURL(audioUrl);
+            };
+
+            setAudioElement(audio);
+            audio.play();
+        } catch (error) {
+            console.error('Error playing audio:', error);
+            message.error('Failed to play audio recording');
+            setIsPlaying(false);
+        }
+    };
+
+    // Update the render function for the audio control
+    const renderAudioControl = (voiceRecording) => {
+        if (!voiceRecording) {
+            return (
+                <AudioMutedOutlined
+                    style={{ fontSize: '18px', color: 'gray' }}
+                    className='rounded-circle border p-2'
+                />
+            );
+        }
+
+        return (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {isPlaying ? (
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <AudioOutlined
+                            style={{ 
+                                fontSize: '18px', 
+                                cursor: 'pointer',
+                                color: '#1890ff'
+                            }}
+                            onClick={() => handleAudioPlay(voiceRecording)}
+                            className='rounded-circle border p-2 custom-theme-dark-btn'
+                        />
+                        <span 
+                            className="animate-pulse" 
+                            style={{ 
+                                marginLeft: '8px',
+                                color: '#1890ff',
+                                fontSize: '12px'
+                            }}
+                        >
+                            Playing...
+                        </span>
+                    </div>
+                ) : (
+                    <AudioOutlined
+                        style={{ fontSize: '18px', cursor: 'pointer' }}
+                        onClick={() => handleAudioPlay(voiceRecording)}
+                        className='rounded-circle border p-2 custom-theme-dark-btn'
+                    />
+                )}
+            </div>
+        );
+    };
+
+    const handleResolve = async () => {
+        try {
+            let existingTransactionData;
+            if (data?.transactionId) {
+                const response = await API.get(`/Transactions/${data.transactionId}`);
+                existingTransactionData = response.data;
+            }
+     
+            const postData = {
+                transactionId: data?.transactionId || 0,
+                interimQuantity: existingTransactionData?.interimQuantity || 0,
+                remarks: existingTransactionData?.remarks || '',
+                projectId: data?.projectId,
+                quantitysheetId: data?.srNo || 0,
+                processId: processId,
+                zoneId: existingTransactionData?.zoneId || 0,
+                machineId: existingTransactionData?.machineId || 0,
+                status: existingTransactionData?.status || 0,
+                alarmId: "0",
+                lotNo: data?.lotNo,
+                teamId: existingTransactionData?.teamId || [],
+                voiceRecording: existingTransactionData?.voiceRecording || ""
+            };
+     
+            if (data?.transactionId) {
+                await API.put(`/Transactions/${data.transactionId}`, postData);
+            } 
+           
+            handleSave("0");
+            handleClose();
+        } catch (error) {
+            console.error('Error updating interim quantity:', error);
+        }
+    };
 
     // Define table columns
     const columns = [
@@ -37,26 +178,34 @@ const CatchDetailModal = ({ show, handleClose, data }) => {
             render: (value, record) => {
                 if (record.label === 'Remarks' || record.label === 'Alerts') {
                     return (
+                        <>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <TextArea
-                                value={value} // Ensure value is passed correctly
+                                value={value}
                                 readOnly
-                                autoSize={{ minRows: 2, maxRows: 6 }} // Allow auto-sizing for larger text
+                                autoSize={{ minRows: 2, maxRows: 6 }}
+                                auto-sizing
                                 bordered={false}
-                                style={{ flex: 1, marginRight: '10px', overflow: 'hidden', wordWrap: 'break-word' }} // Flex to take up space
+                                style={{ flex: 1, marginRight: '10px', overflow: 'hidden', wordWrap: 'break-word' }}
                             />
-                            {record.label === 'Remarks' && (
-                                <AudioOutlined
-                                    style={{ fontSize: '18px', cursor: 'pointer' }} // Mic icon aligned to the right
-                                    onClick={() => console.log('Play audio')}
-                                    className='rounded-circle border p-2 custom-theme-dark-btn'
-                                />
-                            )}
+                            {record.label === 'Remarks' && renderAudioControl(data?.voiceRecording)}
                         </div>
+                       
+                           { record?.label === 'Alerts' && 
+                            value !== 'NA' && (
+                                <Button
+                                    style={{ fontSize: '18px', cursor: 'pointer' }}
+                                    onClick={handleResolve}
+                                    className='d-flex align-items-center border p-2 custom-theme-dark-btn'
+                                >
+                                    Resolve
+                                </Button>
+                            )}
+                       
+                        </>
                     );
-                } else {
-                    return <Text>{value}</Text>;
                 }
+                return <Text>{value}</Text>;
             },
         },
     ];
@@ -73,7 +222,7 @@ const CatchDetailModal = ({ show, handleClose, data }) => {
             centered
             title="Catch Details"
             width={600}
-            className="bg-light rounded" // Apply background class
+            className="bg-light rounded"
         >
             <Table
                 columns={columns}
@@ -81,7 +230,6 @@ const CatchDetailModal = ({ show, handleClose, data }) => {
                 pagination={false}
                 showHeader={false}
                 bordered
-                // className=""
             />
         </Modal>
     );

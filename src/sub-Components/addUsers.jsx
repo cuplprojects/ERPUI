@@ -8,8 +8,10 @@ import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import SuccessModal from './../menus/addedUserModal.jsx';
 import API from '../CustomHooks/MasterApiHooks/api.jsx';
+import { useTranslation } from 'react-i18next';
 
 const AddUsers = () => {
+  const { t } = useTranslation();
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
   const customDarkText = cssClasses[4];
@@ -82,9 +84,9 @@ const AddUsers = () => {
           // Set user details for modal
           setUserDetails({ userName, password });
           setShowModal(true);
-          toast.success('User added successfully!');
+          toast.success(t('userAddedSuccessfully'));
         } catch (error) {
-          toast.error('Failed to add user: ' + error.response.data.message);
+          toast.error(t('failedToAddUser') + error.response.data.message);
         }
       }
     }
@@ -103,12 +105,12 @@ const AddUsers = () => {
         const activeRoles = response.data.filter(role => role.status === true);
         setRoles(activeRoles);
       } catch (error) {
-        console.error('Failed to fetch roles:', error);
+        console.error(t('failedToFetchRoles'), error);
       }
     };
 
     fetchRoles();
-  }, []);
+  }, [t]);
 
   // Generate username suggestion based on input
   useEffect(() => {
@@ -146,9 +148,9 @@ const AddUsers = () => {
       setFormData((prev) => ({ ...prev, username: usernameSuggestion }));
       setUsernameError('');
     } else {
-      setUsernameError('Username must be between 6 and 8 characters.');
+      setUsernameError(t('usernameMustBeBetween6And8Characters'));
     }
-  }, [formData.firstName, formData.middleName, formData.lastName]);
+  }, [formData.firstName, formData.middleName, formData.lastName, t]);
 
   // Validate username length and content
   const isUsernameValid = (username) => {
@@ -166,17 +168,17 @@ const AddUsers = () => {
 
   return (
     <div style={{ padding: '20px', borderRadius: '8px' }}>
-      <h4 className={`${customDarkText}`}>Add Users</h4>
+      <h4 className={`${customDarkText}`}>{t('addUsers')}</h4>
       <Form onSubmit={handleSubmit}>
         {/* First Row: First Name, Middle Name, Last Name */} 
         <Row className="mb-3">
           <Col xs={12} md={4}>
             <Form.Group>
-              <Form.Label className={customDarkText}>First Name: <span style={{ color: 'red' }}>*</span></Form.Label>
+              <Form.Label className={customDarkText}>{t('firstName')}: <span style={{ color: 'red' }}>*</span></Form.Label>
               <Form.Control
                 type="text"
                 name="firstName"
-                placeholder="Enter first name"
+                placeholder={t('enterFirstName')}
                 value={formData.firstName}
                 onChange={handleInputChange}
                 required
@@ -187,11 +189,11 @@ const AddUsers = () => {
 
           <Col xs={12} md={4}>
             <Form.Group>
-              <Form.Label className={customDarkText}>Middle Name:</Form.Label>
+              <Form.Label className={customDarkText}>{t('middleName')}:</Form.Label>
               <Form.Control
                 type="text"
                 name="middleName"
-                placeholder="Enter middle name"
+                placeholder={t('enterMiddleName')}
                 value={formData.middleName}
                 onChange={handleInputChange}
                 autoComplete='off'
@@ -201,11 +203,11 @@ const AddUsers = () => {
 
           <Col xs={12} md={4}>
             <Form.Group>
-              <Form.Label className={customDarkText}>Last Name:</Form.Label>
+              <Form.Label className={customDarkText}>{t('lastName')}:</Form.Label>
               <Form.Control
                 type="text"
                 name="lastName"
-                placeholder="Enter last name"
+                placeholder={t('enterLastName')}
                 value={formData.lastName}
                 onChange={handleInputChange}
                 autoComplete='off'
@@ -218,7 +220,7 @@ const AddUsers = () => {
         <Row className="mb-3">
           <Col lg={6} md={12} sm={12} xs={12}>
             <Form.Group>
-              <Form.Label className={customDarkText}>Username :<span style={{ color: 'red' }}>*</span></Form.Label>
+              <Form.Label className={customDarkText}>{t('username')} :<span style={{ color: 'red' }}>*</span></Form.Label>
               <Form.Control
                 type="text"
                 name="username"
@@ -227,24 +229,24 @@ const AddUsers = () => {
                 isInvalid={!isUsernameValid(formData.username) && formData.username.length > 0} // Conditional error styling
               />
               <Form.Control.Feedback type="invalid">
-                Username must be 6-8 characters long, contain at least 2 numbers, and not be entirely alphabetic.
+                {t('usernameMustBe6To8CharactersLongContainAtLeast2NumbersAndNotBeEntirelyAlphabetic')}
               </Form.Control.Feedback>
             </Form.Group>
           </Col>
 
           <Col lg={6} md={12} sm={12} xs={12}>
             <Form.Group>
-              <Form.Label className={customDarkText}>Gender: <span style={{ color: 'red' }}>*</span></Form.Label>
+              <Form.Label className={customDarkText}>{t('gender')}: <span style={{ color: 'red' }}>*</span></Form.Label>
               <Form.Select
                 name="gender"
                 value={formData.gender}
                 onChange={handleInputChange}
                 required
               >
-                <option value="">Select gender</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="others">Others</option>
+                <option value="">{t('selectGender')}</option>
+                <option value="male">{t('male')}</option>
+                <option value="female">{t('female')}</option>
+                <option value="others">{t('others')}</option>
               </Form.Select>
             </Form.Group>
           </Col>
@@ -252,11 +254,11 @@ const AddUsers = () => {
         <Row className="mb-3">
           <Col lg={6} md={12} sm={12} xs={12}>
             <Form.Group>
-              <Form.Label className={customDarkText}>Mobile Number: <span style={{ color: 'red' }}>*</span></Form.Label>
+              <Form.Label className={customDarkText}>{t('mobileNumber')}: <span style={{ color: 'red' }}>*</span></Form.Label>
               <Form.Control
                 type="text"
                 name="mobileNo"
-                placeholder="Enter mobile number"
+                placeholder={t('enterMobileNumber')}
                 value={formData.mobileNo}
                 onChange={(event) => {
                   const value = event.target.value.replace(/\D/g, ''); // Remove non-numeric characters
@@ -268,14 +270,14 @@ const AddUsers = () => {
           </Col>
           <Col lg={6} md={12} sm={12} xs={12}>
             <Form.Group>
-              <Form.Label className={customDarkText}>Role: <span style={{ color: 'red' }}>*</span></Form.Label>
+              <Form.Label className={customDarkText}>{t('role')}: <span style={{ color: 'red' }}>*</span></Form.Label>
               <Form.Select
                 name="roleId"
                 value={formData.roleId}
                 onChange={handleInputChange}
                 required
               >
-                <option value="">Select a Role</option>
+                <option value="">{t('selectARole')}</option>
                 {roles.map(role => (
                   <option key={role.roleId} value={role.roleId}>
                     {role.roleName}
@@ -286,13 +288,13 @@ const AddUsers = () => {
           </Col>
           <Col lg={12} md={12} sm={12} xs={12} className='mt-3'>
             <Form.Group controlId="formBasicAddress">
-              <Form.Label className={customDarkText}>Address: <span style={{ color: 'red' }}>*</span></Form.Label>
+              <Form.Label className={customDarkText}>{t('address')}: <span style={{ color: 'red' }}>*</span></Form.Label>
               <Form.Control
                 type="text"
                 name="address"
                 value={formData.address}
                 onChange={handleInputChange}
-                placeholder="Address"
+                placeholder={t('address')}
                 required
               />
             </Form.Group>
@@ -302,7 +304,7 @@ const AddUsers = () => {
         {/* Add and Reset Buttons */}
         <div style={{ textAlign: 'right' }}>
           <Button variant="secondary" onClick={handleReset} className='custom-zoom-btn' style={{ width: '100px' }}>
-            Reset
+            {t('reset')}
           </Button>
           <Button 
             type="submit" 
@@ -310,7 +312,7 @@ const AddUsers = () => {
             disabled={!areRequiredFieldsFilled()}
             style={{ width: '100px' }}
           >
-            Add
+            {t('add')}
           </Button>
         </div>
       </Form>

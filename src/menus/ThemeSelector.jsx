@@ -3,6 +3,7 @@ import { Button, Row, Col, Form } from 'react-bootstrap';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import './../styles/ThemeSelector.css'; // Custom styles for theme buttons
+import { useTranslation } from 'react-i18next';
 
 const themes = [
   { name: 'Dark', color: '#021526' },
@@ -17,16 +18,32 @@ const themes = [
 ];
 
 const ThemeSelector = () => {
-  const setTheme = useStore(themeStore, (state) => state.setTheme); // Access setTheme from the store
-  const currentTheme = useStore(themeStore, (state) => state.theme); // Get current theme from the store
+  const { t } = useTranslation();
+  const setTheme = useStore(themeStore, (state) => state.setTheme);
+  const currentTheme = useStore(themeStore, (state) => state.theme);
 
   const handleThemeChange = (newTheme) => {
-    setTheme(newTheme); // Use the setTheme function from Zustand
+    setTheme(newTheme);
+  };
+
+  const getEnglishTheme = (themeName) => {
+    const themeMap = {
+      dark: 'Dark',
+      light: 'Light',
+      red: 'Red',
+      blue: 'Blue',
+      green: 'Green',
+      purple: 'Purple',
+      brown: 'Brown',
+      pink: 'Pink',
+      default: 'Default'
+    };
+    return themeMap[themeName.toLowerCase()] || themeName;
   };
 
   return (
     <Row className="g-3">
-      <Form.Label>Select Theme</Form.Label>
+      <Form.Label>{t('selectTheme')}</Form.Label>
       {themes.map((theme) => (
         <Col key={theme.name} xs={4} md={4}>
           <Button
@@ -35,9 +52,9 @@ const ThemeSelector = () => {
               borderColor: theme.color
             }}
             className={`w-100 text-white theme-btn ${currentTheme === theme.name ? 'active' : ''}`}
-            onClick={() => handleThemeChange(theme.name)}
+            onClick={() => handleThemeChange(getEnglishTheme(theme.name))}
           >
-            {theme.name}
+            {t(theme.name.toLowerCase())}
           </Button>
         </Col>
       ))}

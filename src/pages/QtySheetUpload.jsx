@@ -9,10 +9,13 @@ import ViewQuantitySheet from './ViewQuantitySheet';
 import { useParams } from 'react-router-dom';
 import { IoMdEye } from "react-icons/io";
 import API from '../CustomHooks/MasterApiHooks/api';
-
+import { useTranslation } from 'react-i18next';
+import { decrypt } from '../Security/Security';
 
 const QtySheetUpload = () => {
-    const { projectId } = useParams();
+    const { t } = useTranslation();
+    const { encryptedProjectId } = useParams();
+    const projectId = decrypt(encryptedProjectId);
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = getCssClasses();
     const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
@@ -37,7 +40,7 @@ const QtySheetUpload = () => {
                 const response = await API.get(`/Project/${projectId}`);
                 setProjectName(response.data.name);
             } catch (error) {
-                console.error('Failed to fetch project name', error);
+                console.error(t('failedToFetchProjectName'), error);
             }
         };
 
@@ -49,7 +52,7 @@ const QtySheetUpload = () => {
         const mappedData = await createMappedData();
 
         if (!mappedData || !Array.isArray(mappedData) || mappedData.length === 0) {
-            console.error("Mapped data is invalid or empty.");
+            console.error(t('mappedDataInvalidOrEmpty'));
             setUploading(false);
             return;
         }
@@ -66,12 +69,10 @@ const QtySheetUpload = () => {
             quantity: Number(item.Quantity) || 0,
             percentageCatch: Number(item.percentageCatch) || 0,
             projectId: projectId,
-
-            isOverridden: item.isOverridden === 'true',
             processId: [0],
         }));
 
-        console.log("Final payload:", JSON.stringify(finalPayload, null, 2));
+        console.log(t('finalPayload'), JSON.stringify(finalPayload, null, 2));
 
         try {
 
@@ -81,14 +82,14 @@ const QtySheetUpload = () => {
                     'Content-Type': 'application/json',
                 },
             });
-            console.log('Upload successful:', response.data);
+            console.log(t('uploadSuccessful'), response.data);
             setDataSource(finalPayload);
-            message.success('Quantity Sheet uploaded successfully')
+            message.success(t('quantitySheetUploadedSuccessfully'))
             fetchLots();
             resetState();
         } catch (error) {
-            console.error('Upload failed', error.response?.data || error.message);
-            message.error('Failed to upload quantity sheet')
+            console.error(t('uploadFailed'), error.response?.data || error.message);
+            message.error(t('failedToUploadQuantitySheet'))
         } finally {
             setUploading(false);
         }
@@ -103,21 +104,25 @@ const QtySheetUpload = () => {
                 const firstSheetName = workbook.SheetNames[0];
                 const worksheet = workbook.Sheets[firstSheetName];
                 const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
+    
                 const rows = jsonData.slice(1);
                 const mappedData = rows.map((row) => {
                     const rowData = {};
                     for (let property in fieldMappings) {
                         const header = fieldMappings[property];
                         const index = jsonData[0].indexOf(header);
-                        rowData[property] = index !== -1 ?
+                        rowData[property] = index !== -1 ? 
                             (property === 'quantity' ? parseFloat(row[index]) || 0 : String(row[index])) : '';
+                        
+                        // Format date if it's the examdate column
+                        if (property === 'examdate' && rowData[property]) {
+                            const date = new Date(rowData[property]);
+                            rowData[property] = date.toLocaleDateString('en-GB'); // Converts to DD/MM/YYYY
+                        }
                     }
-                    console.log("Row Data Mapped:", rowData);
-
+                    
+                    console.log(t('rowDataMapped'), rowData);
                     rowData['projectId'] = projectId;
-
-                    rowData['isOverridden'] = 'false';
                     rowData['percentageCatch'] = '0';
                     return rowData;
                 });
@@ -126,13 +131,14 @@ const QtySheetUpload = () => {
             reader.readAsArrayBuffer(selectedFile);
         });
     };
+    
 
     const getColumns = async () => {
         try {
             const response = await API.get('/QuantitySheet/Columns');
             setColumns(response.data);
         } catch (error) {
-            console.error('Failed to fetch columns', error);
+            console.error(t('failedToFetchColumns'), error);
         }
     };
 
@@ -163,7 +169,7 @@ const QtySheetUpload = () => {
             const filteredData = jsonData.filter(row => row.some(cell => cell !== null && cell !== ''));
     
             if (filteredData.length === 0) {
-                console.warn("No valid data found in the file.");
+                console.warn(t('noValidDataFoundInFile'));
                 return;
             }
     
@@ -214,7 +220,7 @@ const QtySheetUpload = () => {
             setLots(response.data)
         }
         catch (error) {
-            console.error('Failed to fetch Lots')
+            console.error(t('failedToFetchLots'))
         }
     }
 
@@ -242,12 +248,12 @@ const QtySheetUpload = () => {
 
 
     return (
-        <div className={`container ${customDarkText} rounded shadow-lg ${customLight}`}>
+        <div className={`container ${customDarkText} rounded shadow-lg ${customLight} ${customLightBorder}`}>
             <Row className='mt-2 mb-2'>
                 <Col lg={12} className='d-flex justify-content-center'>
                     <div className="d-flex flex-column align-items-center">
                         <div className="text-center p-2 mt-3 rounded">
-                            <h1 className={`${customDarkText}`}>Upload Quantity Sheet</h1>
+                            <h1 className={`${customDarkText}`}>{t('uploadQuantitySheet')}</h1>
                         </div>
                         <div className="text-center">
                             <h2 className={`${customDarkText} custom-zoom-btn `}>{projectName}</h2>
@@ -259,7 +265,7 @@ const QtySheetUpload = () => {
             <Row className='mt-2 mb-2'>
                 <Col lg={12}>
                     <Form layout="vertical" form={form}>
-                        <Form.Item name="file" rules={[{ required: true, message: 'Please select a file' }]}>
+                        <Form.Item name="file" rules={[{ required: true, message: t('pleaseSelectAFile') }]}>
                             <Upload
                                 onRemove={(file) => {
                                     const index = fileList.indexOf(file);
@@ -269,11 +275,12 @@ const QtySheetUpload = () => {
                                 }}
                                 beforeUpload={handleFileUpload}
                                 fileList={fileList}
+                                className=''
                             >
-                                <Button className='fs-5 custom-zoom-btn w-100'>
-                                    <UploadOutlined className='me-2' />
-                                    <span className='d-none d-sm-inline'>Select File</span>
-                                    <span className='d-inline d-sm-none'>Upload</span>
+                                <Button className='fs-4 custom-zoom-btn w-100 d-flex align-items-center p-3'>
+                                    <UploadOutlined className='' />
+                                    <span className='d-none d-sm-inline'>{t('selectFile')}</span>
+                                    <span className='d-inline d-sm-none'>{t('upload')}</span>
                                 </Button>
                             </Upload>
                         </Form.Item>
@@ -285,25 +292,25 @@ const QtySheetUpload = () => {
                                     onClick={handleUpload}
                                     loading={uploading}
                                 >
-                                    {uploading ? 'Uploading...' : 'Upload'}
+                                    {uploading ? t('uploading') : t('upload')}
                                 </Button>
                             )}
                         </Form.Item>
                         <Form.Item>
-                            <div className="d-flex flex-wrap justify-content-start">
+                            <div className="d-flex flex-wrap gap-2">
                                 {lots.map((lotNo, index) => (
                                     <Button
                                         key={index}
-                                        className={`${customBtn} me-2 mb-4 ${customDark === "dark-dark" ? `border` : `border-0`}`}
+                                        className={`${selectedLotNo === lotNo ? 'bg-white text-dark border-dark' : customBtn} ${customDark === "dark-dark" ? 'border' : 'custom-light-border'} d-flex align-items-center justify-content-center p-3 `}
                                         type="primary"
                                         onClick={() => handleLotClick(lotNo)}
                                     >
-                                        Lot - {lotNo} <IoMdEye />
+                                        {t('lot')} - {lotNo} <IoMdEye className={`ms-1 ${selectedLotNo === lotNo ? '' : ''} `}/>
                                     </Button>
                                 ))}
                             </div>
                             <div className="">
-                                <ViewQuantitySheet selectedLotNo={selectedLotNo} showBtn={showBtn} showTable={showTable} />
+                                <ViewQuantitySheet project={projectId} selectedLotNo={selectedLotNo} showBtn={showBtn} showTable={showTable} lots={lots}/>
                             </div>
                         </Form.Item>
                     </Form>
@@ -316,8 +323,8 @@ const QtySheetUpload = () => {
                         <table className="table table-bordered">
                             <thead>
                                 <tr>
-                                    <th>Fields</th>
-                                    <th>Excel Header</th>
+                                    <th>{t('fields')}</th>
+                                    <th>{t('excelHeader')}</th>
                                 </tr>
                             </thead>
                             <tbody>

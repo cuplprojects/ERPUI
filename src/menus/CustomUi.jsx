@@ -17,8 +17,10 @@ import { useStore } from 'zustand';
 import LanguageSwitcher from './LanguageSwitcher';
 import { AiFillCloseSquare } from "react-icons/ai";
 import useShowLabelIdStore from './../store/showLabelIdStore';
+import { useTranslation } from 'react-i18next';
 
 const CustomUi = () => {
+  const { t } = useTranslation();
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
   const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
@@ -135,13 +137,13 @@ const CustomUi = () => {
       <div className="user-interface-container" ref={dragRef} style={{ zIndex: "99999" }} onClick={handleShow}>
         <div className="user-interface-icon" >
           <IoSettings className={`settings-icon-ui ${customDark === 'dark-dark' ? "text-dark border-dark" : ''}`} />
-          <img src={themeIcons[customDark] || themeIcons["default"]} alt="Theme Icon" className='ui-icon-img' />
+          <img src={themeIcons[customDark] || themeIcons["default"]} alt={t('themeIcon')} className='ui-icon-img' />
         </div>
       </div>
 
       <Offcanvas show={show} onHide={handleClose} placement="end" style={{ zIndex: "9999999" }}>
         <Offcanvas.Header closeButton={false} className={`${customDark} ${customLightText} d-flex justify-content-between`}>
-          <Offcanvas.Title>Custom UI Menu</Offcanvas.Title>
+          <Offcanvas.Title>{t('customUiMenu')}</Offcanvas.Title>
           <Button
             variant="link"
             className={`close-button ${customDark} ${customLightText}`}
@@ -154,11 +156,11 @@ const CustomUi = () => {
         <Offcanvas.Body>
           <Row className="align-items-center mb-3">
             <Col>
-              <Form.Label>Font Size</Form.Label>
+              <Form.Label>{t('fontSize')}</Form.Label>
             </Col>
             <Col className="text-end">
               <Button variant="outline-secondary" size="sm" onClick={handleReset}>
-                Reset
+                {t('reset')}
               </Button>
             </Col>
           </Row>
@@ -171,31 +173,31 @@ const CustomUi = () => {
               onChange={(e) => setFontSize(parseInt(e.target.value))}
             />
             <Form.Text className="text-muted">
-              Current Font Size: {fontSize}px
+              {t('currentFontSize')}: {fontSize}px
             </Form.Text>
           </Form.Group>
 
           <Row className="mt-4 align-items-center">
             <Col>
-              <Form.Label>Full Screen Mode</Form.Label>
+              <Form.Label>{t('fullScreenMode')}</Form.Label>
               <Form.Check
                 type="switch"
                 id="fullScreenSwitch"
                 checked={isFullScreen}
                 onChange={toggleFullScreen}
-                label={isFullScreen ? "On" : "Off"}
+                label={isFullScreen ? t('on') : t('off')}
               />
             </Col>
           </Row>
           <Row className="mt-4 align-items-center">
             <Col>
-              <Form.Label>Show Label ID</Form.Label>
+              <Form.Label>{t('showLabelId')}</Form.Label>
               <Form.Check
                 type="switch"
                 id="showLabelIdSwitch"
                 checked={showLabelId}
                 onChange={toggleShowLabelId}
-                label={showLabelId ? "On" : "Off"}
+                label={showLabelId ? t('on') : t('off')}
               />
             </Col>
           </Row>

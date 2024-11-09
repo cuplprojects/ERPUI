@@ -1,18 +1,19 @@
 import React, { useEffect, useState } from 'react';
-
 import { Input, Button, Select, Table, Form, message, Pagination } from 'antd';
 import { Modal } from 'react-bootstrap';
-
-
 import API from '../CustomHooks/MasterApiHooks/api';
 import { useMediaQuery } from 'react-responsive';
 import { AiFillCloseSquare } from "react-icons/ai";
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
+import { useTranslation } from 'react-i18next';
+import { SortAscendingOutlined, SortDescendingOutlined, EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
+
 const { Option } = Select;
 const { Search } = Input;
 
 const Zone = () => {
+  const { t } = useTranslation();
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
   const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
@@ -46,7 +47,7 @@ const Zone = () => {
       const response = await API.get('/Zones');
       setZones(response.data);
     } catch (error) {
-      console.error("Failed to fetch zones", error);
+      console.error(t("Failed to fetch zones"), error);
     }
   };
 
@@ -55,7 +56,7 @@ const Zone = () => {
       const response = await API.get('/Cameras');
       setCamera(response.data);
     } catch (error) {
-      console.error("Failed to fetch cameras", error);
+      console.error(t("Failed to fetch cameras"), error);
     }
   };
 
@@ -64,7 +65,7 @@ const Zone = () => {
       const response = await API.get('/Machines');
       setMachine(response.data);
     } catch (error) {
-      console.error("Failed to fetch machines", error);
+      console.error(t("Failed to fetch machines"), error);
     }
   };
 
@@ -72,18 +73,15 @@ const Zone = () => {
     const { zoneNo, zoneDescription, cameraIds, machineId } = values;
     const existingZone = zones.find(zone => zone.zoneNo === zoneNo);
     if (existingZone) {
-      message.error('Zone Name already exists!');
+      message.error(t('Zone Name already exists!'));
       return;
     }
 
-    // Check if any of the selected cameras are already assigned to other zones
     const assignedCameras = zones.flatMap(zone => zone.cameraIds);
     const alreadyAssignedCameras = cameraIds.filter(id => assignedCameras.includes(id));
     if (alreadyAssignedCameras.length > 0) {
-
       const cameraNames = alreadyAssignedCameras.map(id => camera.find(c => c.cameraId === id)?.name).join(', ');
-
-      message.error(`The following cameras are already assigned to other zones: ${cameraNames}`);
+      message.error(t('The following cameras are already assigned to other zones: {{cameraNames}}', { cameraNames }));
       return;
     }
 
@@ -99,10 +97,10 @@ const Zone = () => {
       getZone();
       form.resetFields();
       setIsModalVisible(false);
-      message.success('Zone added successfully!');
+      message.success(t('Zone added successfully!'));
     } catch (error) {
-      console.error("Failed to add zone", error);
-      message.error('Failed to add zone. Please try again.');
+      console.error(t("Failed to add zone"), error);
+      message.error(t('Failed to add zone. Please try again.'));
     }
   };
 
@@ -116,18 +114,15 @@ const Zone = () => {
 
     const existingZone = zones.find(zone => zone.zoneNo === updatedZone.zoneNo && zone.zoneNo !== originalZone.zoneNo);
     if (existingZone) {
-      message.error('Zone Name already exists!');
+      message.error(t('Zone Name already exists!'));
       return;
     }
 
-    // Check if any of the selected cameras are already assigned to other zones
     const assignedCameras = zones.flatMap(zone => zone.zoneId !== updatedZone.zoneId ? zone.cameraIds : []);
     const alreadyAssignedCameras = updatedZone.cameraIds.filter(id => assignedCameras.includes(id));
     if (alreadyAssignedCameras.length > 0) {
-
       const cameraNames = alreadyAssignedCameras.map(id => camera.find(c => c.cameraId === id)?.name).join(', ');
-
-      message.error(`The following cameras are already assigned to other zones: ${cameraNames}`);
+      message.error(t('The following cameras are already assigned to other zones: {{cameraNames}}', { cameraNames }));
       return;
     }
 
@@ -137,10 +132,10 @@ const Zone = () => {
       updatedZones[index] = updatedZone;
       setZones(updatedZones);
       getZone();
-      message.success('Zone updated successfully!');
+      message.success(t('Zone updated successfully!'));
     } catch (error) {
-      console.error("Failed to update zone", error);
-      message.error('Failed to update zone. Please try again.');
+      console.error(t("Failed to update zone"), error);
+      message.error(t('Failed to update zone. Please try again.'));
     } finally {
       setEditingIndex(null);
       setEditingZone({});
@@ -156,12 +151,12 @@ const Zone = () => {
 
   const columns = [
     {
-      title: 'SN.',
+      title: t('SN.'),
       key: 'serial',
       render: (text, record, index) => index + 1,
     },
     {
-      title: 'Zone Name',
+      title: t('Zone Name'),
       dataIndex: 'zoneNo',
       key: 'zoneNo',
       render: (text, record, index) => (
@@ -182,7 +177,7 @@ const Zone = () => {
       ),
     },
     {
-      title: 'Zone Description',
+      title: t('Zone Description'),
       dataIndex: 'zoneDescription',
       key: 'zoneDescription',
       render: (text, record, index) => (
@@ -206,7 +201,7 @@ const Zone = () => {
       ),
     },
     {
-      title: 'Assign Camera Names',
+      title: t('Assign Camera Names'),
       dataIndex: 'cameraNames',
       key: 'cameraNames',
       render: (cameraNames, record, index) => (
@@ -233,7 +228,7 @@ const Zone = () => {
       ),
     },
     {
-      title: 'Assign Machine Names',
+      title: t('Assign Machine Names'),
       dataIndex: 'machineNames',
       key: 'machineNames',
       render: (machineNames, record, index) => (
@@ -260,18 +255,16 @@ const Zone = () => {
       ),
     },
     {
-      title: 'Action',
+      title: t('actions'),
       key: 'action',
       render: (_, record, index) => (
         editingIndex === index ? (
-
           <>
-            <Button type="link" onClick={() => handleEditZone(index)}>Save</Button>
-            <Button type="link" onClick={handleCancelEdit}>Cancel</Button>
+            <Button type="link" icon={<SaveOutlined />} onClick={() => handleEditZone(index)} className={`${customBtn} ms-`}>{t('save')}</Button>
+            <Button type="link" icon={<CloseOutlined />} onClick={handleCancelEdit} className={`${customBtn} ms-2`}>{t('cancel')}</Button>
           </>
         ) : (
-          <Button type="link" onClick={() => {
-
+          <Button type="link" icon={<EditOutlined />} onClick={() => {
             setEditingIndex(index);
             setEditingZone({ 
               zoneNo: record.zoneNo, 
@@ -280,9 +273,7 @@ const Zone = () => {
               machineId: record.machineId
             });
             setOriginalZone(record);
-
-          }}>Edit</Button>
-
+          }} className={`${customBtn}`}>{t('edit')}</Button>
         )
       ),
     },
@@ -297,9 +288,7 @@ const Zone = () => {
     setIsModalVisible(false);
   };
 
-
   const responsiveColumns = isMobile ? columns.slice(0, 2) : isTablet ? columns.slice(0, 4) : columns;
-
 
   const filteredZones = zones.filter(zone => 
     zone.zoneNo.toLowerCase().includes(searchText.toLowerCase()) ||
@@ -310,19 +299,18 @@ const Zone = () => {
 
   return (
     <div style={{ padding: '20px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)', maxWidth: '100%', overflowX: 'auto' }} className={`${customDark === "dark-dark" ? `${customDark}` : ""}`}>
-      <h2 style={{ marginBottom: '20px', fontSize: isMobile ? '1.5rem' : '2rem' }} className={`${customDarkText}`}>Zone Management</h2>
+      <h2 style={{ marginBottom: '20px', fontSize: isMobile ? '1.5rem' : '2rem' }} className={`${customDarkText}`}>{t('Zone Management')}</h2>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <Search
-          placeholder="Search zones"
+          placeholder={t("Search zones")}
           onChange={(e) => setSearchText(e.target.value)}
           style={{ width: 200 }}
           allowClear
         />
 
         <Button onClick={showModal} className={`${customBtn}`}>
-
-          Add Zone
+          {t('Add Zone')}
         </Button>
       </div>
 
@@ -355,7 +343,7 @@ const Zone = () => {
           }}
           showSizeChanger
           showQuickJumper
-          showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
+          showTotal={(total, range) => t('{{start}}-{{end}} of {{total}} items', { start: range[0], end: range[1], total })}
         />
       </div>
 
@@ -367,7 +355,7 @@ const Zone = () => {
         className={`rounded-2 ${customDark === "" ? `${customDark}` : ''}  `}
       >
         <Modal.Header closeButton={false} className={`rounded-top-2 ${customDark} ${customLightText} ${customDark === "dark-dark" ? `border ` : `border-0`} border d-flex justify-content-between `}>
-          <Modal.Title>Add Zone</Modal.Title>
+          <Modal.Title>{t('Add Zone')}</Modal.Title>
           <AiFillCloseSquare
             size={35}
             onClick={handleCancel}
@@ -380,40 +368,36 @@ const Zone = () => {
           <Form form={form} onFinish={handleAddZone} layout="vertical">
             <Form.Item 
               name="zoneNo" 
-              label={<span className={customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`}>Zone Name <span className="text-danger">*</span></span>}
+              label={<span className={customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`}>{t('Zone Name')} <span className="text-danger">*</span></span>}
             >
-              <Input placeholder="Zone Name" required />
+              <Input placeholder={t("Zone Name")} required />
             </Form.Item>
             <Form.Item 
               name="zoneDescription"
-              label={<span className={customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`}>Zone Description <span className="text-danger">*</span></span>}
+              label={<span className={customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`}>{t('Zone Description')} <span className="text-danger">*</span></span>}
             >
-              <Input.TextArea placeholder="Zone Description" required />
+              <Input.TextArea placeholder={t("Zone Description")} required />
             </Form.Item>
             <Form.Item 
               name="cameraIds"
-              label={<span className={customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`}>Assign Camera <span className="text-danger">*</span></span>}
+              label={<span className={customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`}>{t('Assign Camera')} <span className="text-danger">*</span></span>}
             >
-              <Select mode="multiple" placeholder="Select Camera" required>
-
+              <Select mode="multiple" placeholder={t("Select Camera")} required>
                 {camera.map(c => (
                   <Option key={c.cameraId} value={c.cameraId} disabled={zones.some(zone => zone.cameraIds.includes(c.cameraId))}>
                     {c.name}
-
                   </Option>
                 ))}
               </Select>
             </Form.Item>
             <Form.Item 
               name="machineId" 
-              label={<span className={customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`}>Assign Machine</span>}
+              label={<span className={customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`}>{t('Assign Machine')}</span>}
             >
-              <Select mode="multiple" placeholder="Select Machine">
-
+              <Select mode="multiple" placeholder={t("Select Machine")}>
                 {machine.map(m => (
                   <Option key={m.machineId} value={m.machineId}>
                     {m.machineName}
-
                   </Option>
                 ))}
               </Select>
@@ -421,8 +405,7 @@ const Zone = () => {
 
             <Form.Item>
               <Button htmlType="submit" className={`${customBtn}`}>
-
-                Add Zone
+                {t('Add Zone')} 
               </Button>
             </Form.Item>
           </Form>

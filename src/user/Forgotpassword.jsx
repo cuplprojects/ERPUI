@@ -41,7 +41,6 @@ const ForgotPassword = () => {
   const isMediumOrSmaller = useMediaQuery({ query: '(max-width: 992px)' });
   const [currentStep, setCurrentStep] = useState(1);
   const [userName, setUserName] = useState('');
-  const [securityQuestions, setSecurityQuestions] = useState([]);
   const [answers, setAnswers] = useState([]);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -62,7 +61,7 @@ const ForgotPassword = () => {
       // Fetch the security question IDs
       const response = await API.get(`/Login/forgotPassword/securityQuestions/${userName}`);
       setUserQuestions(response.data)
-
+      console.log(response.data)
       setCurrentStep(2); // Move to Step 2
       toast.success('Security questions loaded successfully');
     } catch (error) {
