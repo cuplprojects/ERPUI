@@ -22,6 +22,7 @@ import { BiSolidFlag } from "react-icons/bi";
 import { MdPending } from "react-icons/md";// for pending
 import { IoCheckmarkDoneCircleSharp } from "react-icons/io5";// for completed
 import API from '../CustomHooks/MasterApiHooks/api';
+import { hasPermission } from '../CustomHooks/Services/permissionUtils';
 
 const { Option } = Select;
 
@@ -937,6 +938,7 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
                 data={catchDetailModalData}
                 handleSave={handleSaveCatch}
                 processId={processId}
+                hasResolvePermission={hasPermission('2.8.3')}
             />
             <SelectZoneModal
                 show={selectZoneModalShow}

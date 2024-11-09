@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { Button, Table, Row, Col } from 'react-bootstrap';
-import { hasPermission } from '../CustomHooks/Services/permissionUtils';
+import React, { useEffect, useState } from "react";
+import { Button, Table, Row, Col } from "react-bootstrap";
+import API from "../CustomHooks/MasterApiHooks/api";
 
-const DashboardAlarmModal = ({ projectId, lotNo }) => {
+const DashboardAlarmModal = ({ projectId, lotNo, hasResolvePermission }) => {
   const [alarmsData, setAlarmsData] = useState([]);
   const [catchData, setCatchData] = useState([]);
   const [alarmMessages, setAlarmMessages] = useState({});
@@ -13,18 +13,28 @@ const DashboardAlarmModal = ({ projectId, lotNo }) => {
   // Fetch data from APIs
   useEffect(() => {
     const fetchData = async () => {
+      if (!projectId) {
+        console.log("No projectId provided");
+        return;
+      }
+
       try {
+        console.log("Fetching data for projectId:", projectId);
+
         // Fetch alarms data
-        const alarmsResponse = await fetch(`https://localhost:7212/api/Transactions/alarms?projectId=${projectId}`);
-        const alarms = await alarmsResponse.json();
+        const alarmsResponse = await API.get(`/Transactions/alarms?projectId=${projectId}`);
+        const alarms = alarmsResponse.data;
+        console.log("Alarms data:", alarms);
 
         // Fetch catch details data
-        const catchResponse = await fetch(`https://localhost:7212/api/QuantitySheet/CatchByproject?ProjectId=${projectId}`);
-        const catchDetails = await catchResponse.json();
+        const catchResponse = await API.get(`/QuantitySheet/CatchByproject?ProjectId=${projectId}`);
+        const catchDetails = catchResponse.data;
+        console.log("Catch details:", catchDetails);
 
         // Fetch alarm messages
-        const alarmMessagesResponse = await fetch(`https://localhost:7212/api/Alarms`);
-        const alarmMessagesData = await alarmMessagesResponse.json();
+        const alarmMessagesResponse = await API.get('/alarms');
+        const alarmMessagesData = alarmMessagesResponse.data;
+        console.log("Alarm messages:", alarmMessagesData);
 
         // Map alarm IDs to their messages dynamically
         const messageMap = alarmMessagesData.reduce((acc, alarm) => {
@@ -32,29 +42,35 @@ const DashboardAlarmModal = ({ projectId, lotNo }) => {
           return acc;
         }, {});
 
-        // Set the fetched alarm messages in state
         setAlarmMessages(messageMap);
 
         // Combine alarms with their corresponding catchNo and filter based on lotNo
-        const combinedData = alarms.map(alarm => {
-          const catchInfo = catchDetails.find(catchItem => catchItem.quantitySheetId === alarm.quantitysheetId);
-          const message = messageMap[alarm.alarmId] || `${alarm.alarmId}`; // Default to alarmId if no match
-          return {
+        const combinedData = alarms.map((alarm) => {
+          const catchInfo = catchDetails.find(
+            (catchItem) => catchItem.quantitySheetId === alarm.quantitysheetId
+          );
+          const message = messageMap[alarm.alarmId] || `${alarm.alarmId}`;
+
+          const combined = {
             alarmId: alarm.alarmId,
-            catchNo: catchInfo ? catchInfo.catchNo : 'N/A',
+            catchNo: catchInfo ? catchInfo.catchNo : "N/A",
             alarmMessage: message,
-            lotNo: catchInfo ? catchInfo.lotNo : 'N/A', // Assuming lotNo is in catchInfo
-            quantitySheetId: alarm.quantitysheetId, // Store quantitySheetId for later use
-            transactionId: alarm.transactionId, // Assume this comes from the response or additional transaction data
-            srNo: alarm.quantitysheetId, // Assuming srNo is the quantitySheetId for sending in the request
+            lotNo: catchInfo ? catchInfo.lotNo : "N/A",
+            quantitySheetId: alarm.quantitysheetId,
+            transactionId: alarm.transactionId,
+            srNo: alarm.quantitysheetId,
+            projectId: alarm.projectId,
+            interimQuantity: alarm.interimQuantity,
           };
+          console.log("Combined alarm data:", combined);
+          return combined;
         });
 
         setAlarmsData(combinedData);
         setCatchData(catchDetails);
-
       } catch (err) {
-        setError("An error occurred while fetching the data.");
+        console.error("Error fetching data:", err);
+        setError(`An error occurred while fetching the data: ${err.message}`);
       } finally {
         setLoading(false);
       }
@@ -66,70 +82,66 @@ const DashboardAlarmModal = ({ projectId, lotNo }) => {
   // Filter alarms based on the selected lotNo
   useEffect(() => {
     if (lotNo && alarmsData.length > 0) {
-      const filteredData = alarmsData.filter(alert => alert.lotNo === lotNo);
+      console.log("Filtering alarms for lotNo:", lotNo);
+      const filteredData = alarmsData.filter((alert) => alert.lotNo === lotNo);
+      console.log("Filtered alarms:", filteredData);
       setFilteredAlarmsData(filteredData);
     }
-  }, [lotNo, alarmsData]); // Re-run when either lotNo or alarmsData changes
+  }, [lotNo, alarmsData]);
 
   // Handle resolve functionality
   const handleResolve = async (quantitySheetId) => {
     try {
-      // Find the alarm data for the specific quantitySheetId
-      const alarmData = filteredAlarmsData.find(alarm => alarm.quantitySheetId === quantitySheetId);
+      console.log("Resolving alarm for quantitySheetId:", quantitySheetId);
+
+      const alarmData = filteredAlarmsData.find(
+        (alarm) => alarm.quantitySheetId === quantitySheetId
+      );
       if (!alarmData) {
-        console.error("Alarm not found for QuantitySheetId:", quantitySheetId);
-        return;
+        throw new Error(
+          `Alarm not found for QuantitySheetId: ${quantitySheetId}`
+        );
       }
 
       let existingTransactionData = {};
-      // Fetch existing transaction data only if needed
       if (alarmData.transactionId) {
-        const response = await fetch(`https://localhost:7212/api/Transactions/${alarmData.transactionId}`);
-        existingTransactionData = await response.json();
+        const response = await API.get(`/Transactions/${alarmData.transactionId}`);
+        existingTransactionData = response.data;
+        console.log("Existing transaction data:", existingTransactionData);
       }
 
-      // Construct the dynamic POST data
       const postData = {
-        transactionId: alarmData.transactionId || 0,  // Use the transactionId from alarmData, defaulting to 0
-        interimQuantity: alarmData.interimQuantity || 0,  // Use interimQuantity if available
-        remarks: existingTransactionData.remarks || '',  // Use remarks from the data
-        projectId: alarmData.projectId || projectId,  // Default to projectId prop if not available in alarmData
-        quantitysheetId: alarmData.srNo || 0,  // Use srNo as quantitySheetId, default to 0 if not available
-        processId: existingTransactionData.processId || 0,  // Use processId from existingTransactionData if available
-        zoneId: existingTransactionData.zoneId || 0,  // Use zoneId if available, default to 0
-        machineId: existingTransactionData.machineId || 0,  // Use machineId if available, default to 0
-        status: existingTransactionData.status || 0,  // Default to status 0 if not available
-        alarmId: "0",  // Resolving alarm, set to 0
-        lotNo: alarmData.lotNo || 0,  // Ensure lotNo is included
-        teamId: existingTransactionData.teamId || [],  // Use teamId if available
-        voiceRecording: existingTransactionData.voiceRecording || '',  // Use voiceRecording if available
+        transactionId: alarmData.transactionId || 0,
+        interimQuantity: alarmData.interimQuantity || 0,
+        remarks: existingTransactionData.remarks || "",
+        projectId: alarmData.projectId || projectId,
+        quantitysheetId: alarmData.srNo || 0,
+        processId: existingTransactionData.processId || 0,
+        zoneId: existingTransactionData.zoneId || 0,
+        machineId: existingTransactionData.machineId || 0,
+        status: existingTransactionData.status || 0,
+        alarmId: "0",
+        lotNo: alarmData.lotNo || 0,
+        teamId: existingTransactionData.teamId || [],
+        voiceRecording: existingTransactionData.voiceRecording || "",
       };
 
-      // Send PUT request to update alarmId to '0' for the specific quantitySheetId
-      const response = await fetch(`https://localhost:7212/api/Transactions/quantitysheet/${quantitySheetId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(postData),
-      });
+      console.log("Sending PUT request with data:", postData);
 
-      if (!response.ok) {
-        throw new Error('Failed to resolve alarm');
-      }
+      await API.put(`/Transactions/quantitysheet/${quantitySheetId}`, postData);
 
-      // Update the UI to reflect that this alarm has been resolved
-      setFilteredAlarmsData(prevData =>
-        prevData.map(alarm =>
+      console.log("Alarm resolved successfully");
+
+      setFilteredAlarmsData((prevData) =>
+        prevData.map((alarm) =>
           alarm.quantitySheetId === quantitySheetId
-            ? { ...alarm, alarmId: "0" }  // Update the alarmId to '0' for resolved alarm
+            ? { ...alarm, alarmId: "0" }
             : alarm
         )
       );
-
-      console.log(`Resolved alarm for QuantitySheet ID: ${quantitySheetId}`);
     } catch (error) {
-      console.error('Error resolving alarm:', error);
+      console.error("Error resolving alarm:", error);
+      setError(`Failed to resolve alarm: ${error.message}`);
     }
   };
 
@@ -138,7 +150,7 @@ const DashboardAlarmModal = ({ projectId, lotNo }) => {
   }
 
   if (error) {
-    return <div>{error}</div>;
+    return <div className="alert alert-danger">{error}</div>;
   }
 
   return (
@@ -157,7 +169,7 @@ const DashboardAlarmModal = ({ projectId, lotNo }) => {
           <tr>
             <th>Catch No.</th>
             <th>Alarm Message</th>
-            <th>Action</th> {/* Add an Action column for the Resolve button */}
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>
@@ -167,15 +179,14 @@ const DashboardAlarmModal = ({ projectId, lotNo }) => {
                 <td>{data.catchNo}</td>
                 <td>{data.alarmMessage}</td>
                 <td>
-                  {hasPermission('2.8.3') && (
-                       <Button 
-                    variant="success" 
-                    onClick={() => handleResolve(data.quantitySheetId)} 
-                  >
-                    Resolve
-                  </Button>
+                  {hasResolvePermission && (
+                    <Button
+                      variant="success"
+                      onClick={() => handleResolve(data.quantitySheetId)}
+                    >
+                      Resolve
+                    </Button>
                   )}
-               
                 </td>
               </tr>
             ))

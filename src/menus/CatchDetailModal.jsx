@@ -1,10 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Table, Input, Typography, message } from 'antd';
 import { AudioOutlined, AudioMutedOutlined } from '@ant-design/icons';
 import API from '../CustomHooks/MasterApiHooks/api';
 import { hasPermission } from '../CustomHooks/Services/permissionUtils';
-
 
 const { TextArea } = Input;
 const { Text } = Typography;
@@ -38,7 +36,6 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
             label: formatKey(key),
             value: data[key] || 'No Remarks',
         }));
-
 
     // Update handleAudioPlay function
     const handleAudioPlay = async (audioData) => {
@@ -104,7 +101,6 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
                                 fontSize: '18px', 
                                 cursor: 'pointer',
                                 color: '#1890ff'
-
                             }}
                             onClick={() => handleAudioPlay(voiceRecording)}
                             className='rounded-circle border p-2 custom-theme-dark-btn'
@@ -166,7 +162,6 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
         }
     };
 
-
     // Define table columns
     const columns = [
         {
@@ -194,10 +189,9 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
                                 style={{ flex: 1, marginRight: '10px', overflow: 'hidden', wordWrap: 'break-word' }}
                             />
                             {record.label === 'Remarks' && renderAudioControl(data?.voiceRecording)}
-
                         </div>
-                        {hasPermission('2.8.3') && 
-                            record?.label === 'Alerts' && 
+                       
+                           { record?.label === 'Alerts' && 
                             value !== 'NA' && (
                                 <Button
                                     style={{ fontSize: '18px', cursor: 'pointer' }}
@@ -206,8 +200,8 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
                                 >
                                     Resolve
                                 </Button>
-                            )
-                        }
+                            )}
+                       
                         </>
                     );
                 }
@@ -215,15 +209,6 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
             },
         },
     ];
-
-    // Clean up audio when modal closes
-    useEffect(() => {
-        if (!show && audioElement) {
-            audioElement.pause();
-            setIsPlaying(false);
-            setAudioElement(null);
-        }
-    }, [show]);
 
     return (
         <Modal

@@ -409,7 +409,7 @@ const AllProjects = () => {
       centered
       width={600}
     >
-     <DashboardAlarmModal selectedAlerts={selectedAlerts}  projectId={projectId} lotNo = {selectedChart.lotNumber} />
+     <DashboardAlarmModal selectedAlerts={selectedAlerts}  projectId={projectId} lotNo = {selectedChart.lotNumber} hasResolvePermission={hasPermission('2.8.3')} />
     </Modal>
 
     </Container>
