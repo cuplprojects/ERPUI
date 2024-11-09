@@ -306,7 +306,8 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
                                     className="fs-6  position-relative "
                                     onClick={() => handleCatchClick(record)}
                                 >
-                                    {record.alerts && (
+                                    
+                                    {record.alarmId!=0 || record.alarmId!="" && (
                                         <BiSolidFlag
                                             title={record.alerts}
                                             className=''
@@ -432,7 +433,7 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
                     </div>
                 );
             },
-            sorter: (a, b) => a.status.localeCompare(b.status),
+            sorter: (a, b) => a.status - b.status,
         }        
     ];
 

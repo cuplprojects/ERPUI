@@ -63,7 +63,7 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
             // Create audio URL and play
             const audioUrl = URL.createObjectURL(blob);
             const audio = new Audio(audioUrl);
-            
+
             // Add event listeners
             audio.onplay = () => setIsPlaying(true);
             audio.onpause = () => setIsPlaying(false);
@@ -97,17 +97,17 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
                 {isPlaying ? (
                     <div style={{ display: 'flex', alignItems: 'center' }}>
                         <AudioOutlined
-                            style={{ 
-                                fontSize: '18px', 
+                            style={{
+                                fontSize: '18px',
                                 cursor: 'pointer',
                                 color: '#1890ff'
                             }}
                             onClick={() => handleAudioPlay(voiceRecording)}
                             className='rounded-circle border p-2 custom-theme-dark-btn'
                         />
-                        <span 
-                            className="animate-pulse" 
-                            style={{ 
+                        <span
+                            className="animate-pulse"
+                            style={{
                                 marginLeft: '8px',
                                 color: '#1890ff',
                                 fontSize: '12px'
@@ -134,7 +134,7 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
                 const response = await API.get(`/Transactions/${data.transactionId}`);
                 existingTransactionData = response.data;
             }
-     
+
             const postData = {
                 transactionId: data?.transactionId || 0,
                 interimQuantity: existingTransactionData?.interimQuantity || 0,
@@ -150,11 +150,11 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
                 teamId: existingTransactionData?.teamId || [],
                 voiceRecording: existingTransactionData?.voiceRecording || ""
             };
-     
+
             if (data?.transactionId) {
                 await API.put(`/Transactions/${data.transactionId}`, postData);
-            } 
-           
+            }
+
             handleSave("0");
             handleClose();
         } catch (error) {
@@ -179,29 +179,30 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
                 if (record.label === 'Remarks' || record.label === 'Alerts') {
                     return (
                         <>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <TextArea
-                                value={value}
-                                readOnly
-                                autoSize={{ minRows: 2, maxRows: 6 }}
-                                auto-sizing
-                                bordered={false}
-                                style={{ flex: 1, marginRight: '10px', overflow: 'hidden', wordWrap: 'break-word' }}
-                            />
-                            {record.label === 'Remarks' && renderAudioControl(data?.voiceRecording)}
-                        </div>
-                       
-                           { record?.label === 'Alerts' && 
-                            value !== 'NA' && (
-                                <Button
-                                    style={{ fontSize: '18px', cursor: 'pointer' }}
-                                    onClick={handleResolve}
-                                    className='d-flex align-items-center border p-2 custom-theme-dark-btn'
-                                >
-                                    Resolve
-                                </Button>
-                            )}
-                       
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <TextArea
+                                    value={value}
+                                    readOnly
+                                    autoSize={{ minRows: 2, maxRows: 6 }}
+                                    auto-sizing
+                                    bordered={false}
+                                    style={{ flex: 1, marginRight: '10px', overflow: 'hidden', wordWrap: 'break-word' }}
+                                />
+                                {record.label === 'Remarks' && renderAudioControl(data?.voiceRecording)}
+                            </div>
+
+                            {record?.label === 'Alerts' &&
+                                value !== 'NA' && (
+                                    <Button
+                                        style={{ fontSize: '18px', cursor: 'pointer' }}
+                                        onClick={handleResolve}
+                                        className='d-flex align-items-center border p-2 custom-theme-dark-btn'
+
+                                    >
+                                        Resolve
+                                    </Button>
+                                )}
+
                         </>
                     );
                 }
