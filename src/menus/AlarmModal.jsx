@@ -9,7 +9,7 @@ const statusMapping = {
 };
 
 const AlarmModal = ({ show, handleClose, data, processId, handleSave }) => {
-    console.log(data);
+
     const [alarmType, setAlarmType] = useState('');
     const [alarmId, setAlarmId] = useState(null); // State to hold selected alarmId
     const [customMessage, setCustomMessage] = useState('');
