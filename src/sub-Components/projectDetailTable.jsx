@@ -433,7 +433,7 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
                     </div>
                 );
             },
-            sorter: (a, b) => a.status - b.status,
+            sorter: (a, b) => a.status.localeCompare(b.status),
         }        
     ];
 
