@@ -38,7 +38,7 @@ const AssignTeamModal = ({ show, handleClose, handleSave, data , processId }) =>
         <Modal.Title className={customDarkText}>{t('assignTeam')}</Modal.Title>
       </Modal.Header>
       <Modal.Body className={customMid}>
-        <AssignTeams processId={processId} data={data}/>
+        <AssignTeams processId={processId} data={data} handleClose={handleClose} handleSave={handleSave}/>
       </Modal.Body>
       <Modal.Footer className={customMid}>
         <Button 
