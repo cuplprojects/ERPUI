@@ -306,7 +306,7 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
                                     className="fs-6  position-relative "
                                     onClick={() => handleCatchClick(record)}
                                 >
-                                    {record.alerts && (
+                                    {record.alerts && record?.alerts !== "" && record?.alerts !== "0" && (
                                         <BiSolidFlag
                                             title={record.alerts}
                                             className=''
@@ -345,13 +345,18 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
             align: 'center',
             sorter: (a, b) => a.remarks.localeCompare(b.remarks),
         }] : []),
-        ...(columnVisibility['Team Assigned'] && hasFeaturePermission(7) ? [{
-            title: 'Interim Quantity',
-            dataIndex: 'interimQuantity',
+        ...(columnVisibility['Team Assigned'] && hasFeaturePermission(5) ? [{
+            title: 'Team Assigned',
+            dataIndex: 'teamUserNames',
             width: '20%',
             align: 'center',
-            key: 'interimQuantity',
-            sorter: (a, b) => a.interimQuantity - b.interimQuantity,
+            key: 'teamUserNames',
+            render: (teamUserNames) => teamUserNames?.join(', ') || '-',
+            sorter: (a, b) => {
+                const teamA = a.teamUserNames?.join(', ') || '';
+                const teamB = b.teamUserNames?.join(', ') || '';
+                return teamA.localeCompare(teamB);
+            },
         }] : []),
         ...(columnVisibility['Course'] && hasFeaturePermission(13) ? [{
             title: 'Course',
@@ -389,11 +394,11 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
         
                 const statusSteps = ["Pending", "Started", "Completed"];
                 const initialStatusIndex = text !== undefined ? text : 0;
-                const hasAlerts = record.alerts && record.alerts.length > 0;
-        
+                const hasAlerts = Boolean(record.alerts?.length);
+                console.log(Boolean(record.alerts?.length));
                 // Check if 'Assign Team' and 'Select Zone' data is populated
-                const isZoneAssigned = record.zoneId !== 0 && record.zoneId !== null;
-                const isTeamAssigned = record.teamId && record.teamId.length > 0;  // Assuming teamId is an array
+                const isZoneAssigned = Boolean(record.zoneId);
+                const isTeamAssigned = Boolean(record.teamId?.length);  // Assuming teamId is an array
         
                 // Check if 'Select Machine' is required (i.e., permission granted)
                 const hasSelectMachinePermission = hasFeaturePermission(10); // Check if the user has Select Machine permission
@@ -402,9 +407,8 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
                 // 1. The Select Machine is assigned (if permission for Select Machine exists)
                 // 2. OR The Zone and Team are assigned (if permission for Select Machine doesn't exist)
                 const canChangeStatus = hasSelectMachinePermission
-                    ? record.machineId !== 0 && record.machineId !== null // Check if machine is assigned
-                    : isZoneAssigned && isTeamAssigned; // Check if zone and team are assigned if Select Machine is not required
-        
+                    ? (record.machineId !== 0 && record.machineId !== null && isZoneAssigned && isTeamAssigned) // All conditions must be met if machine permission exists
+                    : (isZoneAssigned && isTeamAssigned); // Just zone and team needed if no machine permission
                 return (
                     <div className="d-flex justify-content-center">
                         {hasAlerts ? (
@@ -802,7 +806,17 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
                                 ]}
                                 disabled={selectedRowKeys.some(catchNumber => {
                                     const row = tableData.find(item => item.catchNumber === catchNumber);
-                                    return row && row.alerts; // Check if this row has alerts
+
+                                    // Validation logic for whether the status can be changed
+                                    const isZoneAssigned = row.zoneId !== 0 && row.zoneId !== null;
+                                    const isTeamAssigned = row.teamId && row.teamId.length > 0;
+                                    const hasSelectMachinePermission = hasFeaturePermission(10); // Check if Select Machine permission exists
+
+                                    const canChangeStatus = hasSelectMachinePermission
+                                    ? (row.machineId !== 0 && row.machineId !== null && isZoneAssigned && isTeamAssigned) // All conditions must be met if machine permission exists
+                                    : (isZoneAssigned && isTeamAssigned);  // Otherwise, Zone and Team must be assigned
+                                        const canBeCompleted = row.interimQuantity === row.quantity;
+                                    return row.alerts || !canChangeStatus || (getSelectedStatus() === 2 && !canBeCompleted); // Disable if there are alerts or the status cannot be changed
                                 })}
                             />
                         </div>
