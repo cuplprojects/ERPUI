@@ -7,16 +7,20 @@ import quantitySheetService from '../../../CustomHooks/ApiServices/quantitySheet
 import teamsService from '../../../CustomHooks/ApiServices/teamsService';
 
 const AssignTeams = ({ data, handleSave, processId }) => {
-  console.log(data)
   const [assignmentType, setAssignmentType] = useState('catch');
   const [teams, setTeams] = useState([]);
   const [lots, setLots] = useState([]);
   const [showTeams, setShowTeams] = useState(false);
 
-  // Use optional chaining to safely access projectId from data
-  const selectedProject = data?.projectId ? { projectid: data.projectId, projectname: data.course } : null;
+  // Extract first item from data array if it exists
+  const selectedData = Array.isArray(data) && data.length > 0 ? data[0] : null;
 
-  // If selectedProject is null, it means the projectId was not available
+  // Use selectedData to get project details
+  const selectedProject = selectedData ? { 
+    projectid: selectedData.projectId, 
+    projectname: selectedData.course 
+  } : null;
+
   useEffect(() => {
     if (selectedProject?.projectid) {
       const fetchData = async () => {
@@ -96,13 +100,23 @@ const AssignTeams = ({ data, handleSave, processId }) => {
               <Form.Group className="mb-3">
                 <Form.Label>Assignment Type</Form.Label>
                 <div className="d-flex gap-4">
+                 
                   <Form.Check
+                    type="radio"
+                    label="Catch-wise"
+                    name="assignmentType"
+                    checked={assignmentType === 'catch'}
+                    onChange={() => setAssignmentType('catch')}
+                    className="custom-radio"
+                  /> 
+                  {/* <Form.Check
                     type="radio"
                     label="Project-wise"
                     name="assignmentType"
                     checked={assignmentType === 'project'}
                     onChange={() => setAssignmentType('project')}
                     className="custom-radio"
+                    disabled
                   />
                   <Form.Check
                     type="radio"
@@ -111,15 +125,8 @@ const AssignTeams = ({ data, handleSave, processId }) => {
                     checked={assignmentType === 'lot'}
                     onChange={() => setAssignmentType('lot')}
                     className="custom-radio"
-                  />
-                  <Form.Check
-                    type="radio"
-                    label="Catch-wise"
-                    name="assignmentType"
-                    checked={assignmentType === 'catch'}
-                    onChange={() => setAssignmentType('catch')}
-                    className="custom-radio"
-                  />
+                    disabled
+                  /> */}
                 </div>
               </Form.Group>
             </Col>
@@ -130,10 +137,10 @@ const AssignTeams = ({ data, handleSave, processId }) => {
               <ProjectTeamAssignment selectedProject={selectedProject} onTeamSelect={handleTeamAssignment} teams={teams} />
             )}
             {assignmentType === 'lot' && (
-              <LotTeamAssignment selectedProject={selectedProject} onTeamSelect={handleTeamAssignment} lots={lots} teams={teams} data={data} processId={processId} />
+              <LotTeamAssignment selectedProject={selectedProject} onTeamSelect={handleTeamAssignment} lots={lots} teams={teams} data={selectedData} processId={processId} />
             )}
             {assignmentType === 'catch' && (
-              <CatchTeamAssignment selectedProject={selectedProject} onTeamSelect={handleTeamAssignment} lots={lots} teams={teams} data ={data} processId={processId}/>
+              <CatchTeamAssignment selectedProject={selectedProject} onTeamSelect={handleTeamAssignment} lots={lots} teams={teams} data={selectedData} processId={processId}/>
             )}
           </div> }
         </Form>
