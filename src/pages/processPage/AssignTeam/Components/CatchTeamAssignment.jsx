@@ -3,7 +3,7 @@ import { Form, Row, Col, Button } from 'react-bootstrap';
 import API from '../../../../CustomHooks/MasterApiHooks/api';
 
 
-const CatchTeamAssignment = ({ teams, data, onTeamSelect, handleSave, handleClose, processId }) => {
+const CatchTeamAssignment = ({ teams, data, onTeamSelect, processId }) => {
   const [selectedTeam, setSelectedTeam] = useState('');
   const [usersInTeam, setUsersInTeam] = useState([]);
   const [userOptions, setUserOptions] = useState([]); // List of users to be added to the team
@@ -94,9 +94,7 @@ const CatchTeamAssignment = ({ teams, data, onTeamSelect, handleSave, handleClos
       } else {
         await API.post('/Transactions', postData);
       }
-  
-      handleSave(); // Call the parent save handler
-      handleClose(); // Close the modal or perform cleanup
+
     } catch (error) {
       console.error('Error updating interim quantity:', error);
     }

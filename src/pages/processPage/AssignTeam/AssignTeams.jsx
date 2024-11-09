@@ -5,58 +5,92 @@ import LotTeamAssignment from './Components/LotTeamAssignment';
 import ProjectTeamAssignment from './Components/ProjectTeamAssignment';
 import quantitySheetService from '../../../CustomHooks/ApiServices/quantitySheetService';
 import teamsService from '../../../CustomHooks/ApiServices/teamsService';
+import API from '../../../CustomHooks/MasterApiHooks/api';
 
 const AssignTeams = ({ data, handleSave, processId }) => {
-  console.log(data)
   const [assignmentType, setAssignmentType] = useState('catch');
   const [teams, setTeams] = useState([]);
   const [lots, setLots] = useState([]);
   const [showTeams, setShowTeams] = useState(false);
 
-  // Use optional chaining to safely access projectId from data
-  const selectedProject = data?.projectId ? { projectid: data.projectId, projectname: data.course } : null;
+  // Get unique project details from selected rows
+  const uniqueProjects = Array.isArray(data) ? [...new Set(data.map(item => item.projectId))] : [];
+  const selectedProject = data && data.length > 0 ? { 
+    projectid: data[0].projectId, 
+    projectname: data[0].course 
+  } : null;
 
-  // If selectedProject is null, it means the projectId was not available
   useEffect(() => {
     if (selectedProject?.projectid) {
       const fetchData = async () => {
         try {
           const lotsData = await quantitySheetService.getLots(selectedProject.projectid);
-          console.log('Lots for project:', lotsData);
           setLots(lotsData);
 
           const teamsData = await teamsService.getTeamsByProcess(processId);
           setTeams(teamsData);
-          console.log('Teams for process:', teamsData);
         } catch (error) {
           console.error('Error fetching data:', error);
         }
       };
 
       fetchData();
-    } else {
-      console.error("No projectId available in data.");
     }
   }, [selectedProject?.projectid, processId]);
 
   const handleTeamAssignment = async (teamId) => {
-    if (assignmentType === 'project') {
-      try {
-        // Update all quantity sheets for the project with the same team
-        const updates = [...lots].map(sheet => ({
-          ...sheet,
-          teamId: teamId,
-        }));
+    try {
+      if (assignmentType === 'catch') {
+        const updates = data.map(async (row) => {
+          try {
+            // Get existing transaction data if available
+            let existingTransactionData = null;
+            if (row.transactionId) {
+              const response = await API.get(`/Transactions/${row.transactionId}`);
+              existingTransactionData = response.data;
+            }
 
-        // Call API to update quantity sheets
-        for (const update of updates) {
-          await quantitySheetService.updateQuantitySheet(update.id, update);
+            // Prepare post data, maintaining existing values
+            const postData = {
+              transactionId: row.transactionId || 0,
+              interimQuantity: row.interimQuantity || 0,
+              remarks: existingTransactionData?.remarks || '',
+              projectId: row.projectId,
+              quantitysheetId: row.srNo || 0,
+              processId: processId,
+              zoneId: existingTransactionData?.zoneId || 0,
+              machineId: existingTransactionData?.machineId || 0,
+              status: existingTransactionData?.status || 0,
+              alarmId: existingTransactionData?.alarmId || "",
+              lotNo: row.lotNo || "",
+              teamId: teamId, // This is an array in your API
+              voiceRecording: existingTransactionData?.voiceRecording || ""
+            };
+
+            console.log('Sending data:', postData); // Debug log
+
+            if (row.transactionId) {
+              await API.put(`/Transactions/${row.transactionId}`, postData);
+            } else {
+              await API.post('/Transactions', postData);
+            }
+          } catch (error) {
+            console.error(`Error updating catch ${row.catchNumber}:`, error);
+            console.log('Failed request data:', error.config?.data); // Debug log
+            throw error; // Re-throw to be caught by outer try-catch
+          }
+        });
+
+        await Promise.all(updates);
+        
+        // Only call handleSave if it exists
+        if (typeof handleSave === 'function') {
+          handleSave(teamId);
         }
-        handleSave();
-        console.log('Successfully assigned team to all quantity sheets');
-      } catch (error) {
-        console.error('Error assigning team:', error);
       }
+    } catch (error) {
+      console.error('Error assigning team:', error);
+      // You might want to show an error message to the user here
     }
   };
 
@@ -69,6 +103,15 @@ const AssignTeams = ({ data, handleSave, processId }) => {
       {/* Assignment Settings */}
       <div className="bg-white rounded shadow-sm p-4 mb-4">
         <h5 className="mb-4">Assignment Settings</h5>
+        
+        {/* Selected Catches Display */}
+        {Array.isArray(data) && data.length > 0 && (
+          <div className="mb-3">
+            <p><strong>Selected Catches:</strong> {data.map(row => row.catchNumber).join(', ')}</p>
+            <p><strong>Total Items:</strong> {data.length}</p>
+          </div>
+        )}
+
         <div className="mb-4">
           <Button
             variant="info"
@@ -78,6 +121,7 @@ const AssignTeams = ({ data, handleSave, processId }) => {
             {showTeams ? 'Hide Teams' : 'Show Teams'}
           </Button>
         </div>
+
         <Form>
           <Row>
             <Col md={4}>
@@ -98,22 +142,6 @@ const AssignTeams = ({ data, handleSave, processId }) => {
                 <div className="d-flex gap-4">
                   <Form.Check
                     type="radio"
-                    label="Project-wise"
-                    name="assignmentType"
-                    checked={assignmentType === 'project'}
-                    onChange={() => setAssignmentType('project')}
-                    className="custom-radio"
-                  />
-                  <Form.Check
-                    type="radio"
-                    label="Lot-wise"
-                    name="assignmentType"
-                    checked={assignmentType === 'lot'}
-                    onChange={() => setAssignmentType('lot')}
-                    className="custom-radio"
-                  />
-                  <Form.Check
-                    type="radio"
                     label="Catch-wise"
                     name="assignmentType"
                     checked={assignmentType === 'catch'}
@@ -125,21 +153,20 @@ const AssignTeams = ({ data, handleSave, processId }) => {
             </Col>
           </Row>
 
-          { <div className="mt-4">
-            {assignmentType === 'project' && (
-              <ProjectTeamAssignment selectedProject={selectedProject} onTeamSelect={handleTeamAssignment} teams={teams} />
-            )}
-            {assignmentType === 'lot' && (
-              <LotTeamAssignment selectedProject={selectedProject} onTeamSelect={handleTeamAssignment} lots={lots} teams={teams} data={data} processId={processId} />
-            )}
-            {assignmentType === 'catch' && (
-              <CatchTeamAssignment selectedProject={selectedProject} onTeamSelect={handleTeamAssignment} lots={lots} teams={teams} data ={data} processId={processId}/>
-            )}
-          </div> }
+          {assignmentType === 'catch' && (
+            <CatchTeamAssignment 
+              selectedProject={selectedProject} 
+              onTeamSelect={handleTeamAssignment} 
+              lots={lots} 
+              teams={teams} 
+              data={data}  // Pass all selected rows
+              processId={processId}
+            />
+          )}
         </Form>
       </div>
 
-      {/* Teams Display - Directly on the page */}
+      {/* Teams Display */}
       {showTeams && (
         <div className="mb-4">
           <h5 className="mb-3">Teams</h5>
