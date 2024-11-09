@@ -41,6 +41,7 @@ const SelectMachineModal = ({ show, handleClose, data, processId, handleSave }) 
           existingTransactionData = response.data;
         }
 
+
         const postData = {
           transactionId: row.transactionId || 0,
           interimQuantity: row.interimQuantity,
@@ -56,6 +57,7 @@ const SelectMachineModal = ({ show, handleClose, data, processId, handleSave }) 
           teamId: existingTransactionData ? existingTransactionData.teamId : [],
           voiceRecording: existingTransactionData ? existingTransactionData.voiceRecording : ""
         };
+
 
         if (row.transactionId) {
           await API.put(`/Transactions/${row.transactionId}`, postData);

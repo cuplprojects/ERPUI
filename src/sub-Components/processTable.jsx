@@ -22,6 +22,7 @@ import useCurrentProcessStore from '../store/currentProcessStore';
 import { decrypt } from "../Security/Security";
 import { getCombinedPercentages } from '../CustomHooks/ApiServices/transacationService';
 
+
 const ProcessTable = () => {
     const { encryptedProjectId, encryptedLotNo } = useParams();
     const id = decrypt(encryptedProjectId);
@@ -469,6 +470,7 @@ const ProcessTable = () => {
                 handleClose={() => setCatchDetailModalShow(false)}
                 data={catchDetailModalData}
             />
+           
         </div>
     );
 };

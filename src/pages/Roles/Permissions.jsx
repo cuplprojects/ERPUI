@@ -198,7 +198,19 @@ const permissionOptions = [
           },
         ],
       },
-      { title: 'alarm', key: '2.8' },
+      { title: 'alarm', 
+        key: '2.8' ,
+        children: [
+          {
+            title: 'CRUD',
+            key: '2.8.0',
+            children: [
+              { title: 'create', key: '2.8.1' },
+              {title: 'read', key: '2.8.2'},
+              {title: 'resolve', key: '2.8.3'},
+            ]
+          }
+        ]},
       { title: 'team', key: '2.9' },
       { title: 'Process Settings', key: '2.10' },
     ],

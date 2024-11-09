@@ -3,6 +3,7 @@ import { useUserData } from '../../store/userDataStore';
 
 const isDevelopmentMode = import.meta.env.VITE_APP_MODE === 'development';
 
+
 /**
  * Retrieves user permissions from the user data store
  * @returns {string[]} Array of permission strings

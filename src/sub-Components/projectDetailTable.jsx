@@ -116,7 +116,7 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
 
     useEffect(() => {
         const newVisibleKeys = filteredData.map(item => item.catchNumber);
-        setVisibleRowKeys(newVisibleKeys);
+        setVisibleRowKeys(newVisibleKeys);lotNo
     }, [searchText, hideCompleted]); // Add other dependencies if necessary
 
     // Add effect to fetch transactions when processId changes
@@ -174,6 +174,7 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
                 machineId: existingTransactionData ? existingTransactionData.machineId : 0,
                 status: newStatusIndex, // Change only this field
                 alarmId: existingTransactionData ? existingTransactionData.alarmId : "",
+
                 teamId: existingTransactionData ? existingTransactionData.teamId : [],
                 lotNo: existingTransactionData ? existingTransactionData.lotNo : lot,
                 voiceRecording: existingTransactionData ? existingTransactionData.voiceRecording : ""
@@ -267,7 +268,7 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
                                 <button
                                     className="rounded border fs-6 custom-zoom-btn bg-white position-relative "
                                     onClick={() => {
-                                        console.log('Detail:', record);
+                                        handleCatchClick(record);
                                         setCatchDetailModalShow(true);
                                         setCatchDetailModalData(record);
                                     }}
@@ -599,6 +600,19 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
         fetchTransactions();
     };
 
+    const handleSaveCatch = (alarm) => {
+        const updatedData = tableData.map((row) => {
+            if (selectedRowKeys.includes(row.catchNumber)) {
+                return { ...row, alarm };
+            }
+            return row;
+        });
+        setTableData(updatedData);
+        setSelectedRowKeys([]); // Deselect all rows
+        setShowOptions(false); // Reset options visibility
+        fetchTransactions();
+    };
+
     const handleRemarksSave = (remarks, mediaBlobUrl) => {
         const updatedData = tableData.map((row) => {
             if (selectedRowKeys.includes(row.catchNumber)) {
@@ -921,6 +935,8 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
                 show={catchDetailModalShow}
                 handleClose={() => setCatchDetailModalShow(false)}
                 data={catchDetailModalData}
+                handleSave={handleSaveCatch}
+                processId={processId}
             />
             <SelectZoneModal
                 show={selectZoneModalShow}
