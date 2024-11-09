@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Button, Table, Row, Col } from "react-bootstrap";
+import { Button, Table, Row, Col, Alert } from "react-bootstrap";
 import API from "../CustomHooks/MasterApiHooks/api";
+import { useStore } from 'zustand';
+import themeStore from '../store/themeStore';
 
 const DashboardAlarmModal = ({ projectId, lotNo, hasResolvePermission }) => {
   const [alarmsData, setAlarmsData] = useState([]);
@@ -9,6 +11,12 @@ const DashboardAlarmModal = ({ projectId, lotNo, hasResolvePermission }) => {
   const [filteredAlarmsData, setFilteredAlarmsData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [projectName, setProjectName] = useState("");
+
+  const { getCssClasses } = useStore(themeStore);
+  const cssClasses = getCssClasses();
+  const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
 
   // Fetch data from APIs
   useEffect(() => {
@@ -35,6 +43,12 @@ const DashboardAlarmModal = ({ projectId, lotNo, hasResolvePermission }) => {
         const alarmMessagesResponse = await API.get('/alarms');
         const alarmMessagesData = alarmMessagesResponse.data;
         console.log("Alarm messages:", alarmMessagesData);
+
+        // Fetch project details
+        const projectResponse = await API.get(`/Project/${projectId}`);
+        const projectDetails = projectResponse.data;
+        setProjectName(projectDetails.name);
+        console.log("Project details:", projectDetails);
 
         // Map alarm IDs to their messages dynamically
         const messageMap = alarmMessagesData.reduce((acc, alarm) => {
@@ -70,7 +84,7 @@ const DashboardAlarmModal = ({ projectId, lotNo, hasResolvePermission }) => {
         setCatchData(catchDetails);
       } catch (err) {
         console.error("Error fetching data:", err);
-        setError(`An error occurred while fetching the data: ${err.message}`);
+        setError(`No Alerts Found`);
       } finally {
         setLoading(false);
       }
@@ -131,14 +145,13 @@ const DashboardAlarmModal = ({ projectId, lotNo, hasResolvePermission }) => {
       await API.put(`/Transactions/quantitysheet/${quantitySheetId}`, postData);
 
       console.log("Alarm resolved successfully");
+      setSuccessMessage("Alarm resolved successfully!");
 
-      setFilteredAlarmsData((prevData) =>
-        prevData.map((alarm) =>
-          alarm.quantitySheetId === quantitySheetId
-            ? { ...alarm, alarmId: "0" }
-            : alarm
-        )
+      // Remove the resolved alarm immediately
+      setFilteredAlarmsData(prevData => 
+        prevData.filter(alarm => alarm.quantitySheetId !== quantitySheetId)
       );
+
     } catch (error) {
       console.error("Error resolving alarm:", error);
       setError(`Failed to resolve alarm: ${error.message}`);
@@ -150,21 +163,27 @@ const DashboardAlarmModal = ({ projectId, lotNo, hasResolvePermission }) => {
   }
 
   if (error) {
-    return <div className="alert alert-danger">{error}</div>;
+    return <div className={`alert alert-success ${customLight}`}>{error}</div>;
   }
 
   return (
-    <div>
+    <div >
       <Row className="mb-3">
         <Col>
-          <h3>Project {projectId} - Alarms</h3>
+          <h3>Project {projectName} - Alarms</h3>
         </Col>
         <Col>
           <h3>Alarms for Lot {lotNo}</h3>
         </Col>
       </Row>
 
-      <Table striped bordered hover>
+      {successMessage && (
+        <Alert variant="success" className={`mb-3 ${customLight}`} onClose={() => setSuccessMessage("")} dismissible>
+          {successMessage}
+        </Alert>
+      )}
+
+      <Table striped bordered hover className={customLight}>
         <thead>
           <tr>
             <th>Catch No.</th>
@@ -182,6 +201,7 @@ const DashboardAlarmModal = ({ projectId, lotNo, hasResolvePermission }) => {
                   {hasResolvePermission && (
                     <Button
                       variant="success"
+                      className={`${customBtn} ${customDark === "dark-dark" ? "border" : "border-0"}`}
                       onClick={() => handleResolve(data.quantitySheetId)}
                     >
                       Resolve
