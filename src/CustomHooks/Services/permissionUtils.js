@@ -18,8 +18,13 @@ const getUserPermissions = () => {
  * @param {string} permission - The permission to check
  * @returns {boolean} - True if the user has the permission or in development mode, false otherwise
  */
+
 export const hasPermission = (permission) => {
   if (isDevelopmentMode) {
+    return true;
+  }
+  const userData = useUserData();
+  if (userData?.role?.roleId === 1) {
     return true;
   }
   const userPermissions = getUserPermissions();

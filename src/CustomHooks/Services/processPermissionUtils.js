@@ -1,25 +1,33 @@
-// processPermissionUtils.js
+// permissionUtils.js
+import { useUserData } from '../../store/userDataStore';
 
 const isDevelopmentMode = import.meta.env.VITE_APP_MODE === 'development';
 
 /**
- * Checks if a specific process has permission for a feature
+ * Retrieves user permissions from the user data store
+ * @returns {string[]} Array of permission strings
+ */
+const getUserPermissions = () => {
+  const userData = useUserData();
+  return userData?.role?.permissions || [];
+};
+
+/**
+ * Checks if the user has a specific permission or if in development mode
  * 
- * @param {number} processId - The ID of the process
- * @param {number} featureId - The ID of the feature
- * @returns {boolean} - True if the process has the feature or in development mode, false otherwise
+ * @param {string} permission - The permission to check
+ * @returns {boolean} - True if the user has the permission or in development mode, false otherwise
  */
 
-export const hasFeaturePermission = (processId, featureId, featureData) => {
+export const hasPermission = (permission) => {
   if (isDevelopmentMode) {
     return true;
   }
-  if (!featureData) {
-    return false;
+  const userData = useUserData();
+  if (userData?.role?.roleId === 1) {
+    return true;
   }
-  const process = featureData.find(p => p.processId === processId);
-  if (process) {
-    return process.featuresList.includes(featureId);
-  }
-  return false;
+  const userPermissions = getUserPermissions();
+  return userPermissions.includes(String(permission));
 };
+
