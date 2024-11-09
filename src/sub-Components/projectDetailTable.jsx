@@ -426,7 +426,7 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
                                     status,
                                     color: index === 0 ? "red" : index === 1 ? "blue" : "green"
                                 }))}
-                                disabled={!canChangeStatus || (newIndex === 2 && !canBeCompleted)} // Disable the toggle if status can't be changed (based on Select Machine or Zone/Team)
+                                disabled={!canChangeStatus} // Disable the toggle if status can't be changed (based on Select Machine or Zone/Team)
                             />
                         )}
                     </div>
