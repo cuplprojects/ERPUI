@@ -14,7 +14,7 @@ const ProjectTeamAssignment = ({ selectedProject, onTeamSelect, teams }) => {
     <Row>
       <Col md={6}>
         <Form.Group className="mb-3">
-          <Form.Label>Select Team for Project: {selectedProject.projectname}</Form.Label>
+          <Form.Label>Select Team for Project: {selectedProject.projectid}</Form.Label>
           <Form.Select
             value={selectedTeam}
             onChange={handleTeamChange}

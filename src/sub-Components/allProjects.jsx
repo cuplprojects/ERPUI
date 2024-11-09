@@ -22,6 +22,10 @@ import API from '../CustomHooks/MasterApiHooks/api';
 import { decrypt, encrypt } from "../Security/Security";
 import {Modal} from 'antd';
 import DashboardAlarmModal from "../menus/DashboardAlarmModal";
+
+import { getCombinedPercentages } from '../CustomHooks/ApiServices/transacationService';
+
+
 Chart.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip);
 import { hasPermission } from "../CustomHooks/Services/permissionUtils";
 
@@ -95,7 +99,8 @@ const AllProjects = () => {
   const [alarmModalVisible, setAlarmModalVisible] = useState(false); // Modal visibility state
   const [selectedAlerts, setSelectedAlerts] = useState([]); // Store alerts for modal
 
-  
+
+  const [lotPercentages, setLotPercentages] = useState({});
 
 
   useEffect(() => {
@@ -136,6 +141,20 @@ const AllProjects = () => {
 
     fetchCatchesData();
   }, [lotsData, projectId]);
+
+  useEffect(() => {
+    const fetchPercentages = async () => {
+      try {
+        const data = await getCombinedPercentages(projectId);
+      
+        setLotPercentages(data.totalLotPercentages);
+      } catch (error) {
+        console.error("Error fetching percentages:", error);
+      }
+    };
+
+    fetchPercentages();
+  }, [projectId]);
 
   const handleCardClick = (lotNumber) => {
     setSelectedChart((prev) => ({
@@ -206,9 +225,12 @@ const AllProjects = () => {
             <ProjectChart
               key={idx}
               title={`${projectName}`}
-              chartdata={[{title: "Completed", value: 10}, {title: "Remaining", value: 50}]}
+              chartdata={[
+                {title: "Completed", value: lotPercentages[lotNumber] || 0},
+                {title: "Remaining", value: 100 - (lotPercentages[lotNumber] || 0)}
+              ]}
               chartKey={lotNumber}
-              tCatch={catchesData[lotNumber] || 0} // Using catchesData to fetch total catches
+              tCatch={catchesData[lotNumber] || 0}
               type={type}
               onClick={() => handleCardClick(lotNumber)}
             />

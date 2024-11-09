@@ -8,7 +8,7 @@ const statusMapping = {
   2: 'Completed',
 };
 
-const SelectMachineModal = ({ show, handleClose, data, processId,handleSave}) => {
+const SelectMachineModal = ({ show, handleClose, data, processId, handleSave }) => {
   const [selectedMachine, setSelectedMachine] = useState('');
   const [machineOptions, setMachineOptions] = useState([]);
   const [machineId, setMachineId] = useState(null);
@@ -34,37 +34,43 @@ const SelectMachineModal = ({ show, handleClose, data, processId,handleSave}) =>
 
   const handleConfirm = async () => {
     try {
-      let existingTransactionData;
-      if (data.transactionId) {
-        const response = await API.get(`/Transactions/${data.transactionId}`);
-        existingTransactionData = response.data;
-      }
+      const updatePromises = data.map(async (row) => {
+        let existingTransactionData;
+        if (row.transactionId) {
+          const response = await API.get(`/Transactions/${row.transactionId}`);
+          existingTransactionData = response.data;
+        }
 
-      const postData = {
-        transactionId: data.transactionId || 0,
-        interimQuantity: data.interimQuantity, // Adjust based on actual data
-        remarks: existingTransactionData ? existingTransactionData.remarks : '',
-        projectId: data.projectId,
-        quantitysheetId: data.srNo || 0,
-        processId: processId,
-        zoneId: existingTransactionData ? existingTransactionData.machineId : 0, // Use the selected zone here
-        machineId: machineId ,
-        status: existingTransactionData ? existingTransactionData.status : 0,
-        alarmId: existingTransactionData ? existingTransactionData.alarmId : "",
-        lotNo: data.lotNo,
-        teamId: existingTransactionData ? existingTransactionData.teamId : [],
-        voiceRecording: existingTransactionData? existingTransactionData.voiceRecording : ""
-      };
 
-      if (data.transactionId) {
-        await API.put(`/Transactions/${data.transactionId}`, postData);
-      } else {
-        await API.post('/Transactions', postData);
-      }
-      handleSave(machineId)
+        const postData = {
+          transactionId: row.transactionId || 0,
+          interimQuantity: row.interimQuantity,
+          remarks: existingTransactionData ? existingTransactionData.remarks : '',
+          projectId: row.projectId,
+          quantitysheetId: row.srNo || 0,
+          processId: processId,
+          zoneId: existingTransactionData ? existingTransactionData.zoneId : 0,
+          machineId: machineId,
+          status: existingTransactionData ? existingTransactionData.status : 0,
+          alarmId: existingTransactionData ? existingTransactionData.alarmId : "",
+          lotNo: row.lotNo,
+          teamId: existingTransactionData ? existingTransactionData.teamId : [],
+          voiceRecording: existingTransactionData ? existingTransactionData.voiceRecording : ""
+        };
+
+
+        if (row.transactionId) {
+          await API.put(`/Transactions/${row.transactionId}`, postData);
+        } else {
+          await API.post('/Transactions', postData);
+        }
+      });
+
+      await Promise.all(updatePromises);
+      handleSave(machineId);
       handleClose();
     } catch (error) {
-      console.error('Error updating interim quantity:', error);
+      console.error('Error updating machine:', error);
     }
   };
 
@@ -74,37 +80,21 @@ const SelectMachineModal = ({ show, handleClose, data, processId,handleSave}) =>
         <Modal.Title>Select Machine</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        {data ? (
+        {Array.isArray(data) && data.length > 0 ? (
           <>
-            <div className="details mb-3 d-flex justify-content-between align-items-center">
-              <div>
-                <span className="fw-bold">Catch No </span>: {data.catchNumber}
-              </div>
-              <div>
-                <span className="fw-bold">Status </span>:
-                <span className={`fw-bold ${data.status === 0 ? 'text-danger' :
-                  data.status === 1 ? 'text-primary' :
-                  data.status === 2 ? 'text-success' : ''
-                }`}>
-                  {statusMapping[data.status]}
-                </span>
-              </div>
+            <div className="mb-3">
+              <span className="fw-bold">Selected Catches: </span>
+              {data.map(row => row.catchNumber).join(', ')}
             </div>
-            <div className='details mb-3 d-flex justify-content-between align-items-center'>
-              <div>
-                <span className='fw-bold'>Total Quantity: </span>
-                <span>{data.quantity}</span>
-              </div>
-              <div>
-                <span className='fw-bold'>Remaining Quantity: </span>
-                <span>{data.quantity - data.interimQuantity}</span>
-              </div>
+            <div className='mb-3'>
+              <span className='fw-bold'>Total Items: </span>
+              {data.length}
             </div>
           </>
         ) : (
           <div>No data available</div>
         )}
-        <Form.Group controlId="formZone">
+        <Form.Group controlId="formMachine">
           <Form.Label>Select Machine</Form.Label>
           <Form.Control
             as="select"
@@ -113,7 +103,9 @@ const SelectMachineModal = ({ show, handleClose, data, processId,handleSave}) =>
           >
             <option value="">Select Machine</option>
             {machineOptions.map(option => (
-              <option key={option.machineId} value={option.machineName}>{option.machineName}</option>
+              <option key={option.machineId} value={option.machineName}>
+                {option.machineName}
+              </option>
             ))}
           </Form.Control>
         </Form.Group>

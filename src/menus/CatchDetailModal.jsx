@@ -1,149 +1,10 @@
-// import React from 'react';
-// import { Modal, Button, Table, Input, Typography } from 'antd';
-// import { AudioOutlined } from '@ant-design/icons';
-// import API from '../CustomHooks/MasterApiHooks/api';
-// import { hasPermission } from '../CustomHooks/Services/permissionUtils';
-
-// const { TextArea } = Input;
-// const { Text } = Typography;
-
-// const CatchDetailModal = ({ show, handleClose, data , processId, handleSave }) => {
-//     if (!show) return null;
-
-//     // Capitalize and format keys for better display
-//     const formatKey = (key) => {
-//         return key.replace(/([A-Z])/g, ' $1')
-//             .replace(/^./, (str) => str.toUpperCase());
-//     };
-
-//     // Prepare data for the table
-//     const tableData = Object.keys(data).filter(key => key !== 'serialNumber').map((key, index) => ({
-//         key: index,
-//         label: formatKey(key),
-//         value: data[key] || 'NA', // Ensure value is always provided
-//     }));
-
-//     // Define table columns
-//     const columns = [
-//         {
-//             title: 'Field',
-//             dataIndex: 'label',
-//             key: 'label',
-//             width: '30%',
-//             render: (text) => <Text strong>{text}</Text>,
-//         },
-//         {
-//             title: 'Details',
-//             dataIndex: 'value',
-//             key: 'value',
-//             render: (value, record) => {
-//                 if (record?.label === 'Remarks' || record.label === 'Alerts') {
-//                     return (
-//                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-//                             <TextArea
-//                                 value={value} // Ensure value is passed correctly
-//                                 readOnly
-//                                 autoSize={{ minRows: 2, maxRows: 6 }} // Allow auto-sizing for larger text
-//                                 bordered={false}
-//                                 style={{ flex: 1, marginRight: '10px', overflow: 'hidden', wordWrap: 'break-word' }} // Flex to take up space
-//                             />
-//                             {record?.label === 'Remarks' && (
-//                                 <AudioOutlined
-//                                     style={{ fontSize: '18px', cursor: 'pointer' }} // Mic icon aligned to the right
-//                                     onClick={() => console.log('Play audio')}
-//                                     className='rounded-circle border p-2 custom-theme-dark-btn'
-//                                 />
-//                             )}
-//                             {hasPermission('2.8.3') && 
-//                                 record?.label === 'Alerts' && value !== 'NA' &&(
-                                    
-//                                 <Button
-//                                      style={{ fontSize: '18px', cursor: 'pointer' }} // Mic icon aligned to the right
-//                                     onClick={handleResolve}
-//                                     className='d-flex align-items-center border p-2 custom-theme-dark-btn'
-//                                     >
-//                                         Resolve
-//                                 </Button>
-//                             )
-//                             }
-                            
-//                         </div>
-//                     );
-//                 } else {
-//                     return <Text>{value}</Text>;
-//                 }
-//             },
-//         },
-//     ];
-
-
-//     const handleResolve = async()=>{
-//         try {
-//             let existingTransactionData;
-//             if (data?.transactionId) {
-//               const response = await API.get(`/Transactions/${data.transactionId}`);
-//               existingTransactionData = response.data;
-//             }
-      
-//             const postData = {
-//               transactionId: data.transactionId || 0,
-//               interimQuantity: existingTransactionData ? existingTransactionData.interimQuantity : 0, // Adjust based on actual data
-//               remarks: existingTransactionData ? existingTransactionData.remarks : '',
-//               projectId: data.projectId,
-//               quantitysheetId: data.srNo || 0,
-//               processId: processId,
-//               zoneId: existingTransactionData ? existingTransactionData.zoneId : 0, // Use the selected zone here
-//               machineId: existingTransactionData ? existingTransactionData.machineId : 0,
-//               status: existingTransactionData ? existingTransactionData.status : 0,
-//               alarmId: "0",
-//               lotNo: data.lotNo,
-//               teamId: existingTransactionData ? existingTransactionData.teamId : [],
-//               voiceRecording: existingTransactionData? existingTransactionData.voiceRecording : ""
-//             };
-      
-//             if (data.transactionId) {
-//               await API.put(`/Transactions/${data.transactionId}`, postData);
-//             } 
-            
-//             handleSave("0");
-//             handleClose();
-//           } catch (error) {
-//             console.error('Error updating interim quantity:', error);
-//           }
-//     }
-
-//     return (
-//         <Modal
-//             open={show}
-//             onCancel={handleClose}
-//             footer={[
-//                 <Button key="close" type="primary" onClick={handleClose} className='custom-theme-dark-btn'>
-//                     Close
-//                 </Button>
-//             ]}
-//             centered
-//             title="Catch Details"
-//             width={600}
-//             className="bg-light rounded" // Apply background class
-//         >
-//             <Table
-//                 columns={columns}
-//                 dataSource={tableData}
-//                 pagination={false}
-//                 showHeader={false}
-//                 bordered
-//             />
-//         </Modal>
-//     );
-// };
-
-// export default CatchDetailModal;
 
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Table, Input, Typography, message } from 'antd';
 import { AudioOutlined, AudioMutedOutlined } from '@ant-design/icons';
 import API from '../CustomHooks/MasterApiHooks/api';
 import { hasPermission } from '../CustomHooks/Services/permissionUtils';
+
 
 const { TextArea } = Input;
 const { Text } = Typography;
@@ -177,6 +38,7 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
             label: formatKey(key),
             value: data[key] || 'No Remarks',
         }));
+
 
     // Update handleAudioPlay function
     const handleAudioPlay = async (audioData) => {
@@ -242,6 +104,7 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
                                 fontSize: '18px', 
                                 cursor: 'pointer',
                                 color: '#1890ff'
+
                             }}
                             onClick={() => handleAudioPlay(voiceRecording)}
                             className='rounded-circle border p-2 custom-theme-dark-btn'
@@ -303,6 +166,7 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
         }
     };
 
+
     // Define table columns
     const columns = [
         {
@@ -330,6 +194,7 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
                                 style={{ flex: 1, marginRight: '10px', overflow: 'hidden', wordWrap: 'break-word' }}
                             />
                             {record.label === 'Remarks' && renderAudioControl(data?.voiceRecording)}
+
                         </div>
                         {hasPermission('2.8.3') && 
                             record?.label === 'Alerts' && 
@@ -350,6 +215,15 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
             },
         },
     ];
+
+    // Clean up audio when modal closes
+    useEffect(() => {
+        if (!show && audioElement) {
+            audioElement.pause();
+            setIsPlaying(false);
+            setAudioElement(null);
+        }
+    }, [show]);
 
     return (
         <Modal

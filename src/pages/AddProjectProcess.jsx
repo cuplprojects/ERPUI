@@ -10,11 +10,11 @@ const DragHandle = SortableHandle(() => (
   <span style={{ cursor: 'grab', marginRight: '8px', opacity: 1 }}>⣿</span>
 ));
 
-const SortableRow = SortableElement(({ process, index, features, editingProcessId, editingFeatures, handleFeatureChange, handleSaveFeatures, handleCancelEdit, handleEdit, independentProcesses }) => {
+const SortableRow = SortableElement(({ process, index, features, editingProcessId, editingFeatures, handleFeatureChange, handleSaveFeatures, handleCancelEdit, handleEdit, independentProcesses, isDraggingDisabled }) => {
   return (
     <tr style={{ opacity: 1, background: 'white', margin: '10px' }}>
       <td>
-        {independentProcesses.some(p => p.id === process.id) && <DragHandle />}
+        {independentProcesses.some(p => p.id === process.id) && !isDraggingDisabled && <DragHandle />}
         {process.name}
       </td>
       <td>
@@ -87,6 +87,7 @@ const AddProjectProcess = ({ selectedProject }) => {
   const [previousFeatures, setPreviousFeatures] = useState([]);
   const [independentProcesses, setIndependentProcesses] = useState([]);
   const [projectName, setProjectName] = useState('');
+  const [isDraggingDisabled, setIsDraggingDisabled] = useState(false);
 
   useEffect(() => {
     const fetchRequiredProcesses = async (typeId) => {
@@ -105,12 +106,14 @@ const AddProjectProcess = ({ selectedProject }) => {
 
         setProjectName(name);
         const response = await API.get(`/ProjectProcess/GetProjectProcesses/${selectedProject}`);
-        if (response.data.length > 0) {
+        if (response.data && response.data.length > 0) {
+          setIsDraggingDisabled(true);
           await fetchRequiredProcesses(typeId);
           const sortedProcesses = response.data.sort((a, b) => a.sequence - b.sequence);
           const independentOnly = sortedProcesses.filter(process => process.processType !== "Dependent");
           setProjectProcesses(calculatedWeightage(independentOnly));
         } else {
+          setIsDraggingDisabled(false);
           await fetchRequiredProcesses(typeId);
           await fetchProjectProcesses(typeId);
         }
@@ -278,6 +281,8 @@ const AddProjectProcess = ({ selectedProject }) => {
   };
 
   const onSortEnd = useCallback(({ oldIndex, newIndex }) => {
+    if (isDraggingDisabled) return;
+    
     const process = projectProcesses[oldIndex];
     const processWithRange = independentProcesses.find(p => p.id === process.id);
     
@@ -295,7 +300,7 @@ const AddProjectProcess = ({ selectedProject }) => {
       const newProcesses = arrayMove(prevProcesses, oldIndex, newIndex);
       return calculatedWeightage(newProcesses);
     });
-  }, [projectProcesses, independentProcesses]);
+  }, [projectProcesses, independentProcesses, isDraggingDisabled]);
 
   if (loading || projectProcesses.length === 0) {
     return <Spin tip="Loading..." />;
@@ -312,7 +317,7 @@ const AddProjectProcess = ({ selectedProject }) => {
               key={process.id}
               checked={selectedProcessIds.includes(process.id)}
               onChange={() => handleProcessSelect(process.id)}
-              disabled={requiredProcessIds.includes(process.id)}
+              disabled={requiredProcessIds.includes(process.id) || isDraggingDisabled}
             >
               {process.name}
             </Checkbox>
@@ -353,6 +358,7 @@ const AddProjectProcess = ({ selectedProject }) => {
                 handleCancelEdit={handleCancelEdit}
                 handleEdit={handleEdit}
                 independentProcesses={independentProcesses}
+                isDraggingDisabled={isDraggingDisabled}
               />
             ))}
           </SortableBody>
