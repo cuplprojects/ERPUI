@@ -74,7 +74,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
 
     useEffect(() => {
         const newVisibleKeys = filteredData.map(item => item.catchNumber);
-        setVisibleRowKeys(newVisibleKeys);
+        setVisibleRowKeys(newVisibleKeys);lotNo
     }, [searchText, hideCompleted]); // Add other dependencies if necessary
 
     const filteredData = tableData.filter(item => {
@@ -162,7 +162,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                 status: newStatusIndex, // Change only this field
                 alarmId: existingTransactionData ? existingTransactionData.alarmId : "",
                 lotNo: existingTransactionData ? existingTransactionData.lotNo : 0,
-                teamId: existingTransactionData ? existingTransactionData.teamId : 0,
+                teamId: existingTransactionData ? existingTransactionData.teamId : [],
                 voiceRecording: existingTransactionData? existingTransactionData.voiceRecording : ""
             };
             // Update or create the transaction
@@ -255,7 +255,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                             <div>
                                 <button
                                     className="rounded border fs-6 custom-zoom-btn bg-white position-relative "
-                                    onClick={() => console.log('Detail:', record)}
+                                    onClick={() => handleCatchClick(record)}
                                 >
                                     {text}
                                 </button>
@@ -315,38 +315,6 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
             align: 'center',
             sorter: (a, b) => a.quantity - b.quantity,
         },
-        // {
-        //     width: '12%',
-        //     title: 'Transaction ID',
-        //     dataIndex: 'transactionId',
-        //     key: 'transactionId',
-        //     align: 'center',
-        //     sorter: (a, b) => (a.transactionId || 0) - (b.transactionId || 0),
-        // },
-        // {
-        //     width: '12%',
-        //     title: 'Lot',
-        //     dataIndex: 'lotNo',
-        //     key: 'lotNo',
-        //     align: 'center',
-        //     sorter: (a, b) => a.lotNo - b.lotNo,
-        // },
-        // {
-        //     width: '12%', 
-        //     title: 'Quantity Sheet ID',
-        //     dataIndex: 'srNo',
-        //     key: 'srNo',
-        //     align: 'center',
-        //     sorter: (a, b) => a.srNo - b.srNo,
-        // },
-        // {
-        //     title: 'Interim Quantity',
-        //     dataIndex: 'interimQuantity',
-        //     width: '12%',
-        //     align: 'center',
-        //     key: 'interimQuantity',
-        //     sorter: (a, b) => a.interimQuantity - b.interimQuantity,
-        // },
         ...(columnVisibility['Interim Quantity'] && hasFeaturePermission(7) ? [{
             title: 'Interim Quantity',
             dataIndex: 'interimQuantity',
@@ -432,7 +400,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                     machineId: updatedRow?.machineId || 0,
                     lotNo: updatedRow?.lotNo || 0,
                     voiceRecording: updatedRow?.voiceRecording || "",
-                    teamId: updatedRow?.teamId || 0
+                    teamId: updatedRow?.teamId || []
                 };
 
                 try {
@@ -560,6 +528,19 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
         const updatedData = tableData.map((row) => {
             if (selectedRowKeys.includes(row.catchNumber)) { // Use catchNumber for comparison
                 return { ...row, interimQuantity };
+            }
+            return row;
+        });
+        setTableData(updatedData);
+        setSelectedRowKeys([]); // Deselect all rows
+        setShowOptions(false); // Reset options visibility
+        fetchTransactions();
+    };
+
+    const handleSaveCatch = (alarm) => {
+        const updatedData = tableData.map((row) => {
+            if (selectedRowKeys.includes(row.catchNumber)) {
+                return { ...row, alarm };
             }
             return row;
         });
@@ -866,6 +847,8 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                 show={catchDetailModalShow}
                 handleClose={() => setCatchDetailModalShow(false)}
                 data={catchDetailModalData}
+                handleSave={handleSaveCatch}
+                processId={processId}
             />
             <SelectZoneModal
                 show={selectZoneModalShow}

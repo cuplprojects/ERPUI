@@ -21,6 +21,7 @@ import { getProjectProcessAndFeature, getProjectProcessByProjectAndSequence } fr
 import useCurrentProcessStore from '../store/currentProcessStore';
 import { decrypt } from "../Security/Security";
 
+
 const ProcessTable = () => {
     const { encryptedProjectId, encryptedLotNo } = useParams();
     const id = decrypt(encryptedProjectId);
@@ -338,6 +339,7 @@ const ProcessTable = () => {
                 handleClose={() => setCatchDetailModalShow(false)}
                 data={catchDetailModalData}
             />
+           
         </div>
     );
 };
