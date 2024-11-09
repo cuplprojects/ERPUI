@@ -3,24 +3,26 @@ import { Form, Row, Col, Button } from 'react-bootstrap';
 import API from '../../../../CustomHooks/MasterApiHooks/api';
 
 
-const CatchTeamAssignment = ({ teams, data, onTeamSelect, processId }) => {
+const CatchTeamAssignment = ({ teams, data, handleSave, handleClose, processId }) => {
+
+
   const [selectedTeam, setSelectedTeam] = useState('');
   const [usersInTeam, setUsersInTeam] = useState([]);
   const [userOptions, setUserOptions] = useState([]); // List of users to be added to the team
   const [selectedUserToAdd, setSelectedUserToAdd] = useState(''); // User selected to be added
-
+  
   useEffect(() => {
-    if (data?.teamId) {
-      setSelectedTeam(data.teamId);
-      const team = teams.find((team) => team.teamId === data.teamId);
+    if (data?.[0]?.teamId) {
+      setSelectedTeam(data[0].teamId);
+      const team = teams.find((team) => team.teamId === data[0].teamId);
       if (team) {
         setUsersInTeam(team.users); // Populate team users when team is selected
       }
     }
-    fetchUsers()
+    fetchUsers();
   }, [data, teams]);
 
-  // Fetch all users for adding a new user to the teamonp
+  // Fetch all users for adding a new user to the team
   const fetchUsers = async () => {
     try {
       const response = await API.get('/User/operator');
@@ -37,7 +39,15 @@ const CatchTeamAssignment = ({ teams, data, onTeamSelect, processId }) => {
     if (team) {
       setUsersInTeam(team.users); // Update users when team changes
     }
-    onTeamSelect(teamId); // Notify parent component about the selected team
+ // Notify parent component about the selected team
+  };
+
+  const handleRemoveUser = (userId) => {
+    setUsersInTeam(usersInTeam.filter(user => user.userId !== userId)); // Remove the user from the array
+  };
+
+  const handleRemoveUser = (userId) => {
+    setUsersInTeam(usersInTeam.filter(user => user.userId !== userId)); // Remove the user from the array
   };
 
   const handleAddUser = async () => {
@@ -61,52 +71,67 @@ const CatchTeamAssignment = ({ teams, data, onTeamSelect, processId }) => {
 
   const handleConfirm = async () => {
     try {
-      let existingTransactionData;
-      if (data.transactionId) {
-        const response = await API.get(`/Transactions/${data.transactionId}`);
-        existingTransactionData = response.data;
-      }
-  
-      // Combine users from the selected team and newly added users
-      const allUserIds = [
-        ...usersInTeam.map(user => user.userId),  // User IDs from selected team
+      for (let item of data) {
+        let existingTransactionData;
         
-      ];
+        if (item?.transactionId) {
+          // Fetch existing transaction data if available
+          const response = await API.get(`/Transactions/${item.transactionId}`);
+          existingTransactionData = response.data;
+        }
   
-      const postData = {
-        transactionId: data.transactionId || 0,
-        interimQuantity: existingTransactionData ? existingTransactionData.interimQuantity : 0, // Adjust based on actual data
-        remarks: existingTransactionData ? existingTransactionData.remarks : '',
-        projectId: data.projectId,
-        quantitysheetId: data.srNo || 0,
-        processId: processId,
-        zoneId: existingTransactionData ? existingTransactionData.zoneId : 0, // Use the selected zone here
-        machineId: existingTransactionData ? existingTransactionData.machineId : 0,
-        status: existingTransactionData ? existingTransactionData.status : 0,
-        alarmId: existingTransactionData ? existingTransactionData.alarmId : "",
-        lotNo: data.lotNo,
-        teamId: allUserIds,  // Send the array of user IDs
-        voiceRecording: existingTransactionData ? existingTransactionData.voiceRecording : "",
-      };
+        // Combine users from the selected team and newly added users
+        const allUserIds = [
+          ...usersInTeam.map(user => user.userId),  // User IDs from selected team
+        ];
   
-      if (data.transactionId) {
-        await API.put(`/Transactions/${data.transactionId}`, postData);
-      } else {
-        await API.post('/Transactions', postData);
-      }
+        const postData = {
+          transactionId: item?.transactionId || 0,
+          interimQuantity: existingTransactionData ? existingTransactionData.interimQuantity : 0, // Adjust based on actual data
+          remarks: existingTransactionData ? existingTransactionData.remarks : '',
+          projectId: item?.projectId,
+          quantitysheetId: item?.srNo || 0,
+          processId: processId,
+          zoneId: existingTransactionData ? existingTransactionData.zoneId : 0, // Use the selected zone here
+          machineId: existingTransactionData ? existingTransactionData.machineId : 0,
+          status: existingTransactionData ? existingTransactionData.status : 0,
+          alarmId: existingTransactionData ? existingTransactionData.alarmId : "",
+          lotNo: item?.lotNo,
+          teamId: allUserIds,  // Send the array of user IDs
+          voiceRecording: existingTransactionData ? existingTransactionData.voiceRecording : "",
+        };
 
+        // Send the data as a PUT (update) or POST (create) request
+        if (item?.transactionId) {
+          await API.put(`/Transactions/${item.transactionId}`, postData);
+        } else {
+          await API.post('/Transactions', postData);
+        }
+      }
+      
+      // Optionally, you can call handleSave here if necessary, after all updates/posts have been completed
+      handleSave(); 
+      handleClose();
     } catch (error) {
-      console.error('Error updating interim quantity:', error);
+      console.error('Error updating team:', error);
     }
   };
-  
 
   return (
     <div>
       <Row className="mb-3">
         <Col md={12}>
-          {/* Display the catch number passed in the `data` prop */}
-          <h5>Catch Number: {data?.catchNumber || 'N/A'}</h5>
+          {/* Display all catch numbers by iterating through `data` */}
+          <h5>Catch Numbers:</h5>
+          {data?.length > 0 ? (
+            <ul>
+              {data.map((item, index) => (
+                <li key={index}>Catch Number: {item?.catchNumber || 'N/A'}</li>
+              ))}
+            </ul>
+          ) : (
+            <p>No catch numbers available.</p>
+          )}
         </Col>
       </Row>
 
@@ -119,9 +144,7 @@ const CatchTeamAssignment = ({ teams, data, onTeamSelect, processId }) => {
               onChange={handleTeamChange}
             >
               <option value="">Select a team...</option>
-              {console.log(teams)}
               {teams.map((team) => (
-                
                 <option key={team.teamId} value={team.teamId}>
                   {team.teamName} ({team.users.map(user => user.userName).join(', ')})
                 </option>

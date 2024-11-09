@@ -30,12 +30,27 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
 
     // Prepare data for the table
     const tableData = Object.keys(data || {})
-        .filter(key => key !== 'serialNumber' && key !== 'voiceRecording')
-        .map((key, index) => ({
-            key: index,
-            label: formatKey(key),
-            value: data[key] || 'No Remarks',
-        }));
+        .filter(key => !['serialNumber', 'voiceRecording', 'teamUserNames', 'teamId', 'transactionId', 'srNo', 'projectId'].includes(key))
+        .map((key, index) => {
+            let value = data[key];
+            if (key === 'team') {
+                value = data.teamUserNames?.join(', ') || 'No team assigned';
+            }
+            return {
+                key: index,
+                label: formatKey(key),
+                value: value || 'NA',
+            };
+        });
+
+    // Add team members row
+    if (data?.teamUserNames?.length) {
+        tableData.push({
+            key: 'team',
+            label: 'Team Members',
+            value: data.teamUserNames.join(', ')
+        });
+    }
 
     // Update handleAudioPlay function
     const handleAudioPlay = async (audioData) => {
@@ -129,36 +144,14 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
 
     const handleResolve = async () => {
         try {
-            let existingTransactionData;
-            if (data?.transactionId) {
-                const response = await API.get(`/Transactions/${data.transactionId}`);
-                existingTransactionData = response.data;
-            }
-
-            const postData = {
-                transactionId: data?.transactionId || 0,
-                interimQuantity: existingTransactionData?.interimQuantity || 0,
-                remarks: existingTransactionData?.remarks || '',
-                projectId: data?.projectId,
-                quantitysheetId: data?.srNo || 0,
-                processId: processId,
-                zoneId: existingTransactionData?.zoneId || 0,
-                machineId: existingTransactionData?.machineId || 0,
-                status: existingTransactionData?.status || 0,
-                alarmId: "0",
-                lotNo: data?.lotNo,
-                teamId: existingTransactionData?.teamId || [],
-                voiceRecording: existingTransactionData?.voiceRecording || ""
-            };
-
-            if (data?.transactionId) {
-                await API.put(`/Transactions/${data.transactionId}`, postData);
-            }
-
+            await API.put(`/Transactions/${data.transactionId}`, {
+                ...data,
+                alarmId: "0"
+            });
             handleSave("0");
             handleClose();
         } catch (error) {
-            console.error('Error updating interim quantity:', error);
+            console.error('Error resolving alert:', error);
         }
     };
 
