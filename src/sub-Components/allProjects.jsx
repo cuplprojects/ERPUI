@@ -20,8 +20,14 @@ import { IoMdArrowDroprightCircle } from "react-icons/io";
 import { IoMdArrowDropleftCircle } from "react-icons/io";
 import API from '../CustomHooks/MasterApiHooks/api';
 import { decrypt, encrypt } from "../Security/Security";
+import {Modal} from 'antd';
+import DashboardAlarmModal from "../menus/DashboardAlarmModal";
+
+import { getCombinedPercentages } from '../CustomHooks/ApiServices/transacationService';
+
 
 Chart.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip);
+import { hasPermission } from "../CustomHooks/Services/permissionUtils";
 
 const ProjectChart = ({ title, chartKey, chartdata, onClick, tCatch, type }) => (
   <Col xs={12} sm={6} md={4} lg={3} xl={2}>
@@ -90,6 +96,12 @@ const AllProjects = () => {
   const [alerts,setAlerts] = useState([])// get data from transaction
   const navigate = useNavigate();
   const carouselRef = useRef(null);
+  const [alarmModalVisible, setAlarmModalVisible] = useState(false); // Modal visibility state
+  const [selectedAlerts, setSelectedAlerts] = useState([]); // Store alerts for modal
+
+
+  const [lotPercentages, setLotPercentages] = useState({});
+
 
   useEffect(() => {
     const fetchLotsData = async () => {
@@ -130,12 +142,31 @@ const AllProjects = () => {
     fetchCatchesData();
   }, [lotsData, projectId]);
 
+  useEffect(() => {
+    const fetchPercentages = async () => {
+      try {
+        const data = await getCombinedPercentages(projectId);
+      
+        setLotPercentages(data.totalLotPercentages);
+      } catch (error) {
+        console.error("Error fetching percentages:", error);
+      }
+    };
+
+    fetchPercentages();
+  }, [projectId]);
+
   const handleCardClick = (lotNumber) => {
     setSelectedChart((prev) => ({
       ...prev,
       label: "Lot",
       lotNumber,
     }));
+  };
+
+  const handleAlarmsButtonClick = () => {
+    setSelectedAlerts(alerts); // Set the alerts data to be shown in modal
+    setAlarmModalVisible(true); // Open the modal
   };
 
   const handleTitleClick = (project) => {
@@ -194,9 +225,12 @@ const AllProjects = () => {
             <ProjectChart
               key={idx}
               title={`${projectName}`}
-              chartdata={[{title: "Completed", value: 10}, {title: "Remaining", value: 50}]}
+              chartdata={[
+                {title: "Completed", value: lotPercentages[lotNumber] || 0},
+                {title: "Remaining", value: 100 - (lotPercentages[lotNumber] || 0)}
+              ]}
               chartKey={lotNumber}
-              tCatch={catchesData[lotNumber] || 0} // Using catchesData to fetch total catches
+              tCatch={catchesData[lotNumber] || 0}
               type={type}
               onClick={() => handleCardClick(lotNumber)}
             />
@@ -269,6 +303,16 @@ const AllProjects = () => {
               >
                 Manage Process
               </button>
+              {hasPermission('2.8.2') && (
+                <button
+              type="button"
+              onClick={handleAlarmsButtonClick} // Open modal with alerts
+              className="btn btn-outline-info"
+            >
+              Alarms
+            </button>
+              )}
+              
             </h4>
             <DashboardGrid projectId={projectId} lotNo={selectedChart.lotNumber} />
           </Card>
@@ -353,6 +397,21 @@ const AllProjects = () => {
           </Card>
         </Col>
       </Row>
+      <Modal
+      title="Alarms"
+      visible={alarmModalVisible}
+      onCancel={() => setAlarmModalVisible(false)} // Close the modal
+      footer={[
+        <Button key="close" type="primary" onClick={() => setAlarmModalVisible(false)}>
+          Close
+        </Button>,
+      ]}
+      centered
+      width={600}
+    >
+     <DashboardAlarmModal selectedAlerts={selectedAlerts}  projectId={projectId} lotNo = {selectedChart.lotNumber} hasResolvePermission={hasPermission('2.8.3')} />
+    </Modal>
+
     </Container>
   );
 };

@@ -61,8 +61,10 @@ const DashboardGrid = ({ projectId, lotNo }) => {
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
-        const response = await API.get(`/QuantitySheet/Catch?ProjectId=${projectId}&lotNo=${lotNo}`);
-        setRowData(response.data);
+        if(lotNo && projectId){
+          const response = await API.get(`/QuantitySheet/Catch?ProjectId=${projectId}&lotNo=${lotNo}`);
+          setRowData(response.data);
+        }
       } catch (error) {
         console.error("Error fetching transactions:", error);
       }
@@ -70,8 +72,10 @@ const DashboardGrid = ({ projectId, lotNo }) => {
 
     const fetchTransactionData = async () => {
       try {
-        const response = await API.get(`https://localhost:7212/api/Transactions?ProjectId=${projectId}&ProcessId=${lotNo}`);
-        setTransactionData(response.data);
+        if(lotNo && projectId){
+          const response = await API.get(`/Transactions?ProjectId=${projectId}&ProcessId=${lotNo}`);
+          setTransactionData(response.data);
+        }
       } catch (error) {
         console.error("Error fetching transaction data:", error);
       }

@@ -190,8 +190,8 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
                             />
                             {record.label === 'Remarks' && renderAudioControl(data?.voiceRecording)}
                         </div>
-                        {hasPermission('2.8.3') && 
-                            record?.label === 'Alerts' && 
+                       
+                           { record?.label === 'Alerts' && 
                             value !== 'NA' && (
                                 <Button
                                     style={{ fontSize: '18px', cursor: 'pointer' }}
@@ -200,8 +200,8 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
                                 >
                                     Resolve
                                 </Button>
-                            )
-                        }
+                            )}
+                       
                         </>
                     );
                 }
