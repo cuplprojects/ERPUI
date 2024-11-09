@@ -1,87 +1,96 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Form, Button } from 'react-bootstrap';
-import LotTeamAssignment from './Components/LotTeamAssignment';
+import { Container, Row, Col, Form, Button, Card } from 'react-bootstrap';
 import CatchTeamAssignment from './Components/CatchTeamAssignment';
-import CreateTeam from './Components/CreateTeam';
-import ShowTeams from './Components/ShowTeams';
-import quantitySheetService from '../../../CustomHooks/ApiServices/quantitySheetService';
+import LotTeamAssignment from './Components/LotTeamAssignment';
 import ProjectTeamAssignment from './Components/ProjectTeamAssignment';
+import quantitySheetService from '../../../CustomHooks/ApiServices/quantitySheetService';
 import teamsService from '../../../CustomHooks/ApiServices/teamsService';
+import API from '../../../CustomHooks/MasterApiHooks/api';
 
-const AssignTeams = () => {
-  const [selectedProject, setSelectedProject] = useState({ projectid: 1, projectname: 'Project Alpha' });
+const AssignTeams = ({ data, handleSave, processId }) => {
   const [assignmentType, setAssignmentType] = useState('catch');
-  const [showCreateTeamModal, setShowCreateTeamModal] = useState(false);
-  const [showTeamsModal, setShowTeamsModal] = useState(false);
   const [teams, setTeams] = useState([]);
   const [lots, setLots] = useState([]);
-  const [catches, setCatches] = useState([]);
-  const [selectedTeam, setSelectedTeam] = useState(null);
-  const processId = 1; // Default processId
+  const [showTeams, setShowTeams] = useState(false);
 
-  const projects = [
-    { id: 1, name: 'Project Alpha' }
-  ];
+  // Get unique project details from selected rows
+  const uniqueProjects = Array.isArray(data) ? [...new Set(data.map(item => item.projectId))] : [];
+  const selectedProject = data && data.length > 0 ? { 
+    projectid: data[0].projectId, 
+    projectname: data[0].course 
+  } : null;
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Get lots for the selected project
-        const lotsData = await quantitySheetService.getLots(selectedProject.projectid);
-        console.log('Lots for project:', lotsData);
-        setLots(lotsData);
+    if (selectedProject?.projectid) {
+      const fetchData = async () => {
+        try {
+          const lotsData = await quantitySheetService.getLots(selectedProject.projectid);
+          setLots(lotsData);
 
-        // Get catches for the selected project
-        const catchesData = await quantitySheetService.getCatchByProject(selectedProject.projectid);
-        console.log('Catches for project:', catchesData);
-        setCatches(catchesData);
+          const teamsData = await teamsService.getTeamsByProcess(processId);
+          setTeams(teamsData);
+        } catch (error) {
+          console.error('Error fetching data:', error);
+        }
+      };
 
-        // Get teams for the process
-        const teamsData = await teamsService.getTeamsByProcess(processId);
-        setTeams(teamsData);
-        console.log('Teams for process:', teamsData);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    };
-
-    if (selectedProject.projectid) {
       fetchData();
     }
-  }, [selectedProject.projectid]);
-
-  const handleCreateTeamModalToggle = () => {
-    setShowCreateTeamModal(!showCreateTeamModal);
-  };
-
-  const handleShowTeams = async () => {
-    try {
-      const teamsData = await teamsService.getTeamsByProcess(processId);
-      setTeams(teamsData);
-      setShowTeamsModal(true);
-      console.log('Teams for process:', teamsData);
-    } catch (error) {
-      console.error('Error fetching teams:', error);
-    }
-  };
+  }, [selectedProject?.projectid, processId]);
 
   const handleTeamAssignment = async (teamId) => {
-    if (assignmentType === 'project') {
-      try {
-        // Update all quantity sheets for the project with the same team
-        const updates = [...lots, ...catches].map(sheet => ({
-          ...sheet,
-          teamId: teamId
-        }));
+    try {
+      if (assignmentType === 'catch') {
+        const updates = data.map(async (row) => {
+          try {
+            // Get existing transaction data if available
+            let existingTransactionData = null;
+            if (row.transactionId) {
+              const response = await API.get(`/Transactions/${row.transactionId}`);
+              existingTransactionData = response.data;
+            }
+
+            // Prepare post data, maintaining existing values
+            const postData = {
+              transactionId: row.transactionId || 0,
+              interimQuantity: row.interimQuantity || 0,
+              remarks: existingTransactionData?.remarks || '',
+              projectId: row.projectId,
+              quantitysheetId: row.srNo || 0,
+              processId: processId,
+              zoneId: existingTransactionData?.zoneId || 0,
+              machineId: existingTransactionData?.machineId || 0,
+              status: existingTransactionData?.status || 0,
+              alarmId: existingTransactionData?.alarmId || "",
+              lotNo: row.lotNo || "",
+              teamId: teamId, // This is an array in your API
+              voiceRecording: existingTransactionData?.voiceRecording || ""
+            };
+
+            console.log('Sending data:', postData); // Debug log
+
+            if (row.transactionId) {
+              await API.put(`/Transactions/${row.transactionId}`, postData);
+            } else {
+              await API.post('/Transactions', postData);
+            }
+          } catch (error) {
+            console.error(`Error updating catch ${row.catchNumber}:`, error);
+            console.log('Failed request data:', error.config?.data); // Debug log
+            throw error; // Re-throw to be caught by outer try-catch
+          }
+        });
+
+        await Promise.all(updates);
         
-        // Call API to update quantity sheets
-        for (const update of updates) {
-          await quantitySheetService.updateQuantitySheet(update.id, update);
+        // Only call handleSave if it exists
+        if (typeof handleSave === 'function') {
+          handleSave(teamId);
         }
-        console.log('Successfully assigned team to all quantity sheets');
-      } catch (error) {
-        console.error('Error assigning team:', error);
       }
+    } catch (error) {
+      console.error('Error assigning team:', error);
+      // You might want to show an error message to the user here
     }
   };
 
@@ -89,74 +98,48 @@ const AssignTeams = () => {
     <Container>
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2>Team Assignment</h2>
-        <div>
-          <Button variant="info" onClick={handleShowTeams} className="me-2">
-            Show Teams
-          </Button>
-          <Button variant="primary" onClick={handleCreateTeamModalToggle}>
-            Create New Team
-          </Button>
-        </div>
       </div>
 
-      <CreateTeam 
-        show={showCreateTeamModal}
-        onHide={handleCreateTeamModalToggle}
-        onCreate={() => {
-          console.log('Team created!');
-          handleShowTeams(); // Refresh teams list after creation
-        }}
-      />
-
-      <ShowTeams
-        show={showTeamsModal}
-        onHide={() => setShowTeamsModal(false)}
-        teams={teams}
-      />
-
+      {/* Assignment Settings */}
       <div className="bg-white rounded shadow-sm p-4 mb-4">
         <h5 className="mb-4">Assignment Settings</h5>
+        
+        {/* Selected Catches Display */}
+        {Array.isArray(data) && data.length > 0 && (
+          <div className="mb-3">
+            <p><strong>Selected Catches:</strong> {data.map(row => row.catchNumber).join(', ')}</p>
+            <p><strong>Total Items:</strong> {data.length}</p>
+          </div>
+        )}
+
+        <div className="mb-4">
+          <Button
+            variant="info"
+            onClick={() => setShowTeams(!showTeams)}
+            className="mb-3"
+          >
+            {showTeams ? 'Hide Teams' : 'Show Teams'}
+          </Button>
+        </div>
+
         <Form>
           <Row>
             <Col md={4}>
               <Form.Group className="mb-3">
                 <Form.Label>Project</Form.Label>
-                <Form.Select 
-                  value={selectedProject.projectid}
-                  onChange={(e) => setSelectedProject({
-                    projectid: parseInt(e.target.value),
-                    projectname: projects.find(p => p.id === parseInt(e.target.value))?.name
-                  })}
-                  disabled={true}
+                <Form.Control
+                  type="text"
+                  value={selectedProject?.projectid || 'Select a project'}
+                  readOnly
                   className="border-0 bg-light"
-                >
-                  <option value="">Select Project</option>
-                  {projects.map((project) => (
-                    <option key={project.id} value={project.id}>{project.name}</option>
-                  ))}
-                </Form.Select>
+                />
               </Form.Group>
             </Col>
+
             <Col md={8}>
               <Form.Group className="mb-3">
                 <Form.Label>Assignment Type</Form.Label>
                 <div className="d-flex gap-4">
-                  <Form.Check
-                    type="radio"
-                    label="Project-wise"
-                    name="assignmentType"
-                    checked={assignmentType === 'project'}
-                    onChange={() => setAssignmentType('project')}
-                    className="custom-radio"
-                  />
-                  <Form.Check
-                    type="radio"
-                    label="Lot-wise"
-                    name="assignmentType"
-                    checked={assignmentType === 'lot'}
-                    onChange={() => setAssignmentType('lot')}
-                    className="custom-radio"
-                  />
                   <Form.Check
                     type="radio"
                     label="Catch-wise"
@@ -170,13 +153,70 @@ const AssignTeams = () => {
             </Col>
           </Row>
 
-          <div className="mt-4">
-            {assignmentType === 'project' && <ProjectTeamAssignment selectedProject={selectedProject} onTeamSelect={handleTeamAssignment} teams={teams} />}
-            {assignmentType === 'lot' && <LotTeamAssignment selectedProject={selectedProject} lots={lots} teams={teams} />}
-            {assignmentType === 'catch' && <CatchTeamAssignment selectedProject={selectedProject} catches={catches} teams={teams} />}
-          </div>
+          {assignmentType === 'catch' && (
+            <CatchTeamAssignment 
+              selectedProject={selectedProject} 
+              onTeamSelect={handleTeamAssignment} 
+              lots={lots} 
+              teams={teams} 
+              data={data}  // Pass all selected rows
+              processId={processId}
+            />
+          )}
         </Form>
       </div>
+
+      {/* Teams Display */}
+      {showTeams && (
+        <div className="mb-4">
+          <h5 className="mb-3">Teams</h5>
+          <Row>
+            {teams.length > 0 ? (
+              teams.map((team) => (
+                <Col md={6} key={team.teamId} className="mb-4">
+                  <div className="team-card bg-white p-4 rounded shadow-sm h-100">
+                    <div className="d-flex align-items-center mb-3">
+                      <div
+                        className="team-avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center"
+                        style={{ width: '40px', height: '40px', fontSize: '1.5rem' }}
+                      >
+                        {team.teamName.charAt(0)}
+                      </div>
+                      <h5 className="ms-3 mb-0">{team.teamName}</h5>
+                    </div>
+                    <div className="team-members">
+                      <p className="text-muted mb-2">Team Members:</p>
+                      <div className="member-list">
+                        {team.users.map((user) => (
+                          <div key={user.userId} className="member-item d-flex align-items-center mb-2">
+                            <div
+                              className="member-avatar bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center me-2"
+                              style={{ width: '30px', height: '30px', fontSize: '0.9rem' }}
+                            >
+                              {user.userName.charAt(0)}
+                            </div>
+                            <span>{user.userName}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <Button variant="primary" onClick={() => handleTeamAssignment(team.teamId)}>
+                      Assign Team
+                    </Button>
+                  </div>
+                </Col>
+              ))
+            ) : (
+              <Col className="text-center py-5">
+                <div className="text-muted">
+                  <i className="fas fa-users mb-3" style={{ fontSize: '3rem' }}></i>
+                  <p className="mt-2">No teams available</p>
+                </div>
+              </Col>
+            )}
+          </Row>
+        </div>
+      )}
     </Container>
   );
 };

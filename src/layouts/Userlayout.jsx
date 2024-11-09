@@ -22,9 +22,8 @@ import Reports from '../pages/Reports';
 import { hasPermission } from '../CustomHooks/Services/permissionUtils';
 import CuDashboard from '../pages/CuDashboard';
 import SecurityQuestions from '../pages/SecurityQuestions';
-
 import AddProjectProcess from '../pages/AddProjectProcess';
-import Test from '../pages/Test';
+//import Test from '../pages/Test';
 import ProtectedRoute from '../Security/ProtectedRoute';
 import AssignTeams from '../pages/processPage/AssignTeam/AssignTeams';
 
@@ -61,7 +60,7 @@ const Userlayout = () => {
               <Route path="/settings" element={<ProtectedRoute component={UserSettings} permission="3"/>} />
               <Route path="/change-password" element={<ProtectedRoute component={ChangePassword} permission="3"/>} />
 
-              <Route path="/test" element={<ProtectedRoute component={AssignTeams} permission="3"/>} />
+              {/* <Route path="/test" element={<ProtectedRoute component={AssignTeams} permission="3"/>} /> */}
 
               <Route path="/quantity-sheet-uploads/:encryptedProjectId" element={<ProtectedRoute component={QtySheetUpload} permission="2.4"/>} />
               <Route path="/project-details/:encryptedProjectId/:encryptedLotNo" element={<ProtectedRoute component={ProcessTable} permission="2.4"/>} />

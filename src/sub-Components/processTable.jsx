@@ -20,6 +20,7 @@ import { useUserData } from '../store/userDataStore';
 import { getProjectProcessAndFeature, getProjectProcessByProjectAndSequence } from '../CustomHooks/ApiServices/projectProcessAndFeatureService';
 import useCurrentProcessStore from '../store/currentProcessStore';
 import { decrypt } from "../Security/Security";
+import { getCombinedPercentages } from '../CustomHooks/ApiServices/transacationService';
 
 const ProcessTable = () => {
     const { encryptedProjectId, encryptedLotNo } = useParams();
@@ -44,6 +45,12 @@ const ProcessTable = () => {
     const [projectLots, setProjectLots] = useState([]);
     const [previousProcess, setPreviousProcess] = useState(null);
     const [processes, setProcesses] = useState([]);
+    const [previousProcessCompletionPercentage, setPreviousProcessCompletionPercentage] = useState(0);
+
+
+    useEffect(() => {
+        fetchCombinedPercentages();
+    }, [selectedLot, previousProcess]);
 
     const handleProcessChange = async (value) => {
         const selectedProcess = processes.find(p => p.processId === value);
@@ -74,6 +81,20 @@ const ProcessTable = () => {
         }
     };
 
+    const fetchCombinedPercentages =async () => {
+        try {
+            const data = await getCombinedPercentages(id);
+            // Update state with combined percentages data
+            if (data && previousProcess) {
+                // Handle the combined percentages data
+                console.log("Combined percentages:", data?.lotProcessWeightageSum[selectedLot][previousProcess.processId]);
+                setPreviousProcessCompletionPercentage(data?.lotProcessWeightageSum[selectedLot][previousProcess.processId]);
+            }
+        } catch (error) {
+            console.error("Error fetching combined percentages:", error);
+        }
+    };
+    
     const hasFeaturePermission = useCallback((featureId) => {
         if (userData?.role?.roleId === 1) {
             return true;
@@ -132,6 +153,7 @@ const ProcessTable = () => {
                         processName: p.processName,
                         sequence: p.sequence
                     })));
+
                 }
             } catch (error) {
                 console.error("Error fetching project process data:", error);
@@ -179,10 +201,10 @@ const ProcessTable = () => {
                 }));
                 
                 // Filter data for selected lot if one is selected
-                const filteredData = selectedLot 
+                const filteredData = selectedLot
                     ? formDataGet.filter(item => Number(item.lotNo) === Number(selectedLot))
                     : formDataGet;
-                
+
                 setTableData(filteredData);
 
                 // Extract unique lot numbers and sort them
@@ -293,7 +315,7 @@ const ProcessTable = () => {
                                         <div className={`align-items-center flex-column`}>
                                             <div className='text-center fs-5'>Previous Process</div>
                                             <div className={`p-1 fs-6 text-primary border ${customDarkBorder} rounded ms-1 d-flex justify-content-center align-items-center ${customDark === 'dark-dark' ? `${customBtn} text-white` : `${customLight} bg-light`}`} style={{ fontWeight: 900 }}>
-                                                {previousProcess ? `${previousProcess.processName} - ${previousProcess.completionPercentage}%` : 'N/A'}
+                                                {previousProcess ? `${previousProcess.processName} - ${previousProcessCompletionPercentage}%` : 'N/A'}
                                                 <span className='ms-2'><FaRegHourglassHalf color='blue' size="20" /></span>
                                             </div>
                                         </div>
@@ -352,13 +374,28 @@ const ProcessTable = () => {
             <Row className='mb-5'>
                 <Col lg={12} md={12}>
                     <CatchProgressBar data={combinedTableData} />
-                </Col>
+                </Col> 
             </Row>
 
-            <Row className='mb-2'>
-                <Col lg={12} md={12}>
-                    <Row>
-                        <Col lg={3} md={12} className="pe-0">
+            <Row>
+                <Col lg={12} md={12} className="pe-0">
+                    <div className="d-flex flex-wrap gap-2 justify-content-center">
+                        {projectLots.map((lot, index) => (
+                            <button
+                                key={index}
+                                className={`${selectedLot === lot.lotNo ? 'bg-white text-dark border-dark' : customBtn} ${customDark === "dark-dark" ? 'border' : 'custom-light-border'} d-flex align-items-center justify-content-center p-2 rounded-2 ${customDark === "dark-dark" ? 'text-dark border-dark' : 'text-dark'} ${customDarkBorder}`}
+                                onClick={() => handleLotClick(lot.lotNo)}
+                                style={{
+                                    minWidth: '100px',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                Lot {lot.lotNo}
+                            </button>
+                        ))}
+                    </div>
+                </Col>
+                 {/* <Col lg={3} md={12} className="pe-0">
                             <h4 className={`${customDark} text-white p-2`}>Project Lots</h4>
                             <div className="d-flex flex-column" style={{ width: '100%', maxHeight: '400px', overflowY: 'auto', overflowX: 'hidden', backgroundColor: '#f0f8ff' }}>
                                 {projectLots.map((lot, index) => (
@@ -384,24 +421,27 @@ const ProcessTable = () => {
                                     </div>
                                 ))}
                             </div>
-                        </Col>
+                        </Col> */}
+            </Row>
 
-                        <Col lg={9} md={8} className="ps-0">
-                            {tableData?.length > 0 && (
-                                <ProjectDetailsTable 
-                                    tableData={combinedTableData} 
+            <Row className='mb-2 mt-1'>
+
+
+
+                <Col lg={12} md={12} className="">
+                    {tableData?.length > 0 && (
+                        <ProjectDetailsTable
+                            tableData={combinedTableData}
                                     fetchTransactions={fetchTransactions}
-                                    setTableData={setTableData} 
-                                    projectId={id} 
-                                    lotNo={selectedLot} 
-                                    featureData={featureData} 
-                                    hasFeaturePermission={hasFeaturePermission} 
-                                    processId={processId} 
-                                    projectLots={projectLots} 
-                                />
-                            )}
-                        </Col>
-                    </Row>
+                            setTableData={setTableData}
+                            projectId={id}
+                            lotNo={selectedLot}
+                            featureData={featureData}
+                            hasFeaturePermission={hasFeaturePermission}
+                            processId={processId}
+                            projectLots={projectLots}
+                        />
+                    )}
                 </Col>
             </Row>
 

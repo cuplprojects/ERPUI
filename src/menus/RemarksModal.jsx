@@ -69,7 +69,7 @@ const RemarksModal = ({ show, handleClose, handleSave, data, processId }) => {
                 status: existingTransactionData ? existingTransactionData.status : 0,
                 alarmId: existingTransactionData ? existingTransactionData.alarmId : "",
                 lotNo: data.lotNo,
-                teamId: existingTransactionData ? existingTransactionData.teamId : 0,
+                teamId: existingTransactionData ? existingTransactionData.teamId : [],
                 // Only include voice recording if there's an actual audio blob
                 voiceRecording: base64Audio || "", // If there's no audio, send an empty string
             };
