@@ -1,11 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Table, Input, Typography, message } from 'antd';
 import { AudioOutlined, AudioMutedOutlined } from '@ant-design/icons';
+import API from '../CustomHooks/MasterApiHooks/api';
+import { hasPermission } from '../CustomHooks/Services/permissionUtils';
 
 const { TextArea } = Input;
 const { Text } = Typography;
 
-const CatchDetailModal = ({ show, handleClose, data }) => {
+const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) => {
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [audioElement, setAudioElement] = useState(null);
+
+    // Clean up audio when modal closes
+    useEffect(() => {
+        if (!show && audioElement) {
+            audioElement.pause();
+            setIsPlaying(false);
+            setAudioElement(null);
+        }
+    }, [show, audioElement]);
+
     if (!show) return null;
 
     // Capitalize and format keys for better display
@@ -15,17 +29,13 @@ const CatchDetailModal = ({ show, handleClose, data }) => {
     };
 
     // Prepare data for the table
-    const tableData = Object.keys(data)
-        .filter(key => key !== 'serialNumber' && key !== 'voiceRecording') // Filter out voiceRecording
+    const tableData = Object.keys(data || {})
+        .filter(key => key !== 'serialNumber' && key !== 'voiceRecording')
         .map((key, index) => ({
             key: index,
             label: formatKey(key),
-            value: data[key] || 'No Remarks', // Ensure value is always provided
+            value: data[key] || 'No Remarks',
         }));
-
-    // Add state for tracking audio playback
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [audioElement, setAudioElement] = useState(null);
 
     // Update handleAudioPlay function
     const handleAudioPlay = async (audioData) => {
@@ -90,7 +100,7 @@ const CatchDetailModal = ({ show, handleClose, data }) => {
                             style={{ 
                                 fontSize: '18px', 
                                 cursor: 'pointer',
-                                color: '#1890ff' // Blue color when playing
+                                color: '#1890ff'
                             }}
                             onClick={() => handleAudioPlay(voiceRecording)}
                             className='rounded-circle border p-2 custom-theme-dark-btn'
@@ -117,6 +127,41 @@ const CatchDetailModal = ({ show, handleClose, data }) => {
         );
     };
 
+    const handleResolve = async () => {
+        try {
+            let existingTransactionData;
+            if (data?.transactionId) {
+                const response = await API.get(`/Transactions/${data.transactionId}`);
+                existingTransactionData = response.data;
+            }
+     
+            const postData = {
+                transactionId: data?.transactionId || 0,
+                interimQuantity: existingTransactionData?.interimQuantity || 0,
+                remarks: existingTransactionData?.remarks || '',
+                projectId: data?.projectId,
+                quantitysheetId: data?.srNo || 0,
+                processId: processId,
+                zoneId: existingTransactionData?.zoneId || 0,
+                machineId: existingTransactionData?.machineId || 0,
+                status: existingTransactionData?.status || 0,
+                alarmId: "0",
+                lotNo: data?.lotNo,
+                teamId: existingTransactionData?.teamId || [],
+                voiceRecording: existingTransactionData?.voiceRecording || ""
+            };
+     
+            if (data?.transactionId) {
+                await API.put(`/Transactions/${data.transactionId}`, postData);
+            } 
+           
+            handleSave("0");
+            handleClose();
+        } catch (error) {
+            console.error('Error updating interim quantity:', error);
+        }
+    };
+
     // Define table columns
     const columns = [
         {
@@ -133,32 +178,37 @@ const CatchDetailModal = ({ show, handleClose, data }) => {
             render: (value, record) => {
                 if (record.label === 'Remarks' || record.label === 'Alerts') {
                     return (
+                        <>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <TextArea
                                 value={value}
                                 readOnly
                                 autoSize={{ minRows: 2, maxRows: 6 }}
+                                auto-sizing
                                 bordered={false}
                                 style={{ flex: 1, marginRight: '10px', overflow: 'hidden', wordWrap: 'break-word' }}
                             />
-                            {record.label === 'Remarks' && renderAudioControl(data.voiceRecording)}
+                            {record.label === 'Remarks' && renderAudioControl(data?.voiceRecording)}
                         </div>
+                        {hasPermission('2.8.3') && 
+                            record?.label === 'Alerts' && 
+                            value !== 'NA' && (
+                                <Button
+                                    style={{ fontSize: '18px', cursor: 'pointer' }}
+                                    onClick={handleResolve}
+                                    className='d-flex align-items-center border p-2 custom-theme-dark-btn'
+                                >
+                                    Resolve
+                                </Button>
+                            )
+                        }
+                        </>
                     );
-                } else {
-                    return <Text>{value}</Text>;
                 }
+                return <Text>{value}</Text>;
             },
         },
     ];
-
-    // Clean up audio when modal closes
-    useEffect(() => {
-        if (!show && audioElement) {
-            audioElement.pause();
-            setIsPlaying(false);
-            setAudioElement(null);
-        }
-    }, [show]);
 
     return (
         <Modal
@@ -172,7 +222,7 @@ const CatchDetailModal = ({ show, handleClose, data }) => {
             centered
             title="Catch Details"
             width={600}
-            className="bg-light rounded" // Apply background class
+            className="bg-light rounded"
         >
             <Table
                 columns={columns}
@@ -180,7 +230,6 @@ const CatchDetailModal = ({ show, handleClose, data }) => {
                 pagination={false}
                 showHeader={false}
                 bordered
-                // className=""
             />
         </Modal>
     );
