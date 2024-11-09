@@ -345,18 +345,24 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
             align: 'center',
             sorter: (a, b) => a.remarks.localeCompare(b.remarks),
         }] : []),
+
         ...(columnVisibility['Team Assigned'] && hasFeaturePermission(5) ? [{
+
             title: 'Team Assigned',
             dataIndex: 'teamUserNames',
             width: '20%',
             align: 'center',
             key: 'teamUserNames',
+
             render: (teamUserNames) => teamUserNames?.join(', ') || '-',
             sorter: (a, b) => {
                 const teamA = a.teamUserNames?.join(', ') || '';
                 const teamB = b.teamUserNames?.join(', ') || '';
                 return teamA.localeCompare(teamB);
             },
+
+    
+
         }] : []),
         ...(columnVisibility['Course'] && hasFeaturePermission(13) ? [{
             title: 'Course',
@@ -391,24 +397,28 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
                 if (!record || text === undefined || text === null) {
                     return <span>Invalid Data</span>; // Fallback for invalid data
                 }
-        
+
                 const statusSteps = ["Pending", "Started", "Completed"];
                 const initialStatusIndex = text !== undefined ? text : 0;
+
                 const hasAlerts = Boolean(record.alerts?.length);
                 console.log(Boolean(record.alerts?.length));
                 // Check if 'Assign Team' and 'Select Zone' data is populated
                 const isZoneAssigned = Boolean(record.zoneId);
                 const isTeamAssigned = Boolean(record.teamId?.length);  // Assuming teamId is an array
         
+
                 // Check if 'Select Machine' is required (i.e., permission granted)
                 const hasSelectMachinePermission = hasFeaturePermission(10); // Check if the user has Select Machine permission
-        
+
                 // The status can only be changed if:
                 // 1. The Select Machine is assigned (if permission for Select Machine exists)
                 // 2. OR The Zone and Team are assigned (if permission for Select Machine doesn't exist)
                 const canChangeStatus = hasSelectMachinePermission
+
                     ? (record.machineId !== 0 && record.machineId !== null && isZoneAssigned && isTeamAssigned) // All conditions must be met if machine permission exists
                     : (isZoneAssigned && isTeamAssigned); // Just zone and team needed if no machine permission
+
                 return (
                     <div className="d-flex justify-content-center">
                         {hasAlerts ? (
@@ -430,14 +440,14 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
                                     status,
                                     color: index === 0 ? "red" : index === 1 ? "blue" : "green"
                                 }))}
-                                disabled={!canChangeStatus} // Disable the toggle if status can't be changed (based on Select Machine or Zone/Team)
+                                disabled={!canChangeStatus || (newIndex === 2 && !canBeCompleted)} // Disable the toggle if status can't be changed (based on Select Machine or Zone/Team)
                             />
                         )}
                     </div>
                 );
             },
             sorter: (a, b) => a.status.localeCompare(b.status),
-        }        
+        }
     ];
 
     const clearSelections = () => {
@@ -513,7 +523,7 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
         if (selectedRowKeys.length > 0) {
             // Get all selected rows
             const selectedRows = tableData.filter(row => selectedRowKeys.includes(row.catchNumber));
-            
+
             if (action === 'Alarm' && hasFeaturePermission(3)) {
                 setAlarmModalShow(true);
                 setAlarmModalData(selectedRows[0]); // Pass first selected row for single-row modals
@@ -795,7 +805,9 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
                 <Col lg={5} md={4} sx={2} className='mt-md-1 mt-xs-1'>
                     {selectedRowKeys.length > 1 && getSelectedStatus() !== null && (
                         <div className="mt-1 d-flex align-items-center">
-                            <span className={`me-2 ${customDark === 'dark-dark' ? 'text-white' : 'custom-theme-dark-text'} fs-6 fw-bold`}>Update Status: </span>
+                            <span className={`me-2 ${customDark === 'dark-dark' ? 'text-white' : 'custom-theme-dark-text'} fs-6 fw-bold`}>
+                                Update Status:
+                            </span>
                             <StatusToggle
                                 initialStatusIndex={getSelectedStatus()} // Use the index returned by getSelectedStatus
                                 onStatusChange={(newIndex) => handleStatusChange(["Pending", "Started", "Completed"][newIndex])}
@@ -813,17 +825,17 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
                                     const hasSelectMachinePermission = hasFeaturePermission(10); // Check if Select Machine permission exists
 
                                     const canChangeStatus = hasSelectMachinePermission
+
                                     ? (row.machineId !== 0 && row.machineId !== null && isZoneAssigned && isTeamAssigned) // All conditions must be met if machine permission exists
                                     : (isZoneAssigned && isTeamAssigned);  // Otherwise, Zone and Team must be assigned
                                         const canBeCompleted = row.interimQuantity === row.quantity;
+
                                     return row.alerts || !canChangeStatus || (getSelectedStatus() === 2 && !canBeCompleted); // Disable if there are alerts or the status cannot be changed
                                 })}
                             />
                         </div>
                     )}
                 </Col>
-
-
                 {/* search box */}
                 <Col lg={5} md={6} xs={12}>
                     <div className="d-flex justify-content-end align-items-center search-container">
