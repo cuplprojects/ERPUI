@@ -17,6 +17,7 @@ import Grid from './../assets/images/table.png';
 import { useUserData } from "../store/userDataStore";
 import { CSSTransition } from 'react-transition-group';
 import styled from 'styled-components';
+import { getAllProjectCompletionPercentages } from "../CustomHooks/ApiServices/transacationService";
 
 const AnimatedDropdownMenu = styled(Dropdown.Menu)`
   &.dropdown-enter {
@@ -70,6 +71,29 @@ const CuDashboard = () => {
     return hasQuantitySheet ? hasQuantitySheet.quantitySheet : false;
   };
 
+useEffect(() => {
+  const fetchPercentages = async () => {
+    try {
+      const projectCompletionPercentages = await getAllProjectCompletionPercentages();
+      const projectData = await API.get(`/Project/GetDistinctProjectsForUser/${userData.userId}`);
+      
+      const mergedData = projectData.data.map(project => {
+        const percentage = projectCompletionPercentages.find(p => p.projectId === project.projectId);
+        return {
+          ...project,
+          completionPercentage: percentage ? percentage.completionPercentage : 0,
+          remainingPercentage: percentage ? 100 - percentage.completionPercentage : 100
+        };
+      });
+      
+      setData(mergedData);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+  fetchPercentages();
+}, [userData.userId]);
+
   useEffect(() => {
     const fetchHasQuantitySheet = async () => {
       try {
@@ -100,19 +124,6 @@ const CuDashboard = () => {
   const customDark = cssClasses[0];
   const customMid = cssClasses[1];
   const customBtn = cssClasses[3];
-
-  useEffect(() => {
-    fetchProject();
-  }, []);
-
-  const fetchProject = async () => {
-    try {
-      const response = await API.get(`/Project/GetDistinctProjectsForUser/${userData.userId}`);
-      setData(response.data);
-    } catch (error) {
-      console.error("Error fetching projects:", error);
-    }
-  };
 
   const handleProjectClick = (project) => {
     setSelectedLots(project.lots || []);
@@ -154,7 +165,7 @@ const CuDashboard = () => {
         <Row className="g-3">
           {data.map((item) => (
             <Col key={item.projectId} xs={12} sm={6} md={4} lg={3}>
-              <Cards item={item} onclick={onclick} disableProject={hasDisable(item.projectId)} />
+              <Cards item={item} onclick={onclick} disableProject={hasDisable(item.projectId)} remainingPercentage={item.remainingPercentage} completionPercentage={item.completionPercentage} />
             </Col>
           ))}
         </Row>
