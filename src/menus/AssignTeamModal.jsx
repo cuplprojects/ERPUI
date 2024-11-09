@@ -13,7 +13,6 @@ const AssignTeamModal = ({ show, handleClose, handleSave, data , processId }) =>
   const { getCssClasses } = useStore(themeStore);
   const [customDark, customMid, customLight, , customDarkText, customLightText] = getCssClasses();
   const [selectedUsers, setSelectedUsers] = useState([]);
-  const [individualTeams, setIndividualTeams] = useState({});
   const [users, setUsers] = useState([]);
 
   if (!show) return null;

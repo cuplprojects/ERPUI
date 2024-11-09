@@ -94,6 +94,7 @@ const CatchTeamAssignment = ({ teams, data, onTeamSelect, processId }) => {
       } else {
         await API.post('/Transactions', postData);
       }
+
     } catch (error) {
       console.error('Error updating interim quantity:', error);
     }

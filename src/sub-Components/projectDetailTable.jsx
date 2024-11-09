@@ -578,32 +578,33 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
     };
 
     const handleDropdownSelect = (action) => {
-        if (showOptions && selectedRowKeys.length > 0) {
-            const selectedRow = tableData.find((row) => row.catchNumber === selectedRowKeys[0]);
+        if (selectedRowKeys.length > 0) {
+            // Get all selected rows
+            const selectedRows = tableData.filter(row => selectedRowKeys.includes(row.catchNumber));
+            
             if (action === 'Alarm' && hasFeaturePermission(3)) {
                 setAlarmModalShow(true);
-                setAlarmModalData(selectedRow); // Pass the selected row's data to the alarm modal
+                setAlarmModalData(selectedRows[0]); // Pass first selected row for single-row modals
             } else if (action === 'Interim Quantity' && hasFeaturePermission(7)) {
                 setInterimQuantityModalShow(true);
-                setInterimQuantityModalData(selectedRow); // Pass the selected row's data to the interim quantity modal
+                setInterimQuantityModalData(selectedRows[0]); // Pass first selected row for single-row modals
             } else if (action === 'Remarks') {
                 setRemarksModalShow(true);
-                setRemarksModalData(selectedRow); // Pass the selected row's data to the remarks modal
+                setRemarksModalData(selectedRows[0]); // Pass first selected row for single-row modals
             } else if (action === 'Select Zone' && hasFeaturePermission(4)) {
                 setSelectZoneModalShow(true);
-                setSelectZoneModalData(selectedRow); // Pass the selected row's data to the select zone modal
-            }
-            else if (action === 'Select Machine' && hasFeaturePermission(10)) {
+
+                setSelectZoneModalData(selectedRows); // Pass array of all selected rows
+            } else if (action === 'Select Machine' && hasFeaturePermission(10)) {
+
                 setSelectMachineModalShow(true);
-                setSelectMachineModalData(selectedRow);
-            }
-            else if (action === 'Assign Team' && hasFeaturePermission(5)) {
+                setSelectMachineModalData(selectedRows); // Pass array of all selected rows
+            } else if (action === 'Assign Team' && hasFeaturePermission(5)) {
                 setAssignTeamModalShow(true);
-                setAssignTeamModalData(selectedRow); // Pass the selected row's data to the assign team modal
+                setAssignTeamModalData(selectedRows); // Pass array of all selected rows
             }
         } else {
-            alert("Selected row not found.");
-
+            alert("Please select at least one row.");
         }
     };
 
