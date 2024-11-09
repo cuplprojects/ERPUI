@@ -9,3 +9,12 @@ export const getCombinedPercentages = async (projectId) => {
     throw error;
   }
 }
+export const getAllProjectCompletionPercentages = async () => {
+  try {
+    const response = await API.get('/Transactions/all-project-completion-percentages');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching all project completion percentages:', error);
+    throw error;
+  }
+}
