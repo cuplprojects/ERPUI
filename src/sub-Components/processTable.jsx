@@ -73,7 +73,7 @@ const ProcessTable = () => {
                 }
 
                 // Refresh quantity sheet data
-                await fetchQuantitySheet();
+                await fetchTransactions();
             } catch (error) {
                 console.error("Error updating process data:", error);
             } finally {
@@ -107,24 +107,28 @@ const ProcessTable = () => {
     }, [userData, featureData]);
 
     const formatQuantitySheetData = (item) => ({
-        srNo: item?.quantitySheetId || "",
-        catchNumber: item?.catchNo,
-        paper: item?.paper || "undefined",
-        course: item?.course,
-        subject: item?.subject,
-        outerEnvelope: item?.outerEnvelope,
-        innerEnvelope: item?.innerEnvelope,
-        lotNo: item?.lotNo,
-        quantity: item?.quantity,
-        percentageCatch: item?.percentageCatch,
-        projectId: item?.projectId,
-        processId: item?.processId || [],
-        status: item?.status || "Pending",
-        alerts: "",
-        interimQuantity: "0",
-        remarks: "",
+        srNo: item.quantitySheetId,
+        catchNumber: item.quantitySheetId,
+        paper: "",
+        course: "",
+        subject: "",
+        outerEnvelope: "",
+        innerEnvelope: "",
+        lotNo: item.lotNo,
+        quantity: 0,
+        percentageCatch: 0,
+        projectId: item.projectId,
+        processId: processId,
+        status: item.transactions[0]?.status || 0,
+        alerts: item.transactions[0]?.alarmId || "",
+        interimQuantity: item.transactions[0]?.interimQuantity || 0,
+        remarks: item.transactions[0]?.remarks || "",
         previousProcessStats: "",
-        voiceRecording: ""
+        voiceRecording: item.transactions[0]?.voiceRecording || "",
+        transactionId: item.transactions[0]?.transactionId || null,
+        zoneId: item.transactions[0]?.zoneId || 0,
+        machineId: item.transactions[0]?.machineId || 0,
+        teamId: item.transactions[0]?.teamId || 0
     });
 
     const fetchData = useCallback(async () => {
@@ -163,14 +167,40 @@ const ProcessTable = () => {
         }
     }, [userData, id, processId, setProcess]);
 
-    const fetchQuantitySheet = useCallback(async () => {
+    const fetchTransactions = useCallback(async () => {
         try {
-            const response = await API.get(`/QuantitySheet/CatchByproject?ProjectId=${id}`);
-            const quantitySheetData = response.data;
+            const response = await API.get(`/Transactions/GetProjectTransactionsData?projectId=${id}&processId=${processId}`);
+            const transactionsData = response.data;
 
-            if (Array.isArray(quantitySheetData) && quantitySheetData.length > 0) {
-                const formDataGet = quantitySheetData.map(formatQuantitySheetData);
-
+            if (Array.isArray(transactionsData)) {
+                // Map each transaction to formatted data
+                const formDataGet = transactionsData.map(item => ({
+                    catchNumber: item.catchNo,
+                    srNo: item.quantitySheetId,
+                    lotNo: item.lotNo,
+                    paper: item.paper,
+                    examDate: item.examDate,
+                    examTime: item.examTime,
+                    course: item.course,
+                    subject: item.subject,
+                    innerEnvelope: item.innerEnvelope,
+                    outerEnvelope: item.outerEnvelope,
+                    quantity: item.quantity,
+                    percentageCatch: item.percentageCatch,
+                    projectId: item.projectId,
+                    processId: processId,
+                    status: item.transactions[0]?.status || 0,
+                    alerts: item.transactions[0]?.alarmId || "",
+                    interimQuantity: item.transactions[0]?.interimQuantity || 0,
+                    remarks: item.transactions[0]?.remarks || "",
+                    previousProcessStats: "",
+                    voiceRecording: item.transactions[0]?.voiceRecording || "",
+                    transactionId: item.transactions[0]?.transactionId || null,
+                    zoneId: item.transactions[0]?.zoneId || 0,
+                    machineId: item.transactions[0]?.machineId || 0,
+                    teamId: item.transactions[0]?.teamId || 0
+                }));
+                
                 // Filter data for selected lot if one is selected
                 const filteredData = selectedLot
                     ? formDataGet.filter(item => Number(item.lotNo) === Number(selectedLot))
@@ -179,15 +209,15 @@ const ProcessTable = () => {
                 setTableData(filteredData);
 
                 // Extract unique lot numbers and sort them
-                const uniqueLots = [...new Set(quantitySheetData.map(item => item.lotNo))].sort((a,b) => a - b);
+                const uniqueLots = [...new Set(transactionsData.map(item => item.lotNo))].sort((a,b) => a - b);
                 setProjectLots(uniqueLots.map(lotNo => ({ lotNo })));
             }
         } catch (error) {
-            console.error("Error fetching quantity sheet data:", error);
+            console.error("Error fetching transactions data:", error);
             setTableData([]);
             setProjectLots([]);
         }
-    }, [id, selectedLot]);
+    }, [id, processId, selectedLot]);
 
     useEffect(() => {
         fetchData();
@@ -207,9 +237,9 @@ const ProcessTable = () => {
     // Update useEffect to watch for selectedLot changes
     useEffect(() => {
         if (selectedLot) {
-            fetchQuantitySheet();
+            fetchTransactions();
         }
-    }, [selectedLot, fetchQuantitySheet]);
+    }, [selectedLot, fetchTransactions]);
 
     const handleLotClick = async (lot) => {
         // Only update if clicking a different lot
@@ -217,9 +247,9 @@ const ProcessTable = () => {
             setSelectedLot(lot);
             setIsLoading(true);
             try {
-                const response = await API.get(`/QuantitySheet/CatchByproject?ProjectId=${id}`);
-                const quantitySheetData = response.data;
-                const formDataGet = quantitySheetData.map(formatQuantitySheetData);
+                const response = await API.get(`/Transactions/GetProjectTransactionsData?projectId=${id}&processId=${processId}`);
+                const transactionsData = response.data;
+                const formDataGet = transactionsData.map(formatQuantitySheetData);
                 const filteredData = formDataGet.filter(item => Number(item.lotNo) === Number(lot));
                 setTableData(filteredData);
             } catch (error) {
@@ -403,6 +433,7 @@ const ProcessTable = () => {
                     {tableData?.length > 0 && (
                         <ProjectDetailsTable
                             tableData={combinedTableData}
+                                    fetchTransactions={fetchTransactions}
                             setTableData={setTableData}
                             projectId={id}
                             lotNo={selectedLot}
