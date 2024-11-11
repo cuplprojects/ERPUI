@@ -4,12 +4,14 @@ import { FaUpload, FaInfoCircle } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { encrypt } from "../Security/Security";
 import useUserDataStore from "../store/userDataStore";
+import { useTranslation } from "react-i18next";
 
 const Cards = ({ item, onclick, disableProject }) => {
   const navigate = useNavigate();
   const { userData } = useUserDataStore();
   const role = userData?.role;
   const supervisor = role.roleId === 5;
+  const { t } = useTranslation();
   console.log(supervisor);
 
   // Navigate to quantity sheet uploads and send projectId
@@ -47,8 +49,8 @@ const Cards = ({ item, onclick, disableProject }) => {
         </div>
 
         <h4 className="project-name">{item.name}</h4>
-        <p>{item.completionPercentage}% Completed</p>
-        <p>{item.remainingPercentage}% Remaining</p>
+        <p>{item.completionPercentage}% {t('completed')}</p>
+        <p>{item.remainingPercentage}% {t('remaining')}</p>
         
         <div
           className={`info-button ${!disableProject ? 'disabled' : ''}`}
