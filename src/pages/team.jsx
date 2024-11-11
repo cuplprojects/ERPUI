@@ -161,7 +161,6 @@ console.log("Processes:", processes);
           teamId: editingTeam.teamId,
           teamName: values.teamName,
           processId: values.processId, // Use selected processId
-          description: values.description || '',
           createdDate: editingTeam.createdDate, // Keep the original created date
           createdBy: editingTeam.createdBy, 
           status: editingTeam.status, // Keep the original status
