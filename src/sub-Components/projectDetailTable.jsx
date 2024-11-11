@@ -248,6 +248,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
             dataIndex: 'catchNumber',
             key: 'catchNumber',
             align: 'center',
+            width: '15%',
             sorter: (a, b) => a.catchNumber.localeCompare(b.catchNumber),
             render: (text, record) => (
                 <>
