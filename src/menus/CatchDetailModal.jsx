@@ -3,11 +3,13 @@ import { Modal, Button, Table, Input, Typography, message } from 'antd';
 import { AudioOutlined, AudioMutedOutlined } from '@ant-design/icons';
 import API from '../CustomHooks/MasterApiHooks/api';
 import { hasPermission } from '../CustomHooks/Services/permissionUtils';
+import { useTranslation } from 'react-i18next';
 
 const { TextArea } = Input;
 const { Text } = Typography;
 
 const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) => {
+    const { t } = useTranslation();
     const [isPlaying, setIsPlaying] = useState(false);
     const [audioElement, setAudioElement] = useState(null);
 
@@ -217,7 +219,7 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
                 </Button>
             ]}
             centered
-            title="Catch Details"
+            title={`${t('catchDetails')}`}
             width={600}
             className="bg-light rounded"
         >
