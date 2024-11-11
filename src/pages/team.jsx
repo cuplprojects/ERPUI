@@ -296,13 +296,6 @@ console.log("Processes:", processes);
             </Form.Item>
 
             <Form.Item
-              label={<span className={customDarkText}>{t('description')}</span>}
-              name="description"
-            >
-              <Input placeholder={t('enterTeamDescription')} size="large" />
-            </Form.Item>
-
-            <Form.Item
               label={<span className={customDarkText}>{t('teamMembers')}</span>}
               name="teamMembers"
               rules={[{ required: true, message: t('pleaseSelectTeamMembers') }]}
