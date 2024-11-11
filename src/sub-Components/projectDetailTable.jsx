@@ -272,7 +272,11 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                             <div>
                                 <button
                                     className="rounded border fs-6 custom-zoom-btn bg-white position-relative "
-                                    onClick={() => console.log('Detail:', record)}
+                                     onClick={() => {
+                                        handleCatchClick(record);
+                                        setCatchDetailModalShow(true);
+                                        setCatchDetailModalData(record);
+                                    }}
                                 >
                                     {text}
                                 </button>
