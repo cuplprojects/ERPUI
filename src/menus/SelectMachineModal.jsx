@@ -9,6 +9,7 @@ const statusMapping = {
 };
 
 const SelectMachineModal = ({ show, handleClose, data, processId, handleSave }) => {
+  console.log(data)
   const [selectedMachine, setSelectedMachine] = useState('');
   const [machineOptions, setMachineOptions] = useState([]);
   const [machineId, setMachineId] = useState(null);
@@ -41,7 +42,7 @@ const SelectMachineModal = ({ show, handleClose, data, processId, handleSave }) 
           existingTransactionData = response.data;
         }
 
-
+        console.log(row)
         const postData = {
           transactionId: row.transactionId || 0,
           interimQuantity: row.interimQuantity,
@@ -58,12 +59,7 @@ const SelectMachineModal = ({ show, handleClose, data, processId, handleSave }) 
           voiceRecording: existingTransactionData ? existingTransactionData.voiceRecording : ""
         };
 
-
-        if (row.transactionId) {
-          await API.put(`/Transactions/${row.transactionId}`, postData);
-        } else {
-          await API.post('/Transactions', postData);
-        }
+        await API.post('/Transactions', postData);
       });
 
       await Promise.all(updatePromises);
