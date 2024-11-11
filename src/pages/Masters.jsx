@@ -17,7 +17,6 @@ import Zone from './Zone'
 import Type from './Type';
 import AlarmMaster from './Alarm';
 import Machine from './ProductionMachine';
-import Team from './team';
 import './../styles/Sidebar.css';
 import AddUsers from '../sub-Components/addUsers';
 import AllUsers from '../sub-Components/allUsers';
