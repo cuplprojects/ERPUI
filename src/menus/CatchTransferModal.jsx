@@ -50,6 +50,7 @@ const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots =
         try {
             await API.put('/QuantitySheet/transfer-catches', payload);
             await fetchQuantity();
+            setSelectedLot(null);
             onClose();
         } catch (error) {
             console.error('Transfer failed:', error);
@@ -60,8 +61,14 @@ const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots =
         const updatedCatches = catches.filter(item => item.id !== catchItem.id);
         onCatchesChange(updatedCatches);
         if (updatedCatches.length === 0) {
+            setSelectedLot(null);
             onClose();
         }
+    };
+
+    const handleClose = () => {
+        setSelectedLot(null);
+        onClose();
     };
 
     // Don't render if not visible
@@ -70,9 +77,12 @@ const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots =
     }
 
     return (
-        <BootstrapModal show={visible} onHide={onClose} className={`${customDark === "dark-dark" ? "" : ""}`}>
+        <BootstrapModal show={visible} onHide={handleClose} className={`${customDark === "dark-dark" ? "" : ""}`}>
             <BootstrapModal.Header closeButton={false} className={customDark}>
-                <BootstrapModal.Title className={customLightText}>{t('transferCatches')} : {projectName}</BootstrapModal.Title>
+                <BootstrapModal.Title className={customLightText}>
+                    <div>{t('transferCatches')} : {projectName} From Lot-{selectedLotNo}</div>
+                   
+                </BootstrapModal.Title>
             </BootstrapModal.Header>
             <BootstrapModal.Body className={customLight}>
                 <div style={{ marginBottom: '20px' }}>
@@ -97,9 +107,11 @@ const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots =
                                 ))}
                             </div>
                         </div>
+                        
                         <div style={{ display: 'flex', alignItems: 'center' }}>
                             <RightOutlined style={{ fontSize: '20px' }} className={customDarkText} />
                         </div>
+                        
                         <div>
                             <Select
                                 placeholder={t('selectLot')}
@@ -116,9 +128,12 @@ const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots =
                         </div>
                     </div>
                 </div>
+                <div className="fs-6 mt-2 text-center">
+                {t('lot')} {selectedLotNo} → {selectedLot ? `${t('lot')} ${selectedLot}` : t('selectLot')}
+                </div>
             </BootstrapModal.Body>
             <BootstrapModal.Footer className={customDark}>
-                <Button onClick={onClose} className={`${customBtn}`}>{t('cancel')}</Button>
+                <Button onClick={handleClose} className={`${customBtn}`}>{t('cancel')}</Button>
                 <Button onClick={handleTransfer} disabled={!selectedLot} className={`${customBtn}`}>{t('transfer')}</Button>
             </BootstrapModal.Footer>
         </BootstrapModal>
