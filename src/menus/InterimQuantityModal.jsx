@@ -24,7 +24,6 @@ const InterimQuantityModal = ({ show, handleClose, handleSave, data, processId }
         try {
             let existingTransactionData;
             if (data.transactionId) {
-                // Fetch existing transaction data if transactionId exists
                 const response = await API.get(`/Transactions/${data.transactionId}`);
                 existingTransactionData = response.data;
             }
@@ -45,15 +44,10 @@ const InterimQuantityModal = ({ show, handleClose, handleSave, data, processId }
                 voiceRecording: existingTransactionData? existingTransactionData.voiceRecording : ""             
             };
 
-            if (data.transactionId) {
-                // Update existing transaction
-                const response = await API.put(`/Transactions/${data.transactionId}`, postData);
-                console.log('Update Response:', response.data);
-            } else {
-                // Create a new transaction
-                const response = await API.post('/Transactions', postData);
-                console.log('Create Response:', response.data);
-            }
+            // Always use POST
+            const response = await API.post('/Transactions', postData);
+            console.log('Response:', response.data);
+            
             handleSave(interimQuantity);
             setInterimQuantity('');
             handleClose(); // Close modal
