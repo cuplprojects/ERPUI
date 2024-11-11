@@ -399,7 +399,6 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
 
                 const statusSteps = [t("pending"), t("started"), t("completed")];
                 const initialStatusIndex = text !== undefined ? text : 0;
-                // const hasAlerts = record.alerts && record.alerts.length > 0;
 
                 const hasAlerts = Boolean(record.alerts?.length);
                 
@@ -434,6 +433,8 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                         ? (record.machineId !== 0 && record.machineId !== null && isZoneAssigned && isTeamAssigned)
                         : (isZoneAssigned && isTeamAssigned)
                 );
+
+                const canBeCompleted = record.interimQuantity === record.quantity;
 
                 console.log('Final status check:', {
                     canChangeStatus,
