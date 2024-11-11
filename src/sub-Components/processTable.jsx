@@ -83,7 +83,7 @@ const ProcessTable = () => {
         }
     };
 
-    const fetchCombinedPercentages =async () => {
+    const fetchCombinedPercentages = async () => {
         try {
             const data = await getCombinedPercentages(id);
             // Update state with combined percentages data
@@ -96,7 +96,7 @@ const ProcessTable = () => {
             console.error("Error fetching combined percentages:", error);
         }
     };
-    
+
     const hasFeaturePermission = useCallback((featureId) => {
         if (userData?.role?.roleId === 1) {
             return true;
@@ -211,7 +211,7 @@ const ProcessTable = () => {
                 setTableData(filteredData);
 
                 // Extract unique lot numbers and sort them
-                const uniqueLots = [...new Set(transactionsData.map(item => item.lotNo))].sort((a,b) => a - b);
+                const uniqueLots = [...new Set(transactionsData.map(item => item.lotNo))].sort((a, b) => a - b);
                 setProjectLots(uniqueLots.map(lotNo => ({ lotNo })));
             }
         } catch (error) {
@@ -223,7 +223,7 @@ const ProcessTable = () => {
 
     useEffect(() => {
         fetchData();
-        
+
         // Fetch project name
         const fetchProjectName = async () => {
             try {
@@ -279,7 +279,8 @@ const ProcessTable = () => {
     const catchNumbers = tableData.map((item) => item.catchNumber).sort((a, b) => a - b);
 
     // Combine entries with the same catch number
-    const combinedTableData = tableData.reduce((acc, item) => {
+    // Combine entries with the same catch number unless the process is Digital Printing
+    const combinedTableData = (processName !== 'Digital Printing' && processName !== 'Offset Printing' && processName !== 'CTP' && processName !== 'Cutting') ? tableData.reduce((acc, item) => {
         const existingItem = acc.find(i => i.catchNumber === item.catchNumber);
         if (existingItem) {
             existingItem.quantity += item.quantity;
@@ -287,7 +288,8 @@ const ProcessTable = () => {
             acc.push({ ...item });
         }
         return acc;
-    }, []);
+    }, []) : tableData;  // If it's Digital Printing, do not combine the catch quantities
+
 
     return (
         <div className="container-fluid">
@@ -377,7 +379,7 @@ const ProcessTable = () => {
             <Row className='mb-5'>
                 <Col lg={12} md={12}>
                     <CatchProgressBar data={combinedTableData} />
-                </Col> 
+                </Col>
             </Row>
 
             <Row>
@@ -398,33 +400,6 @@ const ProcessTable = () => {
                         ))}
                     </div>
                 </Col>
-                 {/* <Col lg={3} md={12} className="pe-0">
-                            <h4 className={`${customDark} text-white p-2`}>Project Lots</h4>
-                            <div className="d-flex flex-column" style={{ width: '100%', maxHeight: '400px', overflowY: 'auto', overflowX: 'hidden', backgroundColor: '#f0f8ff' }}>
-                                {projectLots.map((lot, index) => (
-                                    <div
-                                        key={index}
-                                        className={`mb-2 p-2 rounded-1 ${customLight} ${customDarkText} ${selectedLot === lot.lotNo ? 'border border-primary shadow-lg' : 'border'}`}
-                                        onClick={() => handleLotClick(lot.lotNo)}
-                                        style={{
-                                            cursor: 'pointer',
-                                            transition: 'all 0.3s',
-                                            transform: selectedLot === lot.lotNo ? 'scale(1.02)' : 'scale(1)',
-                                            backgroundColor: selectedLot === lot.lotNo ? '#e6f7ff' : '#ffffff'
-                                        }}
-                                    >
-                                        <div className="d-flex justify-content-between align-items-center">
-                                            <h5 className={`mb-0 ${selectedLot === lot.lotNo ? 'fw-bold text-dark' : ''}`} style={{ width: '90%' }}>
-                                                <span className="d-flex justify-content-start align-items-center" style={{ height: '100%' }}>
-                                                    Lot {lot.lotNo}
-                                                </span>
-                                            </h5>
-                                            {selectedLot === lot.lotNo && <span className="text-primary">✓</span>}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </Col> */}
             </Row>
 
             <Row className='mb-2 mt-1'>
@@ -435,7 +410,7 @@ const ProcessTable = () => {
                     {tableData?.length > 0 && (
                         <ProjectDetailsTable
                             tableData={combinedTableData}
-                                    fetchTransactions={fetchTransactions}
+                            fetchTransactions={fetchTransactions}
                             setTableData={setTableData}
                             projectId={id}
                             lotNo={selectedLot}
@@ -472,7 +447,7 @@ const ProcessTable = () => {
                 handleClose={() => setCatchDetailModalShow(false)}
                 data={catchDetailModalData}
             />
-           
+
         </div>
     );
 };

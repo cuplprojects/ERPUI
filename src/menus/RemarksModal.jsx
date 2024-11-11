@@ -70,15 +70,10 @@ const RemarksModal = ({ show, handleClose, handleSave, data, processId }) => {
                 alarmId: existingTransactionData ? existingTransactionData.alarmId : "",
                 lotNo: data.lotNo,
                 teamId: existingTransactionData ? existingTransactionData.teamId : [],
-                // Only include voice recording if there's an actual audio blob
-                voiceRecording: base64Audio || "", // If there's no audio, send an empty string
+                voiceRecording: base64Audio || ""
             };
 
-            if (data.transactionId) {
-                await API.put(`/Transactions/${data.transactionId}`, postData);
-            } else {
-                await API.post('/Transactions', postData);
-            }
+            await API.post('/Transactions', postData);
 
             // Reset states after save
             handleSave(remarks, mediaBlobUrl);

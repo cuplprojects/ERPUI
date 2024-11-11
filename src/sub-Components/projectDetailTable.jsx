@@ -13,7 +13,7 @@ import { IoCloseCircle } from "react-icons/io5";
 import StatusToggle from '../menus/StatusToggle';
 import { PiDotsNineBold } from "react-icons/pi";
 import { RiSearchLine } from 'react-icons/ri';
-import { Col, Row, Spinner } from 'react-bootstrap';
+import { Col, Row } from 'react-bootstrap';
 import { FaEdit } from "react-icons/fa";
 import { FaFilter } from "react-icons/fa";//filter icon for table filter menu
 import themeStore from './../store/themeStore';
@@ -25,9 +25,10 @@ import API from '../CustomHooks/MasterApiHooks/api';
 import { hasPermission } from '../CustomHooks/Services/permissionUtils';
 import { useTranslation } from 'react-i18next';
 
+
 const { Option } = Select;
 
-const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, projectId, hasFeaturePermission, featureData, processId, lotNo }) => {
+const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePermission, featureData, processId, lotNo, fetchTransactions }) => {
     console.log(lotNo);
     console.log(tableData);
     console.log(processId);
@@ -110,7 +111,6 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
 
         fetchCatchData();
     }, [projectId, lotNo]);
-    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         // Update the initialTableData state whenever tableData changes
@@ -118,8 +118,8 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
     }, [tableData]);
 
     useEffect(() => {
-        const newVisibleKeys = filteredData.map(item => item.catchNumber);
-        setVisibleRowKeys(newVisibleKeys);lotNo
+        const newVisibleKeys = filteredData.map(item => item.srNo); // Use srNo instead of catchNumber
+        setVisibleRowKeys(newVisibleKeys);
     }, [searchText, hideCompleted]); // Add other dependencies if necessary
 
     // Add effect to fetch transactions when processId changes
@@ -151,12 +151,13 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
         }
     }, [projectId, processId, lotNo]);
 
-    const handleRowStatusChange = async (catchNumber, newStatusIndex) => {
-        console.log(`Toggling status for catch number ${catchNumber} to index ${newStatusIndex}`);
+
+    
+    const handleRowStatusChange = async (srNo, newStatusIndex) => {
         const statusSteps = ["Pending", "Started", "Completed"];
         const newStatus = statusSteps[newStatusIndex];
 
-        const updatedRow = tableData.find(row => row.catchNumber === catchNumber);
+        const updatedRow = tableData.find(row => row.srNo === srNo);
 
         try {
             // Fetch the existing transaction data if transactionId exists
@@ -177,21 +178,15 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
                 machineId: existingTransactionData ? existingTransactionData.machineId : 0,
                 status: newStatusIndex, // Change only this field
                 alarmId: existingTransactionData ? existingTransactionData.alarmId : "",
-
                 teamId: existingTransactionData ? existingTransactionData.teamId : [],
-                lotNo: existingTransactionData ? existingTransactionData.lotNo : lot,
+                lotNo: existingTransactionData ? existingTransactionData.lotNo : lotNo,
                 voiceRecording: existingTransactionData ? existingTransactionData.voiceRecording : ""
             };
-            // Update or create the transaction
-            if (updatedRow.transactionId) {
-                // If it exists, update using PUT
-                const response = await API.put(`/Transactions/${updatedRow.transactionId}`, postData);
-                console.log('Update Response:', response.data);
-            } else {
-                // If it doesn't exist, create using POST
-                const response = await API.post('/Transactions', postData);
-                console.log('Create Response:', response.data);
-            }
+
+            // Always use POST regardless of whether transaction exists or not
+            const response = await API.post('/Transactions', postData);
+            console.log('Create Response:', response.data);
+            
             fetchTransactions(); // Refresh data
         } catch (error) {
             console.error('Error updating status:', error);
@@ -216,7 +211,7 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
                         const checked = e.target.checked;
                         setSelectAll(checked);
                         if (checked) {
-                            setSelectedRowKeys(tableData.map((row) => row.catchNumber));
+                            setSelectedRowKeys(tableData.map((row) => row.srNo));
                         } else {
                             setSelectedRowKeys([]);
                         }
@@ -227,13 +222,13 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
             render: (_, record) => (
                 <input
                     type="checkbox"
-                    checked={selectAll || selectedRowKeys.includes(record.catchNumber)}
+                    checked={selectAll || selectedRowKeys.includes(record.srNo)}
                     onChange={(e) => {
                         const checked = e.target.checked;
                         if (checked) {
-                            setSelectedRowKeys([...selectedRowKeys, record.catchNumber]);
+                            setSelectedRowKeys([...selectedRowKeys, record.srNo]);
                         } else {
-                            setSelectedRowKeys(selectedRowKeys.filter((key) => key !== record.catchNumber));
+                            setSelectedRowKeys(selectedRowKeys.filter((key) => key !== record.srNo));
                             setSelectAll(false);
                         }
                     }}
@@ -270,11 +265,7 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
                             <div>
                                 <button
                                     className="rounded border fs-6 custom-zoom-btn bg-white position-relative "
-                                    onClick={() => {
-                                        handleCatchClick(record);
-                                        setCatchDetailModalShow(true);
-                                        setCatchDetailModalData(record);
-                                    }}
+                                    onClick={() => console.log('Detail:', record)}
                                 >
                                     {text}
                                 </button>
@@ -308,7 +299,7 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
                                     className="fs-6  position-relative "
                                     onClick={() => handleCatchClick(record)}
                                 >
-                                    {record.alerts && record?.alerts !== "" && record?.alerts !== "0" && (
+                                    {record.alerts && (
                                         <BiSolidFlag
                                             title={record.alerts}
                                             className=''
@@ -347,24 +338,13 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
             align: 'center',
             sorter: (a, b) => a.remarks.localeCompare(b.remarks),
         }] : []),
-
         ...(columnVisibility['Team Assigned'] && hasFeaturePermission(5) ? [{
-
             title: t("teamAssigned"),
             dataIndex: 'teamUserNames',
             // width: '20%',
             align: 'center',
             key: 'teamUserNames',
-
-            render: (teamUserNames) => teamUserNames?.join(', ') || '-',
-            sorter: (a, b) => {
-                const teamA = a.teamUserNames?.join(', ') || '';
-                const teamB = b.teamUserNames?.join(', ') || '';
-                return teamA.localeCompare(teamB);
-            },
-
-    
-
+            sorter: (a, b) => a.teamUserNames - b.teamUserNames,
         }] : []),
         ...(columnVisibility['Course'] && hasFeaturePermission(13) ? [{
             title: t("course"),
@@ -402,13 +382,11 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
 
                 const statusSteps = [t("pending"), t("started"), t("completed")];
                 const initialStatusIndex = text !== undefined ? text : 0;
+                const hasAlerts = record.alerts && record.alerts.length > 0;
 
-                const hasAlerts = Boolean(record.alerts?.length);
-                console.log(Boolean(record.alerts?.length));
                 // Check if 'Assign Team' and 'Select Zone' data is populated
-                const isZoneAssigned = Boolean(record.zoneId);
-                const isTeamAssigned = Boolean(record.teamId?.length);  // Assuming teamId is an array
-        
+                const isZoneAssigned = record.zoneId !== 0 && record.zoneId !== null;
+                const isTeamAssigned = record.teamId && record.teamId.length > 0;  // Assuming teamId is an array
 
                 // Check if 'Select Machine' is required (i.e., permission granted)
                 const hasSelectMachinePermission = hasFeaturePermission(10); // Check if the user has Select Machine permission
@@ -417,9 +395,8 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
                 // 1. The Select Machine is assigned (if permission for Select Machine exists)
                 // 2. OR The Zone and Team are assigned (if permission for Select Machine doesn't exist)
                 const canChangeStatus = hasSelectMachinePermission
-
-                    ? (record.machineId !== 0 && record.machineId !== null && isZoneAssigned && isTeamAssigned) // All conditions must be met if machine permission exists
-                    : (isZoneAssigned && isTeamAssigned); // Just zone and team needed if no machine permission
+                    ? record.machineId !== 0 && record.machineId !== null // Check if machine is assigned
+                    : isZoneAssigned && isTeamAssigned; // Check if zone and team are assigned if Select Machine is not required
 
                 return (
                     <div className="d-flex justify-content-center">
@@ -437,7 +414,7 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
                         ) : (
                             <StatusToggle
                                 initialStatusIndex={initialStatusIndex}
-                                onStatusChange={(newIndex) => handleRowStatusChange(record.catchNumber, newIndex)}
+                                onStatusChange={(newIndex) => handleRowStatusChange(record.srNo, newIndex)}
                                 statusSteps={statusSteps.map((status, index) => ({
                                     status,
                                     color: index === 0 ? "red" : index === 1 ? "blue" : "green"
@@ -464,7 +441,7 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
 
         // Iterate over selectedRowKeys and update status
         const updates = selectedRowKeys.map(async (key) => {
-            const updatedRow = tableData.find(row => row.catchNumber === key);
+            const updatedRow = tableData.find(row => row.srNo === key);
             if (updatedRow) {
                 const postData = {
                     transactionId: updatedRow.transactionId || 0,
@@ -477,18 +454,14 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
                     status: newStatusIndex,
                     alarmId: updatedRow?.alarmId || "",
                     machineId: updatedRow?.machineId || 0,
-                    lotNo: updatedRow?.lotNo || 0,
+                    lotNo: updatedRow?.lotNo || lotNo,
                     voiceRecording: updatedRow?.voiceRecording || "",
                     teamId: updatedRow?.teamId || []
                 };
 
                 try {
-                    // Update or create based on existence of transactionId
-                    if (updatedRow.transactionId) {
-                        await API.put(`/Transactions/${updatedRow.transactionId}`, postData);
-                    } else {
-                        await API.post('/Transactions', postData);
-                    }
+                    // Always use POST regardless of whether transaction exists or not
+                    await API.post('/Transactions', postData);
                 } catch (error) {
                     console.error(`Error updating status for ${key}:`, error);
                 }
@@ -504,7 +477,7 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
 
     const getSelectedStatus = () => {
         if (selectedRowKeys.length > 0) {
-            const selectedRows = tableData.filter((row) => selectedRowKeys.includes(row.catchNumber));
+            const selectedRows = tableData.filter((row) => selectedRowKeys.includes(row.srNo));
             const statuses = selectedRows.map((row) => row.status);
             const uniqueStatuses = [...new Set(statuses)];
             // Check if all selected rows have the same status
@@ -524,7 +497,7 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
     const handleDropdownSelect = (action) => {
         if (selectedRowKeys.length > 0) {
             // Get all selected rows
-            const selectedRows = tableData.filter(row => selectedRowKeys.includes(row.catchNumber));
+            const selectedRows = tableData.filter(row => selectedRowKeys.includes(row.srNo));
 
             if (action === 'Alarm' && hasFeaturePermission(3)) {
                 setAlarmModalShow(true);
@@ -554,7 +527,7 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
 
     const handleSelectZoneSave = (zone) => {
         const updatedData = tableData.map((row) => {
-            if (selectedRowKeys.includes(row.catchNumber)) {
+            if (selectedRowKeys.includes(row.srNo)) {
                 return { ...row, zone }; // Update the zone or any other necessary field
             }
             return row;
@@ -567,7 +540,7 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
 
     const handleSelectMachineSave = (machine) => {
         const updatedData = tableData.map((row) => {
-            if (selectedRowKeys.includes(row.catchNumber)) {
+            if (selectedRowKeys.includes(row.srNo)) {
                 return { ...row, machine }; // Update the zone or any other necessary field
             }
             return row;
@@ -581,7 +554,7 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
 
     const handleAssignTeamSave = (team) => {
         const updatedData = tableData.map((row) => {
-            if (selectedRowKeys.includes(row.catchNumber)) {
+            if (selectedRowKeys.includes(row.srNo)) {
                 return { ...row, team };
             }
             return row;
@@ -593,7 +566,7 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
 
     const handleAlarmSave = (alarm) => {
         const updatedData = tableData.map((row) => {
-            if (selectedRowKeys.includes(row.catchNumber)) {
+            if (selectedRowKeys.includes(row.srNo)) {
                 return { ...row, alerts: alarm };
             }
             return row;
@@ -606,21 +579,8 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
 
     const handleInterimQuantitySave = (interimQuantity) => {
         const updatedData = tableData.map((row) => {
-            if (selectedRowKeys.includes(row.catchNumber)) { // Use catchNumber for comparison
+            if (selectedRowKeys.includes(row.srNo)) { // Use srNo for comparison
                 return { ...row, interimQuantity };
-            }
-            return row;
-        });
-        setTableData(updatedData);
-        setSelectedRowKeys([]); // Deselect all rows
-        setShowOptions(false); // Reset options visibility
-        fetchTransactions();
-    };
-
-    const handleSaveCatch = (alarm) => {
-        const updatedData = tableData.map((row) => {
-            if (selectedRowKeys.includes(row.catchNumber)) {
-                return { ...row, alarm };
             }
             return row;
         });
@@ -632,7 +592,7 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
 
     const handleRemarksSave = (remarks, mediaBlobUrl) => {
         const updatedData = tableData.map((row) => {
-            if (selectedRowKeys.includes(row.catchNumber)) {
+            if (selectedRowKeys.includes(row.srNo)) {
                 return { ...row, remarks, mediaBlobUrl };
             }
             return row;
@@ -643,12 +603,10 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
         fetchTransactions();
     };
 
-    const selectedRows = tableData.filter((row) => selectedRowKeys.includes(row.catchNumber));
+    const selectedRows = tableData.filter((row) => selectedRowKeys.includes(row.srNo));
     const isCompleted = selectedRows.every(row => row.status === 2);
     const isStarted = selectedRows.every(row => row.status == 1);
 
-
-    
     const menu = (
         <Menu>
             {hasFeaturePermission(3) && !isCompleted && (
@@ -818,8 +776,8 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
                                     { status: "Started", color: "blue" },
                                     { status: "Completed", color: "green" },
                                 ]}
-                                disabled={selectedRowKeys.some(catchNumber => {
-                                    const row = tableData.find(item => item.catchNumber === catchNumber);
+                                disabled={selectedRowKeys.some(srNo => {
+                                    const row = tableData.find(item => item.srNo === srNo);
 
                                     // Validation logic for whether the status can be changed
                                     const isZoneAssigned = row.zoneId !== 0 && row.zoneId !== null;
@@ -827,11 +785,9 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
                                     const hasSelectMachinePermission = hasFeaturePermission(10); // Check if Select Machine permission exists
 
                                     const canChangeStatus = hasSelectMachinePermission
-
-                                    ? (row.machineId !== 0 && row.machineId !== null && isZoneAssigned && isTeamAssigned) // All conditions must be met if machine permission exists
-                                    : (isZoneAssigned && isTeamAssigned);  // Otherwise, Zone and Team must be assigned
-                                        const canBeCompleted = row.interimQuantity === row.quantity;
-
+                                        ? row.machineId !== 0 && row.machineId !== null  // Machine must be assigned if permission exists
+                                        : isZoneAssigned && isTeamAssigned;  // Otherwise, Zone and Team must be assigned
+                                        const canBeCompleted = record.interimQuantity === record.quantity;
                                     return row.alerts || !canChangeStatus || (getSelectedStatus() === 2 && !canBeCompleted); // Disable if there are alerts or the status cannot be changed
                                 })}
                             />
@@ -898,37 +854,29 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
             </Row>
             <Row>
                 <Col lg={12} md={12}>
-                    {loading ? (
-                        <div className="text-center p-4">
-                            <Spinner animation="border" role="status">
-                                <span className="visually-hidden">Loading...</span>
-                            </Spinner>
-                        </div>
-                    ) : (
-                        <Table
-                            rowClassName={rowClassName}
-                            className={`${customDark === "default-dark" ? "thead-default" : ""}
-                                        ${customDark === "red-dark" ? "thead-red" : ""}
-                                        ${customDark === "green-dark" ? "thead-green" : ""}
-                                        ${customDark === "blue-dark" ? "thead-blue" : ""}
-                                        ${customDark === "dark-dark" ? "thead-dark" : ""}
-                                        ${customDark === "pink-dark" ? "thead-pink" : ""}
-                                        ${customDark === "purple-dark" ? "thead-purple" : ""}
-                                        ${customDark === "light-dark" ? "thead-light" : ""}
-                                        ${customDark === "brown-dark" ? "thead-brown" : ""} `}
-                            rowKey="catchNumber"
-                            columns={columns}
-                            dataSource={filteredData}
-                            pagination={customPagination}
-                            bordered
-                            style={{ position: "relative", zIndex: "900" }}
-                            striped={true}
-                            tableLayout="auto"
+                    <Table
+                        rowClassName={rowClassName}
+                        className={`${customDark === "default-dark" ? "thead-default" : ""}
+                                    ${customDark === "red-dark" ? "thead-red" : ""}
+                                    ${customDark === "green-dark" ? "thead-green" : ""}
+                                    ${customDark === "blue-dark" ? "thead-blue" : ""}
+                                    ${customDark === "dark-dark" ? "thead-dark" : ""}
+                                    ${customDark === "pink-dark" ? "thead-pink" : ""}
+                                    ${customDark === "purple-dark" ? "thead-purple" : ""}
+                                    ${customDark === "light-dark" ? "thead-light" : ""}
+                                    ${customDark === "brown-dark" ? "thead-brown" : ""} `}
+                        rowKey="srNo"
+                        columns={columns}
+                        dataSource={filteredData}
+                        pagination={customPagination}
+                        bordered
+                        style={{ position: "relative", zIndex: "900" }}
+                        striped={true}
+                        tableLayout="auto"
                         responsive={true}
                         scroll={{ x: true }}
                         size="middle"
-                        />
-                    )}
+                    />
                 </Col>
             </Row>
             <ColumnToggleModal
@@ -964,9 +912,6 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
                 show={catchDetailModalShow}
                 handleClose={() => setCatchDetailModalShow(false)}
                 data={catchDetailModalData}
-                handleSave={handleSaveCatch}
-                processId={processId}
-                hasResolvePermission={hasPermission('2.8.3')}
             />
             <SelectZoneModal
                 show={selectZoneModalShow}
@@ -993,3 +938,4 @@ const ProjectDetailsTable = ({ tableData, fetchTransactions, setTableData, proje
     );
 };
 export default ProjectDetailsTable;
+
