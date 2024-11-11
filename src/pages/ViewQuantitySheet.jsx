@@ -33,7 +33,9 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
         quantity: 0,
         percentageCatch: 0,
         projectId: projectId,
-        quantitySheetId:quantitySheetId
+        quantitySheetId:quantitySheetId,
+        examDate: '',
+        examTime: '',
     });
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [showTransferModal, setShowTransferModal] = useState(false);
@@ -322,6 +324,8 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
                 percentageCatch: 0,
                 projectId: projectId,
                 processId: [],
+                examDate: newRowData.examDate,
+                examTime: newRowData.examTime,
             }
         ];
 
@@ -343,6 +347,8 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
                 examTime: '',
                 percentageCatch: 0,
                 projectId: projectId,
+                examDate: '',
+                examTime: '',
             });
             fetchQuantity(selectedLotNo);
         } catch (error) {

@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
+import { useTranslation } from 'react-i18next';
 
 const StatusBarChart = ({ data, catchNumbers }) => {
   const [currentPage, setCurrentPage] = useState(0);
+  const { t } = useTranslation();
 
   //Theme Change Section
   const { getCssClasses } = useStore(themeStore);
@@ -67,13 +69,13 @@ const StatusBarChart = ({ data, catchNumbers }) => {
             dataKey="interimQuantity"
             stackId="a"
             fill="#61DB53"
-            name="Interim Quantity"
+            name={t("interimQuantity")}
           />
           <Bar
             dataKey="remainingQuantity"
             stackId="a"
             fill="#0099ff"
-            name="Remaining Quantity"
+            name={t("remainingQuantity")}
           />
         </BarChart>
       </ResponsiveContainer>
@@ -84,15 +86,15 @@ const StatusBarChart = ({ data, catchNumbers }) => {
           disabled={currentPage === 0}
           className={`btn btn-sm btn-link border rounded ${customBtn}`}
         >
-          Previous
+          {t("previous")}
         </button>
-        <span style={{ margin: '0 10px' }} className={`${customDarkText}`}>{`Page ${currentPage + 1} of ${totalPages}`}</span>
+        <span style={{ margin: '0 10px' }} className={`${customDarkText}`}>{`${t("page")} ${currentPage + 1} / ${totalPages}`}</span>
         <button
           onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages - 1))}
           disabled={currentPage === totalPages - 1}
           className={`btn btn-sm btn-link border rounded ${customBtn}`}
         >
-          Next
+          {t("next")}
         </button>
       </div>
     </div>

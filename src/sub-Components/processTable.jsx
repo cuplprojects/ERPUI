@@ -14,7 +14,7 @@ import { useStore } from 'zustand';
 import { MdPending, MdCloudUpload } from "react-icons/md";
 import { Link } from 'react-router-dom';
 import { FaRegHourglassHalf } from "react-icons/fa6";
-
+import { useTranslation } from 'react-i18next';
 import API from '../CustomHooks/MasterApiHooks/api';
 import { useUserData } from '../store/userDataStore';
 import { getProjectProcessAndFeature, getProjectProcessByProjectAndSequence } from '../CustomHooks/ApiServices/projectProcessAndFeatureService';
@@ -31,6 +31,7 @@ const ProcessTable = () => {
     const { processId, processName } = useCurrentProcessStore();
     const { setProcess } = useCurrentProcessStore((state) => state.actions);
     const userData = useUserData();
+    const { t } = useTranslation();
 
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = useMemo(() => getCssClasses(), [getCssClasses]);
@@ -48,6 +49,10 @@ const ProcessTable = () => {
     const [processes, setProcesses] = useState([]);
     const [previousProcessCompletionPercentage, setPreviousProcessCompletionPercentage] = useState(0);
     const [previousProcessTransactions, setPreviousProcessTransactions] = useState([]);
+
+    const [showPieChart, setShowPieChart] = useState(false);
+    const [showProgressBar, setShowProgressBar] = useState(false);
+
 
 
     useEffect(() => {
@@ -105,7 +110,7 @@ const ProcessTable = () => {
         }
     };
 
-    const fetchCombinedPercentages =async () => {
+    const fetchCombinedPercentages = async () => {
         try {
             const data = await getCombinedPercentages(id);
             // Update state with combined percentages data
@@ -118,7 +123,7 @@ const ProcessTable = () => {
             console.error("Error fetching combined percentages:", error);
         }
     };
-    
+
     const hasFeaturePermission = useCallback((featureId) => {
         if (userData?.role?.roleId === 1) {
             return true;
@@ -272,7 +277,7 @@ const ProcessTable = () => {
                 setTableData(filteredData);
 
                 // Extract unique lot numbers and sort them
-                const uniqueLots = [...new Set(transactionsData.map(item => item.lotNo))].sort((a,b) => a - b);
+                const uniqueLots = [...new Set(transactionsData.map(item => item.lotNo))].sort((a, b) => a - b);
                 setProjectLots(uniqueLots.map(lotNo => ({ lotNo })));
             }
         } catch (error) {
@@ -284,7 +289,7 @@ const ProcessTable = () => {
 
     useEffect(() => {
         fetchData();
-        
+
         // Fetch project name
         const fetchProjectName = async () => {
             try {
@@ -340,7 +345,8 @@ const ProcessTable = () => {
     const catchNumbers = tableData.map((item) => item.catchNumber).sort((a, b) => a - b);
 
     // Combine entries with the same catch number
-    const combinedTableData = tableData.reduce((acc, item) => {
+    // Combine entries with the same catch number unless the process is Digital Printing
+    const combinedTableData = (processName !== 'Digital Printing' && processName !== 'Offset Printing' && processName !== 'CTP' && processName !== 'Cutting') ? tableData.reduce((acc, item) => {
         const existingItem = acc.find(i => i.catchNumber === item.catchNumber);
         if (existingItem) {
             existingItem.quantity += item.quantity;
@@ -348,7 +354,8 @@ const ProcessTable = () => {
             acc.push({ ...item });
         }
         return acc;
-    }, []);
+    }, []) : tableData;  // If it's Digital Printing, do not combine the catch quantities
+
 
     return (
         <div className="container-fluid">
@@ -377,7 +384,7 @@ const ProcessTable = () => {
                                 ) : (
                                     <Col lg={3} md={4} xs={12}>
                                         <div className={`align-items-center flex-column`}>
-                                            <div className='text-center fs-5'>Previous Process</div>
+                                            <div className='text-center fs-5'>{t("previousProcess")}</div>
                                             <div className={`p-1 fs-6 text-primary border ${customDarkBorder} rounded ms-1 d-flex justify-content-center align-items-center ${customDark === 'dark-dark' ? `${customBtn} text-white` : `${customLight} bg-light`}`} style={{ fontWeight: 900 }}>
                                                 {previousProcess ? `${previousProcess.processName} - ${previousProcessCompletionPercentage}%` : 'N/A'}
                                                 <span className='ms-2'><FaRegHourglassHalf color='blue' size="20" /></span>
@@ -393,13 +400,13 @@ const ProcessTable = () => {
                                 <Col lg={6} md={4} xs={12} className='d-none d-lg-block d-md-block'>
                                     <div className="center-head">
                                         <div className='text-center fs-4'>{projectName}</div>
-                                        <div className='text-center fs-4'>Lot - {selectedLot}</div>
+                                        <div className='text-center fs-4'>{t("lot")} - {selectedLot}</div>
                                     </div>
                                 </Col>
 
                                 <Col lg={3} md={4} xs={12}>
                                     <div className={`align-items-center flex-column`}>
-                                        <div className='text-center fs-5'>Current Process</div>
+                                        <div className='text-center fs-5'>{t('currentProcess')}</div>
                                         <Select
                                             value={processId}
                                             onChange={handleProcessChange}
@@ -438,7 +445,7 @@ const ProcessTable = () => {
             <Row className='mb-5'>
                 <Col lg={12} md={12}>
                     <CatchProgressBar data={combinedTableData} />
-                </Col> 
+                </Col>
             </Row>
 
             <Row>
@@ -454,7 +461,7 @@ const ProcessTable = () => {
                                     transition: 'all 0.2s'
                                 }}
                             >
-                                Lot {lot.lotNo}
+                                {t("lot")} {lot.lotNo}
                             </button>
                         ))}
                     </div>
@@ -481,17 +488,29 @@ const ProcessTable = () => {
 
             <Row className='mb-4 d-flex justify-content-between'>
                 <Col lg={8} md={12} className='mb-1'>
-                    <Switch checked={showBarChart} onChange={() => setShowBarChart(!showBarChart)} />
-                    <span className={`ms-2 ${customDarkText}`}>
-                        {showBarChart ? 'Show Overall Completion Data' : 'Show Catch Data'}
-                    </span>
+                    <div className="d-flex align-items-center gap-4">
+                        <div>
+                            <Switch checked={showBarChart} onChange={() => setShowBarChart(!showBarChart)} />
+                            <span className={`ms-2 ${customDarkText}`}>
+                                {t("showCatchData")}
+                            </span>
+                        </div>
+                        <div>
+                            <Switch checked={showPieChart} onChange={() => setShowPieChart(!showPieChart)} />
+                            <span className={`ms-2 ${customDarkText}`}>
+                                {t("showCompletionPercentage")}
+                            </span>
+                        </div>
+                    </div>
                 </Col>
 
-                {showBarChart ? (
+                {showBarChart && (
                     <Col lg={12} md={12} sm={12} className='mt-1 d-fle justify-content-center'>
                         <StatusBarChart data={combinedTableData} catchNumbers={catchNumbers} />
                     </Col>
-                ) : (
+                )}
+                
+                {showPieChart && (
                     <Col lg={12} md={12} sm={12} className='mt-1 d-fle justify-content-center'>
                         <StatusPieChart data={combinedTableData} />
                     </Col>
@@ -503,7 +522,7 @@ const ProcessTable = () => {
                 handleClose={() => setCatchDetailModalShow(false)}
                 data={catchDetailModalData}
             />
-           
+
         </div>
     );
 };

@@ -3,9 +3,10 @@ import { ProgressBar } from 'react-bootstrap';
 import './../styles/catchProgressBar.css'; // Assuming you use external CSS
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
+import { useTranslation } from 'react-i18next';
 
 const CatchProgressBar = ({ data }) => {
-
+  const { t } = useTranslation();
 
   console.log(data)
     //Theme Change Section
@@ -40,8 +41,8 @@ const CatchProgressBar = ({ data }) => {
     return (
       <div className="progress-container">
         <div className="d-flex justify-content-between align-items-center">
-          <h5 className={`${customDarkText}`}>Overall Progress : {`${completedPercent.toFixed(0)}% Completed`} </h5>
-          <h5 className={`${customDarkText}`}>{completed} / {total} Completed</h5>
+          <h5 className={`${customDarkText}`}>{t("overallProgress")} : {`${completedPercent.toFixed(0)}% ${t("completed")}`} </h5>
+          <h5 className={`${customDarkText}`}>{completed} / {total} {t("completed")}</h5>
         </div>
         <ProgressBar className={`progress-bar-custom border border-2 ${customDark === 'dark-dark' ? customDark : customDarkText}`}>
           <ProgressBar striped variant="success" now={completedPercent} key={3} />
