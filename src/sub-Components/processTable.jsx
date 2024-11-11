@@ -14,7 +14,7 @@ import { useStore } from 'zustand';
 import { MdPending, MdCloudUpload } from "react-icons/md";
 import { Link } from 'react-router-dom';
 import { FaRegHourglassHalf } from "react-icons/fa6";
-
+import { useTranslation } from 'react-i18next';
 import API from '../CustomHooks/MasterApiHooks/api';
 import { useUserData } from '../store/userDataStore';
 import { getProjectProcessAndFeature, getProjectProcessByProjectAndSequence } from '../CustomHooks/ApiServices/projectProcessAndFeatureService';
@@ -31,6 +31,7 @@ const ProcessTable = () => {
     const { processId, processName } = useCurrentProcessStore();
     const { setProcess } = useCurrentProcessStore((state) => state.actions);
     const userData = useUserData();
+    const { t } = useTranslation();
 
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = useMemo(() => getCssClasses(), [getCssClasses]);
@@ -317,7 +318,7 @@ const ProcessTable = () => {
                                 ) : (
                                     <Col lg={3} md={4} xs={12}>
                                         <div className={`align-items-center flex-column`}>
-                                            <div className='text-center fs-5'>Previous Process</div>
+                                            <div className='text-center fs-5'>{t("previousProcess")}</div>
                                             <div className={`p-1 fs-6 text-primary border ${customDarkBorder} rounded ms-1 d-flex justify-content-center align-items-center ${customDark === 'dark-dark' ? `${customBtn} text-white` : `${customLight} bg-light`}`} style={{ fontWeight: 900 }}>
                                                 {previousProcess ? `${previousProcess.processName} - ${previousProcessCompletionPercentage}%` : 'N/A'}
                                                 <span className='ms-2'><FaRegHourglassHalf color='blue' size="20" /></span>
@@ -333,13 +334,13 @@ const ProcessTable = () => {
                                 <Col lg={6} md={4} xs={12} className='d-none d-lg-block d-md-block'>
                                     <div className="center-head">
                                         <div className='text-center fs-4'>{projectName}</div>
-                                        <div className='text-center fs-4'>Lot - {selectedLot}</div>
+                                        <div className='text-center fs-4'>{t("lot")} - {selectedLot}</div>
                                     </div>
                                 </Col>
 
                                 <Col lg={3} md={4} xs={12}>
                                     <div className={`align-items-center flex-column`}>
-                                        <div className='text-center fs-5'>Current Process</div>
+                                        <div className='text-center fs-5'>{t('currentProcess')}</div>
                                         <Select
                                             value={processId}
                                             onChange={handleProcessChange}
@@ -394,7 +395,7 @@ const ProcessTable = () => {
                                     transition: 'all 0.2s'
                                 }}
                             >
-                                Lot {lot.lotNo}
+                                {t("lot")} {lot.lotNo}
                             </button>
                         ))}
                     </div>

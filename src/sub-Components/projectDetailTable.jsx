@@ -22,6 +22,9 @@ import { BiSolidFlag } from "react-icons/bi";
 import { MdPending } from "react-icons/md";// for pending
 import { IoCheckmarkDoneCircleSharp } from "react-icons/io5";// for completed
 import API from '../CustomHooks/MasterApiHooks/api';
+import { hasPermission } from '../CustomHooks/Services/permissionUtils';
+import { useTranslation } from 'react-i18next';
+
 
 const { Option } = Select;
 
@@ -30,6 +33,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
     console.log(tableData);
     console.log(processId);
     //Theme Change Section
+    const { t } = useTranslation();
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = getCssClasses();
     const customDark = cssClasses[0];
@@ -233,14 +237,14 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
             responsive: ['sm'],
         },
         {
-            title: 'Sr.No.',
+            title: t("srNo"),
             key: 'srNo',
             align: "center",
             render: (_, __, index) => ((currentPage - 1) * pageSize) + index + 1,
             responsive: ['sm'],
         },
         {
-            title: 'Catch No.',
+            title: t("catchNo"),
             dataIndex: 'catchNumber',
             key: 'catchNumber',
             align: 'center',
@@ -314,44 +318,44 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
             ),
         },
         {
-            title: 'Quantity',
+            title: t("quantity"),
             dataIndex: 'quantity',
             key: 'quantity',
             align: 'center',
             sorter: (a, b) => a.quantity - b.quantity,
         },
         ...(columnVisibility['Interim Quantity'] && hasFeaturePermission(7) ? [{
-            title: 'Interim Quantity',
+            title: t("interimQuantity"),
             dataIndex: 'interimQuantity',
             align: 'center',
             key: 'interimQuantity',
             sorter: (a, b) => a.interimQuantity - b.interimQuantity,
         }] : []),
         ...(columnVisibility.Remarks ? [{
-            title: 'Remarks',
+            title: t("remarks"),
             dataIndex: 'remarks',
             key: 'remarks',
             align: 'center',
             sorter: (a, b) => a.remarks.localeCompare(b.remarks),
         }] : []),
-        ...(columnVisibility['Team Assigned'] && hasFeaturePermission(7) ? [{
-            title: 'Team Assigned',
+        ...(columnVisibility['Team Assigned'] && hasFeaturePermission(5) ? [{
+            title: t("teamAssigned"),
             dataIndex: 'teamUserNames',
-            width: '20%',
+            // width: '20%',
             align: 'center',
             key: 'teamUserNames',
             sorter: (a, b) => a.teamUserNames - b.teamUserNames,
         }] : []),
         ...(columnVisibility['Course'] && hasFeaturePermission(13) ? [{
-            title: 'Course',
+            title: t("course"),
             dataIndex: 'course',
-            width: '20%',
+            // width: '20%',
             align: 'center',
             key: 'course',
             sorter: (a, b) => a.course - b.course,
         }] : []),
         ...(columnVisibility['Subject'] && hasFeaturePermission(14) ? [{
-            title: 'Subject',
+            title: t("subject"),
             dataIndex: 'subject',
             width: '20%',
             align: 'center',
@@ -359,7 +363,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
             sorter: (a, b) => a.subject - b.subject,
         }] : []),
         ...(columnVisibility['Paper'] && hasFeaturePermission(15) ? [{
-            title: 'Paper',
+            title: t("questionPaper"),
             dataIndex: 'paper',
             width: '20%',
             align: 'center',
@@ -367,7 +371,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
             sorter: (a, b) => a.paper - b.paper,
         }] : []),
         {
-            title: 'Status',
+            title: t("status"),
             dataIndex: 'status',
             key: 'status',
             align: 'center',
@@ -376,7 +380,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                     return <span>Invalid Data</span>; // Fallback for invalid data
                 }
 
-                const statusSteps = ["Pending", "Started", "Completed"];
+                const statusSteps = [t("pending"), t("started"), t("completed")];
                 const initialStatusIndex = text !== undefined ? text : 0;
                 const hasAlerts = record.alerts && record.alerts.length > 0;
 
@@ -386,14 +390,14 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
 
                 // Check if 'Select Machine' is required (i.e., permission granted)
                 const hasSelectMachinePermission = hasFeaturePermission(10); // Check if the user has Select Machine permission
-
+                const canBeCompleted = record.interimQuantity === record.quantity;
                 // The status can only be changed if:
                 // 1. The Select Machine is assigned (if permission for Select Machine exists)
                 // 2. OR The Zone and Team are assigned (if permission for Select Machine doesn't exist)
                 const canChangeStatus = hasSelectMachinePermission
                     ? record.machineId !== 0 && record.machineId !== null // Check if machine is assigned
                     : isZoneAssigned && isTeamAssigned; // Check if zone and team are assigned if Select Machine is not required
-                const canBeCompleted = record.interimQuantity === record.quantity;
+
                 return (
                     <div className="d-flex justify-content-center">
                         {hasAlerts ? (
@@ -607,34 +611,34 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
         <Menu>
             {hasFeaturePermission(3) && !isCompleted && (
                 <Menu.Item onClick={() => handleDropdownSelect('Alarm')}>
-                    Alarm
+                    {t("alarm")}
                 </Menu.Item>
             )}
             {hasFeaturePermission(7) && !isCompleted && isStarted && (
                 <Menu.Item onClick={() => handleDropdownSelect('Interim Quantity')}>
-                    Interim Quantity
+                    {t("interimQuantity")}
                 </Menu.Item>
             )}
             {!isCompleted && (
                 <Menu.Item onClick={() => handleDropdownSelect('Remarks')}>
-                    Remarks
+                    {t("remarks")}
                 </Menu.Item>
             )}
-            <Menu.Item onClick={() => setColumnModalShow(true)}>Columns</Menu.Item>
+            <Menu.Item onClick={() => setColumnModalShow(true)}>{t("columns")}</Menu.Item>
             {hasFeaturePermission(4) && (
                 <Menu.Item onClick={() => handleDropdownSelect('Select Zone')}
 
-                    disabled={selectedRowKeys.length === 0}>Select Zone</Menu.Item>
+                    disabled={selectedRowKeys.length === 0}>{t("selectZone")}</Menu.Item>
             )}
             {hasFeaturePermission(10) && (
                 <Menu.Item onClick={() => handleDropdownSelect('Select Machine')}
 
-                    disabled={selectedRowKeys.length === 0}>Select Machine</Menu.Item>
+                    disabled={selectedRowKeys.length === 0}>{t("selectMachine")}</Menu.Item>
             )}
             {hasFeaturePermission(5) && (
                 <Menu.Item onClick={() => handleDropdownSelect('Assign Team')}
 
-                    disabled={selectedRowKeys.length === 0}>Assign Team</Menu.Item>
+                    disabled={selectedRowKeys.length === 0}>{t('assignTeam')}</Menu.Item>
             )}
         </Menu>
     );
@@ -646,11 +650,11 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
         showSizeChanger: true,
         onShowSizeChange: (current, size) => setPageSize(size),
         onChange: (page) => setCurrentPage(page),
-        showTotal: (total) => `Total ${total} items`,
-        locale: { items_per_page: "Rows" }, // Removes the "/page" text
+        showTotal: (total) => `${t("total")} ${total} ${t("items")}`,
+        locale: { items_per_page: `${t('rows')}` }, // Removes the "/page" text
         pageSizeRender: (props) => (
             <div style={{ display: "flex", alignItems: "center" }}>
-                <span style={{ marginRight: 8 }} className=''>Limit Rows:</span>
+                <span style={{ marginRight: 8 }} className=''>{t("limitRows")}:</span>
                 {props}
             </div>
         ),
@@ -688,7 +692,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                                         checked={hideCompleted}
                                         onChange={handleToggleChange}
                                     />
-                                    <span className='ms-2'>Hide Completed</span>
+                                    <span className='ms-2'>{t("hideCompleted")}</span>
                                 </Menu.Item>
 
                                 <Menu.Divider />
@@ -698,7 +702,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                                         onChange={() => setShowOnlyCompletedPreviousProcess(!showOnlyCompletedPreviousProcess)}
                                     />
                                     {/* <span className='ms-2'>{previousProcess} Completed</span> */}
-                                    <span className='ms-2'>Previous  Completed</span>
+                                    <span className='ms-2'>{t("previousCompleted")}</span>
                                 </Menu.Item>
                                 <Menu.Divider />
 
@@ -707,7 +711,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                                         checked={showOnlyAlerts}
                                         onChange={() => setShowOnlyAlerts(!showOnlyAlerts)}
                                     />
-                                    <span className='ms-2'>Catches With Alerts</span>
+                                    <span className='ms-2'>{t("catchesWithAlerts")}</span>
                                 </Menu.Item>
 
                                 <Menu.Divider />
@@ -716,13 +720,13 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                                         checked={showOnlyRemarks}
                                         onChange={() => setShowOnlyRemarks(!showOnlyRemarks)}
                                     />
-                                    <span className='ms-2'>Catches With Remarks</span>
+                                    <span className='ms-2'>{t("catchesWithRemarks")}</span>
                                 </Menu.Item>
 
                                 <Menu.Divider />
 
                                 <Menu.Item onClick={(e) => e.stopPropagation()}> {/* Add this */}
-                                    <span>Limit Rows:</span>
+                                <span>{t("limitRows")}:</span>
                                     <Select
                                         value={pageSize}
                                         style={{ width: 60 }}
