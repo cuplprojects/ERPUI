@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Form, Row, Col, Button } from 'react-bootstrap';
 import API from '../../../../CustomHooks/MasterApiHooks/api';
 
+
 const CatchTeamAssignment = ({ teams, data, handleSave, handleClose, processId }) => {
+
 
   const [selectedTeam, setSelectedTeam] = useState('');
   const [usersInTeam, setUsersInTeam] = useState([]);
@@ -38,6 +40,10 @@ const CatchTeamAssignment = ({ teams, data, handleSave, handleClose, processId }
       setUsersInTeam(team.users); // Update users when team changes
     }
  // Notify parent component about the selected team
+  };
+
+  const handleRemoveUser = (userId) => {
+    setUsersInTeam(usersInTeam.filter(user => user.userId !== userId)); // Remove the user from the array
   };
 
   const handleRemoveUser = (userId) => {
