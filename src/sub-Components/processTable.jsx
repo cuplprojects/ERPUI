@@ -38,7 +38,7 @@ const ProcessTable = () => {
     const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
 
     const [tableData, setTableData] = useState([]);
-    const [showBarChart, setShowBarChart] = useState(true);
+    const [showBarChart, setShowBarChart] = useState(false);
     const [catchDetailModalShow, setCatchDetailModalShow] = useState(false);
     const [catchDetailModalData, setCatchDetailModalData] = useState(null);
     const [selectedLot, setSelectedLot] = useState(lotNo);

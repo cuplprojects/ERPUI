@@ -279,7 +279,10 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                             <div>
                                 <button
                                     className="rounded border fs-6 custom-zoom-btn bg-white position-relative "
+
                                     onClick={() => {
+
+
                                         handleCatchClick(record);
                                         setCatchDetailModalShow(true);
                                         setCatchDetailModalData(record);
@@ -383,7 +386,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
         ...(columnVisibility['Paper'] && hasFeaturePermission(15) ? [{
             title: t("questionPaper"),
             dataIndex: 'paper',
-            width: '20%',
+            width: '10%',
             align: 'center',
             key: 'paper',
             sorter: (a, b) => a.paper - b.paper,

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Button, Popconfirm, Select, Switch, message } from 'antd';
-import './FeatureConfiguration.css';
+// import './FeatureConfiguration.css';
 import API from '../../CustomHooks/MasterApiHooks/api';
 
 const FeatureConfiguration = () => {

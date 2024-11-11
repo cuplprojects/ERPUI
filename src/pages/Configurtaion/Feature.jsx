@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Button, Modal, Input, notification } from 'antd';
 import { AppstoreAddOutlined, EditOutlined } from '@ant-design/icons';
-import './FeatureManagement.css'; // Import your CSS file for styling
+// import './FeatureManagement.css'; // Import your CSS file for styling
 import API from '../../CustomHooks/MasterApiHooks/api';
 
 const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {

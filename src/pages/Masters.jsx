@@ -28,7 +28,7 @@ import { useStore } from 'zustand';
 import { hasPermission } from '../CustomHooks/Services/permissionUtils';
 import { useTranslation } from 'react-i18next';
 import SecurityQuestions from './SecurityQuestions';
-import Teams from './team';
+import Teams from './Team';
 
 const Sidebar = () => {
   const { t } = useTranslation();
