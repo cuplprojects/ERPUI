@@ -45,6 +45,7 @@ const CatchTeamAssignment = ({ teams, data, handleSave, handleClose, processId }
   };
 
 
+
   const handleAddUser = async () => {
     if (!selectedUserToAdd) {
       alert('Please select a user to add.');
@@ -124,8 +125,25 @@ const CatchTeamAssignment = ({ teams, data, handleSave, handleClose, processId }
           )}
         </Col>
       </Row>
-
       <Row>
+  <Col md={6}>
+    <Form.Group className="mb-3">
+      <Form.Label>Select Team</Form.Label>
+      <Form.Select value={selectedTeam} onChange={handleTeamChange}>
+        <option value="">Select a team...</option>
+        {teams.map((team) => (
+          <option key={team.teamId} value={team.teamId}>
+            {team.teamName} {/* Display team name */}
+            {/* Optionally, display users' names if needed */}
+            {team.users && team.users.length > 0 ? ` (${team.users.map(user => user.userName).join(', ')})` : ""}
+          </option>
+        ))}
+      </Form.Select>
+    </Form.Group>
+  </Col>
+</Row>
+
+      {/* <Row>
         <Col md={6}>
           <Form.Group className="mb-3">
             <Form.Label>Select Team</Form.Label>
@@ -142,7 +160,7 @@ const CatchTeamAssignment = ({ teams, data, handleSave, handleClose, processId }
             </Form.Select>
           </Form.Group>
         </Col>
-      </Row>
+      </Row> */}
 
       {selectedTeam && (
         <>
