@@ -267,13 +267,8 @@ const getProcesses = async () => {
           <Button onClick={() => setIsModalVisible(true)} size="large" className={`${customBtn} ${customDark === "dark-dark" ? `border` : `border-0`}`}>
             {t('addTeam')}
           </Button>
-          <Checkbox
-            checked={showDescription}
-            onChange={(e) => setShowDescription(e.target.checked)}
-            style={{ marginLeft: 'auto' }}
-          >
-            {t('showDescription')}
-          </Checkbox>
+
+
         </div>
 
         <Divider>{t('existingTeams')}</Divider>
