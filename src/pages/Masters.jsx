@@ -17,7 +17,6 @@ import Zone from './Zone'
 import Type from './Type';
 import AlarmMaster from './Alarm';
 import Machine from './ProductionMachine';
-import Team from './team';
 import './../styles/Sidebar.css';
 import AddUsers from '../sub-Components/addUsers';
 import AllUsers from '../sub-Components/allUsers';
@@ -29,7 +28,7 @@ import { useStore } from 'zustand';
 import { hasPermission } from '../CustomHooks/Services/permissionUtils';
 import { useTranslation } from 'react-i18next';
 import SecurityQuestions from './SecurityQuestions';
-import Teams from './team';
+import Teams from './Team';
 
 const Sidebar = () => {
   const { t } = useTranslation();
