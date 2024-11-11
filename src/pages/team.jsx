@@ -243,16 +243,10 @@ const getProcesses = async () => {
       },
     ];
 
-    if (showDescription) {
-      baseColumns.splice(2, 0, {
-          title: t('description'),
-          dataIndex: 'description',
-          key: 'description',
-      });
-  }
+   
 
   return baseColumns;
-}, [showDescription]);
+}, []);
 
   useEffect(() => {
     getUsers();
