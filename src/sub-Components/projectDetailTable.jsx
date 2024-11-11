@@ -159,6 +159,12 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
 
         const updatedRow = tableData.find(row => row.srNo === srNo);
 
+        // Check if previous process exists and is not completed
+        if (updatedRow.previousProcessData && updatedRow.previousProcessData !== null && updatedRow.previousProcessData.status !== 2) {
+            alert("Cannot change status - previous process must be completed first");
+            return;
+        }
+
         try {
             // Fetch the existing transaction data if transactionId exists
             let existingTransactionData;
@@ -255,7 +261,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                     <Row>
                         <Col lg={3} md={3} sm={3} xs={3}>
                             <div className='d-inline'>
-                                {record.previousProcessStats === "Completed" ? (
+                                {record.previousProcessData && record.previousProcessData.status === 2 ? (
                                     <IoCheckmarkDoneCircleSharp size={20} color="green" className="" />
                                 ) : (
                                     <MdPending size={20} color="orange" className="" />
@@ -377,27 +383,69 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
             key: 'status',
             align: 'center',
             render: (text, record) => {
+                // Add debug logging
+                console.log('Status render called with:', {
+                    text, 
+                    record,
+                    recordExists: !!record,
+                    textValue: text,
+                    previousProcess: record?.previousProcessData
+                });
+
                 if (!record || text === undefined || text === null) {
-                    return <span>Invalid Data</span>; // Fallback for invalid data
+                    console.log('Invalid data detected:', { record, text });
+                    return <span>Invalid Data</span>;
                 }
 
                 const statusSteps = [t("pending"), t("started"), t("completed")];
                 const initialStatusIndex = text !== undefined ? text : 0;
                 const hasAlerts = record.alerts && record.alerts.length > 0;
 
-                // Check if 'Assign Team' and 'Select Zone' data is populated
-                const isZoneAssigned = record.zoneId !== 0 && record.zoneId !== null;
-                const isTeamAssigned = record.teamId && record.teamId.length > 0;  // Assuming teamId is an array
+                const hasAlerts = Boolean(record.alerts?.length);
+                
+                // Check if previous process exists and is completed
+                const isPreviousProcessCompleted = !record.previousProcessData || record.previousProcessData.status === 2;
+                console.log('Previous process check:', {
+                    previousProcessData: record.previousProcessData,
+                    isPreviousProcessCompleted,
+                    previousStatus: record.previousProcessData?.status
+                });
+                
+                // Check if 'Assign Team' and 'Select Zone' data is populated 
+                const isZoneAssigned = Boolean(record.zoneId);
+                const isTeamAssigned = Boolean(record.teamId?.length);
+                console.log('Assignment checks:', {
+                    zoneId: record.zoneId,
+                    isZoneAssigned,
+                    teamId: record.teamId,
+                    isTeamAssigned
+                });
+        
+                // Check if 'Select Machine' is required
+                const hasSelectMachinePermission = hasFeaturePermission(10);
+                console.log('Machine permission check:', {
+                    hasSelectMachinePermission,
+                    machineId: record.machineId
+                });
+        
+                // Determine if status can be changed
+                const canChangeStatus = isPreviousProcessCompleted && (
+                    hasSelectMachinePermission
+                        ? (record.machineId !== 0 && record.machineId !== null && isZoneAssigned && isTeamAssigned)
+                        : (isZoneAssigned && isTeamAssigned)
+                );
 
-                // Check if 'Select Machine' is required (i.e., permission granted)
-                const hasSelectMachinePermission = hasFeaturePermission(10); // Check if the user has Select Machine permission
-                const canBeCompleted = record.interimQuantity === record.quantity;
-                // The status can only be changed if:
-                // 1. The Select Machine is assigned (if permission for Select Machine exists)
-                // 2. OR The Zone and Team are assigned (if permission for Select Machine doesn't exist)
-                const canChangeStatus = hasSelectMachinePermission
-                    ? record.machineId !== 0 && record.machineId !== null // Check if machine is assigned
-                    : isZoneAssigned && isTeamAssigned; // Check if zone and team are assigned if Select Machine is not required
+                console.log('Final status check:', {
+                    canChangeStatus,
+                    conditions: {
+                        isPreviousProcessCompleted,
+                        hasSelectMachinePermission,
+                        machineAssigned: record.machineId !== 0 && record.machineId !== null,
+                        isZoneAssigned,
+                        isTeamAssigned
+                    }
+                });
+
 
                 return (
                     <div className="d-flex justify-content-center">
@@ -426,8 +474,15 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                     </div>
                 );
             },
-            sorter: (a, b) => (a.status ?? 0) - (b.status ?? 0),
-        }
+
+            sorter: (a, b) => {
+                // Convert status numbers to strings for comparison
+                const statusA = a.status?.toString() || '';
+                const statusB = b.status?.toString() || '';
+                return statusA.localeCompare(statusB);
+            }
+        }        
+
     ];
 
     const clearSelections = () => {
@@ -439,6 +494,17 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
     const handleStatusChange = async (newStatus) => {
         const statusSteps = ["Pending", "Started", "Completed"];
         const newStatusIndex = statusSteps.indexOf(newStatus);
+
+        // Check if all selected rows have completed previous process or no previous process
+        const allPreviousCompleted = selectedRowKeys.every(key => {
+            const row = tableData.find(row => row.catchNumber === key);
+            return !row.previousProcessData?.status == 2 || row.previousProcessData === null || row.previousProcessData.status === 2;
+        });
+
+        if (!allPreviousCompleted) {
+            alert("Cannot change status - previous process must be completed for all selected items");
+            return;
+        }
 
         // Iterate over selectedRowKeys and update status
         const updates = selectedRowKeys.map(async (key) => {

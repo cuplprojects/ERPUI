@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Select, Table, Input, Checkbox } from 'antd';
 import { useStore } from 'zustand';
-import 'bootstrap/dist/css/bootstrap.min.css';
 import { Modal as BootstrapModal } from 'react-bootstrap';
 import themeStore from './../store/themeStore';
 import API from '../CustomHooks/MasterApiHooks/api';
@@ -29,6 +28,8 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
         subject: '',
         innerEnvelope: '',
         outerEnvelope: '',
+        examDate: '',
+        examTime: '',
         quantity: 0,
         percentageCatch: 0,
         projectId: projectId,
@@ -97,6 +98,18 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
             title: t('subject'),
             dataIndex: 'subject',
             key: 'subject',
+            width: 100,
+        },
+        {
+            title: t('examDate'),
+            dataIndex: 'examDate',
+            key: 'examDate',
+            width: 100,
+        },
+        {
+            title: t('examTime'),
+            dataIndex: 'examTime',
+            key: 'examTime',
             width: 100,
         },
         {
@@ -305,6 +318,8 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
                 innerEnvelope: newRowData.innerEnvelope,
                 outerEnvelope: newRowData.outerEnvelope,
                 lotNo: selectedLotNo,
+                examDate: newRowData.examDate,
+                examTime: newRowData.examTime,
                 quantity: parseInt(newRowData.quantity, 10),
                 percentageCatch: 0,
                 projectId: projectId,
@@ -328,6 +343,8 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
                 innerEnvelope: '',
                 outerEnvelope: '',
                 quantity: 0,
+                examDate: '',
+                examTime: '',
                 percentageCatch: 0,
                 projectId: projectId,
                 examDate: '',

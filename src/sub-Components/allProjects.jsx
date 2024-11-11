@@ -296,13 +296,13 @@ const AllProjects = () => {
                 {selectedChart.label} {selectedChart.lotNumber}{" "}
                 {selectedChart.barLabel && `| ${selectedChart.barLabel}`}
               </div>
-              <button
+                    <button
                 type="button"
                 onClick={() => handleTitleClick(selectedChart)}
                 className="btn btn-outline-info"
               >
                 Manage Process
-              </button>
+              </button>          
               {hasPermission('2.8.2') && (
                 <button
               type="button"
@@ -312,7 +312,6 @@ const AllProjects = () => {
               Alarms
             </button>
               )}
-              
             </h4>
             <DashboardGrid projectId={projectId} lotNo={selectedChart.lotNumber} />
           </Card>

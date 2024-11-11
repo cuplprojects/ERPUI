@@ -48,8 +48,11 @@ const ProcessTable = () => {
     const [previousProcess, setPreviousProcess] = useState(null);
     const [processes, setProcesses] = useState([]);
     const [previousProcessCompletionPercentage, setPreviousProcessCompletionPercentage] = useState(0);
+    const [previousProcessTransactions, setPreviousProcessTransactions] = useState([]);
+
     const [showPieChart, setShowPieChart] = useState(false);
     const [showProgressBar, setShowProgressBar] = useState(false);
+
 
 
     useEffect(() => {
@@ -67,12 +70,34 @@ const ProcessTable = () => {
                 const processData = data.find(p => p.processId === value);
                 setFeatureData(processData);
 
-                // Update previous process data
+                // Only fetch previous process data if sequence > 1
                 if (processData.sequence > 1) {
-                    const previousProcessData = await getProjectProcessByProjectAndSequence(id, processData.sequence - 1);
-                    setPreviousProcess(previousProcessData);
+                    let previousSequence = processData.sequence - 1;
+                    let previousProcessData;
+                    
+                    // Keep looking back until we find a dependent process
+                    do {
+                        previousProcessData = await getProjectProcessByProjectAndSequence(id, previousSequence);
+                        if (!previousProcessData) break;
+                        
+                        if (previousProcessData.processType === 'Dependent') {
+                            setPreviousProcess(previousProcessData);
+                            // Get previous process transaction data
+                            const prevTransactions = await API.get(`/Transactions/GetProjectTransactionsData?projectId=${id}&processId=${previousProcessData.processId}`);
+                            setPreviousProcessTransactions(prevTransactions.data);
+                            break;
+                        }
+                        previousSequence--;
+                    } while (previousSequence > 0);
+
+                    if (previousSequence <= 0) {
+                        setPreviousProcess(null);
+                        setPreviousProcessTransactions([]);
+                    }
                 } else {
+                    // Reset previous process data if sequence is 1 or less
                     setPreviousProcess(null);
+                    setPreviousProcessTransactions([]);
                 }
 
                 // Refresh quantity sheet data
@@ -146,9 +171,32 @@ const ProcessTable = () => {
                     setProcess(selectedProcess.processId, selectedProcess.processName);
                     setFeatureData(selectedProcess);
 
+                    // Only fetch previous process data if sequence > 1
                     if (selectedProcess.sequence > 1) {
-                        const previousProcessData = await getProjectProcessByProjectAndSequence(id, selectedProcess.sequence - 1);
-                        setPreviousProcess(previousProcessData);
+                        let previousSequence = selectedProcess.sequence - 1;
+                        let previousProcessData;
+                        
+                        do {
+                            previousProcessData = await getProjectProcessByProjectAndSequence(id, previousSequence);
+                            if (!previousProcessData) break;
+                            
+                            if (previousProcessData.processType === 'Dependent') {
+                                setPreviousProcess(previousProcessData);
+                                const prevTransactions = await API.get(`/Transactions/GetProjectTransactionsData?projectId=${id}&processId=${previousProcessData.processId}`);
+                                setPreviousProcessTransactions(prevTransactions.data);
+                                break;
+                            }
+                            previousSequence--;
+                        } while (previousSequence > 0);
+
+                        if (previousSequence <= 0) {
+                            setPreviousProcess(null);
+                            setPreviousProcessTransactions([]);
+                        }
+                    } else {
+                        // Reset previous process data if sequence is 1 or less
+                        setPreviousProcess(null);
+                        setPreviousProcessTransactions([]);
                     }
 
                     // Store all processes for toggling
@@ -176,35 +224,51 @@ const ProcessTable = () => {
             const transactionsData = response.data;
 
             if (Array.isArray(transactionsData)) {
-                // Map each transaction to formatted data
-                const formDataGet = transactionsData.map(item => ({
-                    catchNumber: item.catchNo,
-                    srNo: item.quantitySheetId,
-                    lotNo: item.lotNo,
-                    paper: item.paper,
-                    examDate: item.examDate,
-                    examTime: item.examTime,
-                    course: item.course,
-                    subject: item.subject,
-                    innerEnvelope: item.innerEnvelope,
-                    outerEnvelope: item.outerEnvelope,
-                    quantity: item.quantity,
-                    percentageCatch: item.percentageCatch,
-                    projectId: item.projectId,
-                    processId: processId,
-                    status: item.transactions[0]?.status || 0,
-                    alerts: item.transactions[0]?.alarmId || "",
-                    interimQuantity: item.transactions[0]?.interimQuantity || 0,
-                    remarks: item.transactions[0]?.remarks || "",
-                    previousProcessStats: "",
-                    voiceRecording: item.transactions[0]?.voiceRecording || "",
-                    transactionId: item.transactions[0]?.transactionId || null,
-                    zoneId: item.transactions[0]?.zoneId || 0,
-                    machineId: item.transactions[0]?.machineId || 0,
-                    teamId: item.transactions[0]?.teamId || [],
-                    teamUserNames: item.transactions[0]?.teamUserNames || [],
-                    alarmMessage: item.transactions[0]?.alarmMessage || null
-                }));
+                // Map each transaction to formatted data with previous process data
+                const formDataGet = transactionsData.map(item => {
+                    // Find matching previous process transaction
+                    const previousProcessData = previousProcessTransactions.find(
+                        prevTrans => prevTrans.quantitySheetId === item.quantitySheetId
+                    );
+
+                    return {
+                        catchNumber: item.catchNo,
+                        srNo: item.quantitySheetId,
+                        lotNo: item.lotNo,
+                        paper: item.paper,
+                        examDate: item.examDate,
+                        examTime: item.examTime,
+                        course: item.course,
+                        subject: item.subject,
+                        innerEnvelope: item.innerEnvelope,
+                        outerEnvelope: item.outerEnvelope,
+                        quantity: item.quantity,
+                        percentageCatch: item.percentageCatch,
+                        projectId: item.projectId,
+                        processId: processId,
+                        status: item.transactions[0]?.status || 0,
+                        alerts: item.transactions[0]?.alarmId || "",
+                        interimQuantity: item.transactions[0]?.interimQuantity || 0,
+                        remarks: item.transactions[0]?.remarks || "",
+                        previousProcessData: previousProcessData ? {
+                            status: previousProcessData.transactions[0]?.status || 0,
+                            interimQuantity: previousProcessData.transactions[0]?.interimQuantity || 0,
+                            remarks: previousProcessData.transactions[0]?.remarks || "",
+                            alarmId: previousProcessData.transactions[0]?.alarmId || "",
+                            teamUserNames: previousProcessData.transactions[0]?.teamUserNames || [],
+                            alarmMessage: previousProcessData.transactions[0]?.alarmMessage || null
+                        } : null,
+                        voiceRecording: item.transactions[0]?.voiceRecording || "",
+                        transactionId: item.transactions[0]?.transactionId || null,
+                        zoneId: item.transactions[0]?.zoneId || 0,
+                        machineId: item.transactions[0]?.machineId || 0,
+                        teamId: item.transactions[0]?.teamId || [],
+                        teamUserNames: item.transactions[0]?.teamUserNames || [],
+                        alarmMessage: item.transactions[0]?.alarmMessage || null,
+                        processIds: item.processIds || []
+                    };
+                });
+
                 // Filter data for selected lot if one is selected
                 const filteredData = selectedLot
                     ? formDataGet.filter(item => Number(item.lotNo) === Number(selectedLot))
@@ -221,7 +285,7 @@ const ProcessTable = () => {
             setTableData([]);
             setProjectLots([]);
         }
-    }, [id, processId, selectedLot]);
+    }, [id, processId, selectedLot, previousProcessTransactions]);
 
     useEffect(() => {
         fetchData();
@@ -405,9 +469,6 @@ const ProcessTable = () => {
             </Row>
 
             <Row className='mb-2 mt-1'>
-
-
-
                 <Col lg={12} md={12} className="">
                     {tableData?.length > 0 && (
                         <ProjectDetailsTable

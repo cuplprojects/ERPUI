@@ -30,11 +30,15 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
 
     // Prepare data for the table
     const tableData = Object.keys(data || {})
-        .filter(key => !['serialNumber', 'voiceRecording', 'teamUserNames', 'teamId', 'transactionId', 'srNo', 'projectId'].includes(key))
+        .filter(key => !['serialNumber', 'voiceRecording', 'teamUserNames', 'teamId', 'transactionId', 'srNo', 'projectId', 'processIds'].includes(key))
         .map((key, index) => {
             let value = data[key];
             if (key === 'team') {
                 value = data.teamUserNames?.join(', ') || 'No team assigned';
+            }
+            // Convert value to string if it's an object
+            if (typeof value === 'object' && value !== null) {
+                value = JSON.stringify(value);
             }
             return {
                 key: index,
@@ -172,29 +176,28 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
                 if (record.label === 'Remarks' || record.label === 'Alerts') {
                     return (
                         <>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <TextArea
-                                    value={value}
-                                    readOnly
-                                    autoSize={{ minRows: 2, maxRows: 6 }}
-                                    auto-sizing
-                                    bordered={false}
-                                    style={{ flex: 1, marginRight: '10px', overflow: 'hidden', wordWrap: 'break-word' }}
-                                />
-                                {record.label === 'Remarks' && renderAudioControl(data?.voiceRecording)}
-                            </div>
 
-                            {record?.label === 'Alerts' &&
-                                value !== 'NA' && (
-                                    <Button
-                                        style={{ fontSize: '18px', cursor: 'pointer' }}
-                                        onClick={handleResolve}
-                                        className='d-flex align-items-center border p-2 custom-theme-dark-btn'
-
-                                    >
-                                        Resolve
-                                    </Button>
-                                )}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <TextArea
+                                value={value}
+                                readOnly
+                                autoSize={{ minRows: 2, maxRows: 6 }}
+                                bordered={false}
+                                style={{ flex: 1, marginRight: '10px', overflow: 'hidden', wordWrap: 'break-word' }}
+                            />
+                            {record.label === 'Remarks' && renderAudioControl(data?.voiceRecording)}
+                        </div>
+                           { record?.label === 'Alerts' && value !== "0" &&
+                            value !== 'NA' && (
+                                <Button
+                                    style={{ fontSize: '18px', cursor: 'pointer' }}
+                                    onClick={handleResolve}
+                                    className='d-flex align-items-center border p-2 custom-theme-dark-btn'
+                                >
+                                    Resolve
+                                </Button>
+                            )}
+                       
 
                         </>
                     );
