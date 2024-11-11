@@ -4,7 +4,7 @@ import { useStore } from 'zustand';
 import { Modal as BootstrapModal } from 'react-bootstrap';
 import themeStore from './../store/themeStore';
 import API from '../CustomHooks/MasterApiHooks/api';
-import { EditOutlined, DeleteOutlined, StopOutlined } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined, StopOutlined, WarningOutlined } from '@ant-design/icons';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { decrypt } from '../Security/Security';
@@ -19,7 +19,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
     const [dataSource, setDataSource] = useState([]);
     const [editingRow, setEditingRow] = useState(null);
     const [selectedProcessIds, setSelectedProcessIds] = useState([]);
-    const [selectedCatches, setSelectedCatches] = useState([]); // Changed to store objects with id and catchNo
+    const [selectedCatches, setSelectedCatches] = useState([]);
     const [quantitySheetId, setQuantitySheetId] = useState(null);
     const [newRowData, setNewRowData] = useState({
         catchNo: '',
@@ -55,7 +55,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
         {
             title: t('select'),
             dataIndex: 'selection',
-            key: 'selection',
+            key: 'selection', 
             width: '2%',
             render: (_, record) => (
                 <Checkbox
@@ -81,48 +81,64 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
             filteredValue: [searchText],
             onFilter: (value, record) => 
                 record.catchNo.toString().toLowerCase().includes(value.toLowerCase()),
+            sorter: (a, b) => a.catchNo.localeCompare(b.catchNo)
         },
         {
             title: t('paper'),
             dataIndex: 'paper',
             key: 'paper',
             width: 100,
+            sorter: (a, b) => a.paper.localeCompare(b.paper)
         },
         {
             title: t('course'),
             dataIndex: 'course',
             key: 'course',
             width: 100,
+            sorter: (a, b) => a.course.localeCompare(b.course)
         },
         {
             title: t('subject'),
             dataIndex: 'subject',
             key: 'subject',
             width: 100,
+            sorter: (a, b) => a.subject.localeCompare(b.subject)
         },
         {
             title: t('examDate'),
             dataIndex: 'examDate',
             key: 'examDate',
             width: 100,
+            sorter: (a, b) => new Date(a.examDate) - new Date(b.examDate),
+            render: (text, record) => (
+                <span>
+                    {text}
+                    {record.isExamDateOverlapped && 
+                        <WarningOutlined style={{color: '#ff4d4f', marginLeft: '5px'}} />
+                    }
+                </span>
+            )
         },
         {
             title: t('examTime'),
             dataIndex: 'examTime',
             key: 'examTime',
             width: 100,
+            sorter: (a, b) => a.examTime.localeCompare(b.examTime)
         },
         {
             title: t('innerEnvelope'),
             dataIndex: 'innerEnvelope',
             key: 'innerEnvelope',
             width: 100,
+            sorter: (a, b) => a.innerEnvelope.localeCompare(b.innerEnvelope)
         },
         {
             title: t('outerEnvelope'),
             dataIndex: 'outerEnvelope',
             key: 'outerEnvelope',
             width: 100,
+            sorter: (a, b) => a.outerEnvelope.localeCompare(b.outerEnvelope)
         },
         {
             title: t('quantity'),
@@ -141,6 +157,11 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
                     ? text.map(id => process.find(proc => proc.id === id)?.name).join(', ') || t('notApplicable')
                     : t('notApplicable')
             ),
+            sorter: (a, b) => {
+                const aProcesses = a.processId.map(id => process.find(proc => proc.id === id)?.name).join(',');
+                const bProcesses = b.processId.map(id => process.find(proc => proc.id === id)?.name).join(',');
+                return aProcesses.localeCompare(bProcesses);
+            }
         },
         {
             title: t('action'),
@@ -267,7 +288,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
         setEditingRow(null);
         setSelectedProcessIds([]);
         setIsConfirmed(false);
-        setSelectedCatches([]); // Clear selected catches
+        setSelectedCatches([]);
         
     };
 
