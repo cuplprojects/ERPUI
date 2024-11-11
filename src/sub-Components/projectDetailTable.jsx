@@ -372,7 +372,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
         ...(columnVisibility['Paper'] && hasFeaturePermission(15) ? [{
             title: t("questionPaper"),
             dataIndex: 'paper',
-            width: '20%',
+            width: '10%',
             align: 'center',
             key: 'paper',
             sorter: (a, b) => a.paper - b.paper,

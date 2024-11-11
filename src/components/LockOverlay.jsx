@@ -25,10 +25,19 @@ const LockOverlay = () => {
 
     const resetTimer = useCallback(() => {
         if (timerRef.current) clearTimeout(timerRef.current);
-        timerRef.current = setTimeout(() => setIsLocked(true), 12000000);
+        // Set timer for 2 minutes (120000 ms)
+        timerRef.current = setTimeout(() => {
+            setIsLocked(true);
+            setShowModal(false);
+        }, 120000);
     }, []);
 
-    const handleLock = useCallback(() => setIsLocked(true), []);
+    const handleLock = useCallback(() => {
+        setIsLocked(true);
+        setShowModal(false);
+        if (timerRef.current) clearTimeout(timerRef.current);
+    }, []);
+
     const handleUnlock = useCallback(() => setShowModal(true), []);
 
     const handleSubmit = useCallback(() => {
@@ -43,13 +52,17 @@ const LockOverlay = () => {
     useEffect(() => {
         resetTimer();
         const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
-        const handleActivity = () => resetTimer();
+        const handleActivity = () => {
+            if (!isLocked) {
+                resetTimer();
+            }
+        };
         events.forEach(event => window.addEventListener(event, handleActivity));
         return () => {
             events.forEach(event => window.removeEventListener(event, handleActivity));
             if (timerRef.current) clearTimeout(timerRef.current);
         };
-    }, [resetTimer]);
+    }, [resetTimer, isLocked]);
 
     useEffect(() => {
         if (password) handleSubmit();

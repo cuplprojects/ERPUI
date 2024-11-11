@@ -219,7 +219,7 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
                 </Button>
             ]}
             centered
-            title="Catch Details"
+            title={`${t('catchDetails')}`}
             width={600}
             className="bg-light rounded"
         >
