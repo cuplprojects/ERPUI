@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Table, Input, Button, message, Modal, Spin } from 'antd';
 import { v4 as uuidv4 } from 'uuid'; 
 import API from '../CustomHooks/MasterApiHooks/api';
+import { useTranslation } from 'react-i18next';
 
 const AlarmMaster = () => {
+  const { t } = useTranslation();
   const [alarms, setAlarms] = useState([]);
   const [editingIndex, setEditingIndex] = useState(null);
   const [editingValue, setEditingValue] = useState('');
@@ -30,33 +32,33 @@ const AlarmMaster = () => {
 
   const handleAddAlarm = async () => {
     if (!newAlarmMessage) {
-      setErrorMessage('Please input an alarm message!');
+      setErrorMessage(t('pleaseInputAlarmMessage'));
       return;
     }
 
     if (/^\d+$/.test(newAlarmMessage)) {
-      setErrorMessage('Numeric values are not allowed!');
+      setErrorMessage(t('numericValuesNotAllowed'));
       return;
     }
 
     const existingAlarm = alarms.find(alarm => alarm.message.toLowerCase() === newAlarmMessage.toLowerCase());
     if (existingAlarm) {
-      setErrorMessage('Alarm message already exists!');
+      setErrorMessage(t('alarmMessageExists'));
       return;
     }
 
-    const newAlarm = { alarmId: 0, message: newAlarmMessage }; // Updated for new structure
+    const newAlarm = { alarmId: 0, message: newAlarmMessage };
     
     setAlarms([...alarms, { ...newAlarm, alarmId: uuidv4() }]);
     setNewAlarmMessage('');
     setIsModalVisible(false);
-    message.success('Alarm added successfully!');
+    message.success(t('alarmAddedSuccess'));
 
     try {
       await API.post('/Alarms', newAlarm);
     } catch (error) {
-      message.error('Failed to add alarm');
-      setAlarms(prev => prev.filter(alarm => alarm.alarmId !== newAlarm.alarmId)); // Revert optimistic update
+      message.error(t('failedToAddAlarm'));
+      setAlarms(prev => prev.filter(alarm => alarm.alarmId !== newAlarm.alarmId));
     }
   };
 
@@ -68,7 +70,7 @@ const AlarmMaster = () => {
     );
 
     if (existingAlarm) {
-      message.error('Alarm message already exists!');
+      message.error(t('alarmMessageExists'));
       return;
     }
 
@@ -80,56 +82,56 @@ const AlarmMaster = () => {
       return newAlarms;
     });
 
-    message.success('Alarm updated successfully!');
+    message.success(t('alarmUpdatedSuccess'));
     setEditingIndex(null);
     setEditingValue('');
 
     try {
       await API.put(`/Alarms/${alarms[index].alarmId}`, updatedAlarm);
     } catch (error) {
-      message.error('Failed to update alarm');
-      fetchAlarms(); // Refresh alarms to get the latest data
+      message.error(t('failedToUpdateAlarm'));
+      fetchAlarms();
     }
   };
 
   const columns = [
     {
-      title: 'SN.',
+      title: t('srNo'),
       dataIndex: 'serial',
       key: 'serial',
       render: (_, __, index) => index + 1,
       width: '10%',
     },
     {
-      title: 'Alarm Message',
+      title: t('alarmMessage'),
       dataIndex: 'message',
       key: 'message',
       render: (text, record, index) => (
         editingIndex === index ? (
           <Input
-            key={`editing-input-${record.alarmId}`} // Unique key for editing input
+            key={`editing-input-${record.alarmId}`}
             value={editingValue}
             onChange={(e) => setEditingValue(e.target.value)}
             onPressEnter={() => handleEditSave(index)}
             onBlur={() => handleEditSave(index)}
           />
         ) : (
-          <span key={`message-${record.alarmId}`}>{text}</span> // Unique key for message span
+          <span key={`message-${record.alarmId}`}>{text}</span>
         )
       ),
       width: '70%',
     },
     {
-      title: 'Action',
+      title: t('action'),
       key: 'action',
       render: (_, record, index) => (
         editingIndex === index ? (
           <>
-            <Button type="link" onClick={() => handleEditSave(index)}>Save</Button>
-            <Button type="link" onClick={() => setEditingIndex(null)}>Cancel</Button>
+            <Button type="link" onClick={() => handleEditSave(index)}>{t('save')}</Button>
+            <Button type="link" onClick={() => setEditingIndex(null)}>{t('cancel')}</Button>
           </>
         ) : (
-          <Button type="link" onClick={() => { setEditingIndex(index); setEditingValue(record.message); }}>Edit</Button>
+          <Button type="link" onClick={() => { setEditingIndex(index); setEditingValue(record.message); }}>{t('edit')}</Button>
         )
       ),
       width: '20%',
@@ -139,9 +141,9 @@ const AlarmMaster = () => {
 
   return (
     <div style={{ padding: '20px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)' }}>
-      <h2 style={{ marginBottom: '20px', textAlign: 'center' }}>Alarm Master</h2>
+      <h2 style={{ marginBottom: '20px', textAlign: 'center' }}>{t('alarmMaster')}</h2>
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
-        <Button type="primary" onClick={() => setIsModalVisible(true)}>Add New Alarm</Button>
+        <Button type="primary" onClick={() => setIsModalVisible(true)}>{t('addNewAlarm')}</Button>
       </div>
 
       {loading ? (
@@ -159,21 +161,21 @@ const AlarmMaster = () => {
       )}
 
       <Modal
-        title="Add New Alarm"
+        title={t('addNewAlarm')}
         open={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
         footer={null}
       >
         <Input
-          placeholder="Type an alarm message"
+          placeholder={t('typeAlarmMessage')}
           value={newAlarmMessage}
           onChange={(e) => setNewAlarmMessage(e.target.value)}
           onPressEnter={handleAddAlarm}
         />
         {errorMessage && <div style={{ color: 'red', marginTop: '8px' }}>{errorMessage}</div>}
         <div style={{ textAlign: 'right', marginTop: '16px' }}>
-          <Button onClick={() => setIsModalVisible(false)} style={{ marginRight: '8px' }}>Cancel</Button>
-          <Button type="primary" onClick={handleAddAlarm}>Add</Button>
+          <Button onClick={() => setIsModalVisible(false)} style={{ marginRight: '8px' }}>{t('cancel')}</Button>
+          <Button type="primary" onClick={handleAddAlarm}>{t('add')}</Button>
         </div>
       </Modal>
     </div>
