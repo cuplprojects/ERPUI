@@ -20,7 +20,6 @@ const AlarmModal = ({ show, handleClose, data, processId, handleSave }) => {
         try {
             let existingTransactionData;
             if (data.transactionId) {
-                // Fetch existing transaction data if transactionId exists
                 const response = await API.get(`/Transactions/${data.transactionId}`);
                 existingTransactionData = response.data;
             }
@@ -31,44 +30,36 @@ const AlarmModal = ({ show, handleClose, data, processId, handleSave }) => {
             // Validate that alarmId is not null or empty
             if (!finalAlarmId) {
                 alert("Alarm ID is required. Please select a valid alarm type or enter a custom message.");
-                return; // Prevent submission if alarmId is missing
+                return;
             }
 
             // Convert alarmId to string if it's not already
-            const alarmIdString = String(finalAlarmId); // Ensure alarmId is always a string
+            const alarmIdString = String(finalAlarmId);
 
-            // Ensure the `transaction` field is properly set. Assuming `transactionId` should be passed.
             const postData = {
-                transactionId: data.transactionId || 0, // Transaction field as per the API requirement
-                interimQuantity: existingTransactionData ? existingTransactionData.interimQuantity : 0, // Retain existing quantity
-                remarks: existingTransactionData ? existingTransactionData.remarks : "", // Retain existing remarks
+                transactionId: data.transactionId || 0,
+                interimQuantity: existingTransactionData ? existingTransactionData.interimQuantity : 0,
+                remarks: existingTransactionData ? existingTransactionData.remarks : "",
                 projectId: data.projectId,
                 quantitysheetId: data.srNo || 0,
                 processId: processId,
                 zoneId: existingTransactionData ? existingTransactionData.zoneId : 0,
                 machineId: existingTransactionData ? existingTransactionData.machineId : 0,
-                status: existingTransactionData ? existingTransactionData.status : 0, // Retain existing status
-                alarmId: alarmIdString,  // Ensure alarmId is a string
+                status: existingTransactionData ? existingTransactionData.status : 0,
+                alarmId: alarmIdString,
                 lotNo: data.lotNo,
                 teamId: existingTransactionData ? existingTransactionData.teamId : [],
                 voiceRecording: existingTransactionData ? existingTransactionData.voiceRecording : ""
             };
 
-            if (data.transactionId) {
-                // Update existing transaction
-                const response = await API.put(`/Transactions/${data.transactionId}`, postData);
-                console.log('Update Response:', response.data);
-            } else {
-                // Create a new transaction
-                const response = await API.post('/Transactions', postData);
-                console.log('Create Response:', response.data);
-            }
+            // Always use POST
+            await API.post('/Transactions', postData);
 
-            handleSave(alarmIdString); // Pass the final alarmId (custom or selected)
-            handleClose(); // Close modal
+            handleSave(alarmIdString);
+            handleClose();
             setAlarmType('');
-            setAlarmId(null); // Reset alarmId
-            setCustomMessage(''); // Reset custom message
+            setAlarmId(null);
+            setCustomMessage('');
         } catch (error) {
             console.error('Error saving alarm:', error);
         }

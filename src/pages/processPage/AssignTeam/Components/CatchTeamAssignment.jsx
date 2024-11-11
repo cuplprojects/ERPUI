@@ -4,8 +4,6 @@ import API from '../../../../CustomHooks/MasterApiHooks/api';
 
 
 const CatchTeamAssignment = ({ teams, data, handleSave, handleClose, processId }) => {
-
-
   const [selectedTeam, setSelectedTeam] = useState('');
   const [usersInTeam, setUsersInTeam] = useState([]);
   const [userOptions, setUserOptions] = useState([]); // List of users to be added to the team
@@ -46,7 +44,7 @@ const CatchTeamAssignment = ({ teams, data, handleSave, handleClose, processId }
     setUsersInTeam(usersInTeam.filter(user => user.userId !== userId)); // Remove the user from the array
   };
 
-  
+
 
   const handleAddUser = async () => {
     if (!selectedUserToAdd) {
@@ -85,30 +83,25 @@ const CatchTeamAssignment = ({ teams, data, handleSave, handleClose, processId }
   
         const postData = {
           transactionId: item?.transactionId || 0,
-          interimQuantity: existingTransactionData ? existingTransactionData.interimQuantity : 0, // Adjust based on actual data
+          interimQuantity: existingTransactionData ? existingTransactionData.interimQuantity : 0,
           remarks: existingTransactionData ? existingTransactionData.remarks : '',
           projectId: item?.projectId,
           quantitysheetId: item?.srNo || 0,
           processId: processId,
-          zoneId: existingTransactionData ? existingTransactionData.zoneId : 0, // Use the selected zone here
+          zoneId: existingTransactionData ? existingTransactionData.zoneId : 0,
           machineId: existingTransactionData ? existingTransactionData.machineId : 0,
           status: existingTransactionData ? existingTransactionData.status : 0,
           alarmId: existingTransactionData ? existingTransactionData.alarmId : "",
           lotNo: item?.lotNo,
-          teamId: allUserIds,  // Send the array of user IDs
+          teamId: allUserIds,
           voiceRecording: existingTransactionData ? existingTransactionData.voiceRecording : "",
         };
 
-        // Send the data as a PUT (update) or POST (create) request
-        if (item?.transactionId) {
-          await API.put(`/Transactions/${item.transactionId}`, postData);
-        } else {
-          await API.post('/Transactions', postData);
-        }
+        // Always use POST
+        await API.post('/Transactions', postData);
       }
       
-      // Optionally, you can call handleSave here if necessary, after all updates/posts have been completed
-      handleSave(); 
+      handleSave();
       handleClose();
     } catch (error) {
       console.error('Error updating team:', error);
