@@ -48,6 +48,8 @@ const ProcessTable = () => {
     const [previousProcess, setPreviousProcess] = useState(null);
     const [processes, setProcesses] = useState([]);
     const [previousProcessCompletionPercentage, setPreviousProcessCompletionPercentage] = useState(0);
+    const [showPieChart, setShowPieChart] = useState(false);
+    const [showProgressBar, setShowProgressBar] = useState(false);
 
 
     useEffect(() => {
@@ -425,17 +427,29 @@ const ProcessTable = () => {
 
             <Row className='mb-4 d-flex justify-content-between'>
                 <Col lg={8} md={12} className='mb-1'>
-                    <Switch checked={showBarChart} onChange={() => setShowBarChart(!showBarChart)} />
-                    <span className={`ms-2 ${customDarkText}`}>
-                        {showBarChart ? 'Show Overall Completion Data' : 'Show Catch Data'}
-                    </span>
+                    <div className="d-flex align-items-center gap-4">
+                        <div>
+                            <Switch checked={showBarChart} onChange={() => setShowBarChart(!showBarChart)} />
+                            <span className={`ms-2 ${customDarkText}`}>
+                                {t("showCatchData")}
+                            </span>
+                        </div>
+                        <div>
+                            <Switch checked={showPieChart} onChange={() => setShowPieChart(!showPieChart)} />
+                            <span className={`ms-2 ${customDarkText}`}>
+                                {t("showCompletionPercentage")}
+                            </span>
+                        </div>
+                    </div>
                 </Col>
 
-                {showBarChart ? (
+                {showBarChart && (
                     <Col lg={12} md={12} sm={12} className='mt-1 d-fle justify-content-center'>
                         <StatusBarChart data={combinedTableData} catchNumbers={catchNumbers} />
                     </Col>
-                ) : (
+                )}
+                
+                {showPieChart && (
                     <Col lg={12} md={12} sm={12} className='mt-1 d-fle justify-content-center'>
                         <StatusPieChart data={combinedTableData} />
                     </Col>
