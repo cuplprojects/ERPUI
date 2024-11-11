@@ -7,11 +7,13 @@ import { useMediaQuery } from 'react-responsive';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import { AiFillCloseSquare } from "react-icons/ai";
-import { SortAscendingOutlined, SortDescendingOutlined, EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
+import { EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
 const { Option } = Select;
 const { Search } = Input;
+import { useTranslation } from 'react-i18next';
 
 const Type = () => {
+    const { t } = useTranslation();
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = getCssClasses();
     const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
@@ -31,8 +33,6 @@ const Type = () => {
     const [originalData, setOriginalData] = useState({});
     const [form] = useForm();
     const [searchText, setSearchText] = useState('');
-    const [sortOrder, setSortOrder] = useState('ascend');
-    const [sortField, setSortField] = useState('types');
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(5);
 
@@ -146,48 +146,20 @@ console.log(originalData.requiredProcessIds)
         setSearchText(value);
     };
 
-    const handleSort = (field) => {
-        const newSortOrder = field === sortField && sortOrder === 'ascend' ? 'descend' : 'ascend';
-        setSortOrder(newSortOrder);
-        setSortField(field);
-
-        const sortedTypes = [...filteredTypes].sort((a, b) => {
-            if (field === 'types') {
-                return newSortOrder === 'ascend'
-                    ? a.types.localeCompare(b.types)
-                    : b.types.localeCompare(a.types);
-            } else if (field === 'status') {
-                return newSortOrder === 'ascend'
-                    ? (a.status === b.status ? 0 : a.status ? -1 : 1)
-                    : (a.status === b.status ? 0 : a.status ? 1 : -1);
-            }
-        });
-
-        setFilteredTypes(sortedTypes);
-    };
-
     const columns = [
         {
+            title:t('srNo'),
             align: 'center',
-            title: 'SN.',
             dataIndex: 'serial',
             key: 'serial',
             render: (text, record, index) => (currentPage - 1) * pageSize + index + 1,
             width: '10%',
         },
         {
-            title: (
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    Type
-                    <Button
-                        type="text"
-                        onClick={() => handleSort('types')}
-                        icon={sortField === 'types' && sortOrder === 'ascend' ? <SortAscendingOutlined style={{ color: 'white', border: '1px solid white' }} className='rounded-2 p-1' /> : <SortDescendingOutlined style={{ color: 'white', border: '1px solid white' }} className='rounded-2 p-1' />}
-                    />
-                </div>
-            ),
+            title: t('type'),
             dataIndex: 'types',
             key: 'types',
+            sorter: (a, b) => a.types.localeCompare(b.types),
             render: (text, record, index) => (
                 editingIndex === index ? (
                     <Input
@@ -201,9 +173,14 @@ console.log(originalData.requiredProcessIds)
             ),
         },
         {
-            title: 'Associated Process',
+            title: t('associatedProcess'),
             dataIndex: 'associatedProcessId',
             key: 'associatedProcessId',
+            sorter: (a, b) => {
+                const aProcesses = a.associatedProcessId?.map(id => processMap[id]).join(', ') || '';
+                const bProcesses = b.associatedProcessId?.map(id => processMap[id]).join(', ') || '';
+                return aProcesses.localeCompare(bProcesses);
+            },
             render: (ids, record, index) => (
                 editingIndex === index ? (
                     <Select
@@ -225,9 +202,14 @@ console.log(originalData.requiredProcessIds)
         },
       
         {
-            title: 'Required Process',
+            title: t('requiredProcess'),
             dataIndex: 'requiredProcessId',
             key: 'requiredProcessId',
+            sorter: (a, b) => {
+                const aProcesses = a.requiredProcessId?.map(id => processMap[id]).join(', ') || '';
+                const bProcesses = b.requiredProcessId?.map(id => processMap[id]).join(', ') || '';
+                return aProcesses.localeCompare(bProcesses);
+            },
             render: (ids, record, index) => (
                 editingIndex === index ? (
                     <Select
@@ -248,51 +230,42 @@ console.log(originalData.requiredProcessIds)
             ),
         },
         {
-
+            title: t('status'),
             align: 'center',
-            title: (
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    Status
-                    <Button
-                        type="text"
-                        onClick={() => handleSort('status')}
-                        icon={sortField === 'status' && sortOrder === 'ascend' ? <SortAscendingOutlined style={{ color: 'white', border: '1px solid white' }} className='rounded-2 p-1' /> : <SortDescendingOutlined style={{ color: 'white', border: '1px solid white' }} className='rounded-2 p-1' />}
-                    />
-                </div>
-            ),
             dataIndex: 'status',
             key: 'status',
+            sorter: (a, b) => (a.status === b.status ? 0 : a.status ? -1 : 1),
             render: (status, record, index) => (
                 editingIndex === index ? (
                     <Switch
                         checked={editingStatus}
                         onChange={setEditingStatus}
-                        checkedChildren="Active"
-                        unCheckedChildren="Inactive"
+                        checkedChildren={t("active")}
+                        unCheckedChildren={t("inactive")}
                     />
                 ) : (
                     <Switch
                         checked={status}
                         disabled
-                        checkedChildren="Active"
-                        unCheckedChildren="Inactive"
+                        checkedChildren={t("active")}
+                        unCheckedChildren={t("inactive")}
                     />
                 )
             ),
         },
         {
-            title: 'Action',
+            title: t('action'),
             key: 'action',
             render: (_, record, index) => (
                 editingIndex === index ? (
                     <div style={{ display: 'flex', justifyContent: '' }}>
                         <Button type="link" onClick={() => handleEditSave(index)} className={`${customDark === "dark-dark" ? `${customMid} border` : `${customLight} ${customDarkBorder}`} text-white `}>
                             <SaveOutlined className={`${customDark === "dark-dark" ? `` : `${customDarkText}`} `} />
-                            <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}`} `}>Save</span>
+                            <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}`} `}>{t("save")}</span>
                         </Button>
                         <Button type="link" onClick={handleCancelEdit} className={`${customDark === "dark-dark" ? `${customMid} border` : `${customLight} ${customDarkBorder}`} text-white ms-3`}>
                             <CloseOutlined className={`${customDark === "dark-dark" ? `` : `${customDarkText}`} `} />
-                            <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}`} `}>Cancel</span>
+                            <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}`} `}>{t("cancel")}</span>
                         </Button>
                     </div>
                 ) : (
@@ -303,7 +276,7 @@ console.log(originalData.requiredProcessIds)
                         setRequiredEditingProcessIds(record.requiredProcessId)
                         setEditingStatus(record.status);
                         setOriginalData(record);
-                    }} className={`${customBtn} text-white me-1`}>Edit</Button>
+                    }} className={`${customBtn} text-white me-1`}>{t("edit")}</Button>
                 )
             ),
         },
@@ -327,7 +300,7 @@ console.log(originalData.requiredProcessIds)
             overflow: 'auto'
         }}
             className={`${customDark === "dark-dark" ? customDark : ``}`}>
-            <h2 className={`${customDarkText}`}>Project Type</h2>
+            <h2 className={`${customDarkText}`}>{t("projectType")}</h2>
             <div style={{
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -335,13 +308,13 @@ console.log(originalData.requiredProcessIds)
                 marginBottom: isMobile ? '10px' : '20px'
             }}>
                 <Search
-                    placeholder="Search types or processes"
+                    placeholder={t("searchTypesOrProcesses")}
                     allowClear
                     onChange={(e) => handleSearch(e.target.value)}
                     style={{ width: 300 }}
                 />
                 <Button className={`${customBtn} border-0 custom-zoom-btn`} onClick={() => setIsModalVisible(true)}>
-                    Add Type
+                    {t("addType")}
                 </Button>
             </div>
 
@@ -404,7 +377,6 @@ console.log(originalData.requiredProcessIds)
                         form={form}
                         onFinish={handleAddType}
                         layout="vertical"
-                    // className='w-50'
                     >
                         <Form.Item
                             name="types"
