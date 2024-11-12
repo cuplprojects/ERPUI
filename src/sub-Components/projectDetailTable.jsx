@@ -247,21 +247,20 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                     }}
                 />
             ),
-            responsive: ['sm'],
+            
         },
         {
             title: t("srNo"),
             key: 'srNo',
             align: "center",
             render: (_, __, index) => ((currentPage - 1) * pageSize) + index + 1,
-            responsive: ['sm'],
+          
         },
         {
             title: t("catchNo"),
             dataIndex: 'catchNumber',
             key: 'catchNumber',
             align: 'center',
-            width: '15%',
             sorter: (a, b) => a.catchNumber.localeCompare(b.catchNumber),
             render: (text, record) => (
                 <>
@@ -337,6 +336,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                     </Row>
                 </>
             ),
+            
         },
         {
             title: t("quantity"),
@@ -362,7 +362,6 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
         ...(columnVisibility['Team Assigned'] && hasFeaturePermission(5) ? [{
             title: t("teamAssigned"),
             dataIndex: 'teamUserNames',
-            // width: '20%',
             align: 'center',
             key: 'teamUserNames',
             sorter: (a, b) => a.teamUserNames - b.teamUserNames,
@@ -370,7 +369,6 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
         ...(columnVisibility['Course'] && hasFeaturePermission(13) ? [{
             title: t("course"),
             dataIndex: 'course',
-            // width: '20%',
             align: 'center',
             key: 'course',
             sorter: (a, b) => a.course - b.course,
@@ -378,7 +376,6 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
         ...(columnVisibility['Subject'] && hasFeaturePermission(14) ? [{
             title: t("subject"),
             dataIndex: 'subject',
-            width: '20%',
             align: 'center',
             key: 'subject',
             sorter: (a, b) => a.subject - b.subject,
@@ -386,7 +383,6 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
         ...(columnVisibility['Paper'] && hasFeaturePermission(15) ? [{
             title: t("questionPaper"),
             dataIndex: 'paper',
-            width: '10%',
             align: 'center',
             key: 'paper',
             sorter: (a, b) => a.paper - b.paper,
@@ -897,13 +893,16 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                                     // Validation logic for whether the status can be changed
                                     const isZoneAssigned = row.zoneId !== 0 && row.zoneId !== null;
                                     const isTeamAssigned = row.teamId && row.teamId.length > 0;
-                                    const hasSelectMachinePermission = hasFeaturePermission(10); // Check if Select Machine permission exists
+                                    const hasSelectMachinePermission = hasFeaturePermission(10);
 
                                     const canChangeStatus = hasSelectMachinePermission
-                                        ? row.machineId !== 0 && row.machineId !== null  // Machine must be assigned if permission exists
-                                        : isZoneAssigned && isTeamAssigned;  // Otherwise, Zone and Team must be assigned
-                                        const canBeCompleted = row.interimQuantity === row.quantity;
-                                    return row.alerts || !canChangeStatus || (getSelectedStatus() === 2 && canBeCompleted); // Disable if there are alerts or the status cannot be changed
+                                        ? row.machineId !== 0 && row.machineId !== null
+                                        : isZoneAssigned && isTeamAssigned;
+
+                                    const canBeCompleted = row.interimQuantity === row.quantity;
+                                    
+                                    return row.alerts || !canChangeStatus || (getSelectedStatus() === 2 && !canBeCompleted);
+
                                 })}
                             />
                         </div>
