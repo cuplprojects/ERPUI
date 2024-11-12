@@ -22,9 +22,10 @@ import API from '../CustomHooks/MasterApiHooks/api';
 import { decrypt, encrypt } from "../Security/Security";
 import {Modal} from 'antd';
 import DashboardAlarmModal from "../menus/DashboardAlarmModal";
+import { useTranslation } from 'react-i18next';
+import { t } from 'i18next';
 
 import { getCombinedPercentages } from '../CustomHooks/ApiServices/transacationService';
-
 
 Chart.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip);
 import { hasPermission } from "../CustomHooks/Services/permissionUtils";
@@ -33,8 +34,8 @@ const ProjectChart = ({ title, chartKey, chartdata, onClick, tCatch, type }) => 
   <Col xs={12} sm={6} md={4} lg={3} xl={2}>
     <div className="text-center p-3 chart-container c-pointer custom-zoom-btn">
       <Card className="text-center p-1 shadow-lg" onClick={onClick}>
-        <h4>{title} Lot-{chartKey}</h4>
-        <h5>Type-{type}</h5>
+        <h4>{title} {t('lot')}-{chartKey}</h4>
+        <h5>{t('type')}-{type}</h5>
         <div className="chart-wrapper">
           <Doughnut
             data={{
@@ -63,7 +64,7 @@ const ProjectChart = ({ title, chartKey, chartdata, onClick, tCatch, type }) => 
               },
             }}
           />
-          <span className="">Total Catches-{tCatch}</span>
+          <span className="">{t('totalCatches')}-{tCatch}</span>
         </div>
       </Card>
     </div>
@@ -87,6 +88,8 @@ const AllProjects = () => {
     customDarkBorder,
     customThead
   ] = getCssClasses();
+
+  const { t } = useTranslation();
 
   const [selectedChart, setSelectedChart] = useState({
     label: "",
@@ -226,8 +229,8 @@ const AllProjects = () => {
               key={idx}
               title={`${projectName}`}
               chartdata={[
-                {title: "Completed", value: lotPercentages[lotNumber] || 0},
-                {title: "Remaining", value: 100 - (lotPercentages[lotNumber] || 0)}
+                {title: t('complete'), value: lotPercentages[lotNumber] || 0},
+                {title: t('remaining'), value: 100 - (lotPercentages[lotNumber] || 0)}
               ]}
               chartKey={lotNumber}
               tCatch={catchesData[lotNumber] || 0}
@@ -301,7 +304,7 @@ const AllProjects = () => {
                 onClick={() => handleTitleClick(selectedChart)}
                 className="btn btn-outline-info"
               >
-                Manage Process
+                {t('manageProcess')}
               </button>          
               {hasPermission('2.8.2') && (
                 <button
@@ -309,7 +312,7 @@ const AllProjects = () => {
               onClick={handleAlarmsButtonClick} // Open modal with alerts
               className="btn btn-outline-info"
             >
-              Alarms
+             {t('alarms')}
             </button>
               )}
             </h4>
@@ -402,7 +405,7 @@ const AllProjects = () => {
       onCancel={() => setAlarmModalVisible(false)} // Close the modal
       footer={[
         <Button key="close" type="primary" onClick={() => setAlarmModalVisible(false)}>
-          Close
+          {t('close')}
         </Button>,
       ]}
       centered

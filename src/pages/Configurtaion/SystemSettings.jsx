@@ -2,14 +2,23 @@
 import React, { useState } from 'react';
 import { Tabs } from 'antd';
 import { AppstoreOutlined, SettingOutlined, ToolOutlined } from '@ant-design/icons'; // Import icons
+import { useTranslation } from 'react-i18next';
 import FeatureManagement from './Feature';
 import ProcessManagement from './ProcessManagement';
 import FeatureConfiguration from './FeatureConfiguration'; // Import the FeatureConfiguration component
-
+import { useStore } from 'zustand';
+import themeStore from '../../store/themeStore';
+import { FaSearch } from 'react-icons/fa';
+import { Modal } from 'react-bootstrap';
+import { AiFillCloseSquare } from 'react-icons/ai';
 const { TabPane } = Tabs;
 
 const SystemSettings = () => {
   const [features, setFeatures] = useState([]);
+  const { t } = useTranslation();
+  const { getCssClasses } = useStore(themeStore);
+  const cssClasses = getCssClasses();
+  const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
 
   const updateFeatures = (updatedFeatures) => {
     setFeatures(updatedFeatures);
@@ -21,12 +30,18 @@ const SystemSettings = () => {
 
   return (
     <div>
-      <Tabs defaultActiveKey="1">
+      <Tabs 
+        defaultActiveKey="1"
+        className={`custom-tabs`} // Add custom class
+        tabBarStyle={{
+          borderBottom: `2px solid ${customDark}` // Use customDark color for bottom border
+        }}
+      >
         <TabPane
           tab={
-            <span>
+            <span className={`${customDarkText} ${customDark === 'blue-dark' ? customLightText : customDarkText}`}>
               <AppstoreOutlined /> {/* Feature icon */}
-              Features
+              {t('features')}
             </span>
           }
           key="1"
@@ -35,9 +50,9 @@ const SystemSettings = () => {
         </TabPane>
         <TabPane
           tab={
-            <span>
+            <span className={`${customDarkText} ${customDark === 'blue-dark' ? customLightText : customDarkText}`}>
               <SettingOutlined /> {/* Process icon */}
-              Processes
+              {t('processes')}
             </span>
           }
           key="2"
@@ -46,9 +61,9 @@ const SystemSettings = () => {
         </TabPane>
         <TabPane
           tab={
-            <span>
+            <span className={`${customDarkText} ${customDark === 'blue-dark' ? customLightText : customDarkText}`}>
               <ToolOutlined /> {/* Configuration icon */}
-              Feature Configuration
+              {t('featureConfiguration')}
             </span>
           }
           key="3"

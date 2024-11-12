@@ -107,6 +107,7 @@ const ProjectDetailsTable = ({
       setColumnVisibility((prev) => ({
         ...prev,
         Paper: window.innerWidth >= 992,
+
         Course: window.innerWidth >= 992,
         Subject: window.innerWidth >= 992,
       }));
@@ -389,6 +390,7 @@ const ProjectDetailsTable = ({
     ...(columnVisibility["Interim Quantity"] && hasFeaturePermission(7)
       ? [
           {
+
             title: t("interimQuantity"),
             dataIndex: "interimQuantity",
             align: "center",
@@ -412,10 +414,12 @@ const ProjectDetailsTable = ({
       ? [
           {
             title: t("teamAssigned"),
+
             dataIndex: "teamUserNames",
             // width: '20%',
             align: "center",
             key: "teamUserNames",
+
             sorter: (a, b) => a.teamUserNames - b.teamUserNames,
           },
         ]
@@ -424,10 +428,12 @@ const ProjectDetailsTable = ({
       ? [
           {
             title: t("course"),
+
             dataIndex: "course",
             // width: '20%',
             align: "center",
             key: "course",
+
             sorter: (a, b) => a.course - b.course,
           },
         ]
@@ -440,6 +446,7 @@ const ProjectDetailsTable = ({
             width: "20%",
             align: "center",
             key: "subject",
+
             sorter: (a, b) => a.subject - b.subject,
           },
         ]
@@ -448,6 +455,7 @@ const ProjectDetailsTable = ({
       ? [
           {
             title: t("questionPaper"),
+
             dataIndex: "paper",
             width: "20%",
             align: "center",
@@ -469,12 +477,14 @@ const ProjectDetailsTable = ({
           recordExists: !!record,
           textValue: text,
           previousProcess: record?.previousProcessData,
+
         });
 
         if (!record || text === undefined || text === null) {
           console.log("Invalid data detected:", { record, text });
           return <span>Invalid Data</span>;
         }
+
 
         const statusSteps = [t("pending"), t("started"), t("completed")];
         const initialStatusIndex = text !== undefined ? text : 0;
@@ -499,6 +509,7 @@ const ProjectDetailsTable = ({
           isZoneAssigned,
           teamId: record.teamId,
           isTeamAssigned,
+
         });
 
         // Check if 'Select Machine' is required
@@ -531,6 +542,7 @@ const ProjectDetailsTable = ({
             isTeamAssigned,
           },
         });
+
 
         return (
           <div className="d-flex justify-content-center">
@@ -1050,6 +1062,7 @@ const ProjectDetailsTable = ({
               icon={<RiSearchLine size={20} />}
               className="custom-theme-dark-borde p-1 search-btn"
               style={{ marginLeft: 5 }}
+
             />
           </div>
         </Col>

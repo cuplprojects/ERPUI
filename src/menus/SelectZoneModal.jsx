@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { Modal, Button, Form } from 'react-bootstrap'; // Ensure you have react-bootstrap installed
+import React, { useState, useEffect, useMemo } from 'react';
+import { Modal, Button, Form } from 'react-bootstrap';
 import API from '../CustomHooks/MasterApiHooks/api';
-
-const statusMapping = {
-  0: 'Pending',
-  1: 'Started',
-  2: 'Completed',
-};
+import { useStore } from 'zustand';
+import themeStore from '../store/themeStore';
+import { useTranslation } from 'react-i18next';
 
 const SelectZoneModal = ({ show, handleClose, data, processId, handleSave }) => {
+  const { t } = useTranslation();
+  const { getCssClasses } = useStore(themeStore);
+  const cssClasses = useMemo(() => getCssClasses(), [getCssClasses]);
+  const [customDark, customMid, customLight, customBtn, customDarkText, customLightText] = cssClasses;
+
   const [selectedZone, setSelectedZone] = useState('');
   const [zoneOptions, setZoneOptions] = useState([]);
   const [zoneId, setZoneId] = useState(null);
@@ -21,8 +23,8 @@ const SelectZoneModal = ({ show, handleClose, data, processId, handleSave }) => 
 
   const getZone = async () => {
     try {
-      const response = await API.get('/Zones'); // Adjust endpoint as necessary
-      setZoneOptions(response.data); // Set zone options from API response
+      const response = await API.get('/Zones');
+      setZoneOptions(response.data);
     } catch (error) {
       console.error("Failed to fetch zone options", error);
     }
@@ -62,6 +64,8 @@ const SelectZoneModal = ({ show, handleClose, data, processId, handleSave }) => 
 
       await Promise.all(updatePromises);
       handleSave(zoneId);
+      setSelectedZone()
+      setZoneId()
       handleClose();
     } catch (error) {
       console.error('Error updating zone:', error);
@@ -70,32 +74,33 @@ const SelectZoneModal = ({ show, handleClose, data, processId, handleSave }) => 
 
   return (
     <Modal show={show} onHide={handleClose}>
-      <Modal.Header closeButton>
-        <Modal.Title>Select Zone</Modal.Title>
+      <Modal.Header closeButton className={`${customDark} ${customDarkText}`}>
+        <Modal.Title className={customLightText}>{t('selectZone')}</Modal.Title>
       </Modal.Header>
-      <Modal.Body>
+      <Modal.Body className={`${customLight} ${customDarkText}`}>
         {Array.isArray(data) && data.length > 0 ? (
           <>
             <div className="mb-3">
-              <span className="fw-bold">Selected Catches: </span>
+              <span className="fw-bold">{t('selectedCatches')}: </span>
               {data.map(row => row.catchNumber).join(', ')}
             </div>
             <div className='mb-3'>
-              <span className='fw-bold'>Total Items: </span>
+              <span className='fw-bold'>{t('totalItems')}: </span>
               {data.length}
             </div>
           </>
         ) : (
-          <div>No data available</div>
+          <div>{t('noDataAvailable')}</div>
         )}
         <Form.Group controlId="formZone">
-          <Form.Label>Select Zone</Form.Label>
+          <Form.Label>{t('selectZone')}</Form.Label>
           <Form.Control
             as="select"
             value={selectedZone}
             onChange={handleZoneChange}
+            className={` ${customDarkText}`}
           >
-            <option value="">Select Zone</option>
+            <option value="">{t('selectZone')}</option>
             {zoneOptions.map(option => (
               <option key={option.zoneId} value={option.zoneNo}>
                 {option.zoneNo}
@@ -104,12 +109,19 @@ const SelectZoneModal = ({ show, handleClose, data, processId, handleSave }) => 
           </Form.Control>
         </Form.Group>
       </Modal.Body>
-      <Modal.Footer>
-        <Button variant="danger" onClick={handleClose}>
-          Close
+      <Modal.Footer className={`${customLight} ${customDarkText}`}>
+        <Button 
+          variant="danger" 
+          onClick={handleClose}
+          className={`${customBtn} border-0`}
+        >
+          {t('close')}
         </Button>
-        <Button className='custom-theme-dark-btn' onClick={handleConfirm}>
-          Save Changes
+        <Button 
+          onClick={handleConfirm}
+          className={`${customBtn} border-0`}
+        >
+          {t('saveChanges')}
         </Button>
       </Modal.Footer>
     </Modal>

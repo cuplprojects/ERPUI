@@ -112,6 +112,7 @@ const ProcessTable = () => {
               );
               setPreviousProcessTransactions(prevTransactions.data);
               break;
+
             }
             previousSequence--;
           } while (previousSequence > 0);

@@ -6,12 +6,14 @@ import 'antd/dist/reset.css'; // Import Ant Design styles
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import Clipboard from 'clipboard';
+import { useTranslation } from 'react-i18next';
 
 const AddUserModal = ({ show, username, password, onClose, fullName }) => {
+  const { t } = useTranslation();
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
   const customDark = cssClasses[0];
-  const customMid = cssClasses[1];
+  const customMid = cssClasses[1]; 
   const customLight = cssClasses[2];
   const customBtn = cssClasses[3];
   const customDarkText = cssClasses[4];
@@ -54,18 +56,18 @@ const AddUserModal = ({ show, username, password, onClose, fullName }) => {
 
     clipboard.on('success', () => {
       notification.success({
-        message: `${label} Copied`,
-        description: `${label} has been successfully copied to the clipboard!`,
+        message: t('copySuccessTitle', { label }),
+        description: t('copySuccessDescription', { label }),
         placement: 'bottomRight',
       });
-      clipboard.destroy(); // Clean up after success
+      clipboard.destroy();
     });
 
     clipboard.on('error', (err) => {
       console.error('Failed to copy text: ', err);
       notification.error({
-        message: 'Copy Failed',
-        description: 'Unable to copy to the clipboard. Please try again.',
+        message: t('copyFailedTitle'),
+        description: t('copyFailedDescription'),
         placement: 'bottomRight',
       });
     });
@@ -73,12 +75,12 @@ const AddUserModal = ({ show, username, password, onClose, fullName }) => {
 
   // Function to copy both username and password to clipboard
   const handleCopyBothToClipboard = () => {
-    const combinedText = `Your User Name: ${username}\nYour Temporary Password: ${password}`;
+    const combinedText = `${t('yourUsername')}: ${username}\n${t('yourTemporaryPassword')}: ${password}`;
     navigator.clipboard.writeText(combinedText)
       .then(() => {
         notification.success({
-          message: 'Credentials Copied',
-          description: 'Your credentials have been successfully copied to the clipboard!',
+          message: t('credentialsCopiedTitle'),
+          description: t('credentialsCopiedDescription'),
           placement: 'bottomRight',
         });
       })
@@ -90,43 +92,43 @@ const AddUserModal = ({ show, username, password, onClose, fullName }) => {
   return (
     <Modal show={show} onHide={handleClose} backdrop="static" keyboard={false}>
       <Modal.Header className={`${customDark === "dark-dark" ? `${customDarkText} ${customDark}` : `${customDark} text-light`} d-flex justify-content-center`}>
-        <Modal.Title>User Added Successfully!</Modal.Title>
+        <Modal.Title>{t('userAddedSuccessfully')}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
 
         {/* Disclaimer Section */}
         <div className="d-flex align-items-center text-danger mb-3 justify-content-center">
           <FaExclamationTriangle style={{ marginRight: '5px' }} />
-          <strong>Please note down the credentials carefully.</strong>
+          <strong>{t('noteCredentialsCarefully')}</strong>
         </div>
 
-        <p>The <span>{fullName}</span>  has been added successfully!</p>
+        <p>{t('userAddedSuccessMessage', { fullName })}</p>
 
         <div className="d-flex align-items-center justify-content-between">
-          <strong>Username:</strong>
+          <strong>{t('username')}:</strong>
           <div>
             {username}
             <Button
               variant="link"
-              onClick={() => handleCopyToClipboard(username, 'Username')}
+              onClick={() => handleCopyToClipboard(username, t('username'))}
               style={{ marginLeft: '10px', display: 'inline-flex', alignItems: 'center' }}
             >
-              Copy User Name <FaClipboard style={{ marginLeft: '5px' }} />
+              {t('copyUsername')} <FaClipboard style={{ marginLeft: '5px' }} />
             </Button>
           </div>
         </div>
 
         <div className="d-flex align-items-center justify-content-between mt-3">
-          <strong>Password:</strong>
+          <strong>{t('password')}:</strong>
           <div>
             {password}
             <Button
               variant="link"
-              onClick={() => handleCopyToClipboard(password, 'Password')}
+              onClick={() => handleCopyToClipboard(password, t('password'))}
               style={{ marginLeft: '10px', display: 'inline-flex', alignItems: 'center' }}
               className="copy-btn"
             >
-              Copy Password <FaClipboard style={{ marginLeft: '5px' }} />
+              {t('copyPassword')} <FaClipboard style={{ marginLeft: '5px' }} />
             </Button>
           </div>
         </div>
@@ -138,16 +140,16 @@ const AddUserModal = ({ show, username, password, onClose, fullName }) => {
             style={{ display: 'inline-flex', alignItems: 'center' }}
             className={`${customDark === "dark-dark" ? `${customBtn} border-light custom-zoom-btn` : `${customBtn} border-0 custom-zoom-btn`} copy-btn`}
           >
-            Copy Credentials <FaClipboard style={{ marginLeft: '5px' }} />
+            {t('copyCredentials')} <FaClipboard style={{ marginLeft: '5px' }} />
           </Button>
         </div>
 
         {/* Countdown Timer */}
         <div className="text-center mt-4">
           {isClosingEnabled ? (
-            <span>You can now close this window.</span>
+            <span>{t('canCloseWindow')}</span>
           ) : (
-            <span>Wait before  {countdown} seconds...</span>
+            <span>{t('waitBeforeClosing', { seconds: countdown })}</span>
           )}
         </div>
       </Modal.Body>
@@ -157,7 +159,7 @@ const AddUserModal = ({ show, username, password, onClose, fullName }) => {
           onClick={handleClose}
           disabled={!isClosingEnabled} // Disable button until countdown finishes
         >
-          Close
+          {t('close')}
         </Button>
       </Modal.Footer>
     </Modal>
