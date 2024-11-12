@@ -11,7 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import API from '../CustomHooks/MasterApiHooks/api';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
-
+import { EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
 
 const { Option } = Select;
 
@@ -46,9 +46,10 @@ const Project = () => {
 
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(5);
   const [searchText, setSearchText] = useState('');
   const [sortedInfo, setSortedInfo] = useState({});
+  const [total, setTotal] = useState(0);
 
   const generateSeriesOptions = (count) => {
     const series1 = SERIES_1.slice(0, count);
@@ -66,6 +67,7 @@ const Project = () => {
     try {
       const response = await API.get('/Project');
       setProjects(response.data);
+      setTotal(response.data.length);
     } catch (error) {
       console.error('Failed to fetch projects', error);
       message.error(t('unableToFetchProjects'));
@@ -160,10 +162,13 @@ const Project = () => {
 
   const handleTableChange = (pagination, filters, sorter) => {
     setSortedInfo(sorter);
+    setCurrentPage(pagination.current);
+    setPageSize(pagination.pageSize);
   };
 
   const columns = [
     {
+      align: 'center',
       title: t('sn'),
       dataIndex: 'serial',
       key: 'serial',
@@ -240,23 +245,32 @@ const Project = () => {
       key: 'action',
       render: (_, record, index) =>
         editingIndex === index ? (
-          <>
-            <Button type="link" onClick={() => handleEditSave(index)}>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <Button 
+              className={`${customBtn} d-flex align-items-center justify-content-center`}
+              onClick={() => handleEditSave(index)}
+              icon={<SaveOutlined />}
+            >
               {t('save')}
             </Button>
-            <Button type="link" onClick={() => setEditingIndex(null)}>
+            <Button 
+              className={`${customBtn} d-flex align-items-center justify-content-center`}
+              onClick={() => setEditingIndex(null)}
+              icon={<CloseOutlined />}
+            >
               {t('cancel')}
             </Button>
-          </>
+          </div>
         ) : (
           <Button
-            type="link"
+            className={`${customBtn} d-flex align-items-center justify-content-center`}
             onClick={() => {
               setEditingIndex(index);
               setEditingName(record.name);
               setEditingDescription(record.description);
               setEditingStatus(record.status);
             }}
+            icon={<EditOutlined />}
           >
             {t('edit')}
           </Button>
@@ -301,61 +315,104 @@ const Project = () => {
     )
   );
 
+  // Get current projects for pagination
+  const indexOfLastProject = currentPage * pageSize;
+  const indexOfFirstProject = indexOfLastProject - pageSize;
+  const currentProjects = filteredProjects.slice(indexOfFirstProject, indexOfLastProject);
+
   return (
  
     <Card
       title={t('projects')}
       bordered={true}
-      style={{ padding: '20px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)' }}
+      style={{ padding: '1px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)', width: '100%' }}
     >
       <Tabs activeKey={activeTabKey} onChange={setActiveTabKey}>
         <TabPane tab={t('projectList')} key="1">
-          <Row justify="end" style={{ marginBottom: '20px' }}>
-            <Col>
-              <Button type="primary" onClick={showModal}>
+          <Row justify="space-between" align="middle" style={{ marginBottom: '20px' }}>
+            <Col xs={24} sm={12}>
+              <Input.Search
+                placeholder={t('searchProjects')}
+                onChange={e => setSearchText(e.target.value)}
+                style={{ width: '100%', maxWidth: '300px' }}
+                className={`${customDarkText} mt-1`}
+              />
+            </Col>
+            <Col xs={24} sm={12} style={{ textAlign: 'right', marginTop: { xs: '10px', sm: '0' } }}>
+              <Button type="primary" className={`${customBtn} mt-1`} onClick={showModal}>
                 {t('addNewProject')}
               </Button>
             </Col>
           </Row>
-          <Table
-            columns={columns}
-            dataSource={projects.map((project, index) => ({ ...project, serial: index + 1 }))}
-            pagination={false}
-            rowKey="projectId"
-            bordered
-          />
+          <div className="table-responsive">
+            <Table
+              columns={columns}
+              dataSource={currentProjects.map((project, index) => ({ ...project, serial: index + 1 }))}
+              onChange={handleTableChange}
+              pagination={{
+                className: 'p-3 rounded rounded-top-0',
+                current: currentPage,
+                pageSize: pageSize,
+                total: filteredProjects.length,
+                showSizeChanger: true,
+                // showQuickJumper: true,
+                showTotal: (total, range) => `${range[0]}-${range[1]} ${t('of')} ${total} ${t('items')}`,
+                pageSizeOptions: ['10', '15','20']
+              }}
+              rowKey="projectId"
+              bordered
+              scroll={{ x: 'max-content' }}
+              className={`${customDark === "default-dark" ? "thead-default" : ""}
+                  ${customDark === "red-dark" ? "thead-red" : ""}
+                  ${customDark === "green-dark" ? "thead-green" : ""}
+                  ${customDark === "blue-dark" ? "thead-blue" : ""}
+                  ${customDark === "dark-dark" ? "thead-dark" : ""}
+                  ${customDark === "pink-dark" ? "thead-pink" : ""}
+                  ${customDark === "purple-dark" ? "thead-purple" : ""}
+                  ${customDark === "light-dark" ? "thead-light" : ""}
+                  ${customDark === "brown-dark" ? "thead-brown" : ""} custom-pagination`}
+            />
+          </div>
           <Modal
             title={t('addNewProject')}
             visible={isModalVisible}
             onCancel={handleCancel}
             footer={null}
+            width="95%"
+            style={{ maxWidth: '600px' }}
           >
             <Form form={form} onFinish={handleAddProject} layout="vertical" initialValues={{ status: true }}>
-              <Form.Item
-                name="group"
-                label={t('group')}
-                rules={[{ required: true, message: t('pleaseSelectGroup') }]}
-              >
-                <Select onChange={handleGroupChange} placeholder={t('selectGroup')}>
-                  {groups.map((group) => (
-                    <Option key={group.id} value={group.id}>{group.name}</Option>
-                  ))}
-                </Select>
-              </Form.Item>
-              <Form.Item
-                name="type"
-                label={<span className={customDarkText}>{t('type')}</span>}
-                rules={[{ required: true, message: t('pleaseSelectType') }]}
-              >
-                <Select onChange={handleTypeChange} placeholder={t('selectType')}>
-                  {types.map((type) => (
-                    <Option key={type.typeId} value={type.typeId}>{type.types}</Option>
-                  ))}
-                </Select>
-              </Form.Item>
+              <Row gutter={[16, 0]}>
+                <Col xs={24} sm={24}>
+                  <Form.Item
+                    name="group"
+                    label={t('group')}
+                    rules={[{ required: true, message: t('pleaseSelectGroup') }]}
+                  >
+                    <Select onChange={handleGroupChange} placeholder={t('selectGroup')}>
+                      {groups.map((group) => (
+                        <Option key={group.id} value={group.id}>{group.name}</Option>
+                      ))}
+                    </Select>
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={24}>
+                  <Form.Item
+                    name="type"
+                    label={<span className={customDarkText}>{t('type')}</span>}
+                    rules={[{ required: true, message: t('pleaseSelectType') }]}
+                  >
+                    <Select onChange={handleTypeChange} placeholder={t('selectType')}>
+                      {types.map((type) => (
+                        <Option key={type.typeId} value={type.typeId}>{type.types}</Option>
+                      ))}
+                    </Select>
+                  </Form.Item>
+                </Col>
+              </Row>
               {showSeriesFields && (
-                <Row gutter={16}>
-                  <Col span={12}>
+                <Row gutter={[16, 0]}>
+                  <Col xs={24} sm={12}>
                     <Form.Item
                       name="numberOfSeries"
                       label={<span className={customDarkText}>{t('numberOfSeries')}</span>}
@@ -371,7 +428,7 @@ const Project = () => {
                       </Select>
                     </Form.Item>
                   </Col>
-                  <Col span={12}>
+                  <Col xs={24} sm={12}>
                     <Form.Item
                       name="seriesName"
                       label={<span className={customDarkText}>{t('seriesName')}</span>}
@@ -386,52 +443,62 @@ const Project = () => {
                   </Col>
                 </Row>
               )}
-              <Form.Item
-                name="name"
-                label={<span className={customDarkText}>{t('projectName')}</span>}
-                rules={[{ required: true, message: t('pleaseEnterProjectName') }]}
-              >
-                <Input placeholder={t('enterProjectName')} />
-              </Form.Item>
-              <Form.Item
-                name="description"
-                label={<span className={customDarkText}>{t('description')}</span>}
-              >
-                <Input.TextArea rows={4} placeholder={t('enterDescription')} />
-              </Form.Item>
-              <Form.Item
-                name="status"
-                label={t('status')}
-                valuePropName="checked"
-              >
-                <Switch />
-              </Form.Item>
-              <Form.Item>
-                <Button type="primary" htmlType="submit" style={{ marginRight: '10px' }}>
-                  {t('save')}
-                </Button>
-                <Button onClick={handleCancel}>{t('cancel')}</Button>
-              </Form.Item>
+              <Row gutter={[16, 0]}>
+                <Col xs={24}>
+                  <Form.Item
+                    name="name"
+                    label={<span className={customDarkText}>{t('projectName')}</span>}
+                    rules={[{ required: true, message: t('pleaseEnterProjectName') }]}
+                  >
+                    <Input placeholder={t('enterProjectName')} />
+                  </Form.Item>
+                </Col>
+                <Col xs={24}>
+                  <Form.Item
+                    name="description"
+                    label={<span className={customDarkText}>{t('description')}</span>}
+                  >
+                    <Input.TextArea rows={4} placeholder={t('enterDescription')} />
+                  </Form.Item>
+                </Col>
+                <Col xs={24}>
+                  <Form.Item
+                    name="status"
+                    label={t('status')}
+                    valuePropName="checked"
+                  >
+                    <Switch />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Row justify="end" gutter={[8, 0]}>
+                <Col>
+                  <Button onClick={handleCancel}>{t('cancel')}</Button>
+                </Col>
+                <Col>
+                  <Button type="primary" htmlType="submit">
+                    {t('save')}
+                  </Button>
+                </Col>
+              </Row>
             </Form>
           </Modal>
         </TabPane>
         <TabPane tab={t('selectProcess')} key="2">
-  {/* Content for Select Process */}
-  <div>
-    <AddProjectProcess selectedProject={selectedProject} />
-    <Button 
-      type="primary" 
-      onClick={() => setActiveTabKey("3")} 
-      style={{ marginTop: '20px' }}
-    >
-      {t('next')}
-    </Button>
-  </div>
-</TabPane>
+          <div className="responsive-container">
+            <AddProjectProcess selectedProject={selectedProject} />
+            <Button 
+              type="primary" 
+              onClick={() => setActiveTabKey("3")} 
+              style={{ marginTop: '20px' }}
+            >
+              {t('next')}
+            </Button>
+          </div>
+        </TabPane>
 
         <TabPane tab={t('allocateProcess')} key="3">
-          {/* Content for Allocate Process */}
-          <div>
+          <div className="responsive-container">
             <ProjectUserAllocation selectedProject={selectedProject}/>
           </div>
         </TabPane>
