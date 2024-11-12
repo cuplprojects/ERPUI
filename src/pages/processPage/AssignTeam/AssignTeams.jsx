@@ -6,7 +6,7 @@ import teamsService from '../../../CustomHooks/ApiServices/teamsService';
 import API from '../../../CustomHooks/MasterApiHooks/api';
 
 
-const AssignTeams = ({ data, handleSave, processId , handleClose }) => {
+const AssignTeams = ({ data, processId , handleClose, fetchTransactions}) => {
   console.log(data)
   const [assignmentType, setAssignmentType] = useState('catch');
   const [teams, setTeams] = useState([]);
@@ -105,7 +105,7 @@ const AssignTeams = ({ data, handleSave, processId , handleClose }) => {
               selectedProject={selectedProject} 
               lots={lots} 
               teams={teams} 
-              handleSave={handleSave}
+              fetchTransactions={fetchTransactions}
               handleClose={handleClose}
               data={data}  // Pass all selected rows
               processId={processId}
