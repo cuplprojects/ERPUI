@@ -2,8 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Table, Button, Modal, Input, Switch, Select, notification } from 'antd';
 import { EditOutlined } from '@ant-design/icons';
 import API from '../../CustomHooks/MasterApiHooks/api';
-
+import { useTranslation } from 'react-i18next';
+import { useStore } from 'zustand';
+import themeStore from '../../store/themeStore';
 const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
+    const { t } = useTranslation();
     const [processModalVisible, setProcessModalVisible] = useState(false);
     const [processes, setProcesses] = useState([]);
     const [features, setFeatures] = useState([]);
@@ -17,7 +20,9 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
     const [processType, setProcessType] = useState('');
     const [rangeStart, setRangeStart] = useState('');
     const [rangeEnd, setRangeEnd] = useState('');
-
+    const { getCssClasses } = useStore(themeStore);
+    const cssClasses = getCssClasses();
+    const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
     const fetchProcesses = async () => {
         try {
             const response = await API.get('/Processes');
@@ -101,7 +106,7 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
         }
         const rangeStartNum = parseFloat(rangeStart);
         const rangeEndNum = parseFloat(rangeEnd);
-    
+
         // Validate rangeStart and rangeEnd
         if (processType === 'Independent') {
             if (isNaN(rangeStartNum) || isNaN(rangeEndNum)) {
@@ -145,7 +150,7 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
             if (response.status === 204) {
                 // Handle 204 No Content response
                 notification.success({ message: isEditingProcess ? 'Process updated successfully!' : 'Process added successfully!' });
-                setProcessModalVisible(false); 
+                setProcessModalVisible(false);
                 fetchProcesses();
                 return; // No further processing needed
             } else if (response && response.data) {
@@ -175,7 +180,7 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
 
             setProcessModalVisible(false);
             onUpdateProcesses([...processes, processWithKey]);
-           
+
         } catch (error) {
             console.error('Error saving process:', error);
             notification.error({ message: error.message || 'Failed to save process' });
@@ -224,10 +229,23 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
                 </Button>
             </div>
 
-            <Table columns={processColumns} dataSource={processes} pagination={false} />
+            <Table
+                columns={processColumns}
+                dataSource={processes}
+                pagination={false}
+                className={`${customDark === "default-dark" ? "thead-default" : ""}
+             ${customDark === "red-dark" ? "thead-red" : ""}
+             ${customDark === "green-dark" ? "thead-green" : ""}
+             ${customDark === "blue-dark" ? "thead-blue" : ""}
+             ${customDark === "dark-dark" ? "thead-dark" : ""}
+             ${customDark === "pink-dark" ? "thead-pink" : ""}
+             ${customDark === "purple-dark" ? "thead-purple" : ""}
+             ${customDark === "light-dark" ? "thead-light" : ""}
+             ${customDark === "brown-dark" ? "thead-brown" : ""} custom-pagination`}
+            />
 
             <Modal
-                title={isEditingProcess ? 'Edit Process' : 'Add Process'}
+                title={isEditingProcess ? t('editProcess') : t('addProcess')}
                 open={processModalVisible}
                 onCancel={() => setProcessModalVisible(false)}
                 onOk={handleAddProcess}
@@ -236,7 +254,7 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
                     <label htmlFor="processName">Process Name:</label>
                     <Input
                         id="processName"
-                        placeholder="Process Name"
+                        placeholder={t('processName')}
                         value={processName}
                         onChange={e => setProcessName(e.target.value)}
                         style={{ width: '100%' }}
