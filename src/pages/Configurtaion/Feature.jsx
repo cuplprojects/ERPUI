@@ -1,15 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Modal, Input, notification } from 'antd';
+import { Table, Button, Input, notification } from 'antd';
 import { AppstoreAddOutlined, EditOutlined } from '@ant-design/icons';
-// import './FeatureManagement.css'; // Import your CSS file for styling
 import API from '../../CustomHooks/MasterApiHooks/api';
+import { useTranslation } from 'react-i18next';
+import { useStore } from 'zustand';
+import themeStore from '../../store/themeStore';
+import { FaSearch } from 'react-icons/fa';
+import { Modal } from 'react-bootstrap';
+import { AiFillCloseSquare } from 'react-icons/ai';
 
 const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
+    const { t } = useTranslation();
+    const { getCssClasses } = useStore(themeStore);
+    const cssClasses = getCssClasses();
+    const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
     const [featureModalVisible, setFeatureModalVisible] = useState(false);
     const [features, setFeatures] = useState([]);
     const [isEditingFeature, setIsEditingFeature] = useState(false);
     const [editingFeatureId, setEditingFeatureId] = useState(null);
     const [featureName, setFeatureName] = useState('');
+    const [pageSize, setPageSize] = useState(5); // Default page size set to 5
+    const [searchText, setSearchText] = useState('');
 
     // Fetch features
     useEffect(() => {
@@ -119,23 +130,36 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
         }
     };
 
+    // Handle search
+    const handleSearch = (value) => {
+        setSearchText(value);
+    };
+
+    // Filter features based on search text
+    const filteredFeatures = features.filter(feature =>
+        feature.name.toLowerCase().includes(searchText.toLowerCase()) ||
+        feature.key.toString().includes(searchText)
+    );
+
     // Columns for Feature table
     const featureColumns = [
         { 
-            title: 'SN', 
+            title: t('sn'), 
             dataIndex: 'key', 
             key: 'key',
             width: '15%',
-            align: 'center'
+            align: 'center',
+            sorter: (a, b) => a.key - b.key
         },
         { 
-            title: 'Feature Name', 
+            title: t('featureName'), 
             dataIndex: 'name', 
             key: 'name',
-            width: '65%'
+            width: '65%',
+            sorter: (a, b) => a.name.localeCompare(b.name)
         },
         {
-            title: 'Actions',
+            title: t('actions'),
             key: 'actions',
             width: '20%',
             align: 'center',
@@ -145,8 +169,9 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
                     onClick={() => showAddFeatureModal(record)}
                     type="primary"
                     size="large"
+                    className={`${customBtn}`}
                 >
-                    Edit
+                    {t('edit')}
                 </Button>
             ),
         },
@@ -155,47 +180,88 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
     return (
         <div className="feature-management-container">
            
-            <div className="button-container" style={{ marginBottom: '20px' }}>
+            <div className="d-flex justify-content-between align-items-center" style={{ marginBottom: '20px' }}>
                 <Button 
                     type="primary" 
-                   
+                    className={`${customBtn}`}
                     onClick={() => showAddFeatureModal()}
                 >
-                    Add New Feature
+                    {t('addNewFeature')}
                 </Button>
+                <div className="d-flex align-items-center" style={{ width: '300px' }}>
+                    <Input
+                        placeholder={t('searchFeatures')}
+                        value={searchText}
+                        onChange={(e) => handleSearch(e.target.value)}
+                        allowClear
+                        className={`rounded-2 ${customDark === "dark-dark" ? `${customLightBorder} text-dark` : customDarkText} ${customDarkBorder} rounded-end-0`}
+                    />
+                    <Button
+                        className={`rounded-2 ${customBtn} ${customDark === "dark-dark" ? 'border-white' : 'border-0'} rounded-start-0`}
+                        style={{ height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
+                        <FaSearch size={20}/>
+                    </Button>
+                </div>
             </div>
             <Table
-                dataSource={features}
+                dataSource={filteredFeatures}
                 columns={featureColumns}
                 rowKey="key"
                 pagination={{ 
-                    pageSize: 10, 
-                    showSizeChanger: true, 
-                    showQuickJumper: true 
+                    pageSize: pageSize,
+                    current: 1,
+                    showSizeChanger: true,
+                    pageSizeOptions: ['5', '10', '15'],
+                    onShowSizeChange: (current, size) => {
+                        setPageSize(size);
+                    },
+                    className: `bg-white p-3 rounded rounded-top-0`
                 }}
                 bordered
                 size="small"
                 scroll={{ x: 'max-content' }}
-                style={{ 
-                    boxShadow: '0 4px 8px 0 rgba(0,0,0,0.2)',
-                    borderRadius: '8px',
-                    overflow: 'hidden'
-                }}
+                className={`${customDark === "default-dark" ? "thead-default" : ""}
+                ${customDark === "red-dark" ? "thead-red" : ""}
+                ${customDark === "green-dark" ? "thead-green" : ""}
+                ${customDark === "blue-dark" ? "thead-blue" : ""}
+                ${customDark === "dark-dark" ? "thead-dark" : ""}
+                ${customDark === "pink-dark" ? "thead-pink" : ""}
+                ${customDark === "purple-dark" ? "thead-purple" : ""}
+                ${customDark === "light-dark" ? "thead-light" : ""}
+                ${customDark === "brown-dark" ? "thead-brown" : ""} custom-pagination`}
             />
 
             {/* Feature Modal */}
             <Modal
-                title={isEditingFeature ? 'Edit Feature' : 'Add Feature'}
-                visible={featureModalVisible}
-                onOk={handleAddFeature}
-                onCancel={() => setFeatureModalVisible(false)}
+                show={featureModalVisible}
+                onHide={() => setFeatureModalVisible(false)}
+                centered
+                size="lg"
+                className={`rounded-2 ${customDark === "" ? `${customDark}` : ''}`}
             >
-                <Input
-                    placeholder="Enter feature name"
-                    value={featureName}
-                    onChange={e => setFeatureName(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                />
+                <Modal.Header closeButton={false} className={`rounded-top-2 ${customDark} ${customLightText} ${customDark === "dark-dark" ? `border ` : `border-0`} border d-flex justify-content-between`}>
+                    <Modal.Title>{isEditingFeature ? t('editFeature') : t('addFeature')}</Modal.Title>
+                    <AiFillCloseSquare
+                        size={35}
+                        onClick={() => setFeatureModalVisible(false)}
+                        className={`rounded-2 ${customDark === "dark-dark" ? "text-dark bg-white " : `${customDark} custom-zoom-btn text-white  ${customDarkBorder}`}`}
+                        aria-label="Close"
+                    />
+                </Modal.Header>
+                <Modal.Body className={`${customDarkText} ${customLight}`}>
+                    <Input
+                        placeholder={t('enterFeatureName')}
+                        value={featureName}
+                        onChange={e => setFeatureName(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                    />
+                </Modal.Body>
+                <Modal.Footer className={`rounded-bottom-2 ${customDark} ${customLightText} ${customDark === "dark-dark" ? `border ` : `border-0`} border`}>
+                    <Button className={`${customBtn}`} onClick={handleAddFeature}>
+                        {isEditingFeature ? t('update') : t('add')}
+                    </Button>
+                </Modal.Footer>
             </Modal>
         </div>
     );
