@@ -160,19 +160,21 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
         },
         {
             title: t('actions'),
-            key: 'actions',
+            key: 'actions', 
             width: '20%',
             align: 'center',
             render: (text, record) => (
-                <Button 
-                    icon={<EditOutlined />} 
-                    onClick={() => showAddFeatureModal(record)}
-                    type="primary"
-                    size="large"
-                    className={`${customBtn}`}
-                >
-                    {t('edit')}
-                </Button>
+                <div className="d-flex justify-content-center">
+                    <Button 
+                        icon={<EditOutlined />}
+                        onClick={() => showAddFeatureModal(record)}
+                        type="primary"
+                        size="large"
+                        className={`${customBtn} d-flex align-items-center justify-content-center gap-2`}
+                    >
+                        {t('edit')}
+                    </Button>
+                </div>
             ),
         },
     ];
