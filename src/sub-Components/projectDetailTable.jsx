@@ -846,13 +846,15 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                                     // Validation logic for whether the status can be changed
                                     const isZoneAssigned = row.zoneId !== 0 && row.zoneId !== null;
                                     const isTeamAssigned = row.teamId && row.teamId.length > 0;
-                                    const hasSelectMachinePermission = hasFeaturePermission(10); // Check if Select Machine permission exists
+                                    const hasSelectMachinePermission = hasFeaturePermission(10);
 
                                     const canChangeStatus = hasSelectMachinePermission
-                                        ? row.machineId !== 0 && row.machineId !== null  // Machine must be assigned if permission exists
-                                        : isZoneAssigned && isTeamAssigned;  // Otherwise, Zone and Team must be assigned
-                                        const canBeCompleted = record.interimQuantity === record.quantity;
-                                    return row.alerts || !canChangeStatus || (getSelectedStatus() === 2 && !canBeCompleted); // Disable if there are alerts or the status cannot be changed
+                                        ? row.machineId !== 0 && row.machineId !== null
+                                        : isZoneAssigned && isTeamAssigned;
+
+                                    const canBeCompleted = row.interimQuantity === row.quantity;
+                                    
+                                    return row.alerts || !canChangeStatus || (getSelectedStatus() === 2 && !canBeCompleted);
                                 })}
                             />
                         </div>
