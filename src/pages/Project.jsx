@@ -168,6 +168,7 @@ const Project = () => {
 
   const columns = [
     {
+      // width: '1%',
       align: 'center',
       title: t('sn'),
       dataIndex: 'serial',
