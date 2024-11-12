@@ -900,7 +900,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                                     const hasSelectMachinePermission = hasFeaturePermission(10); // Check if Select Machine permission exists
 
                                     const canChangeStatus = hasSelectMachinePermission
-                                        ? row.machineId !== 0 && row.machineId !== null  // Machine must be assigned if permission exists
+                                        ? row.machineId !== 0 && row.machineId !== null && isZoneAssigned && isTeamAssigned  // Machine must be assigned if permission exists
                                         : isZoneAssigned && isTeamAssigned;  // Otherwise, Zone and Team must be assigned
                                         const canBeCompleted = row.interimQuantity === row.quantity;
                                     return row.alerts || !canChangeStatus || (getSelectedStatus() === 2 && canBeCompleted); // Disable if there are alerts or the status cannot be changed
