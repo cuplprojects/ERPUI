@@ -343,6 +343,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
                 examDate: newRowData.examDate,
                 examTime: newRowData.examTime,
                 processId: [],
+
             }
         ];
 
