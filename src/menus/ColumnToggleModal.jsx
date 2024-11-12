@@ -4,11 +4,11 @@ import themeStore from '../store/themeStore';
 import { useStore } from 'zustand';
 import { useTranslation } from 'react-i18next';
 
-const ColumnToggleModal = ({ show, handleClose, columnVisibility, setColumnVisibility, featureData, hasFeaturePermission }) => {
+const ColumnToggleModal = ({ show, handleClose, columnVisibility, setColumnVisibility, featureData,hasFeaturePermission }) => {
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = useMemo(() => getCssClasses(), [getCssClasses]);
-    const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
     const { t } = useTranslation();
+    const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
 
     const handleToggle = (column) => {
         setColumnVisibility((prevVisibility) => ({
@@ -18,12 +18,12 @@ const ColumnToggleModal = ({ show, handleClose, columnVisibility, setColumnVisib
     };
 
     const columns = [
-        { key: 'interimQuantity', label: t('interimQuantity') },
-        { key: 'remarks', label: t('remarks') },
-        { key: 'teamAssigned', label: t('teamAssigned') },
-        { key: 'paper', label: t('paper') },
-        { key: 'course', label: t('course') },
-        { key: 'subject', label: t('subject') }
+        { key: 'Interim Quantity', label: 'interimQuantity' },
+        { key: 'Remarks', label: 'remarks' },
+        { key: 'Team Assigned', label: 'teamAssigned' },
+        { key: 'Paper', label: 'paper' },
+        { key: 'Course', label: 'course' },
+        { key: 'Subject', label: 'subject' }
     ];
 
     return (
@@ -33,14 +33,14 @@ const ColumnToggleModal = ({ show, handleClose, columnVisibility, setColumnVisib
             </Modal.Header>
             <Modal.Body className={`${customLight} ${customDarkText} p-4`}>
                 <Form>
-                    {columns.map((column) => (
-                        <Form.Group key={column.key} className="mb-3">
+                    {columns.map(({ key, label }) => (
+                        <Form.Group key={key} className="mb-3">
                             <Form.Check
                                 type="switch"
-                                id={`custom-switch-${column.key}`}
-                                label={column.label}
-                                checked={columnVisibility[column.key]}
-                                onChange={() => handleToggle(column.key)}
+                                id={`custom-switch-${key}`}
+                                label={t(label)}
+                                checked={columnVisibility[key]}
+                                onChange={() => handleToggle(key)}
                             />
                         </Form.Group>
                     ))}
