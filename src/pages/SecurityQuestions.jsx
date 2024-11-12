@@ -111,29 +111,32 @@ const SecurityQuestions = () => {
   return (
     <div className="container-fluid">
       <div className="row mb-3">
-        <div className="col-12 col-md-6 mb-3 mb-md-0">
+        <div className="col-12 col-md-4 mb-3 mb-md-0">
           <Search
             placeholder={t('searchQuestions')}
             allowClear
             value={searchText}
             onChange={e => setSearchText(e.target.value)}
             className="w-100"
+            style={{ height: '38px' }}
           />
         </div>
-        <div className="col-12 col-md-6">
-          <Form className="d-flex flex-column flex-md-row">
+        <div className="col-12 col-md-8 d-flex justify-content-end">
+          <Form className="d-flex align-items-center">
             <FormControl
               type="text"
               placeholder={t('enterYourSecurityQuestion')}
               value={newQuestion}
               onChange={(e) => setNewQuestion(e.target.value)}
-              className="mb-2 mb-md-0 me-md-2"
+              className="me-2"
               disabled={loading}
+              style={{ height: '38px', width: '300px' }}
             />
             <Button
               onClick={addQuestion}
               disabled={newQuestion.trim() === '' || loading}
               className={`${customBtn} ${customDark === "dark-dark" ? "border" : "border-0"}`}
+              style={{ height: '38px', width: '150px', fontSize: '16px' }}
             >
               {loading ? t('adding') : t('addQuestion')}
             </Button>
