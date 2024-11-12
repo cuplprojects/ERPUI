@@ -23,6 +23,8 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
     const [rangeStart, setRangeStart] = useState('');
     const [rangeEnd, setRangeEnd] = useState('');
     const [searchText, setSearchText] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(5);
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = getCssClasses();
     const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
@@ -36,7 +38,7 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
             })));
         } catch (error) {
             console.error('Error fetching processes:', error);
-            notification.error({ message: 'Failed to fetch processes' });
+            notification.error({ message: t('failedToFetchProcesses') });
         }
     };
 
@@ -50,7 +52,7 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
             })));
         } catch (error) {
             console.error('Error fetching features:', error);
-            notification.error({ message: 'Failed to fetch features' });
+            notification.error({ message: t('failedToFetchFeatures') });
         }
     };
 
@@ -192,21 +194,21 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
     };
 
     const processColumns = [
-        { 
-            title: t('id'), 
-            dataIndex: 'key', 
+        {
+            title: t('id'),
+            dataIndex: 'key',
             key: 'key',
-            sorter: (a, b) => a.key - b.key 
+            sorter: (a, b) => a.key - b.key
         },
-        { 
-            title: t('processName'), 
-            dataIndex: 'name', 
+        {
+            title: t('processName'),
+            dataIndex: 'name',
             key: 'name',
             sorter: (a, b) => a.name.localeCompare(b.name)
         },
-        { 
-            title: t('weightage'), 
-            dataIndex: 'weightage', 
+        {
+            title: t('weightage'),
+            dataIndex: 'weightage',
             key: 'weightage',
             sorter: (a, b) => a.weightage - b.weightage
         },
@@ -224,15 +226,15 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
             sorter: (a, b) => (a.featureNames?.join(',') || '').localeCompare(b.featureNames?.join(',') || ''),
             render: features => features?.join(', ') || 'None',
         },
-        { 
-            title: t('processOrder'), 
-            dataIndex: 'processIdInput', 
+        {
+            title: t('processOrder'),
+            dataIndex: 'processIdInput',
             key: 'processIdInput',
             sorter: (a, b) => a.processIdInput - b.processIdInput
         },
-        { 
-            title: t('processType'), 
-            dataIndex: 'processType', 
+        {
+            title: t('processType'),
+            dataIndex: 'processType',
             key: 'processType',
             sorter: (a, b) => a.processType.localeCompare(b.processType)
         },
@@ -243,7 +245,10 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
                 <Button
                     icon={<EditOutlined />}
                     onClick={() => showAddProcessModal(record)}
-                />
+                    className={`${customBtn}`}
+                >
+                    {t('edit')}
+                </Button>
             )
         }
     ];
@@ -252,6 +257,16 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
         const searchContent = Object.values(process).join(' ').toLowerCase();
         return searchContent.includes(searchText.toLowerCase());
     });
+
+    const handleTableChange = (pagination) => {
+        setCurrentPage(pagination.current);
+        setPageSize(pagination.pageSize);
+    };
+
+    const paginatedData = filteredProcesses.slice(
+        (currentPage - 1) * pageSize,
+        currentPage * pageSize
+    );
 
     return (
         <div>
@@ -269,13 +284,17 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
 
             <Table
                 columns={processColumns}
-                dataSource={filteredProcesses}
+                dataSource={paginatedData}
+                onChange={handleTableChange}
                 pagination={{
+                    current: currentPage,
+                    pageSize: pageSize,
                     total: filteredProcesses.length,
-                    pageSize: 10,
                     showSizeChanger: true,
-                    showQuickJumper: true,
-                    showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`
+                    pageSizeOptions: [5, 10, 15],
+                    // showQuickJumper: true,
+                    showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
+                    className: `bg-white p-3 rounded rounded-top-0`
                 }}
                 className={`${customDark === "default-dark" ? "thead-default" : ""}
              ${customDark === "red-dark" ? "thead-red" : ""}
