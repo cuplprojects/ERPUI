@@ -8,7 +8,8 @@ import themeStore from '../store/themeStore';
 import { useStore } from 'zustand';
 import { Modal } from 'react-bootstrap';
 import { useUserData } from '../store/userDataStore';
-
+import { EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
+import { FaSearch } from 'react-icons/fa';
 
 const { Option } = Select;
 const { Title, Text } = Typography;
@@ -26,7 +27,9 @@ const Team = () => {
   const [processes, setProcesses] = useState([]);
   const userData = useUserData();
   const modalRef = useRef(null);
-
+  const [searchText, setSearchText] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
 
   const getUsers = async () => {
     try {
@@ -67,6 +70,18 @@ const Team = () => {
     }
 };
 
+const handleSearch = (value) => {
+  setSearchText(value);
+  setCurrentPage(1);
+};
+
+const filteredTeams = teams.filter(team => {
+  const searchValue = searchText.toLowerCase();
+  return (
+    team.teamName.toLowerCase().includes(searchValue) ||
+    team.userNames.toLowerCase().includes(searchValue)
+  );
+});
 
 const getProcesses = async () => {
   try {
@@ -189,17 +204,20 @@ const getProcesses = async () => {
         title: t('srNo'),
         dataIndex: 'sn',
         key: 'sn',
-        render: (text, record, index) => index + 1,
+        render: (text, record, index) => ((currentPage - 1) * pageSize) + index + 1,
+        sorter: (a, b) => a.sn - b.sn,
       },
       {
         title: t('teamName'),
         dataIndex: 'teamName',
         key: 'teamName',
+        sorter: (a, b) => a.teamName.localeCompare(b.teamName),
       },
       {
         title: t('members'),
         dataIndex: 'userNames',
         key: 'userNames',
+        sorter: (a, b) => a.userNames.localeCompare(b.userNames),
         render: (userNames) => (
             <>
                 {userNames ? userNames.split(', ').map((name, index) => (
@@ -212,6 +230,7 @@ const getProcesses = async () => {
         title: t('status'),
         dataIndex: 'status',
         key: 'status',
+        sorter: (a, b) => a.status - b.status,
         render: (status, record) => (
           <Switch
             checkedChildren={t('active')}
@@ -225,9 +244,15 @@ const getProcesses = async () => {
         title: t('action'),
         key: 'action',
         render: (text, record) => (
-            <Button onClick={() => handleEdit(record)} type="link">
+          <div className="d-flex justify-content-start">
+            <Button 
+              className={`${customBtn} d-flex align-items-center justify-content-center`}
+              onClick={() => handleEdit(record)}
+              icon={<EditOutlined />}
+            >
               {t('edit')}
             </Button>
+          </div>
         ),
       },
     ];
@@ -235,7 +260,7 @@ const getProcesses = async () => {
    
 
   return baseColumns;
-}, []);
+}, [currentPage, pageSize]);
 
   useEffect(() => {
     getUsers();
@@ -250,15 +275,52 @@ const getProcesses = async () => {
           <Button onClick={() => setIsModalVisible(true)} size="large" className={`${customBtn} ${customDark === "dark-dark" ? `border` : `border-0`}`}>
             {t('addTeam')}
           </Button>
+          <div className="d-flex align-items-center" style={{ width: '300px' }}>
+            <Input
+              placeholder={t('searchTeams')}
+              value={searchText}
+              onChange={(e) => handleSearch(e.target.value)}
+              allowClear
+              className={`rounded-2 ${customDark === "dark-dark" ? `${customLightBorder} text-dark` : customDarkText} ${customDarkBorder} rounded-end-0`}
+            />
+            <Button
+              className={`rounded-2 ${customBtn} ${customDark === "dark-dark" ? 'border-white' : 'border-0'} rounded-start-0`}
+              style={{ height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >
+              <FaSearch size={20}/>
+            </Button>
+          </div>
         </div>
 
-        <Divider>{t('existingTeams')}</Divider>
+        <Divider className={`fs-3 ${customDarkText}`}>{t('existingTeams')}</Divider>
         <Table
           columns={columns}
-          dataSource={teams}
-          pagination={false}
+          dataSource={filteredTeams}
+          pagination={{
+            className: 'bg-white p-3 rounded rounded-top-0',
+            current: currentPage,
+            pageSize: pageSize,
+            total: filteredTeams.length,
+            onChange: (page, pageSize) => {
+              setCurrentPage(page);
+              setPageSize(pageSize);
+            },
+            showTotal: (total, range) => `${range[0]}-${range[1]} ${t('of')} ${total} ${t('items')}`,
+            showSizeChanger: true,
+            // showQuickJumper: true,
+            pageSizeOptions: ['10', '20', '30', '40']
+          }}
           bordered
           style={{ marginTop: '20px' }}
+          className={`${customDark === "default-dark" ? "thead-default" : ""}
+          ${customDark === "red-dark" ? "thead-red" : ""}
+          ${customDark === "green-dark" ? "thead-green" : ""}
+          ${customDark === "blue-dark" ? "thead-blue" : ""}
+          ${customDark === "dark-dark" ? "thead-dark" : ""}
+          ${customDark === "pink-dark" ? "thead-pink" : ""}
+          ${customDark === "purple-dark" ? "thead-purple" : ""}
+          ${customDark === "light-dark" ? "thead-light" : ""}
+          ${customDark === "brown-dark" ? "thead-brown" : ""} custom-pagination`}
           rowClassName={(record, index) => (index % 2 === 0 ? 'table-row-light' : 'table-row-dark')}
         />
       </Card>
@@ -306,7 +368,7 @@ const getProcesses = async () => {
               </Select>
             </Form.Item>
             <Form.Item
-              label={t('process')}
+              label={t('Process')}
               name="processId"
               rules={[{ required: true, message: t('pleaseSelectProcess') }]}
             >
