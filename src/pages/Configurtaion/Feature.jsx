@@ -190,7 +190,7 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
                 </Button>
                 <div className="d-flex align-items-center" style={{ width: '300px' }}>
                     <Input
-                        placeholder={t('Search features')}
+                        placeholder={t('searchFeatures')}
                         value={searchText}
                         onChange={(e) => handleSearch(e.target.value)}
                         allowClear
@@ -249,7 +249,7 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
                         aria-label="Close"
                     />
                 </Modal.Header>
-                <Modal.Body>
+                <Modal.Body className={`${customDarkText} ${customLight}`}>
                     <Input
                         placeholder={t('enterFeatureName')}
                         value={featureName}
