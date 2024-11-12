@@ -5,7 +5,6 @@ import Navbar from './../components/Navbar';
 import MainDashboard from './../pages/MainDashboard';
 import Footer from '../components/Footer';
 import Masters from './../pages/Masters';
-import Features from './../pages/Features'
 import PageNotFound from '../pages/PageNotFound';
 import Profile from './../user/Profile'
 import ChangePassword from './../user/ChangePassword'
@@ -19,13 +18,9 @@ import QtySheetUpload from '../pages/QtySheetUpload';
 import Message from '../pages/Message/Message';
 import Labels from '../pages/Message/Labels';
 import Reports from '../pages/Reports';
-import { hasPermission } from '../CustomHooks/Services/permissionUtils';
 import CuDashboard from '../pages/CuDashboard';
-import SecurityQuestions from '../pages/SecurityQuestions';
 import AddProjectProcess from '../pages/AddProjectProcess';
-//import Test from '../pages/Test';
 import ProtectedRoute from '../Security/ProtectedRoute';
-import AssignTeams from '../pages/processPage/AssignTeam/AssignTeams';
 
 const Userlayout = () => {
   const { getCssClasses } = useStore(themeStore);
@@ -52,7 +47,6 @@ const Userlayout = () => {
               <Route path="/dashboard/:encryptedProjectId" element={<ProtectedRoute component={MainDashboard} permission="1"/>} />
               <Route path="/master" element={<ProtectedRoute component={Masters} permission="2"/>} />
               <Route path="/AddProjectProcess/:projectId" element={<ProtectedRoute component={AddProjectProcess} permission="2.4"/>} />
-              <Route path="/features" element={<ProtectedRoute component={Features} permission="2"/>} />
 
 
               {/* --------------- User Menu Routes -------------- */}
