@@ -257,8 +257,6 @@ console.log("Processes:", processes);
           <Button onClick={() => setIsModalVisible(true)} size="large" className={`${customBtn} ${customDark === "dark-dark" ? `border` : `border-0`}`}>
             {t('addTeam')}
           </Button>
-
-
         </div>
 
         <Divider>{t('existingTeams')}</Divider>
