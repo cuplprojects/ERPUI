@@ -34,8 +34,6 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
         percentageCatch: 0,
         projectId: projectId,
         quantitySheetId:quantitySheetId,
-        examDate: '',
-        examTime: '',
     });
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [showTransferModal, setShowTransferModal] = useState(false);
@@ -318,12 +316,9 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
                 innerEnvelope: newRowData.innerEnvelope,
                 outerEnvelope: newRowData.outerEnvelope,
                 lotNo: selectedLotNo,
-                examDate: newRowData.examDate,
-                examTime: newRowData.examTime,
                 quantity: parseInt(newRowData.quantity, 10),
                 percentageCatch: 0,
                 projectId: projectId,
-                processId: [],
                 examDate: newRowData.examDate,
                 examTime: newRowData.examTime,
             }
@@ -343,8 +338,6 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
                 innerEnvelope: '',
                 outerEnvelope: '',
                 quantity: 0,
-                examDate: '',
-                examTime: '',
                 percentageCatch: 0,
                 projectId: projectId,
                 examDate: '',
