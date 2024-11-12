@@ -64,6 +64,7 @@ const AlarmMaster = () => {
 
     try {
       await API.post('/Alarms', newAlarm);
+      fetchAlarms();
     } catch (error) {
       message.error(t('failedToAddAlarm'));
       setAlarms(prev => prev.filter(alarm => alarm.alarmId !== newAlarm.alarmId));
