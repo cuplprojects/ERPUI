@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Button, Table, Row, Col, Alert } from "react-bootstrap";
 import API from "../CustomHooks/MasterApiHooks/api";
@@ -7,8 +6,6 @@ import themeStore from '../store/themeStore';
 
 const DashboardAlarmModal = ({ projectId, lotNo, hasResolvePermission }) => {
   const [alarmsData, setAlarmsData] = useState([]);
-  const [catchData, setCatchData] = useState([]);
-  const [alarmMessages, setAlarmMessages] = useState({});
   const [filteredAlarmsData, setFilteredAlarmsData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -17,7 +14,9 @@ const DashboardAlarmModal = ({ projectId, lotNo, hasResolvePermission }) => {
 
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
-  const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
+  const [customDark, customMid, customLight, customBtn] = cssClasses;
+
+  const processesToSkipGroup = ["Digital Printing", "Offset Printing", "CTP", "Cutting"];
 
   // Fetch data from APIs
   useEffect(() => {
@@ -35,54 +34,14 @@ const DashboardAlarmModal = ({ projectId, lotNo, hasResolvePermission }) => {
         const alarms = alarmsResponse.data;
         console.log("Alarms data:", alarms);
 
-        // Fetch catch details data
-        const catchResponse = await API.get(`/QuantitySheet/CatchByproject?ProjectId=${projectId}`);
-        const catchDetails = catchResponse.data;
-        console.log("Catch details:", catchDetails);
-
-        // Fetch alarm messages
-        const alarmMessagesResponse = await API.get('/alarms');
-        const alarmMessagesData = alarmMessagesResponse.data;
-        console.log("Alarm messages:", alarmMessagesData);
-
         // Fetch project details
         const projectResponse = await API.get(`/Project/${projectId}`);
         const projectDetails = projectResponse.data;
         setProjectName(projectDetails.name);
         console.log("Project details:", projectDetails);
 
-        // Map alarm IDs to their messages dynamically
-        const messageMap = alarmMessagesData.reduce((acc, alarm) => {
-          acc[alarm.alarmId] = alarm.message;
-          return acc;
-        }, {});
+        setAlarmsData(alarms);
 
-        setAlarmMessages(messageMap);
-
-        // Combine alarms with their corresponding catchNo and filter based on lotNo
-        const combinedData = alarms.map((alarm) => {
-          const catchInfo = catchDetails.find(
-            (catchItem) => catchItem.quantitySheetId === alarm.quantitysheetId
-          );
-          const message = messageMap[alarm.alarmId] || `${alarm.alarmId}`;
-
-          const combined = {
-            alarmId: alarm.alarmId,
-            catchNo: catchInfo ? catchInfo.catchNo : "N/A",
-            alarmMessage: message,
-            lotNo: catchInfo ? catchInfo.lotNo : "N/A",
-            quantitySheetId: alarm.quantitysheetId,
-            transactionId: alarm.transactionId,
-            srNo: alarm.quantitysheetId,
-            projectId: alarm.projectId,
-            interimQuantity: alarm.interimQuantity,
-          };
-          console.log("Combined alarm data:", combined);
-          return combined;
-        });
-
-        setAlarmsData(combinedData);
-        setCatchData(catchDetails);
       } catch (err) {
         console.error("Error fetching data:", err);
         setError(`No Alerts Found`);
@@ -98,26 +57,57 @@ const DashboardAlarmModal = ({ projectId, lotNo, hasResolvePermission }) => {
   useEffect(() => {
     if (lotNo && alarmsData.length > 0) {
       console.log("Filtering alarms for lotNo:", lotNo);
-      const filteredData = alarmsData.filter((alert) => alert.lotNo === lotNo);
+      const filteredData = alarmsData.filter(
+        (alert) => alert.lotNo === Number(lotNo) && alert.alarmId.trim() !== "" // filter out alarms with empty alarmId
+      );
       console.log("Filtered alarms:", filteredData);
       setFilteredAlarmsData(filteredData);
     }
   }, [lotNo, alarmsData]);
 
+  // Group alarms by catchNumber and alarmMessage if process is not in the specified list
+  const groupAlarms = (alarms) => {
+    const groupedAlarms = {};
+
+    alarms.forEach(alarm => {
+      const { catchNumber, alarmMessage, process } = alarm;
+
+      // If process is in the list, don't group by catchNumber or alarmMessage
+      if (processesToSkipGroup.includes(process)) {
+        const groupKey = `${catchNumber}-${alarmMessage}`;
+        if (!groupedAlarms[groupKey]) {
+          groupedAlarms[groupKey] = [];
+        }
+        groupedAlarms[groupKey].push(alarm);
+      } else {
+        // Otherwise, group by both catchNumber and alarmMessage
+        const groupKey = `${catchNumber}-${alarmMessage}`;
+        if (!groupedAlarms[groupKey]) {
+          groupedAlarms[groupKey] = [];
+        }
+        groupedAlarms[groupKey].push(alarm);
+      }
+    });
+
+    return Object.values(groupedAlarms);  // Return grouped alarms as an array
+  };
+
   // Handle resolve functionality
-  const handleResolve = async (quantitySheetId) => {
+  const handleResolve = async (quantitysheetId) => {
     try {
-      console.log("Resolving alarm for quantitySheetId:", quantitySheetId);
+      console.log("Resolving alarm for quantitySheetId:", quantitysheetId);
 
       const alarmData = filteredAlarmsData.find(
-        (alarm) => alarm.quantitySheetId === quantitySheetId
+        (alarm) => alarm.quantitysheetId === quantitysheetId
       );
+      console.log(alarmData)
       if (!alarmData) {
         throw new Error(
-          `Alarm not found for QuantitySheetId: ${quantitySheetId}`
+          `Alarm not found for QuantitySheetId: ${quantitysheetId}`
         );
       }
 
+      // Fetch existing transaction data if it exists (useful for remarks, status, etc.)
       let existingTransactionData = {};
       if (alarmData.transactionId) {
         const response = await API.get(`/Transactions/${alarmData.transactionId}`);
@@ -125,34 +115,35 @@ const DashboardAlarmModal = ({ projectId, lotNo, hasResolvePermission }) => {
         console.log("Existing transaction data:", existingTransactionData);
       }
 
+      // Prepare the data to send in the POST request
       const postData = {
         transactionId: alarmData.transactionId || 0,
         interimQuantity: alarmData.interimQuantity || 0,
         remarks: existingTransactionData.remarks || "",
         projectId: alarmData.projectId || projectId,
-        quantitysheetId: alarmData.srNo || 0,
+        quantitysheetId: alarmData.quantitysheetId || 0,
         processId: existingTransactionData.processId || 0,
         zoneId: existingTransactionData.zoneId || 0,
         machineId: existingTransactionData.machineId || 0,
         status: existingTransactionData.status || 0,
-        alarmId: " ",
+        alarmId: "0", // Assuming this marks the alarm as resolved
         lotNo: alarmData.lotNo || 0,
         teamId: existingTransactionData.teamId || [],
         voiceRecording: existingTransactionData.voiceRecording || "",
       };
 
-      console.log("Sending PUT request with data:", postData);
+      console.log("Sending POST request with data:", postData);
 
-      await API.put(`/Transactions/quantitysheet/${quantitySheetId}`, postData);
+      // Send the POST request to create or update the transaction
+      const response = await API.post(`/Transactions`, postData);
 
-      console.log("Alarm resolved successfully");
+      console.log("Alarm resolved successfully", response.data);
       setSuccessMessage("Alarm resolved successfully!");
+      const alarmsResponse = await API.get(`/Transactions/alarms?projectId=${projectId}`);
+      const updatedAlarms = alarmsResponse.data;
+      console.log("Updated alarms data:", updatedAlarms);
 
-      // Remove the resolved alarm immediately
-      setFilteredAlarmsData(prevData => 
-        prevData.filter(alarm => alarm.quantitySheetId !== quantitySheetId)
-      );
-
+      setAlarmsData(updatedAlarms);
     } catch (error) {
       console.error("Error resolving alarm:", error);
       setError(`Failed to resolve alarm: ${error.message}`);
@@ -167,8 +158,11 @@ const DashboardAlarmModal = ({ projectId, lotNo, hasResolvePermission }) => {
     return <div className={`alert alert-success ${customLight}`}>{error}</div>;
   }
 
+  // Group the filtered alarms
+  const groupedAlarms = groupAlarms(filteredAlarmsData);
+
   return (
-    <div >
+    <div>
       <Row className="mb-3">
         <Col>
           <h3>Project {projectName} - Alarms</h3>
@@ -193,23 +187,34 @@ const DashboardAlarmModal = ({ projectId, lotNo, hasResolvePermission }) => {
           </tr>
         </thead>
         <tbody>
-          {filteredAlarmsData.length > 0 ? (
-            filteredAlarmsData.map((data, index) => (
-              <tr key={index}>
-                <td>{data.catchNo}</td>
-                <td>{data.alarmMessage}</td>
-                <td>
-                  {hasResolvePermission && (
-                    <Button
-                      variant="success"
-                      className={`${customBtn} ${customDark === "dark-dark" ? "border" : "border-0"}`}
-                      onClick={() => handleResolve(data.quantitySheetId)}
-                    >
-                      Resolve
-                    </Button>
-                  )}
-                </td>
-              </tr>
+          {groupedAlarms.length > 0 ? (
+            groupedAlarms.map((group, index) => (
+              <React.Fragment key={index}>
+                {/* Group alarms with the same catchNumber and alarmMessage */}
+                {group.map((data, idx) => (
+                  <tr key={idx}>
+                    {/* Only show catchNumber and alarmMessage for the first item in the group */}
+                    {idx === 0 && (
+                      <td rowSpan={group.length}>{data.catchNumber}</td>
+                    )}
+                    {idx === 0 && (
+                      <td rowSpan={group.length}>{data.alarmMessage}</td>
+                    )}
+                    {/* Only show Resolve button once per group */}
+                    {idx === 0 && hasResolvePermission && (
+                      <td>
+                        <Button
+                          variant="success"
+                          className={`${customBtn} ${customDark === "dark-dark" ? "border" : "border-0"}`}
+                          onClick={() => handleResolve(data.quantitysheetId)}
+                        >
+                          Resolve
+                        </Button>
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </React.Fragment>
             ))
           ) : (
             <tr>

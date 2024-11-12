@@ -71,6 +71,8 @@ const statusMapping = {
 
       await Promise.all(updatePromises);
       handleSave(machineId);
+      setMachineId()
+      setSelectedMachine()
       handleClose();
     } catch (error) {
       console.error('Error updating machine:', error);
