@@ -30,7 +30,7 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
                 setFeatures(response.data.map(feature => ({ key: feature.featureId, name: feature.features })));
             } catch (error) {
                 console.error('Error fetching features:', error);
-                notification.error({ message: 'Failed to fetch features. Please try again.' });
+                notification.error({ message: t('failedToFetchFeaturesPleaseTryAgain') });
             }
         };
 
@@ -41,7 +41,7 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
     const validateFeature = (name) => {
         // Check for duplicate feature names
         if (features.some(feature => feature.name.toLowerCase() === name.toLowerCase())) {
-            notification.error({ message: 'Feature name already exists!' });
+            notification.error({ message: t('featureNameAlreadyExists') });
             return false;
         }
 
@@ -51,7 +51,7 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
         const isOnlyNumbers = /^[0-9]+$/.test(name);
 
         if (isAlphanumeric && !(isOnlyLetters || isOnlyNumbers)) {
-            notification.error({ message: 'Feature name cannot contain both letters and numbers!' });
+            notification.error({ message: t('featureNameCannotContainBothLettersAndNumbers') });
             return false;
         }
 
@@ -75,7 +75,7 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
     // Handle adding/updating feature
     const handleAddFeature = async () => {
         if (!featureName) {
-            notification.error({ message: 'Feature name cannot be empty!' });
+            notification.error({ message: t('featureNameCannotBeEmpty') });
             return;
         }
 
@@ -97,10 +97,10 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
                         feature.key === editingFeatureId ? { ...feature, name: featureName } : feature
                     )
                 );
-                notification.success({ message: 'Feature updated successfully!' });
+                notification.success({ message: t('featureUpdatedSuccessfully') });
             } catch (error) {
                 console.error('Error updating feature:', error);
-                notification.error({ message: 'Failed to update feature!' });
+                notification.error({ message: t('failedToUpdateFeature') });
             }
         } else {
             // Add new feature
@@ -109,13 +109,13 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
                 const addedFeature = response.data;
                 const newFeature = { key: addedFeature.featureId, name: addedFeature.features };
                 setFeatures([...features, newFeature]);
-                notification.success({ message: 'Feature added successfully!' });
+                notification.success({ message: t('featureAddedSuccessfully') });
                 
                 // Notify parent component to update Feature Configuration
                 onAddFeature(newFeature);
             } catch (error) {
                 console.error('Error adding feature:', error);
-               
+                notification.error({ message: t('failedToAddFeature') });
             }
         }
 
