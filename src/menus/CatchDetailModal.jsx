@@ -7,7 +7,7 @@ import { hasPermission } from '../CustomHooks/Services/permissionUtils';
 const { TextArea } = Input;
 const { Text } = Typography;
 
-const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) => {
+const CatchDetailModal = ({ show, handleClose, data, processId, fetchTransaction }) => {
     const [isPlaying, setIsPlaying] = useState(false);
     const [audioElement, setAudioElement] = useState(null);
 
@@ -147,15 +147,17 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
     };
 
     const handleResolve = async () => {
+        console.log("data", data);
         try {
             await API.put(`/Transactions/${data.transactionId}`, {
                 ...data,
                 alarmId: "0"
             });
-            handleSave("0");
             handleClose();
+            message.success('Alert resolved successfully');
         } catch (error) {
             console.error('Error resolving alert:', error);
+            message.error('Failed to resolve alert');
         }
     };
 

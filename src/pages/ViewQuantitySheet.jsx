@@ -344,9 +344,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
                 quantity: parseInt(newRowData.quantity, 10),
                 percentageCatch: 0,
                 projectId: projectId,
-                processId: [],
-                examDate: newRowData.examDate,
-                examTime: newRowData.examTime,
+                processId: []
             }
         ];
 
