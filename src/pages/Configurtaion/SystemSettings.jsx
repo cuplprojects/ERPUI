@@ -30,10 +30,16 @@ const SystemSettings = () => {
 
   return (
     <div>
-      <Tabs defaultActiveKey="1">
+      <Tabs 
+        defaultActiveKey="1"
+        className={`custom-tabs`} // Add custom class
+        tabBarStyle={{
+          borderBottom: `2px solid ${customDark}` // Use customDark color for bottom border
+        }}
+      >
         <TabPane
           tab={
-            <span>
+            <span className={`${customDarkText} ${customDark === 'blue-dark' ? customLightText : customDarkText}`}>
               <AppstoreOutlined /> {/* Feature icon */}
               {t('features')}
             </span>
@@ -44,7 +50,7 @@ const SystemSettings = () => {
         </TabPane>
         <TabPane
           tab={
-            <span>
+            <span className={`${customDarkText} ${customDark === 'blue-dark' ? customLightText : customDarkText}`}>
               <SettingOutlined /> {/* Process icon */}
               {t('processes')}
             </span>
@@ -55,7 +61,7 @@ const SystemSettings = () => {
         </TabPane>
         <TabPane
           tab={
-            <span>
+            <span className={`${customDarkText} ${customDark === 'blue-dark' ? customLightText : customDarkText}`}>
               <ToolOutlined /> {/* Configuration icon */}
               {t('featureConfiguration')}
             </span>
