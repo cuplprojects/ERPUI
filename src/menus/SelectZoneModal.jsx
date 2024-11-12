@@ -62,6 +62,8 @@ const SelectZoneModal = ({ show, handleClose, data, processId, handleSave }) => 
 
       await Promise.all(updatePromises);
       handleSave(zoneId);
+      setSelectedZone()
+      setZoneId()
       handleClose();
     } catch (error) {
       console.error('Error updating zone:', error);
