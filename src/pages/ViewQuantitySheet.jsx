@@ -337,11 +337,11 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
                 innerEnvelope: newRowData.innerEnvelope,
                 outerEnvelope: newRowData.outerEnvelope,
                 lotNo: selectedLotNo,
-                examDate: newRowData.examDate,
-                examTime: newRowData.examTime,
                 quantity: parseInt(newRowData.quantity, 10),
                 percentageCatch: 0,
                 projectId: projectId,
+                examDate: newRowData.examDate,
+                examTime: newRowData.examTime,
                 processId: [],
             }
         ];
@@ -360,8 +360,6 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
                 innerEnvelope: '',
                 outerEnvelope: '',
                 quantity: 0,
-                examDate: '',
-                examTime: '',
                 percentageCatch: 0,
                 projectId: projectId,
             });

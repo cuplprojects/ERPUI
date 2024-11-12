@@ -1,14 +1,14 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Form, Button, InputGroup, FormControl } from 'react-bootstrap';
-import { AgGridReact } from 'ag-grid-react';
-import 'ag-grid-community/styles/ag-grid.css';
-import 'ag-grid-community/styles/ag-theme-alpine.css';
+import { Table, Input } from 'antd';
 import API from '../CustomHooks/MasterApiHooks/api';
 import themeStore from '../store/themeStore';
 import { useStore } from 'zustand';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import { message } from 'antd';
+
+const { Search } = Input;
 
 const SecurityQuestions = () => {
   const { t } = useTranslation();
@@ -30,6 +30,7 @@ const SecurityQuestions = () => {
       const response = await API.get('/SecurityQuestions');
       if (response.status === 200) {
         const formattedQuestions = response.data.map((item, index) => ({
+          key: item.questionId,
           sr: index + 1,
           questionId: item.questionId,
           question: item.securityQuestions
@@ -60,7 +61,7 @@ const SecurityQuestions = () => {
       if (response.status === 201) {
         message.success(t('questionAddedSuccessfully'));
         setNewQuestion('');
-        await fetchQuestions(); // Refresh the list after adding
+        await fetchQuestions();
       } else {
         console.error('Unexpected response status:', response.status);
         toast.error(t('failedToAddQuestion'));
@@ -73,72 +74,69 @@ const SecurityQuestions = () => {
     }
   };
 
-  const columnDefs = [
-    { 
-      headerName: t('sr'), 
-      field: 'sr', 
-      width: 70, 
-      cellStyle: { textAlign: 'center' } 
+  const columns = [
+    {
+      title: t('sr'),
+      dataIndex: 'sr',
+      key: 'sr',
+      width: 70,
+      align: 'center',
+      sorter: (a, b) => a.sr - b.sr,
     },
-   
-    { 
-      headerName: t('question'), 
-      field: 'question', 
-      flex: 1, 
-      cellStyle: { textAlign: 'left' },
-      sortable: true,
-      filter: true
-    }, { 
-      headerName: t('questionId'), 
-      field: 'questionId', 
-      width: 120, 
-      cellStyle: { textAlign: 'center' } 
+    {
+      title: t('question'),
+      dataIndex: 'question',
+      key: 'question',
+      sorter: (a, b) => a.question.localeCompare(b.question),
+      filteredValue: [searchText],
+      onFilter: (value, record) =>
+        record.question.toLowerCase().includes(value.toLowerCase()),
+    },
+    {
+      title: t('questionId'),
+      dataIndex: 'questionId',
+      key: 'questionId',
+      width: 120,
+      align: 'center',
+      sorter: (a, b) => a.questionId - b.questionId,
     }
   ];
 
-  const onFilterTextBoxChanged = useCallback((e) => {
-    setSearchText(e.target.value);
-    if (gridApi) {
-      gridApi.setQuickFilter(e.target.value);
-    }
-  }, []);
-
-  let gridApi;
-
-  const onGridReady = (params) => {
-    gridApi = params.api;
-    gridApi.sizeColumnsToFit();
-  };
+  const filteredData = questions.filter(item =>
+    Object.values(item).some(val =>
+      val.toString().toLowerCase().includes(searchText.toLowerCase())
+    )
+  );
 
   return (
     <div className="container-fluid">
       <div className="row mb-3">
-        <div className="col-12 col-md-6 mb-3 mb-md-0">
-          <InputGroup className="w-100">
-            <FormControl
-              placeholder={t('searchQuestions')}
-              value={searchText}
-              onChange={onFilterTextBoxChanged}
-            />
-            <Button className={`${customBtn} ${customDark === "dark-dark" ? "border" : "border-0"}`} onClick={() => setSearchText('')}>
-              {t('clear')}
-            </Button>
-          </InputGroup>
+        <div className="col-12 col-md-4 mb-3 mb-md-0">
+          <Search
+            placeholder={t('searchQuestions')}
+            allowClear
+            value={searchText}
+            onChange={e => setSearchText(e.target.value)}
+            className="w-100"
+            style={{ height: '38px' }}
+          />
         </div>
-        <div className="col-12 col-md-6">
-          <Form className="d-flex flex-column flex-md-row">
+        <div className="col-12 col-md-8 d-flex justify-content-end">
+          <Form className="d-flex align-items-center">
             <FormControl
               type="text"
               placeholder={t('enterYourSecurityQuestion')}
               value={newQuestion}
               onChange={(e) => setNewQuestion(e.target.value)}
-              className="mb-2 mb-md-0 me-md-2"
+              className="me-2"
               disabled={loading}
+              style={{ height: '38px', width: '300px' }}
             />
             <Button
               onClick={addQuestion}
               disabled={newQuestion.trim() === '' || loading}
               className={`${customBtn} ${customDark === "dark-dark" ? "border" : "border-0"}`}
+              style={{ height: '38px', width: '150px', fontSize: '16px' }}
             >
               {loading ? t('adding') : t('addQuestion')}
             </Button>
@@ -146,28 +144,29 @@ const SecurityQuestions = () => {
         </div>
       </div>
 
-      <div 
-        className="ag-theme-alpine" 
-        style={{ 
-          height: '400px', 
-          width: '100%', 
-          marginTop: '20px' 
+      <Table
+        columns={columns}
+        dataSource={filteredData}
+        loading={loading}
+        pagination={{
+          total: filteredData.length,
+          pageSize: 5,
+          showSizeChanger: true,
+          showTotal: (total) => t('totalItems', { total }),
+          className: 'bg-white p-3 rounded rounded-top-0'
         }}
-      >
-        <div className="table-responsive" style={{ overflowX: 'auto' }}>
-          <AgGridReact
-            columnDefs={columnDefs}
-            rowData={questions}
-            pagination={true}
-            paginationPageSize={5}
-            domLayout='autoHeight'
-            onGridReady={onGridReady}
-            rowStyle={{ borderRadius: '8px' }}
-            quickFilterText={searchText}
-            className="rounded"
-          />
-        </div>
-      </div>
+        className={`${customDark === "default-dark" ? "thead-default" : ""}
+                                    ${customDark === "red-dark" ? "thead-red" : ""}
+                                    ${customDark === "green-dark" ? "thead-green" : ""}
+                                    ${customDark === "blue-dark" ? "thead-blue" : ""}
+                                    ${customDark === "dark-dark" ? "thead-dark" : ""}
+                                    ${customDark === "pink-dark" ? "thead-pink" : ""}
+                                    ${customDark === "purple-dark" ? "thead-purple" : ""}
+                                    ${customDark === "light-dark" ? "thead-light" : ""}
+                                    ${customDark === "brown-dark" ? "thead-brown" : ""} `}
+        size="middle"
+        bordered
+      />
     </div>
   );
 };
