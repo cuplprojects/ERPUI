@@ -140,7 +140,7 @@ const Type = () => {
         setRequiredEditingProcessIds(originalData.requiredProcessId)
         setEditingStatus(originalData.status);
     };
-console.log(originalData.requiredProcessIds)
+
     const handleSearch = (value) => {
         setSearchText(value);
     };
@@ -313,9 +313,6 @@ console.log(originalData.requiredProcessIds)
                 gap: isMobile ? '10px' : '0',
                 marginBottom: isMobile ? '10px' : '20px'
             }}>
-                <Button className={`${customBtn} border-0 custom-zoom-btn`} onClick={() => setIsModalVisible(true)}>
-                    {t("addType")}
-                </Button>
                 <Search
                     placeholder={t("searchTypesOrProcesses")}
                     allowClear
@@ -454,10 +451,8 @@ console.log(originalData.requiredProcessIds)
                         </Form.Item>
 
                         <Form.Item>
-
                             <Button type="" htmlType="submit" className={`rounded-2 ${customBtn} ${customDark === "dark-dark" ? `` : `border-0`} custom-zoom-btn d-flex align-items-center gap-1`}>
                                 Submit
-
                             </Button>
                         </Form.Item>
                     </Form>
