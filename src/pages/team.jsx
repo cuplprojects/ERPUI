@@ -285,35 +285,37 @@ const getProcesses = async () => {
         </div>
 
         <Divider className={`fs-3 ${customDarkText}`}>{t('existingTeams')}</Divider>
-        <Table
-          columns={columns}
-          dataSource={filteredTeams}
-          pagination={{
-            className: 'bg-white p-3 rounded rounded-top-0',
-            current: currentPage,
-            pageSize: pageSize,
-            total: filteredTeams.length,
-            onChange: (page, pageSize) => {
-              setCurrentPage(page);
-              setPageSize(pageSize);
-            },
-            showTotal: (total, range) => `${range[0]}-${range[1]} ${t('of')} ${total} ${t('items')}`,
-            showSizeChanger: true,
-            pageSizeOptions: ['10', '20', '30', '40']
-          }}
-          bordered
-          style={{ marginTop: '20px' }}
-          className={`${customDark === "default-dark" ? "thead-default" : ""}
-          ${customDark === "red-dark" ? "thead-red" : ""}
-          ${customDark === "green-dark" ? "thead-green" : ""}
-          ${customDark === "blue-dark" ? "thead-blue" : ""}
-          ${customDark === "dark-dark" ? "thead-dark" : ""}
-          ${customDark === "pink-dark" ? "thead-pink" : ""}
-          ${customDark === "purple-dark" ? "thead-purple" : ""}
-          ${customDark === "light-dark" ? "thead-light" : ""}
-          ${customDark === "brown-dark" ? "thead-brown" : ""} custom-pagination`}
-          rowClassName={(record, index) => (index % 2 === 0 ? 'table-row-light' : 'table-row-dark')}
-        />
+        <div className="table-responsive">
+          <Table
+            columns={columns}
+            dataSource={filteredTeams}
+            pagination={{
+              className: 'bg-white p-3 rounded rounded-top-0',
+              current: currentPage,
+              pageSize: pageSize,
+              total: filteredTeams.length,
+              onChange: (page, pageSize) => {
+                setCurrentPage(page);
+                setPageSize(pageSize);
+              },
+              showTotal: (total, range) => `${range[0]}-${range[1]} ${t('of')} ${total} ${t('items')}`,
+              showSizeChanger: true,
+              pageSizeOptions: ['10', '20', '30', '40']
+            }}
+            bordered
+            style={{ marginTop: '20px' }}
+            className={`${customDark === "default-dark" ? "thead-default" : ""}
+            ${customDark === "red-dark" ? "thead-red" : ""}
+            ${customDark === "green-dark" ? "thead-green" : ""}
+            ${customDark === "blue-dark" ? "thead-blue" : ""}
+            ${customDark === "dark-dark" ? "thead-dark" : ""}
+            ${customDark === "pink-dark" ? "thead-pink" : ""}
+            ${customDark === "purple-dark" ? "thead-purple" : ""}
+            ${customDark === "light-dark" ? "thead-light" : ""}
+            ${customDark === "brown-dark" ? "thead-brown" : ""} custom-pagination`}
+            rowClassName={(record, index) => (index % 2 === 0 ? 'table-row-light' : 'table-row-dark')}
+          />
+        </div>
       </Card>
 
       <Modal
