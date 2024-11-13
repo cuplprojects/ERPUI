@@ -225,6 +225,7 @@ const getProcesses = async () => {
                 )) : <span>{t('noMembers')}</span>} 
             </>
         ),
+        responsive: ['md'],
     },
       {
         title: t('status'),
@@ -250,7 +251,7 @@ const getProcesses = async () => {
               onClick={() => handleEdit(record)}
               icon={<EditOutlined />}
             >
-              {t('edit')}
+              <span className="d-none d-md-inline">{t('edit')}</span>
             </Button>
           </div>
         ),
@@ -269,14 +270,14 @@ const getProcesses = async () => {
   }, []);
 
   return (
-    <div style={{ padding: '40px' }}>
+    <div className="p-3 p-md-5">
       <Card style={{ boxShadow: '0 4px 8px rgba(0,0,0,0.1)', borderRadius: '10px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
+        <div className="d-flex flex-column flex-md-row justify-content-md-between gap-3 mt-3">
           <Button onClick={() => setIsModalVisible(true)} size="large" className={`${customBtn} ${customDark === "dark-dark" ? `border` : `border-0`}`}>
             {t('addTeam')}
           </Button>
 
-          <div className="d-flex align-items-center" style={{ width: '300px' }}>
+          <div className="d-flex align-items-center w-100 w-md-25">
             <Input
               placeholder={t('searchTeams')}
               value={searchText}
@@ -309,11 +310,16 @@ const getProcesses = async () => {
             },
             showTotal: (total, range) => `${range[0]}-${range[1]} ${t('of')} ${total} ${t('items')}`,
             showSizeChanger: true,
-            // showQuickJumper: true,
-            pageSizeOptions: ['10', '20', '30', '40']
+            pageSizeOptions: ['5', '10', '20', '30'],
+            size: 'default',
+            responsive: true
           }}
           bordered
-          style={{ marginTop: '20px' }}
+          style={{ 
+            marginTop: '20px',
+            width: '100%',
+            overflowX: 'auto'
+          }}
           className={`${customDark === "default-dark" ? "thead-default" : ""}
           ${customDark === "red-dark" ? "thead-red" : ""}
           ${customDark === "green-dark" ? "thead-green" : ""}
@@ -322,8 +328,11 @@ const getProcesses = async () => {
           ${customDark === "pink-dark" ? "thead-pink" : ""}
           ${customDark === "purple-dark" ? "thead-purple" : ""}
           ${customDark === "light-dark" ? "thead-light" : ""}
-          ${customDark === "brown-dark" ? "thead-brown" : ""} custom-pagination`}
+          ${customDark === "brown-dark" ? "thead-brown" : ""} custom-pagination responsive-table`}
           rowClassName={(record, index) => (index % 2 === 0 ? 'table-row-light' : 'table-row-dark')}
+          scroll={{ x: 'max-content' }}
+          size="middle"
+          responsive={['xxl', 'xl', 'lg', 'md', 'sm', 'xs']}
         />
       </Card>
 
@@ -335,6 +344,7 @@ const getProcesses = async () => {
           form.resetFields();
         }}
         centered
+        size="lg"
         className={`{}`}
         ref={modalRef}
       >

@@ -198,11 +198,11 @@ const RolesAndDepartments = () => {
 
   return (
     <Card
-      className={`w-100 mx-auto p-3 ${customMid} border-0`}
+      className={`w-100 mx-auto ${customMid} border-0`}
       style={{ maxWidth: '1200px' }}
       styles={{ body: { padding: '12px' } }}
     >
-      <div className={`d-flex justify-content-between align-items-center mb-3`}>
+      <div className={`d-flex justify-content-between align-items-center mb-1`}>
         <h2 className={`${customDarkText} m-0`}>{t('Role List')}</h2>
         <Button onClick={onCreateRole} className={`${customBtn}`}>
           {t('New Role')}
@@ -217,11 +217,13 @@ const RolesAndDepartments = () => {
           total: roles.length,
           onChange: handlePaginationChange,
           className: `${customDark === "dark-dark" || customDark === "blue-dark" ? "bg-white" : ""} p-3 rounded-bottom-3 `,
+          responsive: true,
+          showSizeChanger: true
         }}
         columns={roleColumns}
         dataSource={paginatedRoles}
-        style={{ fontSize: '12px' }}
-        scroll={{ x: 'max-content' }}
+        style={{  width: '100%' }}
+        scroll={{ x: true }}
         className={`${customDark === "default-dark" ? "thead-default" : ""} 
                     ${customDark === "red-dark" ? "thead-red" : ""} 
                     ${customDark === "green-dark" ? "thead-green" : ""} 
@@ -232,6 +234,7 @@ const RolesAndDepartments = () => {
                     ${customDark === "light-dark" ? "thead-light" : ""} 
                     ${customDark === "brown-dark" ? "thead-brown" : ""}`}
         bordered
+        responsive
       />
       <Modal
         show={isRoleModalVisible}

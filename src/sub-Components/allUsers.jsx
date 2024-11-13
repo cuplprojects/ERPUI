@@ -159,14 +159,12 @@ const AllUsers = () => {
       title: t('srNo'),
       key: 'serial',
       render: (text, record, index) => index + 1,
-      fixed: 'left',
       width: 70,
     },
     {
       title: t('fullName'),
       key: 'fullName',
       render: (record) => `${record.firstName} ${record.middleName} ${record.lastName}`,
-      fixed: 'left',
       width: 150,
       sorter: (a, b) => `${a.firstName} ${a.middleName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.middleName} ${b.lastName}`),
     },
@@ -190,7 +188,6 @@ const AllUsers = () => {
           roles.find(role => role.roleId === text)?.roleName || text
         );
       },
-      fixed: 'left',
       width: 200,
       sorter: (a, b) => a.roleId - b.roleId,
     },
@@ -246,7 +243,6 @@ const AllUsers = () => {
     {
       title: t('actions'),
       key: 'actions',
-      fixed: '',
       width: 200,
       render: (text, record) => {
         const editable = record.userId === editingUserId;
@@ -368,13 +364,13 @@ const AllUsers = () => {
           </div>
         </Col>
         <Col lg={12} md={12} xs={12}>
-          <div className="d-flex flex-wrap justify-content-end justify-content-end align-items-center h-100">
+          <div className={`d-flex ${window.innerWidth >= 992 ? 'flex-row' : 'flex-column'} justify-content-lg-end justify-content-md-end justify-content-center align-items-center h-100 gap-3`}>
             {['profilePicture', 'address', 'mobileNo'].map((column) => (
               <Checkbox
                 key={column}
                 checked={visibleColumns[column]}
                 onChange={(e) => handleColumnVisibilityChange(e, column)}
-                className={`${customDark === "dark-dark" ? customDarkText : customDarkText} text-start `}
+                className={`${customDark === "dark-dark" ? customDarkText : customDarkText} text-start me-lg-3 me-md-2 me-1 ${window.innerWidth < 992 ? 'w-100' : ''}`}
               >
                 {t(column)}
               </Checkbox>
