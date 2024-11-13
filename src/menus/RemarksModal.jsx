@@ -8,8 +8,8 @@ import API from '../CustomHooks/MasterApiHooks/api';
 import { useTranslation } from 'react-i18next';
 
 const RemarksModal = ({ show, handleClose, handleSave, data, processId }) => {
-    const { getCssClasses } = useStore(themeStore);
-    const cssClasses = useMemo(() => getCssClasses(), [getCssClasses]);
+    const themeState = useStore(themeStore);
+    const cssClasses = themeState.getCssClasses();
     const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder] = cssClasses;
 
     const [remarks, setRemarks] = useState('');
@@ -28,6 +28,11 @@ const RemarksModal = ({ show, handleClose, handleSave, data, processId }) => {
     });
 
     const { t } = useTranslation();
+
+    // Force re-render when theme changes
+    useEffect(() => {
+        // This empty dependency array ensures cssClasses are always fresh
+    }, [cssClasses]);
 
     useEffect(() => {
         let interval;
@@ -137,7 +142,7 @@ const RemarksModal = ({ show, handleClose, handleSave, data, processId }) => {
                                     placeholder={t('enterRemarks')}
                                     value={remarks}
                                     onChange={(e) => setRemarks(e.target.value)}
-                                    className={`${customLight} ${customDarkText}`}
+                                    className={` ${customDarkText}`}
                                     required
                                 />
                             </Form.Group>

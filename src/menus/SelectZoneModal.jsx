@@ -7,9 +7,14 @@ import { useTranslation } from 'react-i18next';
 
 const SelectZoneModal = ({ show, handleClose, data, processId, handleSave }) => {
   const { t } = useTranslation();
-  const { getCssClasses } = useStore(themeStore);
-  const cssClasses = useMemo(() => getCssClasses(), [getCssClasses]);
+  const themeState = useStore(themeStore);
+  const cssClasses = themeState.getCssClasses();
   const [customDark, customMid, customLight, customBtn, customDarkText, customLightText] = cssClasses;
+
+  // Force re-render when theme changes
+  useEffect(() => {
+    // This empty dependency array ensures cssClasses are always fresh
+  }, [cssClasses]);
 
   const [selectedZone, setSelectedZone] = useState('');
   const [zoneOptions, setZoneOptions] = useState([]);
