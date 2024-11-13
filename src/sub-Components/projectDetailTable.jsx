@@ -782,6 +782,19 @@ const ProjectDetailsTable = ({
     fetchTransactions();
   };
 
+  const handleCatchDetailSave = (alarm) =>{
+        const updatedData = tableData.map((row) => {
+            if (selectedRowKeys.includes(row.srNo)) {
+                return { ...row, alerts: alarm };
+            }
+            return row;
+        });
+        setTableData(updatedData);
+        setSelectedRowKeys([]); // Deselect all rows
+        setShowOptions(false); // Reset options visibility
+        fetchTransactions();
+    }
+
   const selectedRows = tableData.filter((row) =>
     selectedRowKeys.includes(row.srNo)
   );
@@ -1173,6 +1186,8 @@ const ProjectDetailsTable = ({
         show={catchDetailModalShow}
         handleClose={() => setCatchDetailModalShow(false)}
         data={catchDetailModalData}
+        handleSave={handleCatchDetailSave}
+                processId={processId}
       />
       <SelectZoneModal
         show={selectZoneModalShow}
