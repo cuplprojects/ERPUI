@@ -148,39 +148,23 @@ const CameraList = () => {
       key: 'action',
       render: (_, record, index) => (
         editingIndex === index ? (
-          <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: '12px' }}>
-            <Button 
-              type="link" 
-              onClick={() => handleEditSave(index)} 
-              className={`${customDark === "dark-dark" ? `${customMid} border` : `${customLight} ${customDarkBorder}`} text-white`}
-              style={{display: 'inline-flex', alignItems: 'center', gap: '4px'}}
-            >
-              <SaveOutlined className={`${customDark === "dark-dark" ? `` : `${customDarkText}`}`}/> 
-              <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}`}`}>{t('save')}</span> 
+
+          <div className='d-flex align-items-center gap-1' style={{ display: 'flex', justifyContent: '' }}>
+            <Button type="link" onClick={() => handleEditSave(index)} className={`${customDark === "dark-dark" ? `${customMid} border` : `${customLight} ${customDarkBorder}`} text-white d-flex align-items-center gap-1 `}>
+              <SaveOutlined className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}/> 
+              <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}>{t('save')}</span> 
             </Button>
-            <Button 
-              type="link" 
-              onClick={() => setEditingIndex(null)} 
-              className={`${customDark === "dark-dark" ? `${customMid} border` : `${customLight} ${customDarkBorder}`} text-white`}
-              style={{display: 'inline-flex', alignItems: 'center', gap: '4px'}}
-            >
-              <CloseOutlined className={`${customDark === "dark-dark" ? `` : `${customDarkText}`}`}/> 
-              <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}`}`}>{t('cancel')}</span> 
+            <Button type="link" onClick={() => setEditingIndex(null)} className={`${customDark === "dark-dark" ? `${customMid} border` : `${customLight} ${customDarkBorder}`} text-white ms-3 d-flex align-items-center gap-1`}>
+              <CloseOutlined className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}/> 
+              <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}>{t('cancel')}</span> 
             </Button>
           </div>
         ) : (
-          <Button 
-            type="link" 
-            icon={<EditOutlined />} 
-            onClick={() => {
-              setEditingIndex(index);
-              setEditingName(record.name);
-            }} 
-            className={`${customBtn} text-white`}
-            style={{display: 'inline-flex', alignItems: 'center', gap: '4px'}}
-          >
-            {t('edit')}
-          </Button>
+          <Button type="link" icon={<EditOutlined />} onClick={() => {
+            setEditingIndex(index);
+            setEditingName(record.name);
+          }} className={`${customBtn} text-white me-1 d-flex align-items-center gap-1`}>{t('edit')}</Button>
+
         )
       ),
     },

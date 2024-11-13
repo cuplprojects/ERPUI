@@ -486,6 +486,7 @@ const Project = () => {
           </Modal>
         </TabPane>
         <TabPane tab={t('selectProcess')} key="2">
+
           <div className="responsive-container">
             <AddProjectProcess selectedProject={selectedProject} />
             <Button 
@@ -497,6 +498,7 @@ const Project = () => {
             </Button>
           </div>
         </TabPane>
+
 
         <TabPane tab={t('allocateProcess')} key="3">
           <div className="responsive-container">

@@ -147,7 +147,7 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
             title: t('sn'), 
             dataIndex: 'key', 
             key: 'key',
-            width: '15%',
+            width: '8%',
             align: 'center',
             sorter: (a, b) => a.key - b.key
         },
@@ -160,21 +160,21 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
         },
         {
             title: t('actions'),
-            key: 'actions', 
-            width: '20%',
+
+            key: 'actions',
+            width: '10%',
             align: 'center',
             render: (text, record) => (
-                <div className="d-flex justify-content-center">
-                    <Button 
-                        icon={<EditOutlined />}
-                        onClick={() => showAddFeatureModal(record)}
-                        type="primary"
-                        size="large"
-                        className={`${customBtn} d-flex align-items-center justify-content-center gap-2`}
-                    >
-                        {t('edit')}
-                    </Button>
-                </div>
+                <Button 
+                    icon={<EditOutlined />} 
+                    onClick={() => showAddFeatureModal(record)}
+                    type="primary"
+                    size="large"
+                    className={`${customBtn} d-flex align-items-center gap-1`}
+                >
+                    {t('edit')}
+                </Button>
+
             ),
         },
     ];
