@@ -9,7 +9,7 @@ import { useStore } from 'zustand';
 import themeStore from '../store/themeStore';
 import { Modal as BootstrapModal } from 'react-bootstrap';
 
-const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots = [], selectedLotNo, fetchQuantity }) => {
+const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots = [], selectedLotNo, fetchQuantity, dispatchedLots = [] }) => {
     const { t } = useTranslation();
     const [selectedLot, setSelectedLot] = useState(null);
     const { encryptedProjectId } = useParams();
@@ -18,9 +18,6 @@ const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots =
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = getCssClasses();
     const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
-
-    // Filter out the current lot from available lots
-    const availableLots = lots.filter(lot => lot !== selectedLotNo);
 
     useEffect(() => {
         const fetchProjectName = async () => {
@@ -36,6 +33,11 @@ const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots =
             fetchProjectName();
         }
     }, [projectId, visible]);
+
+    // Filter out the current lot and dispatched lots from available lots
+    const availableLots = lots.filter(lot => 
+        lot !== selectedLotNo && !dispatchedLots.includes(lot)
+    );
 
     const handleTransfer = async () => {
         if (!selectedLot) return;
