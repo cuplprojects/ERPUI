@@ -160,6 +160,7 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
         },
         {
             title: t('actions'),
+
             key: 'actions',
             width: '10%',
             align: 'center',
@@ -173,6 +174,7 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
                 >
                     {t('edit')}
                 </Button>
+
             ),
         },
     ];

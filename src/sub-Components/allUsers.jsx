@@ -28,7 +28,6 @@ const AllUsers = () => {
   const [users, setUsers] = useState([]);
   const [filterType, setFilterType] = useState('none');
   const [filterValue, setFilterValue] = useState('');
-  const [pageSize, setPageSize] = useState(10);
   const [editingUserId, setEditingUserId] = useState(null);
   const [currentUserData, setCurrentUserData] = useState({});
   const [modalOpen, setModalOpen] = useState(false);
@@ -41,7 +40,8 @@ const AllUsers = () => {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
   const [roles, setRoles] = useState([]);
-
+  const [pageSize, setPageSize] = useState(5); // Default page size
+  const [currentPage, setCurrentPage] = useState(1); // Track current page
   const isMobile = useMediaQuery({ maxWidth: 767 });
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1023 });
 
@@ -72,6 +72,11 @@ const AllUsers = () => {
     setFilterValue('');
   }, []);
 
+  const clearFilters = useCallback(() => {
+    setFilterType('none');
+    setFilterValue('');
+  }, []);
+
   const filteredData = useMemo(() => {
     if (filterType === 'name' && filterValue) {
       return users.filter(user =>
@@ -82,9 +87,20 @@ const AllUsers = () => {
     return users;
   }, [users, filterType, filterValue]);
 
+  const paginatedData = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return filteredData.slice(startIndex, endIndex);
+  }, [filteredData, currentPage, pageSize]);
+
   const handlePageSizeChange = useCallback((value) => {
     setPageSize(value);
   }, []);
+
+  const handlePaginationChange = (page, pageSize) => {
+    setCurrentPage(page);
+    setPageSize(pageSize);
+  };
 
   const handleColumnVisibilityChange = useCallback((e, column) => {
     setVisibleColumns(prev => ({ ...prev, [column]: e.target.checked }));
@@ -239,16 +255,20 @@ const AllUsers = () => {
             <Button
               icon={<SaveOutlined />}
               onClick={() => handleSave(record)}
+
               className={`${customDark === "dark-dark" ? `${customMid} text-white border-1 ${customDarkBorder}` : `${customLight} border-1 ${customDarkText} `} ${customDarkBorder} d-flex align-items-center gap-1`}
+
             >
-              {t('save')}
+              <span className="ms-1">{t('save')}</span>
             </Button>
             <Button
               icon={<CloseOutlined />}
               onClick={handleCancel}
+
               className={`${customDark === "dark-dark" ? `${customMid} text-white border-1 ${customDarkBorder}` : `${customLight} border-1 ${customDarkText} `} ${customDarkBorder} d-flex align-items-center gap-1`}
+
             >
-              {t('cancel')}
+              <span className="ms-1">{t('cancel')}</span>
             </Button>
           </Space>
         ) : (
@@ -257,17 +277,21 @@ const AllUsers = () => {
               icon={<EyeOutlined />}
               onClick={() => showUserDetails(record)}
               type="default"
+
               className={`${customDark === "dark-dark" ? `${customMid} text-white border-1 ${customDarkBorder}` : `${customLight} border-1 ${customDarkText} `} ${customDarkBorder} d-flex align-items-center gap-1`}
+
             >
-              {t('view')}
+              <span className="ms-1">{t('view')}</span>
             </Button>
             <Button
               icon={<EditOutlined />}
               onClick={() => handleEdit(record)}
               type="primary"
+
               className={`${customDark}  border-1 ${customLightText}  ${customDarkBorder} d-flex align-items-center gap-1`}
+
             >
-              {t('edit')}
+              <span className="ms-1">{t('edit')}</span>
             </Button>
           </Space>
         );
@@ -307,7 +331,6 @@ const AllUsers = () => {
 
   const menu = (
     <Menu onClick={({ key }) => handleFilterChange(key)}>
-      <Menu.Item key="none">{t('noFilter')}</Menu.Item>
       <Menu.Item key="name">{t('filterByName')}</Menu.Item>
     </Menu>
   );
@@ -322,6 +345,13 @@ const AllUsers = () => {
               <Button icon={<BsFunnelFill size={20} className={`${customDark === "dark-dark" ? "text-dark" : customDarkText} border-0`} />}>
               </Button>
             </Dropdown>
+            {filterType !== 'none' && (
+              <Button 
+                icon={<AiFillCloseSquare size={25} className={`${customBtn} rounded`}/>} 
+                onClick={clearFilters}
+                className={`ms-2`}
+              />
+            )}
           </div>
         </Col>
         <Col lg={8} md={7} xs={12} className="mb-3 mb-md-0">
@@ -332,6 +362,7 @@ const AllUsers = () => {
                 value={filterValue}
                 onChange={(e) => setFilterValue(e.target.value)}
                 style={{ width: '100%' }}
+                allowClear
               />
             )}
           </div>
@@ -357,12 +388,16 @@ const AllUsers = () => {
         columns={columns}
         dataSource={filteredData}
         pagination={{
-          pageSize: pageSize,
+          current: currentPage,  // Pass current page to the pagination component
+          pageSize: pageSize,  // Set the page size
+          total: filteredData.length,  // Total number of items for pagination
           showSizeChanger: true,
-          pageSizeOptions: ['10', '20'],
+          pageSizeOptions: ['5','10', '20', '30'],
           showTotal: (total, range) => `${range[0]}-${range[1]} ${t('of')} ${total} ${t('items')}`,
+          onChange: handlePaginationChange, // Handle page change
+          onShowSizeChange: handlePageSizeChange, // Handle page size change
           style: { backgroundColor: 'white' },
-          className: 'custom-pagination p-3 rounded-3 rounded-top-0'
+          className: 'custom-pagination p-3 rounded-3 rounded-top-0',
         }}
         bordered
         rowKey="userId"

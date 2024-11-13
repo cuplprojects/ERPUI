@@ -148,6 +148,7 @@ const CameraList = () => {
       key: 'action',
       render: (_, record, index) => (
         editingIndex === index ? (
+
           <div className='d-flex align-items-center gap-1' style={{ display: 'flex', justifyContent: '' }}>
             <Button type="link" onClick={() => handleEditSave(index)} className={`${customDark === "dark-dark" ? `${customMid} border` : `${customLight} ${customDarkBorder}`} text-white d-flex align-items-center gap-1 `}>
               <SaveOutlined className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}/> 
@@ -163,6 +164,7 @@ const CameraList = () => {
             setEditingIndex(index);
             setEditingName(record.name);
           }} className={`${customBtn} text-white me-1 d-flex align-items-center gap-1`}>{t('edit')}</Button>
+
         )
       ),
     },
@@ -190,15 +192,15 @@ const CameraList = () => {
         alignItems: 'center',
         marginBottom: isMobile ? '10px' : '20px'
       }}>
+        <Button className={`${customBtn} ${customDark === "dark-dark" ? `` : `border-0`} custom-zoom-btn`} onClick={showModal}>
+          {t('Add New Camera')}
+        </Button>
         <Input.Search
           placeholder={t('Search cameras')}
           allowClear
           onChange={(e) => handleSearch(e.target.value)}
           style={{ width: 300 }}
         />
-        <Button className={`${customBtn} ${customDark === "dark-dark" ? `` : `border-0`} custom-zoom-btn`} onClick={showModal}>
-          {t('Add New Camera')}
-        </Button>
       </div>
 
       {loading ? (

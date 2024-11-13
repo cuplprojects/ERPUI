@@ -87,27 +87,26 @@ const Type = () => {
         const { associatedProcessId,requiredProcessId } = values;
 
         try {
-            // Check if the type already exists
             const typeExists = types.some(type => type.types.toLowerCase() === values.types.toLowerCase());
             if (typeExists) {
-                message.error("This type already exists!");
+                message.error(t("thisTypeAlreadyExists"));
                 return;
             }
             const postData = {
                 ...values,
-                associatedProcessId: associatedProcessIds, // Keep all selected for submission
-                requiredProcessId: requiredProcessIds // Only send the currently displayed required processes
+                associatedProcessId: associatedProcessIds,
+                requiredProcessId: requiredProcessIds
             };
             const response = await API.post('/PaperTypes', postData);
             setTypes(prev => [...prev, response.data]);
             setFilteredTypes(prev => [...prev, response.data]);
-            message.success("Type created successfully");
+            message.success(t("typeCreatedSuccessfully"));
             setIsModalVisible(false);
             form.resetFields();
             setRequiredProcessIds([])
         } catch (error) {
             console.error(error);
-            message.error("Failed to create type");
+            message.error(t("failedToCreateType"));
         }
     };
 
@@ -126,11 +125,11 @@ const Type = () => {
             updatedTypes[index] = updatedType;
             setTypes(updatedTypes);
             setFilteredTypes(updatedTypes);
-            message.success('Type updated successfully!');
+            message.success(t('typeUpdatedSuccessfully'));
             setEditingIndex(null);
         } catch (error) {
             console.error(error);
-            message.error('Failed to update Type');
+            message.error(t('failedToUpdateType'));
         }
     };
 
@@ -153,12 +152,13 @@ console.log(originalData.requiredProcessIds)
             dataIndex: 'serial',
             key: 'serial',
             render: (text, record, index) => (currentPage - 1) * pageSize + index + 1,
-            width: '10%',
+            width: '5%',
         },
         {
             title: t('type'),
             dataIndex: 'types',
             key: 'types',
+            width: '10%',
             sorter: (a, b) => a.types.localeCompare(b.types),
             render: (text, record, index) => (
                 editingIndex === index ? (
@@ -176,6 +176,7 @@ console.log(originalData.requiredProcessIds)
             title: t('associatedProcess'),
             dataIndex: 'associatedProcessId',
             key: 'associatedProcessId',
+            width: '25%',
             sorter: (a, b) => {
                 const aProcesses = a.associatedProcessId?.map(id => processMap[id]).join(', ') || '';
                 const bProcesses = b.associatedProcessId?.map(id => processMap[id]).join(', ') || '';
@@ -205,6 +206,7 @@ console.log(originalData.requiredProcessIds)
             title: t('requiredProcess'),
             dataIndex: 'requiredProcessId',
             key: 'requiredProcessId',
+            width: '25%',
             sorter: (a, b) => {
                 const aProcesses = a.requiredProcessId?.map(id => processMap[id]).join(', ') || '';
                 const bProcesses = b.requiredProcessId?.map(id => processMap[id]).join(', ') || '';
@@ -234,6 +236,7 @@ console.log(originalData.requiredProcessIds)
             align: 'center',
             dataIndex: 'status',
             key: 'status',
+            width: '10%',
             sorter: (a, b) => (a.status === b.status ? 0 : a.status ? -1 : 1),
             render: (status, record, index) => (
                 editingIndex === index ? (
@@ -256,6 +259,7 @@ console.log(originalData.requiredProcessIds)
         {
             title: t('action'),
             key: 'action',
+            width: '15%',
             render: (_, record, index) => (
                 editingIndex === index ? (
                     <div style={{ display: 'flex', justifyContent: '' }}>
@@ -307,15 +311,20 @@ console.log(originalData.requiredProcessIds)
                 alignItems: 'center',
                 marginBottom: isMobile ? '10px' : '20px'
             }}>
+                <Button className={`${customBtn} border-0 custom-zoom-btn`} onClick={() => setIsModalVisible(true)}>
+                    {t("addType")}
+                </Button>
                 <Search
                     placeholder={t("searchTypesOrProcesses")}
                     allowClear
                     onChange={(e) => handleSearch(e.target.value)}
                     style={{ width: 300 }}
                 />
+
                 <Button className={`${customBtn} border-0 custom-zoom-btn d-flex align-items-center gap-1`} onClick={() => setIsModalVisible(true)}>
                     {t("addType")}
                 </Button>
+
             </div>
 
             {loading ? (
@@ -329,6 +338,7 @@ console.log(originalData.requiredProcessIds)
                         pagination={false}
                         bordered
                         scroll={{ x: 'max-content' }}
+                        size={isMobile ? "small" : "default"}
                         className={`${customDark === "default-dark" ? "thead-default" : ""}
                         ${customDark === "red-dark" ? "thead-red" : ""}
                         ${customDark === "green-dark" ? "thead-green" : ""}
@@ -338,6 +348,10 @@ console.log(originalData.requiredProcessIds)
                         ${customDark === "purple-dark" ? "thead-purple" : ""}
                         ${customDark === "light-dark" ? "thead-light" : ""}
                         ${customDark === "brown-dark" ? "thead-brown" : ""} rounded-2`}
+                        style={{
+                            fontSize: isMobile ? '12px' : '14px',
+                            overflowX: 'auto'
+                        }}
                     />
                     <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px', background: 'white', padding: '10px' }} className='rounded-2 rounded-top-0'>
                         <Pagination
@@ -363,12 +377,12 @@ console.log(originalData.requiredProcessIds)
                 size={isMobile ? 'sm' : 'lg'}
             >
                 <Modal.Header closeButton={false} className={`rounded-top-2 ${customDark} ${customLightText} ${customDark === "dark-dark" ? `border ` : `border-0`} w border d-flex justify-content-between `}>
-                    <Modal.Title>Add Type</Modal.Title>
+                    <Modal.Title>{t('addType')}</Modal.Title>
                     <AiFillCloseSquare
                         size={35}
                         onClick={handleClose}
                         className={`rounded-2 ${customDark === "dark-dark" ? "text-dark bg-white " : `${customDark} custom-zoom-btn text-white  ${customDarkBorder}`}`}
-                        aria-label="Close"
+                        aria-label={t('close')}
                         style={{ cursor: 'pointer', fontSize: '1.5rem' }}
                     />
                 </Modal.Header>
@@ -380,33 +394,33 @@ console.log(originalData.requiredProcessIds)
                     >
                         <Form.Item
                             name="types"
-                            label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-5 `}>{"Type"}</span>}
+                            label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-5 `}>{t('type')}</span>}
                             rules={[
-                                { required: true, message: 'Please input type!' },
+                                { required: true, message: t('pleaseInputType') },
                                 {
                                     validator: (_, value) => {
                                         const isNumeric = /^\d+$/;
                                         if (value && isNumeric.test(value)) {
-                                            return Promise.reject(new Error('Type cannot contain only numbers!'));
+                                            return Promise.reject(new Error(t('typeCannotContainOnlyNumbers')));
                                         }
                                         if (types.some(type => type.types.toLowerCase() === value.toLowerCase())) {
-                                            return Promise.reject(new Error('This type already exists!'));
+                                            return Promise.reject(new Error(t('thisTypeAlreadyExists')));
                                         }
                                         return Promise.resolve();
                                     }
                                 }
                             ]}
                         >
-                            <Input placeholder="Type" />
+                            <Input placeholder={t('type')} />
                         </Form.Item>
                         <Form.Item
                             name="associatedProcessId"
-                            label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-5 `}>{"Associated Process"}</span>}
-                            rules={[{ required: true, message: 'Please select a process!' }]}
+                            label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-5 `}>{t('associatedProcess')}</span>}
+                            rules={[{ required: true, message: t('pleaseSelectProcess') }]}
                         >
                             <Select
                                 mode="multiple"
-                                placeholder="Select Process"
+                                placeholder={t('selectProcess')}
                                 onChange={(selected) => {
                                     setAssociatedProcessIds(selected); 
                                     setRequiredProcessIds(selected); 
@@ -420,7 +434,7 @@ console.log(originalData.requiredProcessIds)
                                 ))}
                             </Select>
                         </Form.Item>
-                        <Form.Item label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-5 `}>{"Required Process"}</span>}>
+                        <Form.Item label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-5 `}>{t('requiredProcess')}</span>}>
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                                 {requiredProcessIds?.map(id => (
                                     <span key={id} style={{ border: '1px solid #ccc', borderRadius: '4px', padding: '4px 8px', display: 'flex', alignItems: 'center' }}>
@@ -434,17 +448,19 @@ console.log(originalData.requiredProcessIds)
                             </div>
                         </Form.Item>
 
-                        <Form.Item name="status" label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-5 `}>{"Status"}</span>} valuePropName="checked" initialValue={true}>
+                        <Form.Item name="status" label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-5 `}>{t('status')}</span>} valuePropName="checked" initialValue={true}>
                             <Switch
-                                checkedChildren="Active"
-                                unCheckedChildren="Inactive"
+                                checkedChildren={t('active')}
+                                unCheckedChildren={t('inactive')}
                                 defaultChecked
                             />
                         </Form.Item>
 
                         <Form.Item>
+
                             <Button type="" htmlType="submit" className={`rounded-2 ${customBtn} ${customDark === "dark-dark" ? `` : `border-0`} custom-zoom-btn d-flex align-items-center gap-1`}>
                                 Submit
+
                             </Button>
                         </Form.Item>
                     </Form>

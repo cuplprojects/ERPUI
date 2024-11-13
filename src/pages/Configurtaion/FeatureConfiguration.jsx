@@ -1,12 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Button, Popconfirm, Select, Switch, message } from 'antd';
-// import './FeatureConfiguration.css';
 import API from '../../CustomHooks/MasterApiHooks/api';
+import { useTranslation } from 'react-i18next';
+import { useStore } from 'zustand';
+import themeStore from '../../store/themeStore';
 
 const FeatureConfiguration = () => {
     const [features, setFeatures] = useState([]);
     const [processes, setProcesses] = useState([]);
     const [checkedFeatures, setCheckedFeatures] = useState({});
+    const { t } = useTranslation();
+    const { getCssClasses } = useStore(themeStore);
+    const cssClasses = getCssClasses();
+    const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
 
     const fetchProcesses = async () => {
         try {
@@ -61,19 +67,19 @@ const FeatureConfiguration = () => {
                 }
             }));
 
-            message.success(`Feature ${checked ? 'enabled' : 'disabled'} successfully`);
+            message.success(t(checked ? 'featureEnabledSuccess' : 'featureDisabledSuccess'));
         } catch (error) {
             console.error("Failed to update process", error);
-            message.error("Failed to update feature. Please try again.");
+            message.error(t('featureUpdateError'));
         }
     };
 
     const columns = [
         {
-            title: 'Process Name',
+            title: t('processName'),
             dataIndex: 'name',
             key: 'name',
-            render: (text) => <span style={{ fontWeight: 'bold' }}>{text || 'Unnamed Process'}</span>,
+            render: (text) => <span style={{ fontWeight: 'bold' }}>{text || t('unnamedProcess')}</span>,
         },
         ...features.map(feature => ({
             title: feature.features,
@@ -96,19 +102,27 @@ const FeatureConfiguration = () => {
 
     return (
         <div className="feature-configuration-container">
-           
             <Table
                 rowKey="id"
                 dataSource={processes}
                 columns={columns}
                 pagination={false}
                 bordered
+                scroll={{ x: true }}
                 style={{ 
                     boxShadow: '0 4px 8px 0 rgba(0,0,0,0.2)',
                     borderRadius: '8px',
                     overflow: 'hidden',
-                    
                 }}
+                className={`${customDark === "default-dark" ? "thead-default" : ""}
+                    ${customDark === "red-dark" ? "thead-red" : ""}
+                    ${customDark === "green-dark" ? "thead-green" : ""}
+                    ${customDark === "blue-dark" ? "thead-blue" : ""}
+                    ${customDark === "dark-dark" ? "thead-dark" : ""}
+                    ${customDark === "pink-dark" ? "thead-pink" : ""}
+                    ${customDark === "purple-dark" ? "thead-purple" : ""}
+                    ${customDark === "light-dark" ? "thead-light" : ""}
+                    ${customDark === "brown-dark" ? "thead-brown" : ""} custom-pagination`}
             />
         </div>
     );

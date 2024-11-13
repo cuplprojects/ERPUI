@@ -9,8 +9,7 @@ const { TextArea } = Input;
 const { Text } = Typography;
 
 
-const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) => {
-    const { t } = useTranslation();
+const CatchDetailModal = ({ show, handleClose, data, processId, fetchTransaction }) => {
 
     const [isPlaying, setIsPlaying] = useState(false);
     const [audioElement, setAudioElement] = useState(null);
@@ -151,35 +150,19 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
     };
 
     const handleResolve = async () => {
+        console.log("data", data);
         try {
-            let existingTransactionData;
-            if (data.transactionId) {
-                const response = await API.get(`/Transactions/${data.transactionId}`);
-                existingTransactionData = response.data;
-            }
-            const postData = {
-                transactionId: data.transactionId || 0,
-                interimQuantity: existingTransactionData ? existingTransactionData.interimQuantity : 0,
-                remarks: existingTransactionData ? existingTransactionData.remarks : "",
-                projectId: data.projectId,
-                quantitysheetId: data.srNo || 0,
-                processId: processId,
-                zoneId: existingTransactionData ? existingTransactionData.zoneId : 0,
-                machineId: existingTransactionData ? existingTransactionData.machineId : 0,
-                status: existingTransactionData ? existingTransactionData.status : 0,
-                alarmId: "0",
-                lotNo: data.lotNo,
-                teamId: existingTransactionData ? existingTransactionData.teamId : [],
-                voiceRecording: existingTransactionData ? existingTransactionData.voiceRecording : ""
-            };
 
-            // Always use POST
-            await API.post('/Transactions', postData);
+            await API.put(`/Transactions/${data.transactionId}`, {
+                ...data,
+                alarmId: "0"
+            });
 
-            handleSave("0");
             handleClose();
+            message.success('Alert resolved successfully');
         } catch (error) {
-            console.error('Error saving alarm:', error);
+
+            console.error('Error resolving alert:', error);
         }
     };
 

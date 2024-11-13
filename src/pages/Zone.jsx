@@ -260,6 +260,7 @@ const Zone = () => {
       render: (_, record, index) => (
         editingIndex === index ? (
           <>
+
           <div className='d-flex align-items-center gap-1'>
             <Button type="link" icon={<SaveOutlined />} onClick={() => handleEditZone(index)} className={`${customBtn} d-flex align-items-center gap-1`}>{t('save')}</Button>
             <Button type="link" icon={<CloseOutlined />} onClick={handleCancelEdit} className={`${customBtn} ms-2 d-flex align-items-center gap-1`}>{t('cancel')}</Button>
@@ -276,6 +277,7 @@ const Zone = () => {
             });
             setOriginalZone(record);
           }} className={`${customBtn} d-flex align-items-center gap-1`}>{t('edit')}</Button>
+
         )
       ),
     },
@@ -304,16 +306,16 @@ const Zone = () => {
       <h2 style={{ marginBottom: '20px', fontSize: isMobile ? '1.5rem' : '2rem' }} className={`${customDarkText}`}>{t('Zone Management')}</h2>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <Button onClick={showModal} className={`${customBtn}`}>
+          {t('Add Zone')}
+        </Button>
+
         <Search
           placeholder={t("Search zones")}
           onChange={(e) => setSearchText(e.target.value)}
           style={{ width: 200 }}
           allowClear
         />
-
-        <Button onClick={showModal} className={`${customBtn}`}>
-          {t('Add Zone')}
-        </Button>
       </div>
 
       <Table
