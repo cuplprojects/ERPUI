@@ -331,18 +331,18 @@ const Project = () => {
       <Tabs activeKey={activeTabKey} onChange={setActiveTabKey}>
         <TabPane tab={t('projectList')} key="1">
           <Row justify="space-between" align="middle" style={{ marginBottom: '20px' }}>
-            <Col xs={24} sm={12}>
+            <Col xs={24} sm={12} style={{ textAlign: 'left', marginTop: { xs: '10px', sm: '0' } }}>
+              <Button type="primary" className={`${customBtn} mt-1`} onClick={showModal}>
+                {t('addNewProject')}
+              </Button>
+            </Col>
+            <Col xs={24} sm={12} style={{ textAlign: 'right' }}>
               <Input.Search
-                placeholder={t('searchProjects')}
+                placeholder={t('searchProjects')} 
                 onChange={e => setSearchText(e.target.value)}
                 style={{ width: '100%', maxWidth: '300px' }}
                 className={`${customDarkText} mt-1`}
               />
-            </Col>
-            <Col xs={24} sm={12} style={{ textAlign: 'right', marginTop: { xs: '10px', sm: '0' } }}>
-              <Button type="primary" className={`${customBtn} mt-1`} onClick={showModal}>
-                {t('addNewProject')}
-              </Button>
             </Col>
           </Row>
           <div className="table-responsive">

@@ -148,21 +148,39 @@ const CameraList = () => {
       key: 'action',
       render: (_, record, index) => (
         editingIndex === index ? (
-          <div style={{ display: 'flex', justifyContent: '' }}>
-            <Button type="link" onClick={() => handleEditSave(index)} className={`${customDark === "dark-dark" ? `${customMid} border` : `${customLight} ${customDarkBorder}`} text-white `}>
-              <SaveOutlined className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}/> 
-              <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}>{t('save')}</span> 
+          <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: '12px' }}>
+            <Button 
+              type="link" 
+              onClick={() => handleEditSave(index)} 
+              className={`${customDark === "dark-dark" ? `${customMid} border` : `${customLight} ${customDarkBorder}`} text-white`}
+              style={{display: 'inline-flex', alignItems: 'center', gap: '4px'}}
+            >
+              <SaveOutlined className={`${customDark === "dark-dark" ? `` : `${customDarkText}`}`}/> 
+              <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}`}`}>{t('save')}</span> 
             </Button>
-            <Button type="link" onClick={() => setEditingIndex(null)} className={`${customDark === "dark-dark" ? `${customMid} border` : `${customLight} ${customDarkBorder}`} text-white ms-3`}>
-              <CloseOutlined className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}/> 
-              <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}>{t('cancel')}</span> 
+            <Button 
+              type="link" 
+              onClick={() => setEditingIndex(null)} 
+              className={`${customDark === "dark-dark" ? `${customMid} border` : `${customLight} ${customDarkBorder}`} text-white`}
+              style={{display: 'inline-flex', alignItems: 'center', gap: '4px'}}
+            >
+              <CloseOutlined className={`${customDark === "dark-dark" ? `` : `${customDarkText}`}`}/> 
+              <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}`}`}>{t('cancel')}</span> 
             </Button>
           </div>
         ) : (
-          <Button type="link" icon={<EditOutlined />} onClick={() => {
-            setEditingIndex(index);
-            setEditingName(record.name);
-          }} className={`${customBtn} text-white me-1`}>{t('edit')}</Button>
+          <Button 
+            type="link" 
+            icon={<EditOutlined />} 
+            onClick={() => {
+              setEditingIndex(index);
+              setEditingName(record.name);
+            }} 
+            className={`${customBtn} text-white`}
+            style={{display: 'inline-flex', alignItems: 'center', gap: '4px'}}
+          >
+            {t('edit')}
+          </Button>
         )
       ),
     },
@@ -190,15 +208,15 @@ const CameraList = () => {
         alignItems: 'center',
         marginBottom: isMobile ? '10px' : '20px'
       }}>
+        <Button className={`${customBtn} ${customDark === "dark-dark" ? `` : `border-0`} custom-zoom-btn`} onClick={showModal}>
+          {t('Add New Camera')}
+        </Button>
         <Input.Search
           placeholder={t('Search cameras')}
           allowClear
           onChange={(e) => handleSearch(e.target.value)}
           style={{ width: 300 }}
         />
-        <Button className={`${customBtn} ${customDark === "dark-dark" ? `` : `border-0`} custom-zoom-btn`} onClick={showModal}>
-          {t('Add New Camera')}
-        </Button>
       </div>
 
       {loading ? (
