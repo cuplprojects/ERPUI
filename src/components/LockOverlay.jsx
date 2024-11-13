@@ -29,7 +29,7 @@ const LockOverlay = () => {
         timerRef.current = setTimeout(() => {
             setIsLocked(true);
             setShowModal(false);
-        }, 180000);
+        }, 300000);
     }, []);
 
     const handleLock = useCallback(() => {
