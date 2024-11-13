@@ -239,14 +239,14 @@ const AllUsers = () => {
             <Button
               icon={<SaveOutlined />}
               onClick={() => handleSave(record)}
-              className={`${customDark === "dark-dark" ? `${customMid} text-white border-1 ${customDarkBorder}` : `${customLight} border-1 ${customDarkText} `} ${customDarkBorder}`}
+              className={`${customDark === "dark-dark" ? `${customMid} text-white border-1 ${customDarkBorder}` : `${customLight} border-1 ${customDarkText} `} ${customDarkBorder} d-flex align-items-center gap-1`}
             >
               {t('save')}
             </Button>
             <Button
               icon={<CloseOutlined />}
               onClick={handleCancel}
-              className={`${customDark === "dark-dark" ? `${customMid} text-white border-1 ${customDarkBorder}` : `${customLight} border-1 ${customDarkText} `} ${customDarkBorder}`}
+              className={`${customDark === "dark-dark" ? `${customMid} text-white border-1 ${customDarkBorder}` : `${customLight} border-1 ${customDarkText} `} ${customDarkBorder} d-flex align-items-center gap-1`}
             >
               {t('cancel')}
             </Button>
@@ -257,7 +257,7 @@ const AllUsers = () => {
               icon={<EyeOutlined />}
               onClick={() => showUserDetails(record)}
               type="default"
-              className={`${customDark === "dark-dark" ? `${customMid} text-white border-1 ${customDarkBorder}` : `${customLight} border-1 ${customDarkText} `} ${customDarkBorder}`}
+              className={`${customDark === "dark-dark" ? `${customMid} text-white border-1 ${customDarkBorder}` : `${customLight} border-1 ${customDarkText} `} ${customDarkBorder} d-flex align-items-center gap-1`}
             >
               {t('view')}
             </Button>
@@ -265,7 +265,7 @@ const AllUsers = () => {
               icon={<EditOutlined />}
               onClick={() => handleEdit(record)}
               type="primary"
-              className={`${customDark}  border-1 ${customLightText}  ${customDarkBorder}`}
+              className={`${customDark}  border-1 ${customLightText}  ${customDarkBorder} d-flex align-items-center gap-1`}
             >
               {t('edit')}
             </Button>
@@ -468,7 +468,7 @@ const AllUsers = () => {
           <Modal.Title>{t('confirmDelete')}</Modal.Title>
           <Button
             variant="link"
-            className={`close-button ${customDark} ${customLightText} border-0`}
+            className={`close-button ${customDark} ${customLightText} border-0 d-flex align-items-center gap-1`}
             style={{ padding: 0, fontSize: 18 }}
             onClick={() => setDeleteModalOpen(false)}
           >
@@ -496,13 +496,13 @@ const AllUsers = () => {
         </Modal.Body>
         <Modal.Footer className={`${customDark} ${customLightText}`}>
           <Button 
-            className={`${customDark === "dark-dark" ? `${customMid} text-white` : `${customLight} border-1 ${customDarkText}`} ${customDarkBorder}`}
+            className={`${customDark === "dark-dark" ? `${customMid} text-white` : `${customLight} border-1 ${customDarkText}`} ${customDarkBorder} d-flex align-items-center gap-1`}
             onClick={() => setDeleteModalOpen(false)}
           >
             {t('cancel')}
           </Button>
           <Button 
-             className={`${customDark === "dark-dark" ? `${customMid} text-white` : `${customLight} border-1 ${customDarkText}`} ${customDarkBorder}`}
+             className={`${customDark === "dark-dark" ? `${customMid} text-white` : `${customLight} border-1 ${customDarkText}`} ${customDarkBorder} d-flex align-items-center gap-1`}
             onClick={handleDelete}
           >
             {t('delete')}

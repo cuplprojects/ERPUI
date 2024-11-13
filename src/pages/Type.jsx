@@ -259,11 +259,11 @@ console.log(originalData.requiredProcessIds)
             render: (_, record, index) => (
                 editingIndex === index ? (
                     <div style={{ display: 'flex', justifyContent: '' }}>
-                        <Button type="link" onClick={() => handleEditSave(index)} className={`${customDark === "dark-dark" ? `${customMid} border` : `${customLight} ${customDarkBorder}`} text-white `}>
+                        <Button type="link" onClick={() => handleEditSave(index)} className={`${customDark === "dark-dark" ? `${customMid} border` : `${customLight} ${customDarkBorder}`} text-white d-flex align-items-center gap-1 `}>
                             <SaveOutlined className={`${customDark === "dark-dark" ? `` : `${customDarkText}`} `} />
                             <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}`} `}>{t("save")}</span>
                         </Button>
-                        <Button type="link" onClick={handleCancelEdit} className={`${customDark === "dark-dark" ? `${customMid} border` : `${customLight} ${customDarkBorder}`} text-white ms-3`}>
+                        <Button type="link" onClick={handleCancelEdit} className={`${customDark === "dark-dark" ? `${customMid} border` : `${customLight} ${customDarkBorder}`} text-white ms-3 d-flex align-items-center gap-1`}>
                             <CloseOutlined className={`${customDark === "dark-dark" ? `` : `${customDarkText}`} `} />
                             <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}`} `}>{t("cancel")}</span>
                         </Button>
@@ -276,7 +276,7 @@ console.log(originalData.requiredProcessIds)
                         setRequiredEditingProcessIds(record.requiredProcessId)
                         setEditingStatus(record.status);
                         setOriginalData(record);
-                    }} className={`${customBtn} text-white me-1`}>{t("edit")}</Button>
+                    }} className={`${customBtn} text-white me-1 d-flex align-items-center gap-1`}>{t("edit")}</Button>
                 )
             ),
         },
@@ -313,7 +313,7 @@ console.log(originalData.requiredProcessIds)
                     onChange={(e) => handleSearch(e.target.value)}
                     style={{ width: 300 }}
                 />
-                <Button className={`${customBtn} border-0 custom-zoom-btn`} onClick={() => setIsModalVisible(true)}>
+                <Button className={`${customBtn} border-0 custom-zoom-btn d-flex align-items-center gap-1`} onClick={() => setIsModalVisible(true)}>
                     {t("addType")}
                 </Button>
             </div>
@@ -443,7 +443,7 @@ console.log(originalData.requiredProcessIds)
                         </Form.Item>
 
                         <Form.Item>
-                            <Button type="" htmlType="submit" className={`rounded-2 ${customBtn} ${customDark === "dark-dark" ? `` : `border-0`} custom-zoom-btn`}>
+                            <Button type="" htmlType="submit" className={`rounded-2 ${customBtn} ${customDark === "dark-dark" ? `` : `border-0`} custom-zoom-btn d-flex align-items-center gap-1`}>
                                 Submit
                             </Button>
                         </Form.Item>

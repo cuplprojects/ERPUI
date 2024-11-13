@@ -260,8 +260,10 @@ const Zone = () => {
       render: (_, record, index) => (
         editingIndex === index ? (
           <>
-            <Button type="link" icon={<SaveOutlined />} onClick={() => handleEditZone(index)} className={`${customBtn} ms-`}>{t('save')}</Button>
-            <Button type="link" icon={<CloseOutlined />} onClick={handleCancelEdit} className={`${customBtn} ms-2`}>{t('cancel')}</Button>
+          <div className='d-flex align-items-center gap-1'>
+            <Button type="link" icon={<SaveOutlined />} onClick={() => handleEditZone(index)} className={`${customBtn} d-flex align-items-center gap-1`}>{t('save')}</Button>
+            <Button type="link" icon={<CloseOutlined />} onClick={handleCancelEdit} className={`${customBtn} ms-2 d-flex align-items-center gap-1`}>{t('cancel')}</Button>
+          </div>
           </>
         ) : (
           <Button type="link" icon={<EditOutlined />} onClick={() => {
@@ -273,7 +275,7 @@ const Zone = () => {
               machineId: record.machineId
             });
             setOriginalZone(record);
-          }} className={`${customBtn}`}>{t('edit')}</Button>
+          }} className={`${customBtn} d-flex align-items-center gap-1`}>{t('edit')}</Button>
         )
       ),
     },

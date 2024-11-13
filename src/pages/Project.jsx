@@ -423,6 +423,7 @@ const Project = () => {
       type="primary" 
       onClick={() => setActiveTabKey("3")} 
       style={{ marginTop: '20px' }}
+      
     >
       {t('next')}
     </Button>
