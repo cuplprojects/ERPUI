@@ -46,9 +46,6 @@ const ProjectDetailsTable = ({
   lotNo,
   fetchTransactions,
 }) => {
-  console.log(lotNo);
-  console.log(tableData);
-  console.log(processId);
   //Theme Change Section
   const { t } = useTranslation();
   const { getCssClasses } = useStore(themeStore);
@@ -242,7 +239,6 @@ const ProjectDetailsTable = ({
 
       // Always use POST regardless of whether transaction exists or not
       const response = await API.post("/Transactions", postData);
-      console.log("Create Response:", response.data);
 
       fetchTransactions(); // Refresh data
     } catch (error) {
@@ -470,15 +466,7 @@ const ProjectDetailsTable = ({
       key: "status",
       align: "center",
       render: (text, record) => {
-        // Add debug logging
-        console.log("Status render called with:", {
-          text,
-          record,
-          recordExists: !!record,
-          textValue: text,
-          previousProcess: record?.previousProcessData,
-
-        });
+        // Add debug loggin
 
         if (!record || text === undefined || text === null) {
           console.log("Invalid data detected:", { record, text });
@@ -495,29 +483,14 @@ const ProjectDetailsTable = ({
         const isPreviousProcessCompleted =
           !record.previousProcessData ||
           record.previousProcessData.status === 2;
-        console.log("Previous process check:", {
-          previousProcessData: record.previousProcessData,
-          isPreviousProcessCompleted,
-          previousStatus: record.previousProcessData?.status,
-        });
+    
 
         // Check if 'Assign Team' and 'Select Zone' data is populated
         const isZoneAssigned = Boolean(record.zoneId);
         const isTeamAssigned = Boolean(record.teamId?.length);
-        console.log("Assignment checks:", {
-          zoneId: record.zoneId,
-          isZoneAssigned,
-          teamId: record.teamId,
-          isTeamAssigned,
-
-        });
-
-        // Check if 'Select Machine' is required
+               // Check if 'Select Machine' is required
         const hasSelectMachinePermission = hasFeaturePermission(10);
-        console.log("Machine permission check:", {
-          hasSelectMachinePermission,
-          machineId: record.machineId,
-        });
+       
 
         // Determine if status can be changed
         const canChangeStatus =
@@ -531,19 +504,7 @@ const ProjectDetailsTable = ({
 
         const canBeCompleted = record.interimQuantity === record.quantity;
 
-        console.log("Final status check:", {
-          canChangeStatus,
-          conditions: {
-            isPreviousProcessCompleted,
-            hasSelectMachinePermission,
-            machineAssigned:
-              record.machineId !== 0 && record.machineId !== null,
-            isZoneAssigned,
-            isTeamAssigned,
-          },
-        });
-
-
+      
         return (
           <div className="d-flex justify-content-center">
             {hasAlerts ? (
