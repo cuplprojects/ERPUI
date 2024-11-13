@@ -207,6 +207,11 @@ const ProjectDetailsTable = ({
       return;
     }
 
+     if (newStatusIndex === 2 && updatedRow.interimQuantity !== updatedRow.quantity) {
+            alert("Cannot set status to Completed - Interim Quantity must equal Quantity");
+            return;
+        }
+
     try {
       // Fetch the existing transaction data if transactionId exists
       let existingTransactionData;
@@ -715,18 +720,6 @@ const ProjectDetailsTable = ({
     fetchTransactions();
   };
 
-  const handleAssignTeamSave = (team) => {
-    const updatedData = tableData.map((row) => {
-      if (selectedRowKeys.includes(row.srNo)) {
-        return { ...row, team };
-      }
-      return row;
-    });
-    setTableData(updatedData);
-    setSelectedRowKeys([]); // Deselect all rows
-    setSelectAll(false);
-    setShowOptions(false); // Reset options visibility
-  };
 
   const handleAlarmSave = (alarm) => {
     const updatedData = tableData.map((row) => {
@@ -1196,7 +1189,7 @@ const ProjectDetailsTable = ({
       <AssignTeamModal
         show={assignTeamModalShow}
         handleClose={() => setAssignTeamModalShow(false)}
-        handleSave={handleAssignTeamSave}
+        fetchTransactions={fetchTransactions}
         data={assignTeamModalData}
         processId={processId}
       />
