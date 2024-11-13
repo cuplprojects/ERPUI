@@ -19,7 +19,10 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
     const [isEditingFeature, setIsEditingFeature] = useState(false);
     const [editingFeatureId, setEditingFeatureId] = useState(null);
     const [featureName, setFeatureName] = useState('');
-    const [pageSize, setPageSize] = useState(5); // Default page size set to 5
+   const [pagination, setPagination] = useState({
+        current: 1,
+        pageSize: 5,
+    });
     const [searchText, setSearchText] = useState('');
 
     // Fetch features
@@ -210,15 +213,18 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
                 dataSource={filteredFeatures}
                 columns={featureColumns}
                 rowKey="key"
-                pagination={{ 
-                    pageSize: pageSize,
-                    current: 1,
+                pagination={{
+                    current: pagination.current,
+                    pageSize: pagination.pageSize,
+                    total: features.length,
                     showSizeChanger: true,
-                    pageSizeOptions: ['5', '10', '15'],
-                    onShowSizeChange: (current, size) => {
-                        setPageSize(size);
+                    showQuickJumper: true,
+                    onChange: (page, pageSize) => {
+                        setPagination({
+                            current: page,
+                            pageSize: pageSize,
+                        });
                     },
-                    className: `bg-white p-3 rounded rounded-top-0`
                 }}
                 bordered
                 size="small"
