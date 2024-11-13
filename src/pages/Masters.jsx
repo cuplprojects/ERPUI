@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Nav, Offcanvas } from 'react-bootstrap';
 import {
   FaUsers, FaProjectDiagram, FaBell, FaUserPlus, FaUserCog, FaListUl,
-  FaCamera, FaCog, FaCaretDown, FaCaretLeft
+  FaCamera, FaCog, FaCaretDown, FaCaretLeft,
+  FaCaretRight
 } from 'react-icons/fa';
 import { RiTeamFill } from "react-icons/ri";
 import { GiGears } from "react-icons/gi";
@@ -13,7 +14,7 @@ import { BiSolidCctv } from "react-icons/bi";
 import { BsQuestionSquareFill } from "react-icons/bs";
 import GroupManager from './Group';
 import Project from './Project';
-import Zone from './Zone'
+import Zone from './Zone';
 import Type from './Type';
 import AlarmMaster from './Alarm';
 import Machine from './ProductionMachine';
@@ -22,7 +23,7 @@ import AddUsers from '../sub-Components/addUsers';
 import AllUsers from '../sub-Components/allUsers';
 import CameraList from './CameraList';
 import RolesAndDepartments from './Roles/RolePage';
-import SystemSettings from  './Configurtaion/SystemSettings'; 
+import SystemSettings from './Configurtaion/SystemSettings';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import { hasPermission } from '../CustomHooks/Services/permissionUtils';
@@ -33,16 +34,7 @@ import Teams from './Team';
 const Sidebar = () => {
   const { t } = useTranslation();
   const { getCssClasses } = useStore(themeStore);
-  const [
-    customDark,
-    customMid,
-    customLight,
-    ,
-    customDarkText,
-    customLightText,
-    customLightBorder,
-    customDarkBorder
-  ] = getCssClasses();
+  const [customDark, customMid, customLight, , customDarkText, customLightText, customLightBorder, customDarkBorder] = getCssClasses();
 
   const [selectedMenu, setSelectedMenu] = useState(localStorage.getItem('activeTab') || 'group');
   const [expandedMenus, setExpandedMenus] = useState({});
@@ -123,11 +115,11 @@ const Sidebar = () => {
           onClick={() => menu.children ? toggleDropdown(menu.key) : handleMenuClick(menu.key)}
           className={`d-flex align-items-center ${customDark === "dark-dark" ? `sidebar-item-dark` : `sidebar-item`} ${selectedMenu === menu.key ? `active rounded-start rounded-end-5 ${customMid}` : `rounded-start rounded-end-5 text-dark`} hover:bg-my-hover-bg hover:text-my-hover-text`}
         >
-          {React.cloneElement(menu.icon, { className: `${customDark === "dark-dark" ? `text-white` : customDarkText} menu-icon` })}
-          <span className={`${customDark === "dark-dark" ? `text-white` : customDarkText} ml-3 ${isOffcanvas ? '' : 'd-none d-md-block d-lg-block'}`}>{menu.label}</span>
+          {React.cloneElement(menu.icon, { className: `${customDark === "dark-dark" ? `text-white` : customDarkText} menu-icon me-2` })}
+          <span className={`${customDark === "dark-dark" ? `text-white` : customDarkText} ${isOffcanvas ? '' : 'd-none d-md-block d-lg-block'}`}>{menu.label}</span>
           {menu.children && (
-            <span className="ml-auto">
-              {expandedMenus[menu.key] ? <FaCaretDown className={customDark === "dark-dark" ? `text-white` : customDarkText} size={25} /> : <FaCaretLeft className={customDark === "dark-dark" ? 'text-white' : customDarkText} size={25} />}
+            <span className="ms-auto">
+              {expandedMenus[menu.key] ? <FaCaretDown className={customDark === "dark-dark" ? `text-white` : customDarkText} size={25} /> : <FaCaretRight className={customDark === "dark-dark" ? 'text-white' : customDarkText} size={25} />}
             </span>
           )}
         </Nav.Link>
@@ -135,10 +127,10 @@ const Sidebar = () => {
           <Nav.Link
             key={child.key}
             onClick={() => handleMenuClick(child.key)}
-            className={`ml-4 d-flex align-items-center ${customDark === "dark-dark" ? `sidebar-item-dark` : `sidebar-item`} ${selectedMenu === child.key ? `active rounded-start rounded-end-5 ${customMid}` : 'rounded-start rounded-end-5'} hover:bg-my-hover-bg hover:text-my-hover-text`}
+            className={`ms-4 d-flex align-items-center ${customDark === "dark-dark" ? `sidebar-item-dark` : `sidebar-item`} ${selectedMenu === child.key ? `active rounded-start rounded-end-5 ${customMid}` : 'rounded-start rounded-end-5'} hover:bg-my-hover-bg hover:text-my-hover-text`}
           >
-            {React.cloneElement(child.icon, { className: `${customDark === "dark-dark" ? `text-white` : customDarkText} menu-icon` })}
-            <span className={`${customDark === "dark-dark" ? `text-white` : customDarkText} ml-3`}>{child.label}</span>
+            {React.cloneElement(child.icon, { className: `${customDark === "dark-dark" ? `text-white` : customDarkText} menu-icon me-2` })}
+            <span className={`${customDark === "dark-dark" ? `text-white` : customDarkText}`}>{child.label}</span>
           </Nav.Link>
         ))}
       </React.Fragment>
