@@ -6,11 +6,13 @@ import { ClientSideRowModelModule } from "@ag-grid-community/client-side-row-mod
 import { ModuleRegistry } from "@ag-grid-community/core";
 import "./../styles/DashboardGrid.css";
 import API from '../CustomHooks/MasterApiHooks/api';
+import { useTranslation } from 'react-i18next';
 
 // Register AG Grid Modules
 ModuleRegistry.registerModules([ClientSideRowModelModule]);
 
 const DashboardGrid = ({ projectId, lotNo }) => {
+  const { t } = useTranslation();
   // Set grid container width to 800px and allow it to take full height
   const containerStyle = useMemo(() => ({ height: "100vh" }), []);
 
@@ -21,24 +23,24 @@ const DashboardGrid = ({ projectId, lotNo }) => {
 
   const [columnDefs, setColumnDefs] = useState([
 
-    { field: "quantitySheetId", headerName: "Serial No.", cellStyle: { textAlign: "center" }, headerClass: "center-header" },
-    { field: "catchNo", headerName: "Catch No.", cellStyle: { textAlign: "center" }, headerClass: "center-header" },
-    { field: "paper", headerName: "Paper", cellStyle: { textAlign: "center" }, headerClass: "center-header" },
-    { field: "course", headerName: "Course", cellStyle: { textAlign: "center" }, headerClass: "center-header" },
-    { field: "subject", headerName: "Subject", cellStyle: { textAlign: "center" }, headerClass: "center-header" },
-    // { field: "innerEnvelope", headerName: "Inner Envelope", cellStyle: { textAlign: "center" }, headerClass: "center-header" },
-    // { field: "outerEnvelope", headerName: "Outer Envelope", cellStyle: { textAlign: "center" }, headerClass: "center-header" },
-    { field: "quantity", headerName: "Quantity", cellStyle: { textAlign: "center" }, headerClass: "center-header" },
-    { field: "percentageCatch", headerName: "Percentage Catch", cellStyle: { textAlign: "center" }, headerClass: "center-header", valueFormatter: params => params.value.toFixed(2) },
-    { field: "status", headerName: "Status", cellStyle: { textAlign: "center" }, headerClass: "center-header", valueFormatter: params => {
+    { field: "quantitySheetId", headerName: t('srNo'), cellStyle: { textAlign: "center" }, headerClass: "center-header" },
+    { field: "catchNo", headerName: t('catchNo'), cellStyle: { textAlign: "center" }, headerClass: "center-header" },
+    { field: "paper", headerName: t('paper'), cellStyle: { textAlign: "center" }, headerClass: "center-header" },
+    { field: "course", headerName: t('course'), cellStyle: { textAlign: "center" }, headerClass: "center-header" },
+    { field: "subject", headerName: t('subject'), cellStyle: { textAlign: "center" }, headerClass: "center-header" },
+    { field: "innerEnvelope", headerName: t('innerEnvelope'), cellStyle: { textAlign: "center" }, headerClass: "center-header" },
+    { field: "outerEnvelope", headerName: t('outerEnvelope'), cellStyle: { textAlign: "center" }, headerClass: "center-header" },
+    { field: "quantity", headerName: t('quantity'), cellStyle: { textAlign: "center" }, headerClass: "center-header" },
+    { field: "percentageCatch", headerName: t('percentageCatch'), cellStyle: { textAlign: "center" }, headerClass: "center-header", valueFormatter: params => params.value.toFixed(2) },
+    { field: "status", headerName: t('status'), cellStyle: { textAlign: "center" }, headerClass: "center-header", valueFormatter: params => {
       const transactionStatus = transactionData.find(transaction => transaction.catchNo === params.data.catchNo)?.status;
       switch (transactionStatus) {
         case 1:
-          return "Started";
+          return t('started');
         case 2:
-          return "Completed";
+          return t('completed');
         default:
-          return "Pending";
+          return t('pending');
       }
     } },
   ]);
@@ -85,6 +87,18 @@ const DashboardGrid = ({ projectId, lotNo }) => {
     fetchTransactionData();
   }, [projectId, lotNo]);
 
+  const localeTextFunc = useCallback((key, defaultValue) => {
+    // Map AG Grid's pagination text keys to your translation keys
+    const translationMap = {
+      'Page Size': 'pageSize',
+      'of': 'of',
+      'to': 'to',
+      'of Page': 'ofPage',
+      'Page': 'page'
+    };
+    return t(translationMap[key] || key);
+  }, [t]);
+
   return (
     <div style={{ width: '100%', height: '100vh' }}>
       <div style={{ height: '100%', width: '100%' }} className="ag-theme-quartz-dark">
@@ -93,11 +107,17 @@ const DashboardGrid = ({ projectId, lotNo }) => {
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}
           onGridReady={onGridReady}
-          paginationPageSize={10} // Set default pagination to 10
+          paginationPageSize={10}
           pagination={true}
           autoHeight={true}
           width={300}
           height={300}
+          localeText={{
+            page: t('page'),
+            to: t('to'), 
+            of: t('of'),
+            pageSize: t('pageSize')
+          }}
           paginationOptions={{
             pageSize: 10,
             pageSizes: [10, 25, 50],

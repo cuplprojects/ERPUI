@@ -1,19 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { Switch } from "antd";
+import { useTranslation } from 'react-i18next';
 
 const defaultStatusSteps = [
-  { status: "Pending", color: "red" },
-  { status: "Started", color: "blue" },
-  { status: "Completed", color: "#00F700" },
+  { status: "pending", color: "red" },
+  { status: "started", color: "blue" },
+  { status: "completed", color: "#00F700" },
 ];
 
 const StatusToggle = ({ initialStatusIndex, onStatusChange, disabled, statusSteps = defaultStatusSteps }) => {
+  const { t } = useTranslation();
   const [statusIndex, setStatusIndex] = useState(Math.min(initialStatusIndex, statusSteps.length - 1));
   const [toggling, setToggling] = useState(false);
   const [statusChecked, setStatusChecked] = useState(false);
 
   // Ensure statusSteps[statusIndex] exists before destructuring
-  const { status = "", color = "gray" } = statusSteps[statusIndex] || {};
+  const { status = "", color = "gray" } = statusSteps[statusIndex] || {};   
 
   const handleToggle = () => {
     if (toggling || disabled) return; // Prevent toggling if disabled or already toggling

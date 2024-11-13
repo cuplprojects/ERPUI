@@ -12,6 +12,20 @@ import API from '../CustomHooks/MasterApiHooks/api';
 import { useTranslation } from 'react-i18next';
 import { decrypt } from '../Security/Security';
 
+// Helper function to convert Excel date number to JS Date
+const convertExcelDate = (excelDate) => {
+    if (!excelDate) return null;
+    
+    // Check if excelDate is a number (Excel serial date)
+    if (!isNaN(excelDate)) {
+        // Excel dates are number of days since 1/1/1900
+        return new Date((excelDate - 25569) * 86400 * 1000);
+    }
+    
+    // If it's already a date string, parse it
+    return new Date(excelDate);
+};
+
 const QtySheetUpload = () => {
     const { t } = useTranslation();
     const { encryptedProjectId } = useParams();
@@ -57,27 +71,31 @@ const QtySheetUpload = () => {
             return;
         }
 
-        const finalPayload = mappedData.map(item => ({
-            catchNo: item.CatchNo || "",
-            paper: item.Paper || "",
-            course: item.Course || "",
-            subject: item.Subject || "",
-            innerEnvelope: item.InnerEnvelope || "",
-            outerEnvelope: item.OuterEnvelope || "",
-
-            lotNo: item.LotNo || "",
-            quantity: Number(item.Quantity) || 0,
-            percentageCatch: Number(item.percentageCatch) || 0,
-            projectId: projectId,
-            processId: [0],
-        }));
+        const finalPayload = mappedData.map(item => {
+            // Convert Excel date to proper date format
+            const examDate = item.ExamDate ? convertExcelDate(item.ExamDate) : null;
+            
+            return {
+                catchNo: item.CatchNo || "",
+                paper: item.Paper || "",
+                course: item.Course || "",
+                subject: item.Subject || "",
+                innerEnvelope: item.InnerEnvelope || "",
+                outerEnvelope: item.OuterEnvelope || "",
+                examDate: examDate ? examDate.toISOString() : "",
+                examTime: item.ExamTime || "",
+                lotNo: item.LotNo || "",
+                quantity: Number(item.Quantity) || 0,
+                percentageCatch: Number(item.percentageCatch) || 0,
+                projectId: projectId,
+                processId: [0],
+            };
+        });
 
         console.log(t('finalPayload'), JSON.stringify(finalPayload, null, 2));
 
         try {
-
             const response = await API.post('/QuantitySheet', finalPayload, {
-
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -111,14 +129,19 @@ const QtySheetUpload = () => {
                     for (let property in fieldMappings) {
                         const header = fieldMappings[property];
                         const index = jsonData[0].indexOf(header);
-                        rowData[property] = index !== -1 ? 
-                            (property === 'quantity' ? parseFloat(row[index]) || 0 : String(row[index])) : '';
+                        let value = index !== -1 ? row[index] : '';
                         
-                        // Format date if it's the examdate column
-                        if (property === 'examdate' && rowData[property]) {
-                            const date = new Date(rowData[property]);
-                            rowData[property] = date.toLocaleDateString('en-GB'); // Converts to DD/MM/YYYY
+                        // Handle special cases
+                        if (property === 'quantity') {
+                            value = parseFloat(value) || 0;
+                        } else if (property === 'examdate' && value) {
+                            // Keep the raw value for later conversion
+                            value = value;
+                        } else {
+                            value = String(value || '');
                         }
+                        
+                        rowData[property] = value;
                     }
                     
                     console.log(t('rowDataMapped'), rowData);
@@ -131,7 +154,6 @@ const QtySheetUpload = () => {
             reader.readAsArrayBuffer(selectedFile);
         });
     };
-    
 
     const getColumns = async () => {
         try {
@@ -179,10 +201,8 @@ const QtySheetUpload = () => {
     
             const autoMappings = {};
             columns.forEach((col) => {
-
                 const matchingHeader = excelHeaders.find(header => header?.toLowerCase() === col?.toLowerCase());
                 autoMappings[col] = matchingHeader || '';
-
             });
     
             setFieldMappings(autoMappings);
@@ -208,15 +228,11 @@ const QtySheetUpload = () => {
         setSelectedFile(null);
         setFileList([]);
         setShowTable(false);
-
     };
 
     const fetchLots = async () => {
         try {
-
-
             const response = await API.get(`/QuantitySheet/Lots?ProjectId=${projectId}`)
-
             setLots(response.data)
         }
         catch (error) {
@@ -231,9 +247,6 @@ const QtySheetUpload = () => {
         link.click();
     };
 
-
-
-
     const handleLotClick = (lotNo) => {
         if (selectedLotNo === lotNo) {
             setShowTable(!showTable); // Toggle table visibility
@@ -244,8 +257,6 @@ const QtySheetUpload = () => {
             setShowBtn(true);
         }
     };
-
-
 
     return (
         <div className={`container ${customDarkText} rounded shadow-lg ${customLight} ${customLightBorder}`}>

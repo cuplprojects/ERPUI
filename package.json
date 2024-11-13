@@ -68,6 +68,7 @@
     "react-media-recorder": "^1.7.1",
     "react-plotly.js": "^2.6.0",
     "react-resizable": "^3.0.5",
+    "moment": "^2.29.1",
     "react-responsive": "^10.0.0",
     "react-router": "^6.26.1",
     "react-router-dom": "^6.26.1",

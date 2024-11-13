@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
+import { useTranslation } from 'react-i18next';
 
 const StatusBarChart = ({ data, catchNumbers }) => {
   const [currentPage, setCurrentPage] = useState(0);
+  const { t } = useTranslation();
 
   //Theme Change Section
   const { getCssClasses } = useStore(themeStore);
@@ -41,10 +43,10 @@ const StatusBarChart = ({ data, catchNumbers }) => {
       const { catchNumber, interimQuantity, remainingQuantity, totalQuantity } = payload[0].payload;
       return (
         <div className="custom-tooltip bg-white p-2 border rounded-3 box-shadow ">
-          <p>{`Catch Number: ${catchNumber}`}</p>
-          <p>{`Interim Quantity: ${interimQuantity}`}</p>
-          <p>{`Remaining Quantity: ${remainingQuantity}`}</p>
-          <p>{`Total Quantity: ${totalQuantity}`}</p>
+          <p>{`${t("catchNo")}: ${catchNumber}`}</p>
+          <p>{`${t("interimQuantity")}: ${interimQuantity}`}</p>
+          <p>{`${t("remainingQuantity")}: ${remainingQuantity}`}</p>
+          <p>{`${t("totalQuantity")}: ${totalQuantity}`}</p>
         </div>
       );
     }
@@ -52,28 +54,28 @@ const StatusBarChart = ({ data, catchNumbers }) => {
   };
 
   return (
-    <div style={{ position: "relative", zIndex: "1" }} className='bg-whit  rounded pb-'>
+    <div style={{ position: "relative", zIndex: "1" }} className='rounded '>
       <ResponsiveContainer width="100%" height={300}>
         <BarChart
           data={chartData}
-          margin={{ top: 20, right: 10, left: 2, bottom: 10 }}
+          margin={{ top: 20, right: 10, left: 40, bottom: 10 }}
         >
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="catchNumber" />
-          <YAxis width={40} />
+          <YAxis width={60} />
           <Tooltip content={<CustomTooltip />} />
           <Legend />
           <Bar
             dataKey="interimQuantity"
             stackId="a"
             fill="#61DB53"
-            name="Interim Quantity"
+            name={t("interimQuantity")}
           />
           <Bar
             dataKey="remainingQuantity"
             stackId="a"
             fill="#0099ff"
-            name="Remaining Quantity"
+            name={t("remainingQuantity")}
           />
         </BarChart>
       </ResponsiveContainer>
@@ -84,15 +86,15 @@ const StatusBarChart = ({ data, catchNumbers }) => {
           disabled={currentPage === 0}
           className={`btn btn-sm btn-link border rounded ${customBtn}`}
         >
-          Previous
+          {t("previous")}
         </button>
-        <span style={{ margin: '0 10px' }} className={`${customDarkText}`}>{`Page ${currentPage + 1} of ${totalPages}`}</span>
+        <span style={{ margin: '0 10px' }} className={`${customDarkText}`}>{`${t("page")} ${currentPage + 1} / ${totalPages}`}</span>
         <button
           onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages - 1))}
           disabled={currentPage === totalPages - 1}
           className={`btn btn-sm btn-link border rounded ${customBtn}`}
         >
-          Next
+          {t("next")}
         </button>
       </div>
     </div>

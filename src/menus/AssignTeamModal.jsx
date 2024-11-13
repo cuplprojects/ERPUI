@@ -7,30 +7,13 @@ import Select from 'react-select';
 import API from '../CustomHooks/MasterApiHooks/api';
 import AssignTeams from '../pages/processPage/AssignTeam/AssignTeams';
 
-const AssignTeamModal = ({ show, handleClose, handleSave, data , processId }) => {
+const AssignTeamModal = ({ show, handleClose, data , processId , fetchTransactions }) => {
   console.log(data)
   const { t } = useTranslation();
   const { getCssClasses } = useStore(themeStore);
-  const [customDark, customMid, customLight, , customDarkText, customLightText] = getCssClasses();
-  const [selectedUsers, setSelectedUsers] = useState([]);
-  const [users, setUsers] = useState([]);
+  const [customDark, customMid, customDarkText, customLightText] = getCssClasses();
 
-  if (!show) return null;
 
-  const onSave = (e) => {
-    e.preventDefault();
-    const teamToAssign = selectedUsers.map(user => user.label).join(', ');
-    if (data?.length === 1) {
-      handleSave(teamToAssign);
-    } else {
-      const teamsToAssign = {};
-      data?.forEach(row => {
-        teamsToAssign[row.catchNumber] = individualTeams[row.catchNumber] || teamToAssign;
-      });
-      handleSave(teamsToAssign);
-    }
-    handleClose();
-  };
 
   return (
     <Modal show={show} onHide={handleClose} centered className='custom-modal'>
@@ -38,23 +21,9 @@ const AssignTeamModal = ({ show, handleClose, handleSave, data , processId }) =>
         <Modal.Title className={customDarkText}>{t('assignTeam')}</Modal.Title>
       </Modal.Header>
       <Modal.Body className={customMid}>
-        <AssignTeams processId={processId} data={data} handleClose={handleClose} handleSave={handleSave}/>
+        <AssignTeams processId={processId} data={data} handleClose={handleClose} fetchTransactions={fetchTransactions}/>
       </Modal.Body>
       <Modal.Footer className={customMid}>
-        <Button 
-          variant="primary"
-          onClick={onSave}
-          className={`${customDark} ${customLightText}`}
-        >
-          {t('save')}
-        </Button>
-        <Button 
-          variant="secondary"
-          onClick={handleClose}
-          className={`${customDark} ${customLightText}`}
-        >
-          {t('cancel')}
-        </Button>
       </Modal.Footer>
       <style>{`
     .custom-modal .modal-dialog {

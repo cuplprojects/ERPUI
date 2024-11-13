@@ -3,11 +3,14 @@ import { Modal, Button, Table, Input, Typography, message } from 'antd';
 import { AudioOutlined, AudioMutedOutlined } from '@ant-design/icons';
 import API from '../CustomHooks/MasterApiHooks/api';
 import { hasPermission } from '../CustomHooks/Services/permissionUtils';
+import { useTranslation } from 'react-i18next';
 
 const { TextArea } = Input;
 const { Text } = Typography;
 
-const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) => {
+
+const CatchDetailModal = ({ show, handleClose, data, processId, fetchTransaction }) => {
+
     const [isPlaying, setIsPlaying] = useState(false);
     const [audioElement, setAudioElement] = useState(null);
 
@@ -30,11 +33,15 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
 
     // Prepare data for the table
     const tableData = Object.keys(data || {})
-        .filter(key => !['serialNumber', 'voiceRecording', 'teamUserNames', 'teamId', 'transactionId', 'srNo', 'projectId'].includes(key))
+        .filter(key => !['serialNumber', 'voiceRecording', 'teamUserNames', 'teamId', 'transactionId', 'srNo', 'projectId', 'processIds'].includes(key))
         .map((key, index) => {
             let value = data[key];
             if (key === 'team') {
                 value = data.teamUserNames?.join(', ') || 'No team assigned';
+            }
+            // Convert value to string if it's an object
+            if (typeof value === 'object' && value !== null) {
+                value = JSON.stringify(value);
             }
             return {
                 key: index,
@@ -78,7 +85,7 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
             // Create audio URL and play
             const audioUrl = URL.createObjectURL(blob);
             const audio = new Audio(audioUrl);
-            
+
             // Add event listeners
             audio.onplay = () => setIsPlaying(true);
             audio.onpause = () => setIsPlaying(false);
@@ -112,17 +119,17 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
                 {isPlaying ? (
                     <div style={{ display: 'flex', alignItems: 'center' }}>
                         <AudioOutlined
-                            style={{ 
-                                fontSize: '18px', 
+                            style={{
+                                fontSize: '18px',
                                 cursor: 'pointer',
                                 color: '#1890ff'
                             }}
                             onClick={() => handleAudioPlay(voiceRecording)}
                             className='rounded-circle border p-2 custom-theme-dark-btn'
                         />
-                        <span 
-                            className="animate-pulse" 
-                            style={{ 
+                        <span
+                            className="animate-pulse"
+                            style={{
                                 marginLeft: '8px',
                                 color: '#1890ff',
                                 fontSize: '12px'
@@ -143,14 +150,18 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
     };
 
     const handleResolve = async () => {
+        console.log("data", data);
         try {
+
             await API.put(`/Transactions/${data.transactionId}`, {
                 ...data,
                 alarmId: "0"
             });
-            handleSave("0");
+
             handleClose();
+            message.success('Alert resolved successfully');
         } catch (error) {
+
             console.error('Error resolving alert:', error);
         }
     };
@@ -172,19 +183,18 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
                 if (record.label === 'Remarks' || record.label === 'Alerts') {
                     return (
                         <>
+
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <TextArea
                                 value={value}
                                 readOnly
                                 autoSize={{ minRows: 2, maxRows: 6 }}
-                                auto-sizing
                                 bordered={false}
                                 style={{ flex: 1, marginRight: '10px', overflow: 'hidden', wordWrap: 'break-word' }}
                             />
                             {record.label === 'Remarks' && renderAudioControl(data?.voiceRecording)}
                         </div>
-                       
-                           { record?.label === 'Alerts' && 
+                           { record?.label === 'Alerts' && value !== "0" &&
                             value !== 'NA' && (
                                 <Button
                                     style={{ fontSize: '18px', cursor: 'pointer' }}
@@ -195,6 +205,7 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
                                 </Button>
                             )}
                        
+
                         </>
                     );
                 }
@@ -213,7 +224,7 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
                 </Button>
             ]}
             centered
-            title="Catch Details"
+            title={`${t('catchDetails')}`}
             width={600}
             className="bg-light rounded"
         >

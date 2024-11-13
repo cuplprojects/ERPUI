@@ -18,6 +18,7 @@ import { useUserData } from "../store/userDataStore";
 import { CSSTransition } from 'react-transition-group';
 import styled from 'styled-components';
 import { getAllProjectCompletionPercentages } from "../CustomHooks/ApiServices/transacationService";
+import { useTranslation } from 'react-i18next';
 
 const AnimatedDropdownMenu = styled(Dropdown.Menu)`
   &.dropdown-enter {
@@ -41,6 +42,7 @@ const AnimatedDropdownMenu = styled(Dropdown.Menu)`
 `;
 
 const CuDashboard = () => {
+  const { t } = useTranslation();
   const userData = useUserData();
   const [selectedLots, setSelectedLots] = useState([]);
   const [pieData, setPieData] = useState([]);
@@ -153,8 +155,8 @@ useEffect(() => {
     if (data.length === 0) {
       return (
         <div className="d-flex justify-content-center align-items-center flex-column" style={{ height: '200px' }}>
-          <h3 className="text-center mb-3">No active projects available.</h3>
-          <p>Contact admin for assistance.</p>
+          <h3 className="text-center mb-3">{t('noActiveProjects')}</h3>
+          <p>{t('contactAdmin')}</p>
         </div>
       );
     }
@@ -309,7 +311,7 @@ useEffect(() => {
               style={{ height: "500px", background: "rgba(255,255,255,0.6)" }}
             >
               <h4 className="text-dark d-flex justify-content-between p-3">
-                {clickData.name || 'Select a project'}
+                {clickData.name || t('selectProject')}
               </h4>
               <div style={{ flex: 1, overflow: "hidden", padding: "0 15px" }}>
                 <CuDetailedAgGrid clickData={clickData} />

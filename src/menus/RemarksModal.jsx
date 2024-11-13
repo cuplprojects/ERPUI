@@ -1,18 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Modal, Button, Form, Container, Row, Col } from 'react-bootstrap';
 import { useReactMediaRecorder } from "react-media-recorder";
 import { useStore } from 'zustand';
-import themeStore from './../store/themeStore';
+import themeStore from '../store/themeStore';
 import { FaMicrophone } from 'react-icons/fa';
 import API from '../CustomHooks/MasterApiHooks/api';
+import { useTranslation } from 'react-i18next';
 
 const RemarksModal = ({ show, handleClose, handleSave, data, processId }) => {
+    const { getCssClasses } = useStore(themeStore);
+    const cssClasses = useMemo(() => getCssClasses(), [getCssClasses]);
+    const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder] = cssClasses;
+
     const [remarks, setRemarks] = useState('');
     const [isRecording, setIsRecording] = useState(false);
     const [recordingTime, setRecordingTime] = useState(0);
-    const { getCssClasses } = useStore(themeStore);
-    const cssClasses = getCssClasses();
-    const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
 
     const {
         status,
@@ -24,6 +26,8 @@ const RemarksModal = ({ show, handleClose, handleSave, data, processId }) => {
         audio: true,
         echoCancellation: true,
     });
+
+    const { t } = useTranslation();
 
     useEffect(() => {
         let interval;
@@ -70,15 +74,10 @@ const RemarksModal = ({ show, handleClose, handleSave, data, processId }) => {
                 alarmId: existingTransactionData ? existingTransactionData.alarmId : "",
                 lotNo: data.lotNo,
                 teamId: existingTransactionData ? existingTransactionData.teamId : [],
-                // Only include voice recording if there's an actual audio blob
-                voiceRecording: base64Audio || "", // If there's no audio, send an empty string
+                voiceRecording: base64Audio || ""
             };
 
-            if (data.transactionId) {
-                await API.put(`/Transactions/${data.transactionId}`, postData);
-            } else {
-                await API.post('/Transactions', postData);
-            }
+            await API.post('/Transactions', postData);
 
             // Reset states after save
             handleSave(remarks, mediaBlobUrl);
@@ -119,33 +118,33 @@ const RemarksModal = ({ show, handleClose, handleSave, data, processId }) => {
         setIsRecording(!isRecording);
     };
 
-    const isSaveDisabled = remarks.trim() === '';
-
     return (
         <Modal show={show} onHide={handleClose} size="md">
-            <Modal.Header className={`${customDark === "dark-dark" ? `${customDark} border` : customDark}`}>
-                <Modal.Title className={`${customLightText}`}>Set Remarks</Modal.Title>
+            <Modal.Header className={`${customDark} ${customDarkText}`}>
+                <Modal.Title className={customLightText}>{t('setRemarks')}</Modal.Title>
             </Modal.Header>
-            <Modal.Body className={`${customLight} ${customDark === "dark-dark" ? `${customDark} border-top-0 border border-bottom-0` : customDark}`}>
+            <Modal.Body className={`${customLight} ${customDarkText}`}>
                 <Container fluid>
                     <Row>
                         <Col xs={12} md={12}>
                             <Form.Group controlId="formRemarks" className="mb-3">
-                                <Form.Label className={`${customDarkText} fs-4`}>Remarks <span className="text-danger">*</span></Form.Label>
+                                <Form.Label className={`${customDarkText} fs-4`}>
+                                    {t('remarks')} <span className="text-danger">*</span>
+                                </Form.Label>
                                 <Form.Control
                                     as="textarea"
                                     rows={5}
-                                    placeholder="Enter remarks"
+                                    placeholder={t('enterRemarks')}
                                     value={remarks}
                                     onChange={(e) => setRemarks(e.target.value)}
-                                    className={`${customDarkText}`}
+                                    className={`${customLight} ${customDarkText}`}
                                     required
                                 />
                             </Form.Group>
                         </Col>
                         <Col xs={12} md={12}>
                             <div className="voice-recording mb-3">
-                                <h5 className={`${customDarkText}`}>Voice Recording</h5>
+                                <h5 className={customDarkText}>{t('voiceRecording')}</h5>
                                 <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-2">
                                     <Button
                                         variant={isRecording ? "danger" : "primary"}
@@ -153,14 +152,14 @@ const RemarksModal = ({ show, handleClose, handleSave, data, processId }) => {
                                         className={`${customBtn} ${customLightBorder} mb-2 mb-md-0`}
                                     >
                                         <FaMicrophone className="me-2" />
-                                        {isRecording ? "Stop Recording" : "Start Recording"}
+                                        {isRecording ? t('stopRecording') : t('startRecording')}
                                     </Button>
-                                    <div className={`${customDarkText}`}>
-                                        <span className="fw-bold">Status: </span>
+                                    <div className={customDarkText}>
+                                        <span className="fw-bold">{t('recordingStatus')}: </span>
                                         {status}
                                     </div>
-                                    <div className={`${customDarkText}`}>
-                                        <span className="fw-bold">Time: </span>
+                                    <div className={customDarkText}>
+                                        <span className="fw-bold">{t('recordingTime')}: </span>
                                         {formatTime(recordingTime)}
                                     </div>
                                 </div>
@@ -172,17 +171,21 @@ const RemarksModal = ({ show, handleClose, handleSave, data, processId }) => {
                     </Row>
                 </Container>
             </Modal.Body>
-            <Modal.Footer className={`${customDark === "dark-dark" ? `${customDark} border` : customDark}`}>
-                <Button variant="secondary" onClick={handleClose} className={`${customBtn} ${customLightBorder}`}>
-                    Close
+            <Modal.Footer className={`${customDark} ${customDarkText}`}>
+                <Button 
+                    variant="secondary" 
+                    onClick={handleClose} 
+                    className={`${customBtn} ${customLightBorder}`}
+                >
+                    {t('close')}
                 </Button>
                 <Button
                     variant="primary"
                     onClick={handleSubmit}
                     className={`${customBtn} ${customLightBorder}`}
-                    disabled={isSaveDisabled}
+                    disabled={remarks.trim() === ''}
                 >
-                    Save Changes
+                    {t('saveChanges')}
                 </Button>
             </Modal.Footer>
         </Modal>
