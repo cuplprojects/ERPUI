@@ -37,7 +37,7 @@ const Project = () => {
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [selectedType, setSelectedType] = useState(null);
   const [showSeriesFields, setShowSeriesFields] = useState(false);
-  const [availableSeriesOptions, setAvailableSeriesOptions] = useState([]);
+  const [numberOfSeries, setNumberOfSeries] = useState(0);
   const navigate = useNavigate();
 
   const { TabPane } = Tabs;
@@ -51,16 +51,27 @@ const Project = () => {
   const [sortedInfo, setSortedInfo] = useState({});
   const [total, setTotal] = useState(0);
 
-  const generateSeriesOptions = (count) => {
-    const series1 = SERIES_1.slice(0, count);
-    const series2 = SERIES_2.slice(0, count);
-    return [series1, series2];
-  };
+  const validateSeriesInput = (_, value) => {
+    if (!value) {
+      return Promise.reject();
+    }
 
-  const handleNumberOfSeriesChange = (value) => {
-    const [series1, series2] = generateSeriesOptions(value);
-    setAvailableSeriesOptions([series1, series2]);
-    form.setFieldsValue({ seriesName: '' }); // Reset series name when number changes
+    if (value.length !== numberOfSeries) {
+      return Promise.resolve();
+    }
+
+    // Convert to uppercase for validation
+    value = value.toUpperCase();
+
+    // Check if characters are sequential but can start from any letter
+    const startCharCode = value.charCodeAt(0);
+    for (let i = 1; i < value.length; i++) {
+      if (value.charCodeAt(i) !== startCharCode + i) {
+        return Promise.reject(new Error('Characters must be sequential'));
+      }
+    }
+
+    return Promise.resolve();
   };
 
   const getProjects = async () => {
@@ -188,7 +199,6 @@ const Project = () => {
             value={editingName}
             onChange={(e) => setEditingName(e.target.value)}
             onPressEnter={() => handleEditSave(index)}
-            onBlur={() => handleEditSave(index)}
           />
         ) : (
           <a 
@@ -212,7 +222,6 @@ const Project = () => {
             value={editingDescription}
             onChange={(e) => setEditingDescription(e.target.value)}
             onPressEnter={() => handleEditSave(index)}
-            onBlur={() => handleEditSave(index)}
           />
         ) : (
           <span>{text}</span>
@@ -289,7 +298,7 @@ const Project = () => {
     setSelectedGroup(null);
     setSelectedType(null);
     setShowSeriesFields(false);
-    setAvailableSeriesOptions([]);
+    setNumberOfSeries(0);
   };
 
   const handleGroupChange = (value) => {
@@ -421,7 +430,7 @@ const Project = () => {
                     >
                       <Select 
                         placeholder={t('selectNumberOfSeries')}
-                        onChange={handleNumberOfSeriesChange}
+                        onChange={(value) => setNumberOfSeries(value)}
                       >
                         {[1,2,3,4,5,6,7,8].map(num => (
                           <Option key={num} value={num}>{num}</Option>
@@ -433,13 +442,16 @@ const Project = () => {
                     <Form.Item
                       name="seriesName"
                       label={<span className={customDarkText}>{t('seriesName')}</span>}
-                      rules={[{ required: true, message: t('pleaseEnterSeriesName') }]}
+                      rules={[
+                        { required: true, message: t('pleaseEnterSeriesName') },
+                        { validator: validateSeriesInput }
+                      ]}
                     >
-                      <Select placeholder={t('selectSeriesName')}>
-                        {availableSeriesOptions.map((series, index) => (
-                          <Option key={index} value={series}>{series}</Option>
-                        ))}
-                      </Select>
+                      <Input 
+                        placeholder={t('enterSeriesName')}
+                        maxLength={numberOfSeries}
+                        style={{ textTransform: 'uppercase' }}
+                      />
                     </Form.Item>
                   </Col>
                 </Row>
@@ -485,7 +497,7 @@ const Project = () => {
             </Form>
           </Modal>
         </TabPane>
-        <TabPane tab={t('selectProcess')} key="2">
+        <TabPane tab={t('selectProcess')} key="2" disabled={!selectedProject}>
 
           <div className="responsive-container">
             <AddProjectProcess selectedProject={selectedProject} />
@@ -500,7 +512,8 @@ const Project = () => {
         </TabPane>
 
 
-        <TabPane tab={t('allocateProcess')} key="3">
+        <TabPane tab={t('allocateProcess')} key="3" disabled={!selectedProject}>
+
           <div className="responsive-container">
             <ProjectUserAllocation selectedProject={selectedProject}/>
           </div>

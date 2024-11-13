@@ -132,7 +132,6 @@ const AlarmMaster = () => {
             value={editingValue}
             onChange={(e) => setEditingValue(e.target.value)}
             onPressEnter={() => handleEditSave(index)}
-            onBlur={() => handleEditSave(index)}
           />
         ) : (
           <span key={`message-${record.alarmId}`}>{text}</span>

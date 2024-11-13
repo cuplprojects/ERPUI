@@ -19,24 +19,24 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
     const [isEditingFeature, setIsEditingFeature] = useState(false);
     const [editingFeatureId, setEditingFeatureId] = useState(null);
     const [featureName, setFeatureName] = useState('');
-   const [pagination, setPagination] = useState({
-        current: 1,
-        pageSize: 5,
-    });
+
+    const [pageSize, setPageSize] = useState(5);
+    const [currentPage, setCurrentPage] = useState(1);
+
     const [searchText, setSearchText] = useState('');
 
     // Fetch features
-    useEffect(() => {
-        const fetchFeatures = async () => {
-            try {
-                const response = await API.get('/Features');
-                setFeatures(response.data.map(feature => ({ key: feature.featureId, name: feature.features })));
-            } catch (error) {
-                console.error('Error fetching features:', error);
-                notification.error({ message: t('failedToFetchFeaturesPleaseTryAgain') });
-            }
-        };
+    const fetchFeatures = async () => {
+        try {
+            const response = await API.get('/Features');
+            setFeatures(response.data.map(feature => ({ key: feature.featureId, name: feature.features })));
+        } catch (error) {
+            console.error('Error fetching features:', error);
+            notification.error({ message: t('failedToFetchFeaturesPleaseTryAgain') });
+        }
+    };
 
+    useEffect(() => {
         fetchFeatures();
     }, []);
 
@@ -91,39 +91,32 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
             features: featureName,
         };
 
-        if (isEditingFeature) {
-            // Update existing feature
-            try {
-                const response = await API.put(`/Features/${editingFeatureId}`, featurePayload);
-                setFeatures(prevFeatures =>
-                    prevFeatures.map(feature =>
-                        feature.key === editingFeatureId ? { ...feature, name: featureName } : feature
-                    )
-                );
-                notification.success({ message: t('featureUpdatedSuccessfully') });
-            } catch (error) {
-                console.error('Error updating feature:', error);
-                notification.error({ message: t('failedToUpdateFeature') });
-            }
-        } else {
-            // Add new feature
-            try {
+        try {
+            if (isEditingFeature) {
+                // Update existing feature
+                await API.put(`/Features/${editingFeatureId}`, featurePayload);
+                notification.success({ 
+                    message: t('featureUpdatedSuccessfully'),
+                    duration: 0,
+                    onClose: () => {}
+                });
+            } else {
+                // Add new feature
                 const response = await API.post('/Features', featurePayload);
                 const addedFeature = response.data;
-                const newFeature = { key: addedFeature.featureId, name: addedFeature.features };
-                setFeatures([...features, newFeature]);
+                onAddFeature({ key: addedFeature.featureId, name: addedFeature.features });
                 notification.success({ message: t('featureAddedSuccessfully') });
-                
-                // Notify parent component to update Feature Configuration
-                onAddFeature(newFeature);
-            } catch (error) {
-                console.error('Error adding feature:', error);
-                notification.error({ message: t('failedToAddFeature') });
             }
+            
+            setFeatureModalVisible(false);
+            await fetchFeatures(); // Refresh data after successful operation
+            
+        } catch (error) {
+            console.error('Error handling feature:', error);
+            notification.error({ 
+                message: isEditingFeature ? t('failedToUpdateFeature') : t('failedToAddFeature')
+            });
         }
-
-        setFeatureModalVisible(false);
-        onUpdateFeatures(features); // Call the parent update function
     };
 
     // Handle key down event in the Input
@@ -136,6 +129,7 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
     // Handle search
     const handleSearch = (value) => {
         setSearchText(value);
+        setCurrentPage(1); // Reset to first page when searching
     };
 
     // Filter features based on search text
@@ -143,6 +137,12 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
         feature.name.toLowerCase().includes(searchText.toLowerCase()) ||
         feature.key.toString().includes(searchText)
     );
+
+    // Handle pagination change
+    const handleTableChange = (pagination) => {
+        setCurrentPage(pagination.current);
+        setPageSize(pagination.pageSize);
+    };
 
     // Columns for Feature table
     const featureColumns = [
@@ -213,19 +213,23 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
                 dataSource={filteredFeatures}
                 columns={featureColumns}
                 rowKey="key"
-                pagination={{
-                    current: pagination.current,
-                    pageSize: pagination.pageSize,
-                    total: features.length,
+                pagination={{ 
+                    total: filteredFeatures.length,
+                    pageSize: pageSize,
+                    current: currentPage,
                     showSizeChanger: true,
-                    showQuickJumper: true,
+                    pageSizeOptions: ['5', '10', '15'],
                     onChange: (page, pageSize) => {
-                        setPagination({
-                            current: page,
-                            pageSize: pageSize,
-                        });
+                        setCurrentPage(page);
+                        setPageSize(pageSize);
+                    },
+                    onShowSizeChange: (current, size) => {
+                        setCurrentPage(1);
+                        setPageSize(size);
+
                     },
                 }}
+                onChange={handleTableChange}
                 bordered
                 size="small"
                 scroll={{ x: 'max-content' }}
