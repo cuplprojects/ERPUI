@@ -46,9 +46,6 @@ const ProjectDetailsTable = ({
   lotNo,
   fetchTransactions,
 }) => {
-  console.log(lotNo);
-  console.log(tableData);
-  console.log(processId);
   //Theme Change Section
   const { t } = useTranslation();
   const { getCssClasses } = useStore(themeStore);
@@ -173,11 +170,13 @@ const ProjectDetailsTable = ({
     const alertsCondition = showOnlyAlerts
       ? item.alerts && item.alerts.trim() !== ""
       : true;
+     const previousProcessCondition = showOnlyCompletedPreviousProcess ? (!item.previousProcessData || item.previousProcessData.status === 2) : true;
+
     return (
       matchesSearchText &&
       statusCondition &&
       remarksCondition &&
-      alertsCondition
+      alertsCondition && previousProcessCondition
     );
   });
 
@@ -242,7 +241,6 @@ const ProjectDetailsTable = ({
 
       // Always use POST regardless of whether transaction exists or not
       const response = await API.post("/Transactions", postData);
-      console.log("Create Response:", response.data);
 
       fetchTransactions(); // Refresh data
     } catch (error) {
@@ -470,15 +468,7 @@ const ProjectDetailsTable = ({
       key: "status",
       align: "center",
       render: (text, record) => {
-        // Add debug logging
-        console.log("Status render called with:", {
-          text,
-          record,
-          recordExists: !!record,
-          textValue: text,
-          previousProcess: record?.previousProcessData,
-
-        });
+        // Add debug loggin
 
         if (!record || text === undefined || text === null) {
           console.log("Invalid data detected:", { record, text });
@@ -495,29 +485,14 @@ const ProjectDetailsTable = ({
         const isPreviousProcessCompleted =
           !record.previousProcessData ||
           record.previousProcessData.status === 2;
-        console.log("Previous process check:", {
-          previousProcessData: record.previousProcessData,
-          isPreviousProcessCompleted,
-          previousStatus: record.previousProcessData?.status,
-        });
+    
 
         // Check if 'Assign Team' and 'Select Zone' data is populated
         const isZoneAssigned = Boolean(record.zoneId);
         const isTeamAssigned = Boolean(record.teamId?.length);
-        console.log("Assignment checks:", {
-          zoneId: record.zoneId,
-          isZoneAssigned,
-          teamId: record.teamId,
-          isTeamAssigned,
-
-        });
-
-        // Check if 'Select Machine' is required
+               // Check if 'Select Machine' is required
         const hasSelectMachinePermission = hasFeaturePermission(10);
-        console.log("Machine permission check:", {
-          hasSelectMachinePermission,
-          machineId: record.machineId,
-        });
+       
 
         // Determine if status can be changed
         const canChangeStatus =
@@ -531,19 +506,7 @@ const ProjectDetailsTable = ({
 
         const canBeCompleted = record.interimQuantity === record.quantity;
 
-        console.log("Final status check:", {
-          canChangeStatus,
-          conditions: {
-            isPreviousProcessCompleted,
-            hasSelectMachinePermission,
-            machineAssigned:
-              record.machineId !== 0 && record.machineId !== null,
-            isZoneAssigned,
-            isTeamAssigned,
-          },
-        });
-
-
+      
         return (
           <div className="d-flex justify-content-center">
             {hasAlerts ? (
@@ -596,60 +559,80 @@ const ProjectDetailsTable = ({
   };
 
   const handleStatusChange = async (newStatus) => {
-    const statusSteps = ["Pending", "Started", "Completed"];
-    const newStatusIndex = statusSteps.indexOf(newStatus);
+        const statusSteps = ["Pending", "Started", "Completed"];
+        const newStatusIndex = statusSteps.indexOf(newStatus);
 
-    // Check if all selected rows have completed previous process or no previous process
-    const allPreviousCompleted = selectedRowKeys.every((key) => {
-      const row = tableData.find((row) => row.catchNumber === key);
-      return (
-        !row.previousProcessData?.status == 2 ||
-        row.previousProcessData === null ||
-        row.previousProcessData.status === 2
-      );
-    });
+        // Check if all selected rows have completed previous process or no previous process
+        const allPreviousCompleted = selectedRowKeys.every(key => {
+            const row = tableData.find(row => row.srNo === key); // Changed from catchNumber to srNo
+            return !row.previousProcessData || row.previousProcessData.status === 2;
+        });
 
-    if (!allPreviousCompleted) {
-      alert(
-        "Cannot change status - previous process must be completed for all selected items"
-      );
-      return;
-    }
+        if (!allPreviousCompleted) {
+            alert("Cannot change status - previous process must be completed for all selected items");
+            return;
+        }
 
-    // Iterate over selectedRowKeys and update status
-    const updates = selectedRowKeys.map(async (key) => {
-      const updatedRow = tableData.find((row) => row.srNo === key);
-      if (updatedRow) {
-        const postData = {
-          transactionId: updatedRow.transactionId || 0,
-          interimQuantity: updatedRow?.interimQuantity || 0,
-          remarks: updatedRow?.remarks || "",
-          projectId: projectId,
-          quantitysheetId: updatedRow?.srNo || 0,
-          processId: processId,
-          zoneId: updatedRow?.zoneId || 0,
-          status: newStatusIndex,
-          alarmId: updatedRow?.alarmId || "",
-          machineId: updatedRow?.machineId || 0,
-          lotNo: updatedRow?.lotNo || lotNo,
-          voiceRecording: updatedRow?.voiceRecording || "",
-          teamId: updatedRow?.teamId || [],
-        };
+        // Check if trying to set status to Completed when interimQuantity != quantity for any row
+        if (newStatusIndex === 2) {
+            const hasIncompleteQuantity = selectedRowKeys.some(key => {
+                const row = tableData.find(row => row.srNo === key);
+                return row.interimQuantity !== row.quantity;
+            });
+
+            if (hasIncompleteQuantity) {
+                alert("Cannot set status to Completed - Interim Quantity must equal Quantity for all selected items");
+                return;
+            }
+        }
+
+        // Iterate over selectedRowKeys and update status
+        const updates = selectedRowKeys.map(async (key) => {
+            const updatedRow = tableData.find(row => row.srNo === key);
+            if (updatedRow) {
+                // Fetch existing transaction data if transactionId exists
+                let existingTransactionData;
+                if (updatedRow.transactionId) {
+                    try {
+                        const response = await API.get(`/Transactions/${updatedRow.transactionId}`);
+                        existingTransactionData = response.data;
+                    } catch (error) {
+                        console.error(`Error fetching transaction data for ${key}:`, error);
+                    }
+                }
+
+                const postData = {
+                    transactionId: updatedRow.transactionId || 0,
+                    interimQuantity: existingTransactionData ? existingTransactionData.interimQuantity : 0,
+                    remarks: existingTransactionData ? existingTransactionData.remarks : "",
+                    projectId: projectId,
+                    quantitysheetId: updatedRow.srNo,
+                    processId: processId,
+                    zoneId: existingTransactionData ? existingTransactionData.zoneId : (updatedRow.zoneId || 0),
+                    machineId: existingTransactionData ? existingTransactionData.machineId : (updatedRow.machineId || 0),
+                    status: newStatusIndex,
+                    alarmId: existingTransactionData ? existingTransactionData.alarmId : (updatedRow.alarmId || ""),
+                    teamId: existingTransactionData ? existingTransactionData.teamId : (updatedRow.teamId || []),
+                    lotNo: existingTransactionData ? existingTransactionData.lotNo : lotNo,
+                    voiceRecording: existingTransactionData ? existingTransactionData.voiceRecording : ""
+                };
+
+                try {
+                    await API.post('/Transactions', postData);
+                } catch (error) {
+                    console.error(`Error updating status for ${key}:`, error);
+                }
+            }
+        });
 
         try {
-          // Always use POST regardless of whether transaction exists or not
-          await API.post("/Transactions", postData);
+            await Promise.all(updates);
+            clearSelections();
+            await fetchTransactions(); // Refresh data after all updates are complete
         } catch (error) {
-          console.error(`Error updating status for ${key}:`, error);
+            console.error('Error updating statuses:', error);
         }
-      }
-    });
-
-    // Wait for all updates to finish
-    await Promise.all(updates);
-    clearSelections();
-    fetchTransactions();
-  };
+    };
 
   const getSelectedStatus = () => {
     if (selectedRowKeys.length > 0) {
@@ -713,6 +696,7 @@ const ProjectDetailsTable = ({
     });
     setTableData(updatedData);
     setSelectedRowKeys([]); // Deselect all rows
+    setSelectAll(false);
     setShowOptions(false); // Reset options visibility
     fetchTransactions();
   };
@@ -726,6 +710,7 @@ const ProjectDetailsTable = ({
     });
     setTableData(updatedData);
     setSelectedRowKeys([]); // Deselect all rows
+    setSelectAll(false);
     setShowOptions(false); // Reset options visibility
     fetchTransactions();
   };
@@ -739,6 +724,7 @@ const ProjectDetailsTable = ({
     });
     setTableData(updatedData);
     setSelectedRowKeys([]); // Deselect all rows
+    setSelectAll(false);
     setShowOptions(false); // Reset options visibility
   };
 
@@ -751,6 +737,7 @@ const ProjectDetailsTable = ({
     });
     setTableData(updatedData);
     setSelectedRowKeys([]); // Deselect all rows
+    setSelectAll(false);
     setShowOptions(false); // Reset options visibility
     fetchTransactions();
   };
@@ -765,6 +752,7 @@ const ProjectDetailsTable = ({
     });
     setTableData(updatedData);
     setSelectedRowKeys([]); // Deselect all rows
+    setSelectAll(false);
     setShowOptions(false); // Reset options visibility
     fetchTransactions();
   };
@@ -778,6 +766,7 @@ const ProjectDetailsTable = ({
     });
     setTableData(updatedData);
     setSelectedRowKeys([]); // Deselect all rows
+    setSelectAll(false);
     setShowOptions(false); // Reset options visibility
     fetchTransactions();
   };
@@ -791,6 +780,7 @@ const ProjectDetailsTable = ({
         });
         setTableData(updatedData);
         setSelectedRowKeys([]); // Deselect all rows
+    setSelectAll(false);
         setShowOptions(false); // Reset options visibility
         fetchTransactions();
     }
@@ -1016,7 +1006,7 @@ const ProjectDetailsTable = ({
                   const hasSelectMachinePermission = hasFeaturePermission(10); // Check if Select Machine permission exists
 
                   const canChangeStatus = hasSelectMachinePermission
-                    ? row.machineId !== 0 && row.machineId !== null // Machine must be assigned if permission exists
+                    ? row.machineId !== 0 && row.machineId !== null && isZoneAssigned && isTeamAssigned // Machine must be assigned if permission exists
                     : isZoneAssigned && isTeamAssigned; // Otherwise, Zone and Team must be assigned
                   const canBeCompleted =
                     row.interimQuantity === row.quantity;
