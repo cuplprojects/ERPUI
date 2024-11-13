@@ -44,10 +44,26 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
             if (typeof value === 'object' && value !== null) {
                 value = JSON.stringify(value);
             }
+            // Convert status numbers to text
+            if (key === 'status') {
+                switch (value) {
+                    case 0:
+                        value = 'Pending';
+                        break;
+                    case 1:
+                        value = 'Started';
+                        break;
+                    case 2:
+                        value = 'Completed';
+                        break;
+                    default:
+                        value = 'N/A';
+                }
+            }
             return {
                 key: index,
                 label: formatKey(key),
-                value: value || 'NA',
+                value: value || `No ${key}`,
             };
         });
 
