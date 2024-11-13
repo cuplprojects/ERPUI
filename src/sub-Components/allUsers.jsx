@@ -28,7 +28,6 @@ const AllUsers = () => {
   const [users, setUsers] = useState([]);
   const [filterType, setFilterType] = useState('none');
   const [filterValue, setFilterValue] = useState('');
-  const [pageSize, setPageSize] = useState(10);
   const [editingUserId, setEditingUserId] = useState(null);
   const [currentUserData, setCurrentUserData] = useState({});
   const [modalOpen, setModalOpen] = useState(false);
@@ -41,7 +40,8 @@ const AllUsers = () => {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
   const [roles, setRoles] = useState([]);
-
+  const [pageSize, setPageSize] = useState(5); // Default page size
+  const [currentPage, setCurrentPage] = useState(1); // Track current page
   const isMobile = useMediaQuery({ maxWidth: 767 });
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1023 });
 
@@ -82,9 +82,20 @@ const AllUsers = () => {
     return users;
   }, [users, filterType, filterValue]);
 
+  const paginatedData = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return filteredData.slice(startIndex, endIndex);
+  }, [filteredData, currentPage, pageSize]);
+
   const handlePageSizeChange = useCallback((value) => {
     setPageSize(value);
   }, []);
+
+  const handlePaginationChange = (page, pageSize) => {
+    setCurrentPage(page);
+    setPageSize(pageSize);
+  };
 
   const handleColumnVisibilityChange = useCallback((e, column) => {
     setVisibleColumns(prev => ({ ...prev, [column]: e.target.checked }));
@@ -357,12 +368,16 @@ const AllUsers = () => {
         columns={columns}
         dataSource={filteredData}
         pagination={{
-          pageSize: pageSize,
+          current: currentPage,  // Pass current page to the pagination component
+          pageSize: pageSize,  // Set the page size
+          total: filteredData.length,  // Total number of items for pagination
           showSizeChanger: true,
-          pageSizeOptions: ['10', '20'],
+          pageSizeOptions: ['5','10', '20', '30'],
           showTotal: (total, range) => `${range[0]}-${range[1]} ${t('of')} ${total} ${t('items')}`,
+          onChange: handlePaginationChange, // Handle page change
+          onShowSizeChange: handlePageSizeChange, // Handle page size change
           style: { backgroundColor: 'white' },
-          className: 'custom-pagination p-3 rounded-3 rounded-top-0'
+          className: 'custom-pagination p-3 rounded-3 rounded-top-0',
         }}
         bordered
         rowKey="userId"

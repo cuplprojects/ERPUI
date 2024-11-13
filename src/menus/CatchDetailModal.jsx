@@ -3,11 +3,14 @@ import { Modal, Button, Table, Input, Typography, message } from 'antd';
 import { AudioOutlined, AudioMutedOutlined } from '@ant-design/icons';
 import API from '../CustomHooks/MasterApiHooks/api';
 import { hasPermission } from '../CustomHooks/Services/permissionUtils';
+import { useTranslation } from 'react-i18next';
 
 const { TextArea } = Input;
 const { Text } = Typography;
 
+
 const CatchDetailModal = ({ show, handleClose, data, processId, fetchTransaction }) => {
+
     const [isPlaying, setIsPlaying] = useState(false);
     const [audioElement, setAudioElement] = useState(null);
 
@@ -149,15 +152,17 @@ const CatchDetailModal = ({ show, handleClose, data, processId, fetchTransaction
     const handleResolve = async () => {
         console.log("data", data);
         try {
+
             await API.put(`/Transactions/${data.transactionId}`, {
                 ...data,
                 alarmId: "0"
             });
+
             handleClose();
             message.success('Alert resolved successfully');
         } catch (error) {
+
             console.error('Error resolving alert:', error);
-            message.error('Failed to resolve alert');
         }
     };
 
@@ -219,7 +224,7 @@ const CatchDetailModal = ({ show, handleClose, data, processId, fetchTransaction
                 </Button>
             ]}
             centered
-            title="Catch Details"
+            title={`${t('catchDetails')}`}
             width={600}
             className="bg-light rounded"
         >

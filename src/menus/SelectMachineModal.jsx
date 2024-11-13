@@ -1,15 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { Modal, Button, Form } from 'react-bootstrap'; // Ensure you have react-bootstrap installed
+import React, { useState, useEffect, useMemo } from 'react';
+import { Modal, Button, Form } from 'react-bootstrap';
 import API from '../CustomHooks/MasterApiHooks/api';
+import { useStore } from 'zustand';
+import themeStore from '../store/themeStore';
+import { useTranslation } from 'react-i18next';
 
-const statusMapping = {
-  0: 'Pending',
-  1: 'Started',
-  2: 'Completed',
-};
 
 const SelectMachineModal = ({ show, handleClose, data, processId, handleSave }) => {
-  console.log(data)
+  const { t } = useTranslation();
+  const { getCssClasses } = useStore(themeStore);
+  const cssClasses = useMemo(() => getCssClasses(), [getCssClasses]);
+  const [customDark, customMid, customLight, customBtn, customDarkText, customLightText] = cssClasses;
+
+const statusMapping = {
+  0: t('pending'),
+  1: t('started'), 
+  2: t('completed'),
+};
   const [selectedMachine, setSelectedMachine] = useState('');
   const [machineOptions, setMachineOptions] = useState([]);
   const [machineId, setMachineId] = useState(null);
@@ -64,6 +71,8 @@ const SelectMachineModal = ({ show, handleClose, data, processId, handleSave }) 
 
       await Promise.all(updatePromises);
       handleSave(machineId);
+      setMachineId()
+      setSelectedMachine()
       handleClose();
     } catch (error) {
       console.error('Error updating machine:', error);
@@ -72,32 +81,33 @@ const SelectMachineModal = ({ show, handleClose, data, processId, handleSave }) 
 
   return (
     <Modal show={show} onHide={handleClose}>
-      <Modal.Header closeButton>
-        <Modal.Title>Select Machine</Modal.Title>
+      <Modal.Header closeButton className={`${customDark} ${customDarkText}`}>
+        <Modal.Title className={customLightText}>{t('selectMachine')}</Modal.Title>
       </Modal.Header>
-      <Modal.Body>
+      <Modal.Body className={`${customLight} ${customDarkText}`}>
         {Array.isArray(data) && data.length > 0 ? (
           <>
             <div className="mb-3">
-              <span className="fw-bold">Selected Catches: </span>
+              <span className="fw-bold">{t('selectedCatches')}: </span>
               {data.map(row => row.catchNumber).join(', ')}
             </div>
             <div className='mb-3'>
-              <span className='fw-bold'>Total Items: </span>
+              <span className='fw-bold'>{t('totalItems')}: </span>
               {data.length}
             </div>
           </>
         ) : (
-          <div>No data available</div>
+          <div>{t('noDataAvailable')}</div>
         )}
         <Form.Group controlId="formMachine">
-          <Form.Label>Select Machine</Form.Label>
+          <Form.Label>{t('selectMachine')}</Form.Label>
           <Form.Control
             as="select"
             value={selectedMachine}
             onChange={handleMachineChange}
+            className={` ${customDarkText}`}
           >
-            <option value="">Select Machine</option>
+            <option value="">{t('selectMachine')}</option>
             {machineOptions.map(option => (
               <option key={option.machineId} value={option.machineName}>
                 {option.machineName}
@@ -106,12 +116,19 @@ const SelectMachineModal = ({ show, handleClose, data, processId, handleSave }) 
           </Form.Control>
         </Form.Group>
       </Modal.Body>
-      <Modal.Footer>
-        <Button variant="danger" onClick={handleClose}>
-          Close
+      <Modal.Footer className={`${customLight} ${customDarkText}`}>
+        <Button 
+          variant="danger" 
+          onClick={handleClose}
+          className={`${customBtn} border-0`}
+        >
+          {t('close')}
         </Button>
-        <Button className='custom-theme-dark-btn' onClick={handleConfirm}>
-          Save Changes
+        <Button 
+          onClick={handleConfirm}
+          className={`${customBtn} border-0`}
+        >
+          {t('saveChanges')}
         </Button>
       </Modal.Footer>
     </Modal>

@@ -43,10 +43,10 @@ const StatusBarChart = ({ data, catchNumbers }) => {
       const { catchNumber, interimQuantity, remainingQuantity, totalQuantity } = payload[0].payload;
       return (
         <div className="custom-tooltip bg-white p-2 border rounded-3 box-shadow ">
-          <p>{`Catch Number: ${catchNumber}`}</p>
-          <p>{`Interim Quantity: ${interimQuantity}`}</p>
-          <p>{`Remaining Quantity: ${remainingQuantity}`}</p>
-          <p>{`Total Quantity: ${totalQuantity}`}</p>
+          <p>{`${t("catchNo")}: ${catchNumber}`}</p>
+          <p>{`${t("interimQuantity")}: ${interimQuantity}`}</p>
+          <p>{`${t("remainingQuantity")}: ${remainingQuantity}`}</p>
+          <p>{`${t("totalQuantity")}: ${totalQuantity}`}</p>
         </div>
       );
     }
@@ -54,15 +54,15 @@ const StatusBarChart = ({ data, catchNumbers }) => {
   };
 
   return (
-    <div style={{ position: "relative", zIndex: "1" }} className='bg-whit  rounded pb-'>
+    <div style={{ position: "relative", zIndex: "1" }} className='rounded '>
       <ResponsiveContainer width="100%" height={300}>
         <BarChart
           data={chartData}
-          margin={{ top: 20, right: 10, left: 2, bottom: 10 }}
+          margin={{ top: 20, right: 10, left: 40, bottom: 10 }}
         >
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="catchNumber" />
-          <YAxis width={40} />
+          <YAxis width={60} />
           <Tooltip content={<CustomTooltip />} />
           <Legend />
           <Bar

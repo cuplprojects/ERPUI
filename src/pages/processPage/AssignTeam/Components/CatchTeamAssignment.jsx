@@ -3,7 +3,7 @@ import { Form, Row, Col, Button } from 'react-bootstrap';
 import API from '../../../../CustomHooks/MasterApiHooks/api';
 
 
-const CatchTeamAssignment = ({ teams, data, handleSave, handleClose, processId }) => {
+const CatchTeamAssignment = ({ teams, data, handleClose, processId , fetchTransactions}) => {
   const [selectedTeam, setSelectedTeam] = useState('');
   const [usersInTeam, setUsersInTeam] = useState([]);
   const [userOptions, setUserOptions] = useState([]); // List of users to be added to the team
@@ -101,7 +101,7 @@ const CatchTeamAssignment = ({ teams, data, handleSave, handleClose, processId }
         await API.post('/Transactions', postData);
       }
       
-      handleSave();
+      fetchTransactions()
       handleClose();
     } catch (error) {
       console.error('Error updating team:', error);
