@@ -274,6 +274,8 @@ const AddUsers = () => {
             <Form.Group>
               <Form.Label className={customDarkText}>{t('mobileNumber')}: <span style={{ color: 'red' }}>*</span></Form.Label>
               <Form.Control
+                maxLength={10}
+                minLength={10}
                 type="text"
                 name="mobileNo"
                 placeholder={t('enterMobileNumber')}
@@ -321,9 +323,10 @@ const AddUsers = () => {
           <Button variant="secondary" onClick={handleReset} className='custom-zoom-btn' style={{ width: '100px' }}>
             {t('reset')}
           </Button>
-          <Button
-            type="submit"
-            className={`ms-2 ${customBtn === "dark-dark" ? `${customBtn}  custom-zoom-btn ` : `${customBtn}  custom-zoom-btn`} ${areRequiredFieldsFilled() ? `border border-white` : `border-0`}`}
+          <Button 
+            type="submit" 
+            className={`ms-2 ${customBtn === "dark-dark" ? `${customBtn}  custom-zoom-btn ` : `${customBtn}  custom-zoom-btn`} ${areRequiredFieldsFilled() ? `border border-white` : `border-0`} text-white`} 
+
             disabled={!areRequiredFieldsFilled()}
             style={{ width: '100px' }}
           >

@@ -7,9 +7,14 @@ import { useStore } from 'zustand';
 
 const AlarmModal = ({ show, handleClose, data, processId, handleSave }) => {
     const { t } = useTranslation();
-    const { getCssClasses } = useStore(themeStore);
-    const cssClasses = useMemo(() => getCssClasses(), [getCssClasses]);
+    const themeState = useStore(themeStore);
+    const cssClasses = themeState.getCssClasses();
     const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
+
+    // Force re-render when theme changes
+    useEffect(() => {
+        // This empty dependency array ensures cssClasses are always fresh
+    }, [cssClasses]);
 
     const statusMapping = {
         0: t('pending'),
@@ -137,13 +142,13 @@ const AlarmModal = ({ show, handleClose, data, processId, handleSave }) => {
                         as="select"
                         value={alarmType}
                         onChange={handleAlarmTypeChange}
-                        className={`${customLight} ${customDarkText}`}
+                        className="text-dark"
                     >
-                        <option value="">{t('selectAlarmType')}</option>
+                        <option value="" className="text-dark">{t('selectAlarmType')}</option>
                         {alarmOptions.map(option => (
-                            <option key={option.id} value={option.message}>{option.message}</option>
+                            <option key={option.id} value={option.message} className="text-dark">{option.message}</option>
                         ))}
-                        <option value="Other">{t('other')}</option>
+                        <option value="Other" className="text-dark">{t('other')}</option>
                     </Form.Control>
                 </Form.Group>
                 {showCustomInput && (

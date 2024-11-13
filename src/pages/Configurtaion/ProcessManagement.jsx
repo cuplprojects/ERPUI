@@ -277,7 +277,7 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
                     onChange={e => setSearchText(e.target.value)}
                     style={{ width: 300 }}
                 />
-                <Button type="primary" onClick={() => showAddProcessModal()} className={`${customDark} text-white`}>
+                <Button type="primary" onClick={() => showAddProcessModal()} className={`${customDark} text-white `}>
                     {t('addNewProcess')}
                 </Button>
             </div>

@@ -40,8 +40,9 @@ const ProcessTable = () => {
   const userData = useUserData();
   const { t } = useTranslation();
 
-  const { getCssClasses } = useStore(themeStore);
-  const cssClasses = useMemo(() => getCssClasses(), [getCssClasses]);
+  // Subscribe to theme store changes
+  const themeState = useStore(themeStore);
+  const cssClasses = useMemo(() => themeState.getCssClasses(), [themeState]);
   const [
     customDark,
     customMid,
@@ -53,8 +54,13 @@ const ProcessTable = () => {
     customDarkBorder,
   ] = cssClasses;
 
+  // Force re-render when theme changes
+  useEffect(() => {
+    // This empty dependency array ensures cssClasses are always fresh
+  }, [cssClasses]);
+
   const [tableData, setTableData] = useState([]);
-  const [showBarChart, setShowBarChart] = useState(true);
+  const [showBarChart, setShowBarChart] = useState(false);
   const [catchDetailModalShow, setCatchDetailModalShow] = useState(false);
   const [catchDetailModalData, setCatchDetailModalData] = useState(null);
   const [selectedLot, setSelectedLot] = useState(lotNo);

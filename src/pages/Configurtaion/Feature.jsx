@@ -19,8 +19,10 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
     const [isEditingFeature, setIsEditingFeature] = useState(false);
     const [editingFeatureId, setEditingFeatureId] = useState(null);
     const [featureName, setFeatureName] = useState('');
+
     const [pageSize, setPageSize] = useState(5);
     const [currentPage, setCurrentPage] = useState(1);
+
     const [searchText, setSearchText] = useState('');
 
     // Fetch features
@@ -148,7 +150,7 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
             title: t('sn'), 
             dataIndex: 'key', 
             key: 'key',
-            width: '15%',
+            width: '8%',
             align: 'center',
             sorter: (a, b) => a.key - b.key
         },
@@ -161,21 +163,21 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
         },
         {
             title: t('actions'),
-            key: 'actions', 
-            width: '20%',
+
+            key: 'actions',
+            width: '10%',
             align: 'center',
             render: (text, record) => (
-                <div className="d-flex justify-content-center">
-                    <Button 
-                        icon={<EditOutlined />}
-                        onClick={() => showAddFeatureModal(record)}
-                        type="primary"
-                        size="large"
-                        className={`${customBtn} d-flex align-items-center justify-content-center gap-2`}
-                    >
-                        {t('edit')}
-                    </Button>
-                </div>
+                <Button 
+                    icon={<EditOutlined />} 
+                    onClick={() => showAddFeatureModal(record)}
+                    type="primary"
+                    size="large"
+                    className={`${customBtn} d-flex align-items-center gap-1`}
+                >
+                    {t('edit')}
+                </Button>
+
             ),
         },
     ];
@@ -224,8 +226,8 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
                     onShowSizeChange: (current, size) => {
                         setCurrentPage(1);
                         setPageSize(size);
+
                     },
-                    className: `bg-white p-3 rounded rounded-top-0`
                 }}
                 onChange={handleTableChange}
                 bordered
