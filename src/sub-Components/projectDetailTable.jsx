@@ -313,7 +313,7 @@ const ProjectDetailsTable = ({
             <Col lg={3} md={3} sm={3} xs={3}>
               <div className="d-inline">
                 {record.previousProcessData &&
-                record.previousProcessData.status === 2 ? (
+                  record.previousProcessData.status === 2 ? (
                   <IoCheckmarkDoneCircleSharp
                     size={20}
                     color="green"
@@ -389,80 +389,80 @@ const ProjectDetailsTable = ({
     },
     ...(columnVisibility["Interim Quantity"] && hasFeaturePermission(7)
       ? [
-          {
+        {
 
-            title: t("interimQuantity"),
-            dataIndex: "interimQuantity",
-            align: "center",
-            key: "interimQuantity",
-            sorter: (a, b) => a.interimQuantity - b.interimQuantity,
-          },
-        ]
+          title: t("interimQuantity"),
+          dataIndex: "interimQuantity",
+          align: "center",
+          key: "interimQuantity",
+          sorter: (a, b) => a.interimQuantity - b.interimQuantity,
+        },
+      ]
       : []),
     ...(columnVisibility.Remarks
       ? [
-          {
-            title: t("remarks"),
-            dataIndex: "remarks",
-            key: "remarks",
-            align: "center",
-            sorter: (a, b) => a.remarks.localeCompare(b.remarks),
-          },
-        ]
+        {
+          title: t("remarks"),
+          dataIndex: "remarks",
+          key: "remarks",
+          align: "center",
+          sorter: (a, b) => a.remarks.localeCompare(b.remarks),
+        },
+      ]
       : []),
     ...(columnVisibility["Team Assigned"] && hasFeaturePermission(5)
       ? [
-          {
-            title: t("teamAssigned"),
+        {
+          title: t("teamAssigned"),
 
-            dataIndex: "teamUserNames",
-            // width: '20%',
-            align: "center",
-            key: "teamUserNames",
+          dataIndex: "teamUserNames",
+          // width: '20%',
+          align: "center",
+          key: "teamUserNames",
 
-            sorter: (a, b) => a.teamUserNames - b.teamUserNames,
-          },
-        ]
+          sorter: (a, b) => a.teamUserNames - b.teamUserNames,
+        },
+      ]
       : []),
     ...(columnVisibility["Course"] && hasFeaturePermission(13)
       ? [
-          {
-            title: t("course"),
+        {
+          title: t("course"),
 
-            dataIndex: "course",
-            // width: '20%',
-            align: "center",
-            key: "course",
+          dataIndex: "course",
+          // width: '20%',
+          align: "center",
+          key: "course",
 
-            sorter: (a, b) => a.course - b.course,
-          },
-        ]
+          sorter: (a, b) => a.course - b.course,
+        },
+      ]
       : []),
     ...(columnVisibility["Subject"] && hasFeaturePermission(14)
       ? [
-          {
-            title: t("subject"),
-            dataIndex: "subject",
-            width: "20%",
-            align: "center",
-            key: "subject",
+        {
+          title: t("subject"),
+          dataIndex: "subject",
+          width: "20%",
+          align: "center",
+          key: "subject",
 
-            sorter: (a, b) => a.subject - b.subject,
-          },
-        ]
+          sorter: (a, b) => a.subject - b.subject,
+        },
+      ]
       : []),
     ...(columnVisibility["Paper"] && hasFeaturePermission(15)
       ? [
-          {
-            title: t("questionPaper"),
+        {
+          title: t("questionPaper"),
 
-            dataIndex: "paper",
-            width: "20%",
-            align: "center",
-            key: "paper",
-            sorter: (a, b) => a.paper - b.paper,
-          },
-        ]
+          dataIndex: "paper",
+          width: "20%",
+          align: "center",
+          key: "paper",
+          sorter: (a, b) => a.paper - b.paper,
+        },
+      ]
       : []),
     {
       title: t("status"),
@@ -524,9 +524,9 @@ const ProjectDetailsTable = ({
           isPreviousProcessCompleted &&
           (hasSelectMachinePermission
             ? record.machineId !== 0 &&
-              record.machineId !== null &&
-              isZoneAssigned &&
-              isTeamAssigned
+            record.machineId !== null &&
+            isZoneAssigned &&
+            isTeamAssigned
             : isZoneAssigned && isTeamAssigned);
 
         const canBeCompleted = record.interimQuantity === record.quantity;
@@ -836,6 +836,7 @@ const ProjectDetailsTable = ({
   );
 
   const customPagination = {
+    className: "bg-white p-3 rounded rounded-top-0",
     current: currentPage,
     pageSize,
     pageSizeOptions: [5, 10, 25, 50, 100],
@@ -957,11 +958,10 @@ const ProjectDetailsTable = ({
                   padding: 0,
                   width: "30px",
                 }}
-                className={`p- border ${
-                  customDark === "dark-dark"
+                className={`p- border ${customDark === "dark-dark"
                     ? `${customDark} text-white`
                     : "bg-white"
-                }`}
+                  }`}
               >
                 <FaFilter size={20} className={`${customDarkText}`} />
               </Button>
@@ -974,11 +974,10 @@ const ProjectDetailsTable = ({
           {selectedRowKeys.length > 1 && getSelectedStatus() !== null && (
             <div className="mt-1 d-flex align-items-center">
               <span
-                className={`me-2 ${
-                  customDark === "dark-dark"
+                className={`me-2 ${customDark === "dark-dark"
                     ? "text-white"
                     : "custom-theme-dark-text"
-                } fs-6 fw-bold`}
+                  } fs-6 fw-bold`}
               >
                 Update Status:
               </span>
@@ -1081,9 +1080,8 @@ const ProjectDetailsTable = ({
               >
                 <PiDotsNineBold
                   size={30}
-                  className={` ${
-                    customDark === "dark-dark" ? "text-white" : customDarkText
-                  }`}
+                  className={` ${customDark === "dark-dark" ? "text-white" : customDarkText
+                    }`}
                 />
               </Button>
             </Dropdown>
@@ -1095,46 +1093,38 @@ const ProjectDetailsTable = ({
           <Table
             rowClassName={rowClassName}
             className={`${customDark === "default-dark" ? "thead-default" : ""}
-                                    ${
-                                      customDark === "red-dark"
-                                        ? "thead-red"
-                                        : ""
-                                    }
-                                    ${
-                                      customDark === "green-dark"
-                                        ? "thead-green"
-                                        : ""
-                                    }
-                                    ${
-                                      customDark === "blue-dark"
-                                        ? "thead-blue"
-                                        : ""
-                                    }
-                                    ${
-                                      customDark === "dark-dark"
-                                        ? "thead-dark"
-                                        : ""
-                                    }
-                                    ${
-                                      customDark === "pink-dark"
-                                        ? "thead-pink"
-                                        : ""
-                                    }
-                                    ${
-                                      customDark === "purple-dark"
-                                        ? "thead-purple"
-                                        : ""
-                                    }
-                                    ${
-                                      customDark === "light-dark"
-                                        ? "thead-light"
-                                        : ""
-                                    }
-                                    ${
-                                      customDark === "brown-dark"
-                                        ? "thead-brown"
-                                        : ""
-                                    } `}
+                                    ${customDark === "red-dark"
+                ? "thead-red"
+                : ""
+              }
+                                    ${customDark === "green-dark"
+                ? "thead-green"
+                : ""
+              }
+                                    ${customDark === "blue-dark"
+                ? "thead-blue"
+                : ""
+              }
+                                    ${customDark === "dark-dark"
+                ? "thead-dark"
+                : ""
+              }
+                                    ${customDark === "pink-dark"
+                ? "thead-pink"
+                : ""
+              }
+                                    ${customDark === "purple-dark"
+                ? "thead-purple"
+                : ""
+              }
+                                    ${customDark === "light-dark"
+                ? "thead-light"
+                : ""
+              }
+                                    ${customDark === "brown-dark"
+                ? "thead-brown"
+                : ""
+              } `}
             rowKey="srNo"
             columns={columns}
             dataSource={filteredData}

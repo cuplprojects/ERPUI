@@ -10,7 +10,8 @@ const { Text } = Typography;
 
 
 const CatchDetailModal = ({ show, handleClose, data, processId, fetchTransaction }) => {
-
+    const { t } = useTranslation();
+    
     const [isPlaying, setIsPlaying] = useState(false);
     const [audioElement, setAudioElement] = useState(null);
 
