@@ -19,6 +19,7 @@ import { EditOutlined, CloseOutlined } from '@ant-design/icons';
 const Labels = () => {
   const [labels, setLabels] = useState([]);
   const [formData, setFormData] = useState({
+    textLabelId: '',
     labelKey: '',
     englishLabel: '',
     hindiLabel: '',
@@ -131,7 +132,7 @@ const Labels = () => {
   };
 
   const handleAdd = () => {
-    setFormData({ labelKey: '', englishLabel: '', hindiLabel: '' });
+    setFormData({ textLabelId: '', labelKey: '', englishLabel: '', hindiLabel: '' });
     setShowAddForm(true);
     setShowAlert(false);
   };
@@ -165,7 +166,20 @@ const Labels = () => {
       {(showEditForm || showAddForm) && (
         <Form onSubmit={handleSubmit}>
           <Row>
-            <Col md={4}>
+            {showEditForm && (
+              <Col md={1}>
+                <Form.Group className="mb-3" controlId="textLabelId">
+                  <Form.Label className={customDarkText}>ID</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="textLabelId"
+                    value={formData.textLabelId}
+                    readOnly
+                  />
+                </Form.Group>
+              </Col>
+            )}
+            <Col md={3}>
               <Form.Group className="mb-3" controlId="labelKey">
                 <Form.Label className={customDarkText}>Key</Form.Label>
                 <Form.Control
