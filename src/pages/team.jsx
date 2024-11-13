@@ -275,6 +275,7 @@ const getProcesses = async () => {
           <Button onClick={() => setIsModalVisible(true)} size="large" className={`${customBtn} ${customDark === "dark-dark" ? `border` : `border-0`}`}>
             {t('addTeam')}
           </Button>
+
           <div className="d-flex align-items-center" style={{ width: '300px' }}>
             <Input
               placeholder={t('searchTeams')}
@@ -290,6 +291,7 @@ const getProcesses = async () => {
               <FaSearch size={20}/>
             </Button>
           </div>
+
         </div>
 
         <Divider className={`fs-3 ${customDarkText}`}>{t('existingTeams')}</Divider>

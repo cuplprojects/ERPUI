@@ -34,7 +34,7 @@ const AddUsers = () => {
   const [formData, setFormData] = useState(initialState);
   const [userDetails, setUserDetails] = useState({ userName: '', password: '' });
   const [showModal, setShowModal] = useState(false);
-
+  const [message, setMessage] = useState(false);
   const [roles, setRoles] = useState([]);
 
   const handleCloseModal = () => {
@@ -160,6 +160,24 @@ const AddUsers = () => {
     return hasAtLeastTwoNumbers && isCorrectLength && isNotAllAlphabets;
   };
 
+  const handleMobileNumberChange = (event) => {
+    let value = event.target.value.replace(/\D/g, ''); // Allow only numbers
+
+    if (value.length > 10) {
+      value = value.slice(0, 10); // Truncate if there are more than 10 digits
+    }
+
+    setFormData({ ...formData, mobileNo: value });
+
+    // Mobile number validation
+    if (value.length !== 10) {
+      setMessage(t('mobileNumberMustBeExactly10Digits'));
+    } else {
+      setMessage(''); // Clear message when valid
+    }
+  };
+
+
   // Function to handle reset
   const handleReset = () => {
     setFormData(initialState); // Reset to the initial state
@@ -170,7 +188,7 @@ const AddUsers = () => {
     <div style={{ padding: '20px', borderRadius: '8px' }}>
       <h4 className={`${customDarkText}`}>{t('addUsers')}</h4>
       <Form onSubmit={handleSubmit}>
-        {/* First Row: First Name, Middle Name, Last Name */} 
+        {/* First Row: First Name, Middle Name, Last Name */}
         <Row className="mb-3">
           <Col xs={12} md={4}>
             <Form.Group>
@@ -262,10 +280,7 @@ const AddUsers = () => {
                 name="mobileNo"
                 placeholder={t('enterMobileNumber')}
                 value={formData.mobileNo}
-                onChange={(event) => {
-                  const value = event.target.value.replace(/\D/g, ''); // Remove non-numeric characters
-                  setFormData({ ...formData, mobileNo: value });
-                }}
+                onChange={handleMobileNumberChange}
                 required
               />
             </Form.Group>
@@ -311,6 +326,7 @@ const AddUsers = () => {
           <Button 
             type="submit" 
             className={`ms-2 ${customBtn === "dark-dark" ? `${customBtn}  custom-zoom-btn ` : `${customBtn}  custom-zoom-btn`} ${areRequiredFieldsFilled() ? `border border-white` : `border-0`} text-white`} 
+
             disabled={!areRequiredFieldsFilled()}
             style={{ width: '100px' }}
           >
@@ -319,12 +335,12 @@ const AddUsers = () => {
         </div>
       </Form>
       <div>
-      <ToastContainer style={{marginTop:"50px"}} autoClose={2000}/>
+        <ToastContainer style={{ marginTop: "50px" }} autoClose={2000} />
       </div>
       <SuccessModal
         show={showModal} username={userDetails.userName} password={userDetails.password} onClose={handleCloseModal} fullName={displayName}
       />
-    </div> 
+    </div>
   );
 };
 export default AddUsers;
