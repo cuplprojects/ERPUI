@@ -69,6 +69,7 @@ const Group = () => {
       await API.post('/Groups', newGroup);
       setGroups([...groups, newGroup]);
       setFilteredGroups([...filteredGroups, newGroup]);
+      fetchGroups();
       form.resetFields();
       setIsModalVisible(false);
       message.success(t('groupAddedSuccessfully'));
@@ -99,6 +100,7 @@ const Group = () => {
       setFilteredGroups(updatedGroups.filter(group =>
         group.name.toLowerCase().includes(searchText.toLowerCase())
       ));
+      fetchGroups();
       message.success(t('groupUpdatedSuccessfully'));
     } catch (error) {
       message.error(t('failedToUpdateGroup'));
