@@ -109,7 +109,6 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
                         value = 'N/A';
                 }
             }
-
             return {
                 key: index,
                 label: formatKey(key),
