@@ -596,60 +596,80 @@ const ProjectDetailsTable = ({
   };
 
   const handleStatusChange = async (newStatus) => {
-    const statusSteps = ["Pending", "Started", "Completed"];
-    const newStatusIndex = statusSteps.indexOf(newStatus);
+        const statusSteps = ["Pending", "Started", "Completed"];
+        const newStatusIndex = statusSteps.indexOf(newStatus);
 
-    // Check if all selected rows have completed previous process or no previous process
-    const allPreviousCompleted = selectedRowKeys.every((key) => {
-      const row = tableData.find((row) => row.catchNumber === key);
-      return (
-        !row.previousProcessData?.status == 2 ||
-        row.previousProcessData === null ||
-        row.previousProcessData.status === 2
-      );
-    });
+        // Check if all selected rows have completed previous process or no previous process
+        const allPreviousCompleted = selectedRowKeys.every(key => {
+            const row = tableData.find(row => row.srNo === key); // Changed from catchNumber to srNo
+            return !row.previousProcessData || row.previousProcessData.status === 2;
+        });
 
-    if (!allPreviousCompleted) {
-      alert(
-        "Cannot change status - previous process must be completed for all selected items"
-      );
-      return;
-    }
+        if (!allPreviousCompleted) {
+            alert("Cannot change status - previous process must be completed for all selected items");
+            return;
+        }
 
-    // Iterate over selectedRowKeys and update status
-    const updates = selectedRowKeys.map(async (key) => {
-      const updatedRow = tableData.find((row) => row.srNo === key);
-      if (updatedRow) {
-        const postData = {
-          transactionId: updatedRow.transactionId || 0,
-          interimQuantity: updatedRow?.interimQuantity || 0,
-          remarks: updatedRow?.remarks || "",
-          projectId: projectId,
-          quantitysheetId: updatedRow?.srNo || 0,
-          processId: processId,
-          zoneId: updatedRow?.zoneId || 0,
-          status: newStatusIndex,
-          alarmId: updatedRow?.alarmId || "",
-          machineId: updatedRow?.machineId || 0,
-          lotNo: updatedRow?.lotNo || lotNo,
-          voiceRecording: updatedRow?.voiceRecording || "",
-          teamId: updatedRow?.teamId || [],
-        };
+        // Check if trying to set status to Completed when interimQuantity != quantity for any row
+        if (newStatusIndex === 2) {
+            const hasIncompleteQuantity = selectedRowKeys.some(key => {
+                const row = tableData.find(row => row.srNo === key);
+                return row.interimQuantity !== row.quantity;
+            });
+
+            if (hasIncompleteQuantity) {
+                alert("Cannot set status to Completed - Interim Quantity must equal Quantity for all selected items");
+                return;
+            }
+        }
+
+        // Iterate over selectedRowKeys and update status
+        const updates = selectedRowKeys.map(async (key) => {
+            const updatedRow = tableData.find(row => row.srNo === key);
+            if (updatedRow) {
+                // Fetch existing transaction data if transactionId exists
+                let existingTransactionData;
+                if (updatedRow.transactionId) {
+                    try {
+                        const response = await API.get(`/Transactions/${updatedRow.transactionId}`);
+                        existingTransactionData = response.data;
+                    } catch (error) {
+                        console.error(`Error fetching transaction data for ${key}:`, error);
+                    }
+                }
+
+                const postData = {
+                    transactionId: updatedRow.transactionId || 0,
+                    interimQuantity: existingTransactionData ? existingTransactionData.interimQuantity : 0,
+                    remarks: existingTransactionData ? existingTransactionData.remarks : "",
+                    projectId: projectId,
+                    quantitysheetId: updatedRow.srNo,
+                    processId: processId,
+                    zoneId: existingTransactionData ? existingTransactionData.zoneId : (updatedRow.zoneId || 0),
+                    machineId: existingTransactionData ? existingTransactionData.machineId : (updatedRow.machineId || 0),
+                    status: newStatusIndex,
+                    alarmId: existingTransactionData ? existingTransactionData.alarmId : (updatedRow.alarmId || ""),
+                    teamId: existingTransactionData ? existingTransactionData.teamId : (updatedRow.teamId || []),
+                    lotNo: existingTransactionData ? existingTransactionData.lotNo : lotNo,
+                    voiceRecording: existingTransactionData ? existingTransactionData.voiceRecording : ""
+                };
+
+                try {
+                    await API.post('/Transactions', postData);
+                } catch (error) {
+                    console.error(`Error updating status for ${key}:`, error);
+                }
+            }
+        });
 
         try {
-          // Always use POST regardless of whether transaction exists or not
-          await API.post("/Transactions", postData);
+            await Promise.all(updates);
+            clearSelections();
+            await fetchTransactions(); // Refresh data after all updates are complete
         } catch (error) {
-          console.error(`Error updating status for ${key}:`, error);
+            console.error('Error updating statuses:', error);
         }
-      }
-    });
-
-    // Wait for all updates to finish
-    await Promise.all(updates);
-    clearSelections();
-    fetchTransactions();
-  };
+    };
 
   const getSelectedStatus = () => {
     if (selectedRowKeys.length > 0) {
