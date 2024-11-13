@@ -9,9 +9,9 @@ const { TextArea } = Input;
 const { Text } = Typography;
 
 
-const CatchDetailModal = ({ show, handleClose, data, processId, fetchTransaction , handleSave }) => {
+const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) => {
     const { t } = useTranslation();
-    
+
     const [isPlaying, setIsPlaying] = useState(false);
     const [audioElement, setAudioElement] = useState(null);
 
