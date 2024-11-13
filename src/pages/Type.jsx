@@ -307,21 +307,18 @@ const Type = () => {
             <h2 className={`${customDarkText}`}>{t("projectType")}</h2>
             <div style={{
                 display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
                 justifyContent: 'space-between',
-                alignItems: 'center',
+                alignItems: isMobile ? 'flex-start' : 'center',
+                gap: isMobile ? '10px' : '0',
                 marginBottom: isMobile ? '10px' : '20px'
             }}>
                 <Search
                     placeholder={t("searchTypesOrProcesses")}
                     allowClear
                     onChange={(e) => handleSearch(e.target.value)}
-                    style={{ width: 300 }}
+                    style={{ width: isMobile ? '100%' : 300 }}
                 />
-
-                <Button className={`${customBtn} border-0 custom-zoom-btn d-flex align-items-center gap-1`} onClick={() => setIsModalVisible(true)}>
-                    {t("addType")}
-                </Button>
-
             </div>
 
             {loading ? (
