@@ -91,11 +91,27 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
             if (key === 'percentageCatch' && value !== null && value !== undefined) {
                 value = Number(value).toFixed(2) + '%'; //add percentage symbol
             }
+            // Convert status numbers to text
+            if (key === 'status') {
+                switch (value) {
+                    case 0:
+                        value = 'Pending';
+                        break;
+                    case 1:
+                        value = 'Started';
+                        break;
+                    case 2:
+                        value = 'Completed';
+                        break;
+                    default:
+                        value = 'N/A';
+                }
+            }
 
             return {
                 key: index,
                 label: formatKey(key),
-                value: value || 'NA',
+                value: value || `No ${key}`,
             };
         });
 
