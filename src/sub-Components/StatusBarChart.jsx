@@ -19,9 +19,9 @@ const StatusBarChart = ({ data, catchNumbers }) => {
 
   const getItemsPerPage = () => {
     const width = window.innerWidth;
-    if (width >= 1200) return 10;  // Large screens
-    if (width >= 768) return 8;    // Medium screens
-    return 5;                       // Extra small screens
+    if (width >= 1200) return 30;  // Large screens
+    if (width >= 768) return 20;   // Medium/tablet screens
+    return 10;                     // Mobile screens
   };
 
   const itemsPerPage = getItemsPerPage();
