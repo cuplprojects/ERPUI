@@ -540,7 +540,7 @@ const ProjectDetailsTable = ({
                 }))}
                 disabled={
                   !canChangeStatus ||
-                  (initialStatusIndex === 2 && !canBeCompleted)
+                  (initialStatusIndex === 1 && !canBeCompleted)
                 } // Disable the toggle if status can't be changed (based on Select Machine or Zone/Team)
               />
             )}
