@@ -9,37 +9,15 @@ import { useStore } from 'zustand';
 import themeStore from '../store/themeStore';
 import { Modal as BootstrapModal } from 'react-bootstrap';
 
-const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots = [], selectedLotNo, fetchQuantity }) => {
+const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots = [], selectedLotNo, fetchQuantity, dispatchedLots = [] }) => {
     const { t } = useTranslation();
     const [selectedLot, setSelectedLot] = useState(null);
     const { encryptedProjectId } = useParams();
     const projectId = decrypt(encryptedProjectId);
     const [projectName, setProjectName] = useState('');
-    const [dispatchedLots, setDispatchedLots] = useState([]);
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = getCssClasses();
     const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
-
-    useEffect(() => {
-        const fetchDispatchedLots = async () => {
-            try {
-                const response = await API.get(`/Dispatch/project/${projectId}`);
-                const dispatchedLotNos = response.data.map(dispatch => dispatch.lotNo);
-                setDispatchedLots(dispatchedLotNos);
-            } catch (error) {
-                console.error('Failed to fetch dispatched lots:', error);
-            }
-        };
-
-        if (visible) {
-            fetchDispatchedLots();
-        }
-    }, [projectId, visible]);
-
-    // Filter out the current lot and dispatched lots from available lots
-    const availableLots = lots.filter(lot => 
-        lot !== selectedLotNo && !dispatchedLots.includes(lot)
-    );
 
     useEffect(() => {
         const fetchProjectName = async () => {
@@ -55,6 +33,11 @@ const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots =
             fetchProjectName();
         }
     }, [projectId, visible]);
+
+    // Filter out the current lot and dispatched lots from available lots
+    const availableLots = lots.filter(lot => 
+        lot !== selectedLotNo && !dispatchedLots.includes(lot)
+    );
 
     const handleTransfer = async () => {
         if (!selectedLot) return;
