@@ -73,6 +73,7 @@ const FeatureConfiguration = () => {
             title: 'Process Name',
             dataIndex: 'name',
             key: 'name',
+            fixed: 'left',
             render: (text) => <span style={{ fontWeight: 'bold' }}>{text || 'Unnamed Process'}</span>,
         },
         ...features.map(feature => ({
@@ -96,20 +97,21 @@ const FeatureConfiguration = () => {
 
     return (
         <div className="feature-configuration-container">
-           
-            <Table
-                rowKey="id"
-                dataSource={processes}
-                columns={columns}
-                pagination={false}
-                bordered
-                style={{ 
-                    boxShadow: '0 4px 8px 0 rgba(0,0,0,0.2)',
-                    borderRadius: '8px',
-                    overflow: 'hidden',
-                    
-                }}
-            />
+            <div style={{ width: '100%', overflowX: 'auto' }}>
+                <Table
+                    rowKey="id"
+                    dataSource={processes}
+                    columns={columns}
+                    pagination={false}
+                    bordered
+                    scroll={{ x: true }}
+                    style={{ 
+                        boxShadow: '0 4px 8px 0 rgba(0,0,0,0.2)',
+                        borderRadius: '8px',
+                        overflow: 'hidden',
+                    }}
+                />
+            </div>
         </div>
     );
 };

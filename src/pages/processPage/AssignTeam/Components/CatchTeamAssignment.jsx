@@ -42,9 +42,7 @@ const CatchTeamAssignment = ({ teams, data, handleSave, handleClose, processId }
  // Notify parent component about the selected team
   };
 
-  const handleRemoveUser = (userId) => {
-    setUsersInTeam(usersInTeam.filter(user => user.userId !== userId)); // Remove the user from the array
-  };
+
 
   const handleRemoveUser = (userId) => {
     setUsersInTeam(usersInTeam.filter(user => user.userId !== userId)); // Remove the user from the array
