@@ -173,11 +173,13 @@ const ProjectDetailsTable = ({
     const alertsCondition = showOnlyAlerts
       ? item.alerts && item.alerts.trim() !== ""
       : true;
+     const previousProcessCondition = showOnlyCompletedPreviousProcess ? (!item.previousProcessData || item.previousProcessData.status === 2) : true;
+
     return (
       matchesSearchText &&
       statusCondition &&
       remarksCondition &&
-      alertsCondition
+      alertsCondition && previousProcessCondition
     );
   });
 
