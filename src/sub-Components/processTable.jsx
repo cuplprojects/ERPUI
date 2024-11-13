@@ -572,7 +572,7 @@ const ProcessTable = () => {
         </Col>
       </Row>
 
-      { processName !== "Dispatch" || true && (
+      { processName !== "Dispatch"  && (
         <Row className="mb-5">
           <Col lg={12} md={12}>
           <CatchProgressBar data={combinedTableData} />
@@ -610,7 +610,7 @@ const ProcessTable = () => {
         </Col>
       </Row>
 
-      {processName === "Dispatch" || true ? (
+      {processName === "Dispatch" ? (
         <DispatchPage
           projectId={selectedProject?.value || id}
           processId={processId}
