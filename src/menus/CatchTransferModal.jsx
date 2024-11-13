@@ -15,12 +15,31 @@ const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots =
     const { encryptedProjectId } = useParams();
     const projectId = decrypt(encryptedProjectId);
     const [projectName, setProjectName] = useState('');
+    const [dispatchedLots, setDispatchedLots] = useState([]);
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = getCssClasses();
     const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
 
-    // Filter out the current lot from available lots
-    const availableLots = lots.filter(lot => lot !== selectedLotNo);
+    useEffect(() => {
+        const fetchDispatchedLots = async () => {
+            try {
+                const response = await API.get(`/Dispatch/project/${projectId}`);
+                const dispatchedLotNos = response.data.map(dispatch => dispatch.lotNo);
+                setDispatchedLots(dispatchedLotNos);
+            } catch (error) {
+                console.error('Failed to fetch dispatched lots:', error);
+            }
+        };
+
+        if (visible) {
+            fetchDispatchedLots();
+        }
+    }, [projectId, visible]);
+
+    // Filter out the current lot and dispatched lots from available lots
+    const availableLots = lots.filter(lot => 
+        lot !== selectedLotNo && !dispatchedLots.includes(lot)
+    );
 
     useEffect(() => {
         const fetchProjectName = async () => {
