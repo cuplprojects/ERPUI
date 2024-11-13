@@ -165,7 +165,6 @@ const Zone = () => {
             value={editingZone.zoneNo || record.zoneNo}
             onChange={(e) => setEditingZone({ ...editingZone, zoneNo: e.target.value })}
             onPressEnter={() => handleEditZone(index)}
-            onBlur={() => handleEditZone(index)}
           />
         ) : (
           <span onClick={() => {
@@ -186,7 +185,6 @@ const Zone = () => {
             value={editingZone.zoneDescription || record.zoneDescription}
             onChange={(e) => setEditingZone({ ...editingZone, zoneDescription: e.target.value })}
             onPressEnter={() => handleEditZone(index)}
-            onBlur={() => handleEditZone(index)}
             style={{ resize: 'none' }}
             rows={1}
             cols={1}
@@ -210,7 +208,6 @@ const Zone = () => {
             mode="multiple"
             value={editingZone.cameraIds || record.cameraIds}
             onChange={(value) => setEditingZone({ ...editingZone, cameraIds: value })}
-            onBlur={() => handleEditZone(index)}
           >
             {camera.map(cam => (
               <Option key={cam.cameraId} value={cam.cameraId} disabled={zones.some(zone => zone.zoneId !== record.zoneId && zone.cameraIds.includes(cam.cameraId))}>
@@ -237,7 +234,7 @@ const Zone = () => {
             mode="multiple"
             value={editingZone.machineId || record.machineId}
             onChange={(value) => setEditingZone({ ...editingZone, machineId: value })}
-            onBlur={() => handleEditZone(index)}
+
           >
             {machine.map(mach => (
               <Option key={mach.machineId} value={mach.machineId}>

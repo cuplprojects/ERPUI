@@ -137,7 +137,6 @@ const Machine = () => {
             value={editingValue}
             onChange={(e) => setEditingValue(e.target.value)}
             onPressEnter={() => handleEditSave(index)}
-            onBlur={() => handleEditSave(index)}
           />
         ) : (
           <span>{text}</span>
