@@ -186,7 +186,7 @@ const DispatchPage = ({ projectId, processId, lotNo, fetchTransactions }) => {
       ) : (
         <Col xs={12} md={6}>
           <Card className={customLight}>
-            <div className={`text-center p-3 ${customDarkText}`}>
+            <div className={`text-center p-3 ${customDarkText} fs-4 fw-bold`}>
               {t("noDispatchData")}
             </div>
           </Card>
