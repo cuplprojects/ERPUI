@@ -713,6 +713,7 @@ const ProjectDetailsTable = ({
     });
     setTableData(updatedData);
     setSelectedRowKeys([]); // Deselect all rows
+    setSelectAll(false);
     setShowOptions(false); // Reset options visibility
     fetchTransactions();
   };
@@ -726,6 +727,7 @@ const ProjectDetailsTable = ({
     });
     setTableData(updatedData);
     setSelectedRowKeys([]); // Deselect all rows
+    setSelectAll(false);
     setShowOptions(false); // Reset options visibility
     fetchTransactions();
   };
@@ -739,6 +741,7 @@ const ProjectDetailsTable = ({
     });
     setTableData(updatedData);
     setSelectedRowKeys([]); // Deselect all rows
+    setSelectAll(false);
     setShowOptions(false); // Reset options visibility
   };
 
@@ -751,6 +754,7 @@ const ProjectDetailsTable = ({
     });
     setTableData(updatedData);
     setSelectedRowKeys([]); // Deselect all rows
+    setSelectAll(false);
     setShowOptions(false); // Reset options visibility
     fetchTransactions();
   };
@@ -765,6 +769,7 @@ const ProjectDetailsTable = ({
     });
     setTableData(updatedData);
     setSelectedRowKeys([]); // Deselect all rows
+    setSelectAll(false);
     setShowOptions(false); // Reset options visibility
     fetchTransactions();
   };
@@ -778,6 +783,7 @@ const ProjectDetailsTable = ({
     });
     setTableData(updatedData);
     setSelectedRowKeys([]); // Deselect all rows
+    setSelectAll(false);
     setShowOptions(false); // Reset options visibility
     fetchTransactions();
   };
@@ -791,6 +797,7 @@ const ProjectDetailsTable = ({
         });
         setTableData(updatedData);
         setSelectedRowKeys([]); // Deselect all rows
+    setSelectAll(false);
         setShowOptions(false); // Reset options visibility
         fetchTransactions();
     }
