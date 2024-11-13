@@ -785,51 +785,37 @@ const ProjectDetailsTable = ({
   const isStarted = selectedRows.every((row) => row.status == 1);
 
   const menu = (
-    <Menu>
-      {hasFeaturePermission(3) && !isCompleted && (
-        <Menu.Item onClick={() => handleDropdownSelect("Alarm")}>
-          {t("alarm")}
-        </Menu.Item>
-      )}
-      {hasFeaturePermission(7) && !isCompleted && isStarted && (
-        <Menu.Item onClick={() => handleDropdownSelect("Interim Quantity")}>
-          {t("interimQuantity")}
-        </Menu.Item>
-      )}
-      {!isCompleted && (
-        <Menu.Item onClick={() => handleDropdownSelect("Remarks")}>
-          {t("remarks")}
-        </Menu.Item>
-      )}
-      <Menu.Item onClick={() => setColumnModalShow(true)}>
-        {t("columns")}
-      </Menu.Item>
-      {hasFeaturePermission(4) && (
-        <Menu.Item
-          onClick={() => handleDropdownSelect("Select Zone")}
-          disabled={selectedRowKeys.length === 0}
-        >
-          {t("selectZone")}
-        </Menu.Item>
-      )}
-      {hasFeaturePermission(10) && (
-        <Menu.Item
-          onClick={() => handleDropdownSelect("Select Machine")}
-          disabled={selectedRowKeys.length === 0}
-        >
-          {t("selectMachine")}
-        </Menu.Item>
-      )}
-      {hasFeaturePermission(5) && (
-        <Menu.Item
-          onClick={() => handleDropdownSelect("Assign Team")}
-          disabled={selectedRowKeys.length === 0}
-        >
-          {t("assignTeam")}
-        </Menu.Item>
-      )}
-    </Menu>
-  );
+        <Menu>
+            {hasFeaturePermission(3) && !isCompleted && selectedRowKeys.length === 1 && (
+                <Menu.Item onClick={() => handleDropdownSelect('Alarm')}>
+                    {t("alarm")}
+                </Menu.Item>
+            )}
+            {hasFeaturePermission(7) && !isCompleted && isStarted && selectedRowKeys.length === 1 && (
+                <Menu.Item onClick={() => handleDropdownSelect('Interim Quantity')}>
+                    {t("interimQuantity")}
+                </Menu.Item>
+            )}
+            {!isCompleted && selectedRowKeys.length === 1 && (
+                <Menu.Item onClick={() => handleDropdownSelect('Remarks')}>
+                    {t("remarks")}
+                </Menu.Item>
+            )}
+            <Menu.Item onClick={() => setColumnModalShow(true)}>{t("columns")}</Menu.Item>
+            {hasFeaturePermission(4) && (
+                <Menu.Item onClick={() => handleDropdownSelect('Select Zone')}
+                    disabled={selectedRowKeys.length === 0}>{t("selectZone")}</Menu.Item>
+            )}
+            {hasFeaturePermission(10) && (
+                <Menu.Item onClick={() => handleDropdownSelect('Select Machine')}
+                    disabled={selectedRowKeys.length === 0}>{t("selectMachine")}</Menu.Item>
+            )}
+            {hasFeaturePermission(5) && (
+                <Menu.Item onClick={() => handleDropdownSelect('Assign Team')}
+                    disabled={selectedRowKeys.length === 0}>{t('assignTeam')}</Menu.Item>
+            )}
+        </Menu>
+    );
 
   const customPagination = {
     className: "bg-white p-3 rounded rounded-top-0",
