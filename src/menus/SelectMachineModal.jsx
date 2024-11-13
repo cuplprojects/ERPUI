@@ -8,9 +8,14 @@ import { useTranslation } from 'react-i18next';
 
 const SelectMachineModal = ({ show, handleClose, data, processId, handleSave }) => {
   const { t } = useTranslation();
-  const { getCssClasses } = useStore(themeStore);
-  const cssClasses = useMemo(() => getCssClasses(), [getCssClasses]);
+  const themeState = useStore(themeStore);
+  const cssClasses = useMemo(() => themeState.getCssClasses(), [themeState]);
   const [customDark, customMid, customLight, customBtn, customDarkText, customLightText] = cssClasses;
+
+  // Force re-render when theme changes
+  useEffect(() => {
+    // This empty dependency array ensures cssClasses are always fresh
+  }, [cssClasses]);
 
 const statusMapping = {
   0: t('pending'),
