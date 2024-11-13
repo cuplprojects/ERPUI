@@ -207,6 +207,11 @@ const ProjectDetailsTable = ({
       return;
     }
 
+     if (newStatusIndex === 2 && updatedRow.interimQuantity !== updatedRow.quantity) {
+            alert("Cannot set status to Completed - Interim Quantity must equal Quantity");
+            return;
+        }
+
     try {
       // Fetch the existing transaction data if transactionId exists
       let existingTransactionData;
