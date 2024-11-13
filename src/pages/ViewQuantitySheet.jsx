@@ -151,7 +151,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
             sorter: (a, b) => a.quantity - b.quantity,
         },
         {
-            title: t('process'),
+            title: t('Process'),
             dataIndex: 'processId',
             key: 'processId',
             width: 100,
