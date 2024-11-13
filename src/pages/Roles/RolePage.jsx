@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Card, Table, Input, Switch, message } from 'antd';
+import { Button, Card, Table, Input, Switch, message, Tabs } from 'antd';
 import { Modal } from 'react-bootstrap';
 import { EditOutlined } from '@ant-design/icons';
 import themeStore from '../../store/themeStore';
@@ -8,6 +8,8 @@ import Permissions from './Permissions';
 import API from '../../CustomHooks/MasterApiHooks/api';
 import { AiFillCloseSquare } from "react-icons/ai";
 import { useTranslation } from 'react-i18next';
+
+const { TabPane } = Tabs;
 
 const RolesAndDepartments = () => {
   const { t } = useTranslation();
@@ -22,18 +24,19 @@ const RolesAndDepartments = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
 
-  useEffect(() => {
-    fetchRoles();
-  }, []);
-
   const fetchRoles = async () => {
     try {
       const response = await API.get('/Roles');
-      setRoles(response.data); // Assuming response contains all roles data
+      console.log(response.data);
+      setRoles(response.data);
     } catch (error) {
       console.error('Failed to fetch roles');
     }
   };
+
+  useEffect(() => {
+    fetchRoles();
+  }, []);
 
   // Handle page change
   const handlePaginationChange = (page, pageSize) => {
@@ -89,6 +92,7 @@ const RolesAndDepartments = () => {
       }
   
       handleRoleCancel();
+      fetchRoles();
     } catch (error) {
       message.error(t('Failed to process the role'));
     }
@@ -176,10 +180,8 @@ const RolesAndDepartments = () => {
       render: (_, record) => (
         <Button
           type="link"
-          onClick={() => handleEditRole(record)}
-
           className={`${customBtn} d-flex align-items-center gap-1`}
-
+          onClick={() => handleEditRole(record)}
         >
           <EditOutlined />
           <span className="ms-1">{t('edit')}</span>
@@ -187,6 +189,12 @@ const RolesAndDepartments = () => {
       ),
     }
   ];
+
+  const paginationConfig = {
+    pageSize: 5,
+    showSizeChanger: true,
+    pageSizeOptions: [5, 10, 20],
+  };
 
   return (
     <Card
@@ -204,16 +212,14 @@ const RolesAndDepartments = () => {
         rowKey="roleId"
         size="small"
         pagination={{
-          pageSize,
+          ...paginationConfig,
           current: currentPage,
-          total: roles.length,  // Total roles
+          total: roles.length,
           onChange: handlePaginationChange,
-          showSizeChanger: true,
-          pageSizeOptions: [5, 10, 20],
           className: `${customDark === "dark-dark" || customDark === "blue-dark" ? "bg-white" : ""} p-3 rounded-bottom-3 `,
         }}
         columns={roleColumns}
-        dataSource={paginatedRoles}  // Display only the paginated subset of roles
+        dataSource={paginatedRoles}
         style={{ fontSize: '12px' }}
         scroll={{ x: 'max-content' }}
         className={`${customDark === "default-dark" ? "thead-default" : ""} 
@@ -234,38 +240,48 @@ const RolesAndDepartments = () => {
         backdrop="static"
         keyboard={false}
       >
-        <Modal.Header className={`${customLight} ${customDarkText} ${customDark === "dark-dark" ? ' border border-transparent' : ''}`}>
-          <Modal.Title>{newRole.roleId === 0 ? t('New Role') : t('Edit Role')}</Modal.Title>
-          <AiFillCloseSquare onClick={handleRoleCancel} className="cursor-pointer" />
-        </Modal.Header>
-        <Modal.Body>
-          <div className="mb-3">
-            <Input
-              placeholder={t('Role Name')}
-              value={newRole.roleName}
-              onChange={(e) => setNewRole({ ...newRole, roleName: e.target.value })}
-              readOnly={newRole.roleId !== 0} 
-            />
-          </div>
-          <div className="mb-3">
-            <Input
-              placeholder={t('Priority Order')}
-              type="number"
-              value={newRole.priorityOrder}
-              onChange={(e) => setNewRole({ ...newRole, priorityOrder: +e.target.value })}
-            />
-          </div>
-          <Permissions
-            permissions={newRole.permissions}
-            onChange={handlePermissionChange}
+        <Modal.Header className={`${customLight} ${customDarkText} ${customDark === "dark-dark" ? ' border border-bottom-0' : `border-0`} d-flex justify-content-between align-items-center`}>
+          <Modal.Title>{newRole.roleId === 0 ? t("Add New Role") : t("Edit Role")}</Modal.Title>
+          <AiFillCloseSquare
+            size={35}
+            onClick={handleRoleCancel}
+            className={`rounded-2 ${customDark === "dark-dark" ? "text-dark bg-white " : `${customDark} custom-zoom-btn text-white  ${customDarkBorder}`}`}
+            aria-label="Close"
+            style={{ cursor: 'pointer', fontSize: '1.5rem' }}
           />
+        </Modal.Header>
+        <Modal.Body className={`${customLight} ${customDarkText} ${customDark === "dark-dark" ? ' border' : `border-0`}`}>
+          <Input
+            placeholder={t("Role Name")}
+            value={newRole.roleName}
+            onChange={(e) => setNewRole({ ...newRole, roleName: e.target.value })}
+            onPressEnter={handleRoleOk}
+          />
+          <div style={{ marginTop: 10 }}>
+            <Input
+              type="number"
+              placeholder={t("Priority Order")}
+              value={newRole.priorityOrder}
+              onChange={(e) => setNewRole({ ...newRole, priorityOrder: Number(e.target.value) })}
+            />
+          </div>
+          <div style={{ marginTop: 10 }}>
+            <span>{t('status')}: </span>
+            <Switch
+              checked={newRole.status}
+              onChange={(checked) => setNewRole({ ...newRole, status: checked })}
+              checkedChildren={t('active')}
+              unCheckedChildren={t('inactive')}
+            />
+          </div>
+          <Permissions selectedPermissions={newRole.permissions} onChange={handlePermissionChange} />
         </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleRoleCancel}>
-            {t('Cancel')}
+        <Modal.Footer className={`${customLight} ${customDarkText} ${customDark === "dark-dark" ? 'border border-top-0' : ''}`}>
+          <Button onClick={handleRoleCancel}>
+            {t('close')}
           </Button>
-          <Button variant="primary" onClick={handleRoleOk}>
-            {t('Save')}
+          <Button type="primary" onClick={handleRoleOk}>
+            {newRole.roleId === 0 ? t("Add Role") : t("Update Role")}
           </Button>
         </Modal.Footer>
       </Modal>
