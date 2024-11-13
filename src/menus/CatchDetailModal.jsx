@@ -8,14 +8,34 @@ import { useTranslation } from 'react-i18next';
 const { TextArea } = Input;
 const { Text } = Typography;
 
-
 const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) => {
     const { t } = useTranslation();
 
     const [isPlaying, setIsPlaying] = useState(false);
     const [audioElement, setAudioElement] = useState(null);
+    const [processes, setProcesses] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    // Clean up audio when modal closes
+    useEffect(() => {
+        const fetchProcesses = async () => {
+            try {
+                const response = await API.get('/Processes');
+                setProcesses(response.data);
+                setLoading(false);
+            } catch (error) {
+                console.error('Error fetching processes:', error);
+                message.error('Failed to fetch processes');
+                setLoading(false);
+            }
+        };
+
+        if (show) {
+            fetchProcesses();
+        }
+
+        return () => setProcesses([]);
+    }, [show]);
+
     useEffect(() => {
         if (!show && audioElement) {
             audioElement.pause();
@@ -26,23 +46,50 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
 
     if (!show) return null;
 
-    // Capitalize and format keys for better display
     const formatKey = (key) => {
         return key.replace(/([A-Z])/g, ' $1')
             .replace(/^./, (str) => str.toUpperCase());
     };
 
-    // Prepare data for the table
+    const getProcessName = (processId) => {
+        const process = processes.find(p => p.id === processId);
+        return process ? process.name : 'Unknown Process';
+    };
+
+    const formatDate = (dateString) => {
+        if (!dateString) return 'NA';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-IN', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+    };
+
     const tableData = Object.keys(data || {})
-        .filter(key => !['serialNumber', 'voiceRecording', 'teamUserNames', 'teamId', 'transactionId', 'srNo', 'projectId', 'processIds'].includes(key))
+        .filter(key => !['serialNumber', 'voiceRecording', 'teamUserNames', 'teamId', 'transactionId', 'srNo', 'projectId', 'processIds', 'previousProcessData'].includes(key))
         .map((key, index) => {
             let value = data[key];
+            
+            if (typeof value === 'object' && value !== null) {
+                if (Array.isArray(value)) {
+                    value = value.join(', ');
+                } else {
+                    value = JSON.stringify(value);
+                }
+            }
+
+            if (key === 'processId') {
+                value = getProcessName(data[key]);
+            }
             if (key === 'team') {
                 value = data.teamUserNames?.join(', ') || 'No team assigned';
             }
-            // Convert value to string if it's an object
-            if (typeof value === 'object' && value !== null) {
-                value = JSON.stringify(value);
+            if (key === 'examDate') {
+                value = formatDate(value);
+            }
+            if (key === 'percentageCatch' && value !== null && value !== undefined) {
+                value = Number(value).toFixed(2) + '%'; //add percentage symbol
             }
             // Convert status numbers to text
             if (key === 'status') {
@@ -60,6 +107,7 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
                         value = 'N/A';
                 }
             }
+
             return {
                 key: index,
                 label: formatKey(key),
@@ -67,7 +115,6 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
             };
         });
 
-    // Add team members row
     if (data?.teamUserNames?.length) {
         tableData.push({
             key: 'team',
@@ -76,7 +123,6 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
         });
     }
 
-    // Update handleAudioPlay function
     const handleAudioPlay = async (audioData) => {
         if (!audioData) {
             message.info('No audio recording available');
@@ -90,7 +136,6 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
                 return;
             }
 
-            // Convert base64 to blob
             const byteCharacters = atob(audioData);
             const byteNumbers = new Array(byteCharacters.length);
             for (let i = 0; i < byteCharacters.length; i++) {
@@ -99,11 +144,9 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
             const byteArray = new Uint8Array(byteNumbers);
             const blob = new Blob([byteArray], { type: 'audio/wav' });
 
-            // Create audio URL and play
             const audioUrl = URL.createObjectURL(blob);
             const audio = new Audio(audioUrl);
 
-            // Add event listeners
             audio.onplay = () => setIsPlaying(true);
             audio.onpause = () => setIsPlaying(false);
             audio.onended = () => {
@@ -120,7 +163,6 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
         }
     };
 
-    // Update the render function for the audio control
     const renderAudioControl = (voiceRecording) => {
         if (!voiceRecording) {
             return (
@@ -189,7 +231,6 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
                 voiceRecording: existingTransactionData ? existingTransactionData.voiceRecording : ""
             };
 
-            // Always use POST
             await API.post('/Transactions', postData);
 
             handleSave("0");
@@ -199,7 +240,6 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
         }
     };
 
-    // Define table columns
     const columns = [
         {
             title: 'Field',
@@ -216,19 +256,17 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
                 if (record.label === 'Remarks' || record.label === 'Alerts') {
                     return (
                         <>
-
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <TextArea
-                                value={value}
-                                readOnly
-                                autoSize={{ minRows: 2, maxRows: 6 }}
-                                bordered={false}
-                                style={{ flex: 1, marginRight: '10px', overflow: 'hidden', wordWrap: 'break-word' }}
-                            />
-                            {record.label === 'Remarks' && renderAudioControl(data?.voiceRecording)}
-                        </div>
-                           { record?.label === 'Alerts' && value !== "0" &&
-                            value !== 'NA' && (
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <TextArea
+                                    value={value}
+                                    readOnly
+                                    autoSize={{ minRows: 2, maxRows: 6 }}
+                                    bordered={false}
+                                    style={{ flex: 1, marginRight: '10px', overflow: 'hidden', wordWrap: 'break-word' }}
+                                />
+                                {record.label === 'Remarks' && renderAudioControl(data?.voiceRecording)}
+                            </div>
+                            {record?.label === 'Alerts' && value !== "0" && value !== 'NA' && (
                                 <Button
                                     style={{ fontSize: '18px', cursor: 'pointer' }}
                                     onClick={handleResolve}
@@ -237,8 +275,6 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
                                     Resolve
                                 </Button>
                             )}
-                       
-
                         </>
                     );
                 }
