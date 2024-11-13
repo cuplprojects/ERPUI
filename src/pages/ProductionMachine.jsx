@@ -170,7 +170,7 @@ const Machine = () => {
       width: '30%',
     },
     {
-      title: t('Status'),
+      title: t('status'),
       dataIndex: 'status',
       key: 'status',
       sorter: (a, b) => a.status - b.status,
