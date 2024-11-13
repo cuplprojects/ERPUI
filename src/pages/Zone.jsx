@@ -260,20 +260,44 @@ const Zone = () => {
       render: (_, record, index) => (
         editingIndex === index ? (
           <>
-            <Button type="link" icon={<SaveOutlined />} onClick={() => handleEditZone(index)} className={`${customBtn} ms-`}>{t('save')}</Button>
-            <Button type="link" icon={<CloseOutlined />} onClick={handleCancelEdit} className={`${customBtn} ms-2`}>{t('cancel')}</Button>
+            <Button 
+              type="link" 
+              icon={<SaveOutlined />} 
+              onClick={() => handleEditZone(index)} 
+              className={`${customBtn} me-2`}
+              style={{display: 'inline-flex', alignItems: 'center', gap: '4px'}}
+            >
+              {t('save')}
+            </Button>
+            <Button 
+              type="link" 
+              icon={<CloseOutlined />} 
+              onClick={handleCancelEdit} 
+              className={`${customBtn}`}
+              style={{display: 'inline-flex', alignItems: 'center', gap: '4px'}}
+            >
+              {t('cancel')}
+            </Button>
           </>
         ) : (
-          <Button type="link" icon={<EditOutlined />} onClick={() => {
-            setEditingIndex(index);
-            setEditingZone({ 
-              zoneNo: record.zoneNo, 
-              zoneDescription: record.zoneDescription,
-              cameraIds: record.cameraIds,
-              machineId: record.machineId
-            });
-            setOriginalZone(record);
-          }} className={`${customBtn}`}>{t('edit')}</Button>
+          <Button 
+            type="link" 
+            icon={<EditOutlined />} 
+            onClick={() => {
+              setEditingIndex(index);
+              setEditingZone({ 
+                zoneNo: record.zoneNo, 
+                zoneDescription: record.zoneDescription,
+                cameraIds: record.cameraIds,
+                machineId: record.machineId
+              });
+              setOriginalZone(record);
+            }} 
+            className={`${customBtn}`}
+            style={{display: 'inline-flex', alignItems: 'center', gap: '4px'}}
+          >
+            {t('edit')}
+          </Button>
         )
       ),
     },
@@ -302,16 +326,16 @@ const Zone = () => {
       <h2 style={{ marginBottom: '20px', fontSize: isMobile ? '1.5rem' : '2rem' }} className={`${customDarkText}`}>{t('Zone Management')}</h2>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <Button onClick={showModal} className={`${customBtn}`}>
+          {t('Add Zone')}
+        </Button>
+
         <Search
           placeholder={t("Search zones")}
           onChange={(e) => setSearchText(e.target.value)}
           style={{ width: 200 }}
           allowClear
         />
-
-        <Button onClick={showModal} className={`${customBtn}`}>
-          {t('Add Zone')}
-        </Button>
       </div>
 
       <Table

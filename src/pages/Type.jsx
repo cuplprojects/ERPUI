@@ -311,15 +311,15 @@ console.log(originalData.requiredProcessIds)
                 alignItems: 'center',
                 marginBottom: isMobile ? '10px' : '20px'
             }}>
+                <Button className={`${customBtn} border-0 custom-zoom-btn`} onClick={() => setIsModalVisible(true)}>
+                    {t("addType")}
+                </Button>
                 <Search
                     placeholder={t("searchTypesOrProcesses")}
                     allowClear
                     onChange={(e) => handleSearch(e.target.value)}
                     style={{ width: 300 }}
                 />
-                <Button className={`${customBtn} border-0 custom-zoom-btn`} onClick={() => setIsModalVisible(true)}>
-                    {t("addType")}
-                </Button>
             </div>
 
             {loading ? (
