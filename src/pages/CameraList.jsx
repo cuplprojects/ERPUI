@@ -135,7 +135,6 @@ const CameraList = () => {
             value={editingName}
             onChange={(e) => setEditingName(e.target.value)}
             onPressEnter={() => handleEditSave(index)}
-            onBlur={() => handleEditSave(index)}
           />
         ) : (
           <span>{text}</span>
