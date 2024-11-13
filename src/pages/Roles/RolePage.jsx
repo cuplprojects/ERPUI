@@ -167,11 +167,11 @@ const RolesAndDepartments = () => {
       render: (_, record) => (
         <Button
           type="link"
-          icon={<EditOutlined />}
           onClick={() => handleEditRole(record)}
-          className={`${customBtn}`}
+          className={`${customBtn} d-flex align-items-center`}
         >
-          {t('edit')}
+          <EditOutlined />
+          <span className="ms-1">{t('edit')}</span>
         </Button>
       ),
     }
