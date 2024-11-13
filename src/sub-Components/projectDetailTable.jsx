@@ -1019,7 +1019,7 @@ const ProjectDetailsTable = ({
                     ? row.machineId !== 0 && row.machineId !== null // Machine must be assigned if permission exists
                     : isZoneAssigned && isTeamAssigned; // Otherwise, Zone and Team must be assigned
                   const canBeCompleted =
-                    record.interimQuantity === record.quantity;
+                    row.interimQuantity === row.quantity;
                   return (
                     row.alerts ||
                     !canChangeStatus ||
