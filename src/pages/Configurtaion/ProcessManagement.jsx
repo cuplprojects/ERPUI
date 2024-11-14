@@ -408,25 +408,45 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
                         <div>
                             <div style={{ marginBottom: '16px' }}>
                                 <label htmlFor="rangeStart" className={`${customDarkText}`}>{t('rangeStartLabel')}:</label>
-                                <Input
+                                <Select
                                     id="rangeStart"
-                                    placeholder="Range Start"
+                                    placeholder={
+                                        rangeStart
+                                            ? processes.find(process => process.id === parseInt(rangeStart))?.name || t('selectProcess')
+                                            : t('selectProcess')
+                                    }
                                     value={rangeStart}
-                                    onChange={e => setRangeStart(e.target.value)}
+                                    onChange={value => setRangeStart(value)}
                                     style={{ width: '100%' }}
                                     className={`${customLight} ${customDarkText}`}
-                                />
+                                >
+                                    {processes.map(process => (
+                                        <Select.Option key={process.id} value={process.id}>
+                                            {process.name} {/* Display the process name */}
+                                        </Select.Option>
+                                    ))}
+                                </Select>
                             </div>
                             <div style={{ marginBottom: '16px' }}>
                                 <label htmlFor="rangeEnd" className={`${customDarkText}`}>{t('rangeEndLabel')}:</label>
-                                <Input
+                                <Select
                                     id="rangeEnd"
-                                    placeholder="Range End"
+                                    placeholder={
+                                        rangeEnd
+                                            ? processes.find(process => process.id === parseInt(rangeEnd))?.name || t('selectProcess')
+                                            : t('selectProcess')
+                                    }
                                     value={rangeEnd}
-                                    onChange={e => setRangeEnd(e.target.value)}
+                                    onChange={value => setRangeEnd(value)}
                                     style={{ width: '100%' }}
                                     className={`${customLight} ${customDarkText}`}
-                                />
+                                >
+                                    {processes.map(process => (
+                                        <Select.Option key={process.id} value={process.id}>
+                                            {process.name} {/* Display the process name */}
+                                        </Select.Option>
+                                    ))}
+                                </Select>
                             </div>
                         </div>
                     )}
