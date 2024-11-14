@@ -109,7 +109,19 @@ const ProcessTable = () => {
             );
             if (!previousProcessData) break;
 
-            if (previousProcessData.processType === "Dependent") {
+            if (previousProcessData.processType === "Dependent" || 
+                (previousProcessData.processType === "Independent" && 
+                 previousProcessData.rangeStart <= processData.sequence &&
+                 previousProcessData.rangeEnd >= processData.sequence)) {
+              
+              // If current process is Independent, set previous process to min range
+              if (processData.processType === "Independent" && processData.rangeStart) {
+                previousProcessData = await getProjectProcessByProjectAndSequence(
+                  selectedProject?.value || id,
+                  processData.rangeStart
+                );
+              }
+
               setPreviousProcess(previousProcessData);
               const prevTransactions = await API.get(
                 `/Transactions/GetProjectTransactionsData?projectId=${
@@ -118,7 +130,6 @@ const ProcessTable = () => {
               );
               setPreviousProcessTransactions(prevTransactions.data);
               break;
-
             }
             previousSequence--;
           } while (previousSequence > 0);
@@ -308,7 +319,7 @@ const ProcessTable = () => {
               previousSequence
             );
             if (!previousProcessData) break;
-
+            console.log(previousProcessData);
             if (previousProcessData.processType === "Dependent") {
               setPreviousProcess(previousProcessData);
               const prevTransactions = await API.get(
