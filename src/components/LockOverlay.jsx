@@ -91,6 +91,8 @@ const LockOverlay = () => {
                                 <Form.Control
                                     ref={inputRef}
                                     type="password"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
                                     placeholder={t('enterUnlockKey')}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
