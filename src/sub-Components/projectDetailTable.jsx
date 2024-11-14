@@ -49,10 +49,17 @@ const ProjectDetailsTable = ({
   //Theme Change Section
   const { t } = useTranslation();
   const { getCssClasses } = useStore(themeStore);
-  const cssClasses = getCssClasses();
-  const customDark = cssClasses[0];
-  const customBtn = cssClasses[3];
-  const customDarkText = cssClasses[4];
+  const [
+    customDark,
+    customMid,
+    customLight, 
+    customBtn,
+    customDarkText,
+    customLightText,
+    customLightBorder,
+    customDarkBorder,
+    customThead
+  ] = getCssClasses();
   const [initialTableData, setInitialTableData] = useState(tableData);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [columnVisibility, setColumnVisibility] = useState({
@@ -820,7 +827,7 @@ const ProjectDetailsTable = ({
     );
 
   const customPagination = {
-    className: "bg-white p-3 rounded rounded-top-0",
+    className: `bg-white p-3 rounded rounded-top-0 mt-0  ${customDark==="dark-dark" ? `` : ``}`,
     current: currentPage,
     pageSize,
     pageSizeOptions: [5, 10, 25, 50, 100],

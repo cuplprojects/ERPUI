@@ -10,7 +10,17 @@ import { useTranslation } from 'react-i18next';
 const LockOverlay = () => {
     const { t } = useTranslation();
     const { getCssClasses } = useStore(themeStore);
-    const [customDark, customMid, customLight, customBtn, customDarkText, customLightText] = getCssClasses();
+    const [
+        customDark,
+        customMid, 
+        customLight,
+        customBtn,
+        customDarkText,
+        customLightText,
+        customLightBorder,
+        customDarkBorder,
+        customThead
+    ] = getCssClasses();
 
     const [showModal, setShowModal] = useState(false);
     const [password, setPassword] = useState('');
