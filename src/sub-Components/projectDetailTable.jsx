@@ -66,8 +66,6 @@ const ProjectDetailsTable = ({
     Alerts: false,
     "Interim Quantity": false,
     Remarks: false,
-    Zone:false,
-    Machine: false,
     Paper: window.innerWidth >= 992, // Enable by default on large screens
     Course: window.innerWidth >= 992,
     Subject: window.innerWidth >= 992,
@@ -106,7 +104,7 @@ const ProjectDetailsTable = ({
   const [paperData, setPaperData] = useState([]);
   const [courseData, setCourseData] = useState([]);
   const [subjectData, setSubjectData] = useState([]);
-console.log(tableData)
+
   // Add resize listener for responsive column visibility
   useEffect(() => {
     const handleResize = () => {
@@ -435,34 +433,6 @@ console.log(tableData)
             const bNames = b.teamUserNames?.join(", ") || "";
             return aNames.localeCompare(bNames);
           },
-        },
-      ]
-      : []),
-    ...(columnVisibility["Zone"] && hasFeaturePermission(4)
-      ? [
-        {
-          title: t("zone"),
-
-          dataIndex: "zoneNo",
-          // width: '20%',
-          align: "center",
-          key: "zoneNo",
-
-          sorter: (a, b) => a.zoneNo - b.zoneNo,
-        },
-      ]
-      : []),
-    ...(columnVisibility["Machine"] && hasFeaturePermission(10)
-      ? [
-        {
-          title: t("machine"),
-
-          dataIndex: "machinename",
-          // width: '20%',
-          align: "center",
-          key: "machinename",
-
-          sorter: (a, b) => a.machinename - b.machinename,
         },
       ]
       : []),
