@@ -6,8 +6,10 @@ import { useTranslation } from 'react-i18next';
 
 const DashBarChart = ({ selectedChart, lotsData, handleBarClick, projectId }) => {
   const [processData, setProcessData] = useState({});
+  const [processNames, setProcessNames] = useState({});
   const { t } = useTranslation();
 
+  // Fetch process completion data
   useEffect(() => {
     const fetchProcessData = async () => {
       try {
@@ -24,11 +26,36 @@ const DashBarChart = ({ selectedChart, lotsData, handleBarClick, projectId }) =>
     }
   }, [projectId]);
 
+  // Fetch process names
+  useEffect(() => {
+    const fetchProcessNames = async () => {
+      try {
+        const response = await API.get(`/ProjectProcess/GetProjectProcesses/${projectId}`);
+        // Create a mapping of process ID to process name
+        const nameMapping = response.data.reduce((acc, process) => {
+          acc[process.id] = process.name;
+          return acc;
+        }, {});
+        setProcessNames(nameMapping);
+      } catch (error) {
+        console.error("Error fetching process names:", error);
+        setProcessNames({});
+      }
+    };
+
+    if (projectId) {
+      fetchProcessNames();
+    }
+  }, [projectId]);
+
   // Get the selected lot's process data
   const selectedLotProcesses = processData[selectedChart.lotNumber] || {};
   
-  // Create labels for all processes (1 to 10)
-  const processLabels = Array.from({ length: 10 }, (_, i) => `${t('process')} ${i + 1}`);
+  // Create labels for all processes using their actual names
+  const processLabels = Array.from({ length: 10 }, (_, i) => {
+    const processId = i + 1;
+    return processNames[processId] || `${t('process')} ${processId}`;
+  });
   
   // Get completion values for each process
   const processValues = Array.from({ length: 10 }, (_, i) => {
@@ -95,6 +122,10 @@ const DashBarChart = ({ selectedChart, lotsData, handleBarClick, projectId }) =>
                   title: {
                     display: true,
                     text: t('processes')
+                  },
+                  ticks: {
+                    maxRotation: 45,
+                    minRotation: 45
                   }
                 }
               },
@@ -106,7 +137,8 @@ const DashBarChart = ({ selectedChart, lotsData, handleBarClick, projectId }) =>
                   enabled: true,
                   callbacks: {
                     label: (tooltipItem) => {
-                      return `${t('completion')}: ${tooltipItem.raw.toFixed(2)}%`;
+                      const processName = processNames[tooltipItem.dataIndex + 1] || `${t('process')} ${tooltipItem.dataIndex + 1}`;
+                      return `${processName}: ${tooltipItem.raw.toFixed(2)}%`;
                     },
                   },
                 },
