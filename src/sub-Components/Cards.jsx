@@ -44,11 +44,13 @@ const Cards = ({ item, onclick, disableProject }) => {
   return (
     <StyledWrapper>
       <div className="card" onClick={handleCardClick}>
-        <div className="upload-button ml-5" onClick={handleUploadClick} >
-          <FaUpload />
+        <div className="header">
+          <h4 className="project-name">{item.name}</h4>
+          <div className="upload-button" onClick={handleUploadClick}>
+            <FaUpload />
+          </div>
         </div>
 
-        <h4 className="project-name">{item.name}</h4>
         <p>{item.completionPercentage}% {t('completed')}</p>
         <p>{item.remainingPercentage}% {t('remaining')}</p>
         
@@ -87,6 +89,15 @@ const StyledWrapper = styled.div`
     position: relative;
   }
 
+  .header {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    padding: 0 40px;
+  }
+
   .card:hover {
     border: 1px solid black;
     transform: scale(1.05);
@@ -103,8 +114,9 @@ const StyledWrapper = styled.div`
   }
 
   .upload-button {
-    top: 10px;
+    top: 50%;
     right: 10px;
+    transform: translateY(-50%);
     padding: 10px;
     font-size: 1.2em;
     border-radius: 50%;

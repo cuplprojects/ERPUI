@@ -417,13 +417,15 @@ const ProjectDetailsTable = ({
       ? [
         {
           title: t("teamAssigned"),
-
           dataIndex: "teamUserNames",
-          // width: '20%',
-          align: "center",
+          align: "center", 
           key: "teamUserNames",
-
-          sorter: (a, b) => a.teamUserNames - b.teamUserNames,
+          render: (teamUserNames) => teamUserNames?.join(", "),
+          sorter: (a, b) => {
+            const aNames = a.teamUserNames?.join(", ") || "";
+            const bNames = b.teamUserNames?.join(", ") || "";
+            return aNames.localeCompare(bNames);
+          },
         },
       ]
       : []),
