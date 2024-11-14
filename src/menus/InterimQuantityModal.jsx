@@ -104,6 +104,12 @@ const InterimQuantityModal = ({ show, handleClose, handleSave, data, processId }
                                 <span className={customLightText}>{data.interimQuantity}</span>
                             </div>
                         </div>
+                        <div className="details mb-3 d-flex justify-content-between align-items-center">
+                            <div>
+                                <span className={`me-1 fw-bold ${customLightText}`}>{t("remainingQuantity")} :</span>
+                                <span className={customLightText}>{data.quantity - data.interimQuantity}</span>
+                            </div>
+                        </div>
                     </>
                 ) : (
                     <div className={customLightText}>{t("noDataAvailable")}</div>
