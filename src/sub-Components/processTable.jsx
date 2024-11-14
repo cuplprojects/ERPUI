@@ -411,8 +411,11 @@ const ProcessTable = () => {
             transactionId: item.transactions[0]?.transactionId || null,
             zoneId: item.transactions[0]?.zoneId || 0,
             machineId: item.transactions[0]?.machineId || 0,
+            machinename : item.transactions[0]?.machinename || "No Machine Assigned",
+            zoneNo: item.transactions?.[0]?.zoneNo || "No Zone Assigned",
+
             teamId: item.transactions[0]?.teamId || [],
-            teamUserNames: item.transactions[0]?.teamUserNames || [],
+            teamUserNames: item.transactions[0]?.teamUserNames || ["No Team Assigned"],
             alarmMessage: item.transactions[0]?.alarmMessage || null,
             processIds: item.processIds || [],
           };
