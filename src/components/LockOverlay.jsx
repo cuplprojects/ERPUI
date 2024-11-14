@@ -15,6 +15,7 @@ const LockOverlay = () => {
     const [showModal, setShowModal] = useState(false);
     const [password, setPassword] = useState('');
     const timerRef = useRef(null);
+    const inputRef = useRef(null);
     const [isLocked, setIsLocked] = useState(() => {
         return JSON.parse(localStorage.getItem('isLocked') || 'false');
     });
@@ -38,7 +39,15 @@ const LockOverlay = () => {
         if (timerRef.current) clearTimeout(timerRef.current);
     }, []);
 
-    const handleUnlock = useCallback(() => setShowModal(true), []);
+    const handleUnlock = useCallback(() => {
+        setShowModal(true);
+        // Focus input after a short delay to ensure the input is rendered
+        setTimeout(() => {
+            if (inputRef.current) {
+                inputRef.current.focus();
+            }
+        }, 100);
+    }, []);
 
     const handleSubmit = useCallback(() => {
         if (password === '123') {
@@ -80,7 +89,10 @@ const LockOverlay = () => {
                                 <FaLock size={100} color="white" className={customLightText} />
                                 <Form.Label className='text-light text-center mt-1'>{t('enterYourUnlockKey')}</Form.Label>
                                 <Form.Control
+                                    ref={inputRef}
                                     type="password"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
                                     placeholder={t('enterUnlockKey')}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
