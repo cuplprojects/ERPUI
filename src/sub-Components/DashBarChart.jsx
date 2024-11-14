@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from 'react-bootstrap';
 import { Bar } from 'react-chartjs-2';
+import { Switch } from 'antd';
 import API from '../CustomHooks/MasterApiHooks/api';
 import { useTranslation } from 'react-i18next';
 
 const DashBarChart = ({ selectedChart, lotsData, handleBarClick, projectId }) => {
   const [processData, setProcessData] = useState({});
   const [processNames, setProcessNames] = useState({});
+  const [showRemaining, setShowRemaining] = useState(false);
   const { t } = useTranslation();
 
   // Fetch process completion data
@@ -60,7 +62,8 @@ const DashBarChart = ({ selectedChart, lotsData, handleBarClick, projectId }) =>
   // Get completion values for each process
   const processValues = Array.from({ length: 10 }, (_, i) => {
     const processId = (i + 1).toString();
-    return selectedLotProcesses[processId] || 0;
+    const value = selectedLotProcesses[processId] || 0;
+    return showRemaining ? 100 - value : value;
   });
 
   return (
@@ -83,8 +86,15 @@ const DashBarChart = ({ selectedChart, lotsData, handleBarClick, projectId }) =>
           }}
         >
           <h4 className="text-dark">
-            {t('lot')} {selectedChart.lotNumber} {t('processCompletion')}
+            {t('lot')} {selectedChart.lotNumber} {showRemaining ? t('remainingWork') : t('processCompletion')}
           </h4>
+          <Switch
+            checkedChildren={t('showCompleted')}
+            unCheckedChildren={t('showRemaining')}
+            checked={showRemaining}
+            onChange={(checked) => setShowRemaining(checked)}
+            style={{ marginLeft: '10px' }}
+          />
         </div>
         <div style={{ width: "100%", height: "90%" }}>
           <Bar
@@ -94,12 +104,22 @@ const DashBarChart = ({ selectedChart, lotsData, handleBarClick, projectId }) =>
               datasets: [
                 {
                   data: processValues,
-                  backgroundColor: processValues.map(value => 
-                    value > 0 ? "rgba(75, 192, 192, 0.6)" : "rgba(200, 200, 200, 0.6)"
-                  ),
-                  borderColor: processValues.map(value => 
-                    value > 0 ? "rgb(75, 192, 192)" : "rgb(180, 180, 180)"
-                  ),
+                  backgroundColor: processValues.map(value => {
+                    const actualValue = showRemaining ? 100 - value : value;
+                    return actualValue > 0 
+                      ? showRemaining 
+                        ? "rgba(255, 99, 132, 0.6)"  // Red for remaining
+                        : "rgba(75, 192, 192, 0.6)"   // Green for completed
+                      : "rgba(200, 200, 200, 0.6)";
+                  }),
+                  borderColor: processValues.map(value => {
+                    const actualValue = showRemaining ? 100 - value : value;
+                    return actualValue > 0 
+                      ? showRemaining 
+                        ? "rgb(255, 99, 132)"  // Red for remaining
+                        : "rgb(75, 192, 192)"   // Green for completed
+                      : "rgb(180, 180, 180)";
+                  }),
                   borderWidth: 1,
                   borderRadius: 5,
                 },
@@ -115,7 +135,7 @@ const DashBarChart = ({ selectedChart, lotsData, handleBarClick, projectId }) =>
                   max: 100,
                   title: {
                     display: true,
-                    text: t('completionPercentage')
+                    text: showRemaining ? t('remainingPercentage') : t('completionPercentage')
                   }
                 },
                 x: {
@@ -138,7 +158,7 @@ const DashBarChart = ({ selectedChart, lotsData, handleBarClick, projectId }) =>
                   callbacks: {
                     label: (tooltipItem) => {
                       const processName = processNames[tooltipItem.dataIndex + 1] || `${t('process')} ${tooltipItem.dataIndex + 1}`;
-                      return `${processName}: ${tooltipItem.raw.toFixed(2)}%`;
+                      return `${processName}: ${tooltipItem.raw.toFixed(2)}% ${showRemaining ? t('remaining') : t('completed')}`;
                     },
                   },
                 },
