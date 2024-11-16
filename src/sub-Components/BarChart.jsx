@@ -1,6 +1,7 @@
 // BarChart.js
 import React, { useEffect, useRef, useState } from 'react';
 import { Chart, registerables } from 'chart.js';
+import API from '../CustomHooks/MasterApiHooks/api';
 
 Chart.register(...registerables);
 
@@ -11,9 +12,8 @@ const BarChart = ({ projectId }) => {
   useEffect(() => {
     const fetchLotPercentages = async () => {
       try {
-        const response = await fetch(`https://localhost:7212/api/Transactions/combined-percentages?projectId=${projectId}`);
-        const data = await response.json();
-        setLotData(data.totalLotPercentages);
+        const response = await API.get(`/Transactions/combined-percentages?projectId=${projectId}`);
+        setLotData(response.data.totalLotPercentages);
       } catch (error) {
         console.error("Error fetching lot percentages:", error);
       }
