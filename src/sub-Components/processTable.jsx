@@ -405,6 +405,7 @@ const ProcessTable = () => {
                     previousProcessData.transactions[0]?.teamUserNames || [],
                   alarmMessage:
                     previousProcessData.transactions[0]?.alarmMessage || null,
+                  thresholdQty:null
                 }
               : null,
             voiceRecording: item.transactions[0]?.voiceRecording || "",
