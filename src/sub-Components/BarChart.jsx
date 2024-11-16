@@ -1,28 +1,49 @@
 // BarChart.js
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Chart, registerables } from 'chart.js';
 
 Chart.register(...registerables);
 
-const BarChart = ({ lots = [] }) => {
+const BarChart = ({ projectId }) => {
   const chartRef = useRef(null);
+  const [lotData, setLotData] = useState(null);
 
   useEffect(() => {
+    const fetchLotPercentages = async () => {
+      try {
+        const response = await fetch(`https://localhost:7212/api/Transactions/combined-percentages?projectId=${projectId}`);
+        const data = await response.json();
+        setLotData(data.totalLotPercentages);
+      } catch (error) {
+        console.error("Error fetching lot percentages:", error);
+      }
+    };
+
+    if (projectId) {
+      fetchLotPercentages();
+    }
+  }, [projectId]);
+
+  useEffect(() => {
+    if (!lotData || !chartRef.current) return;
+
     const ctx = chartRef.current.getContext('2d');
+    const lotNumbers = Object.keys(lotData);
+    const percentages = Object.values(lotData);
 
     const chartInstance = new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: lots.map(lot => lot.name),
+        labels: lotNumbers.map(num => `Lot ${num}`),
         datasets: [
           {
             label: 'Completion %',
-            data: lots.map(lot => lot.completion),
+            data: percentages,
             backgroundColor: '#29ce6a',
           },
           {
             label: 'Remaining %',
-            data: lots.map(lot => lot.remaining),
+            data: percentages.map(value => 100 - value),
             backgroundColor: '#ff6384',
           },
         ],
@@ -57,7 +78,7 @@ const BarChart = ({ lots = [] }) => {
     return () => {
       chartInstance.destroy();
     };
-  }, [lots]);
+  }, [lotData]);
 
   return <canvas ref={chartRef} style={{ width: '100%', height: '100%' }} />;
 };
