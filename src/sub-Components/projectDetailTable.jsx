@@ -49,10 +49,17 @@ const ProjectDetailsTable = ({
   //Theme Change Section
   const { t } = useTranslation();
   const { getCssClasses } = useStore(themeStore);
-  const cssClasses = getCssClasses();
-  const customDark = cssClasses[0];
-  const customBtn = cssClasses[3];
-  const customDarkText = cssClasses[4];
+  const [
+    customDark,
+    customMid,
+    customLight, 
+    customBtn,
+    customDarkText,
+    customLightText,
+    customLightBorder,
+    customDarkBorder,
+    customThead
+  ] = getCssClasses();
   const [initialTableData, setInitialTableData] = useState(tableData);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [columnVisibility, setColumnVisibility] = useState({
@@ -417,13 +424,15 @@ const ProjectDetailsTable = ({
       ? [
         {
           title: t("teamAssigned"),
-
           dataIndex: "teamUserNames",
-          // width: '20%',
-          align: "center",
+          align: "center", 
           key: "teamUserNames",
-
-          sorter: (a, b) => a.teamUserNames - b.teamUserNames,
+          render: (teamUserNames) => teamUserNames?.join(", "),
+          sorter: (a, b) => {
+            const aNames = a.teamUserNames?.join(", ") || "";
+            const bNames = b.teamUserNames?.join(", ") || "";
+            return aNames.localeCompare(bNames);
+          },
         },
       ]
       : []),
@@ -540,7 +549,7 @@ const ProjectDetailsTable = ({
                 }))}
                 disabled={
                   !canChangeStatus ||
-                  (initialStatusIndex === 2 && !canBeCompleted)
+                  (initialStatusIndex === 1 && !canBeCompleted)
                 } // Disable the toggle if status can't be changed (based on Select Machine or Zone/Team)
               />
             )}
@@ -785,54 +794,40 @@ const ProjectDetailsTable = ({
   const isStarted = selectedRows.every((row) => row.status == 1);
 
   const menu = (
-    <Menu>
-      {hasFeaturePermission(3) && !isCompleted && (
-        <Menu.Item onClick={() => handleDropdownSelect("Alarm")}>
-          {t("alarm")}
-        </Menu.Item>
-      )}
-      {hasFeaturePermission(7) && !isCompleted && isStarted && (
-        <Menu.Item onClick={() => handleDropdownSelect("Interim Quantity")}>
-          {t("interimQuantity")}
-        </Menu.Item>
-      )}
-      {!isCompleted && (
-        <Menu.Item onClick={() => handleDropdownSelect("Remarks")}>
-          {t("remarks")}
-        </Menu.Item>
-      )}
-      <Menu.Item onClick={() => setColumnModalShow(true)}>
-        {t("columns")}
-      </Menu.Item>
-      {hasFeaturePermission(4) && (
-        <Menu.Item
-          onClick={() => handleDropdownSelect("Select Zone")}
-          disabled={selectedRowKeys.length === 0}
-        >
-          {t("selectZone")}
-        </Menu.Item>
-      )}
-      {hasFeaturePermission(10) && (
-        <Menu.Item
-          onClick={() => handleDropdownSelect("Select Machine")}
-          disabled={selectedRowKeys.length === 0}
-        >
-          {t("selectMachine")}
-        </Menu.Item>
-      )}
-      {hasFeaturePermission(5) && (
-        <Menu.Item
-          onClick={() => handleDropdownSelect("Assign Team")}
-          disabled={selectedRowKeys.length === 0}
-        >
-          {t("assignTeam")}
-        </Menu.Item>
-      )}
-    </Menu>
-  );
+        <Menu>
+            {hasFeaturePermission(3) && !isCompleted && selectedRowKeys.length === 1 && (
+                <Menu.Item onClick={() => handleDropdownSelect('Alarm')}>
+                    {t("alarm")}
+                </Menu.Item>
+            )}
+            {hasFeaturePermission(7) && !isCompleted && isStarted && selectedRowKeys.length === 1 && (
+                <Menu.Item onClick={() => handleDropdownSelect('Interim Quantity')}>
+                    {t("interimQuantity")}
+                </Menu.Item>
+            )}
+            {!isCompleted && selectedRowKeys.length === 1 && (
+                <Menu.Item onClick={() => handleDropdownSelect('Remarks')}>
+                    {t("remarks")}
+                </Menu.Item>
+            )}
+            <Menu.Item onClick={() => setColumnModalShow(true)}>{t("columns")}</Menu.Item>
+            {hasFeaturePermission(4) && (
+                <Menu.Item onClick={() => handleDropdownSelect('Select Zone')}
+                    disabled={selectedRowKeys.length === 0}>{t("selectZone")}</Menu.Item>
+            )}
+            {hasFeaturePermission(10) && (
+                <Menu.Item onClick={() => handleDropdownSelect('Select Machine')}
+                    disabled={selectedRowKeys.length === 0}>{t("selectMachine")}</Menu.Item>
+            )}
+            {hasFeaturePermission(5) && (
+                <Menu.Item onClick={() => handleDropdownSelect('Assign Team')}
+                    disabled={selectedRowKeys.length === 0}>{t('assignTeam')}</Menu.Item>
+            )}
+        </Menu>
+    );
 
   const customPagination = {
-    className: "bg-white p-3 rounded rounded-top-0",
+    className: `bg-white p-3 rounded rounded-top-0 mt-0  ${customDark==="dark-dark" ? `` : ``}`,
     current: currentPage,
     pageSize,
     pageSizeOptions: [5, 10, 25, 50, 100],

@@ -69,9 +69,7 @@ const Group = () => {
       await API.post('/Groups', newGroup);
       setGroups([...groups, newGroup]);
       setFilteredGroups([...filteredGroups, newGroup]);
-
       fetchGroups();
-
       form.resetFields();
       setIsModalVisible(false);
       message.success(t('groupAddedSuccessfully'));

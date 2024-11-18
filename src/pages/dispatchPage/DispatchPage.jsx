@@ -3,12 +3,13 @@ import { Row, Col } from "react-bootstrap";
 import { Button, message, Modal, Card } from "antd";
 import {
   getAllDispatches,
-  updateDispatch,
+  updateDispatch
 } from "../../CustomHooks/ApiServices/dispatchService";
 import DispatchFormModal from "../../menus/DispatchFormModal";
 import { useStore } from 'zustand';
 import themeStore from '../../store/themeStore';
 import { useTranslation } from 'react-i18next';
+import { getProcessLotPercentages } from "../../CustomHooks/ApiServices/transacationService";
 
 const DispatchPage = ({ projectId, processId, lotNo, fetchTransactions }) => {
   const { t } = useTranslation();
@@ -18,7 +19,31 @@ const DispatchPage = ({ projectId, processId, lotNo, fetchTransactions }) => {
 
   const [dispatchData, setDispatchData] = useState([]);
   const [dispatchModalVisible, setDispatchModalVisible] = useState(false);
-  const [previousProcessStatus, setPreviousProcessStatus] = useState(true);
+  const [previousProcessStatus, setPreviousProcessStatus] = useState(false);
+
+  const checkPreviousProcessStatus = async () => {
+    try {
+      const { processes } = await getProcessLotPercentages(projectId);
+      
+      // Check if all processes before current process are 100% complete
+      const isAllPreviousComplete = processes.every((process) => {
+        // Skip checking current process and process 10
+        if (process.processId === processId || process.processId === 10) {
+          return true;
+        }
+        // For processes before current one, check if complete
+        if (process.processId < processId) {
+          return process.statistics.overallPercentage === 100;
+        }
+        return true;
+      });
+
+      setPreviousProcessStatus(isAllPreviousComplete);
+    } catch (error) {
+      console.error("Error checking process status:", error);
+      setPreviousProcessStatus(false);
+    }
+  };
 
   const fetchDispatchData = async () => {
     try {
@@ -32,6 +57,7 @@ const DispatchPage = ({ projectId, processId, lotNo, fetchTransactions }) => {
   useEffect(() => {
     if (projectId && processId && lotNo) {
       fetchDispatchData();
+      checkPreviousProcessStatus();
     }
   }, [projectId, processId, lotNo]);
 
