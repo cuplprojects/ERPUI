@@ -665,7 +665,6 @@ const ProjectDetailsTable = ({
                 }
             }
         });
-
         try {
             await Promise.all(updates);
             clearSelections();
