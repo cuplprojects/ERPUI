@@ -9,6 +9,7 @@ import {
   Select,
   Modal,
 } from "antd";
+import { notification } from 'antd';
 import ColumnToggleModal from "./../menus/ColumnToggleModal";
 import AlarmModal from "./../menus/AlarmModal";
 import InterimQuantityModal from "./../menus/InterimQuantityModal";
@@ -105,6 +106,15 @@ const ProjectDetailsTable = ({
   const [courseData, setCourseData] = useState([]);
   const [subjectData, setSubjectData] = useState([]);
 
+  const showNotification = (type, messageKey, descriptionKey, details = '') => {
+    notification[type]({
+      message: t(messageKey),
+      description: `${t(descriptionKey)} ${details}`,
+      placement: 'topRight',
+      duration: 3,
+    });
+  };
+
   // Add resize listener for responsive column visibility
   useEffect(() => {
     const handleResize = () => {
@@ -177,7 +187,7 @@ const ProjectDetailsTable = ({
     const alertsCondition = showOnlyAlerts
       ? item.alerts && item.alerts.trim() !== ""
       : true;
-     const previousProcessCondition = showOnlyCompletedPreviousProcess ? (!item.previousProcessData || item.previousProcessData.status === 2) : true;
+     const previousProcessCondition = showOnlyCompletedPreviousProcess ? (!item.previousProcessData || item.previousProcessData.status === 2 || (item.previousProcessData.thresholdQty != null && item.previousProcessData.thresholdQty > item.previousProcessData.interimQuantity)) : true;
 
     return (
       matchesSearchText &&
@@ -204,20 +214,22 @@ const ProjectDetailsTable = ({
 
     const updatedRow = tableData.find((row) => row.srNo === srNo);
 
-    // Check if previous process exists and is not completed
+    // Check if previous process exists and is not completed, with threshold exception
     if (
       updatedRow.previousProcessData &&
       updatedRow.previousProcessData !== null &&
-      updatedRow.previousProcessData.status !== 2
+      updatedRow.previousProcessData.status !== 2 &&
+      !(updatedRow.previousProcessData.thresholdQty != null && 
+        updatedRow.previousProcessData.thresholdQty > updatedRow.previousProcessData.interimQuantity)
     ) {
-      alert("Cannot change status - previous process must be completed first");
+      showNotification('error', 'Status Update Failed', 'Previous process must be completed first');
       return;
     }
 
-     if (newStatusIndex === 2 && updatedRow.interimQuantity !== updatedRow.quantity) {
-            alert("Cannot set status to Completed - Interim Quantity must equal Quantity");
-            return;
-        }
+    if (newStatusIndex === 2 && updatedRow.interimQuantity !== updatedRow.quantity) {
+      showNotification('error', 'Status Update Failed', 'Interim Quantity must equal Quantity');
+      return;
+    }
 
     try {
       // Fetch the existing transaction data if transactionId exists
@@ -230,7 +242,7 @@ const ProjectDetailsTable = ({
       }
 
       const postData = {
-        transactionId: updatedRow?.transactionId || 0, // Use the transactionId from the updated row
+        transactionId: updatedRow?.transactionId || 0,
         interimQuantity: existingTransactionData
           ? existingTransactionData.interimQuantity
           : 0,
@@ -242,7 +254,7 @@ const ProjectDetailsTable = ({
         machineId: existingTransactionData
           ? existingTransactionData.machineId
           : 0,
-        status: newStatusIndex, // Change only this field
+        status: newStatusIndex,
         alarmId: existingTransactionData ? existingTransactionData.alarmId : "",
         teamId: existingTransactionData ? existingTransactionData.teamId : [],
         lotNo: existingTransactionData ? existingTransactionData.lotNo : lotNo,
@@ -251,12 +263,13 @@ const ProjectDetailsTable = ({
           : "",
       };
 
-      // Always use POST regardless of whether transaction exists or not
-      const response = await API.post("/Transactions", postData);
-
-      fetchTransactions(); // Refresh data
+      await API.post("/Transactions", postData);
+      await fetchTransactions();
+      const catchNumber = tableData.find(row => row.srNo === srNo)?.catchNumber;
+      showNotification('success', 'rowStatusUpdateSuccess', 'rowStatusUpdateDescription', `(Catch: ${catchNumber})`);
     } catch (error) {
-      console.error("Error updating status:", error);
+      showNotification('error', 'rowStatusUpdateError', 'rowStatusUpdateErrorDescription');
+      console.error('Error updating status:', error);
     }
   };
 
@@ -324,11 +337,20 @@ const ProjectDetailsTable = ({
               <div className="d-inline">
                 {record.previousProcessData &&
                   record.previousProcessData.status === 2 ? (
-                  <IoCheckmarkDoneCircleSharp
-                    size={20}
-                    color="green"
-                    className=""
-                  />
+                  record.previousProcessData.thresholdQty != null && 
+                  record.previousProcessData.thresholdQty > record.previousProcessData.interimQuantity ? (
+                    <IoCheckmarkDoneCircleSharp
+                      size={20}
+                      color="yellow"
+                      className=""
+                    />
+                  ) : (
+                    <IoCheckmarkDoneCircleSharp
+                      size={20}
+                      color="green"
+                      className=""
+                    />
+                  )
                 ) : (
                   <MdPending size={20} color="orange" className="" />
                 )}
@@ -478,17 +500,15 @@ const ProjectDetailsTable = ({
       : []),
     {
       title: t("status"),
-      dataIndex: "status",
+      dataIndex: "status", 
       key: "status",
       align: "center",
       render: (text, record) => {
-        // Add debug loggin
-
+        // Add debug logging
         if (!record || text === undefined || text === null) {
           console.log("Invalid data detected:", { record, text });
           return <span>Invalid Data</span>;
         }
-
 
         const statusSteps = [t("pending"), t("started"), t("completed")];
         const initialStatusIndex = text !== undefined ? text : 0;
@@ -496,38 +516,52 @@ const ProjectDetailsTable = ({
         const hasAlerts = Boolean(record.alerts?.length);
 
         // Check if previous process exists and is completed
-        const isPreviousProcessCompleted =
+        const isPreviousProcessCompleted = 
           !record.previousProcessData ||
-          record.previousProcessData.status === 2;
-    
+          record.previousProcessData.status === 2 ||
+          (record.previousProcessData.thresholdQty != null && 
+           record.previousProcessData.thresholdQty > record.previousProcessData.interimQuantity);
 
         // Check if 'Assign Team' and 'Select Zone' data is populated
         const isZoneAssigned = Boolean(record.zoneId);
         const isTeamAssigned = Boolean(record.teamId?.length);
-               // Check if 'Select Machine' is required
+        
+        // Check if 'Select Machine' is required
         const hasSelectMachinePermission = hasFeaturePermission(10);
-       
 
-        // Determine if status can be changed
+        const requirements = []; // Array to hold the reasons
+
         const canChangeStatus =
           isPreviousProcessCompleted &&
           (hasSelectMachinePermission
             ? record.machineId !== 0 &&
-            record.machineId !== null &&
-            isZoneAssigned &&
-            isTeamAssigned
+              record.machineId !== null &&
+              isZoneAssigned &&
+              isTeamAssigned
             : isZoneAssigned && isTeamAssigned);
 
         const canBeCompleted = record.interimQuantity === record.quantity;
 
-      
+        // Populate the requirements array based on conditions
+        if (hasAlerts) {
+          requirements.push("Status cannot be changed due to alerts.");
+        }
+        if (!isPreviousProcessCompleted) {
+          requirements.push("Previous process must be completed.");
+        }
+        if (!canChangeStatus) {
+          requirements.push("Ensure all required fields are filled (Zone, Team, Machine).");
+        }
+        if (initialStatusIndex === 1 && !canBeCompleted) {
+          requirements.push("Cannot set status to Completed - Interim Quantity must equal Quantity.");
+        }
+
+        const isDisabled = requirements.length > 0; // Determine if the toggle is disabled based on requirements
+
         return (
           <div className="d-flex justify-content-center">
             {hasAlerts ? (
-              <span
-                className="text-danger"
-                title="Status cannot be changed due to alerts."
-              >
+              <span className="text-danger" title={requirements.join(', ')}>
                 <StatusToggle
                   initialStatusIndex={initialStatusIndex}
                   statusSteps={statusSteps.map((status, index) => ({
@@ -538,20 +572,21 @@ const ProjectDetailsTable = ({
                 />
               </span>
             ) : (
-              <StatusToggle
-                initialStatusIndex={initialStatusIndex}
-                onStatusChange={(newIndex) =>
-                  handleRowStatusChange(record.srNo, newIndex)
-                }
-                statusSteps={statusSteps.map((status, index) => ({
-                  status,
-                  color: index === 0 ? "red" : index === 1 ? "blue" : "green",
-                }))}
-                disabled={
-                  !canChangeStatus ||
-                  (initialStatusIndex === 1 && !canBeCompleted)
-                } // Disable the toggle if status can't be changed (based on Select Machine or Zone/Team)
-              />
+              <span
+                title={isDisabled ? requirements.join('\n') : ""} // Join requirements with newline for display
+              >
+                <StatusToggle
+                  initialStatusIndex={initialStatusIndex}
+                  onStatusChange={(newIndex) =>
+                    handleRowStatusChange(record.srNo, newIndex)
+                  }
+                  statusSteps={statusSteps.map((status, index) => ({
+                    status,
+                    color: index === 0 ? "red" : index === 1 ? "blue" : "green",
+                  }))}
+                  disabled={isDisabled} // Disable the toggle if status can't be changed
+                />
+              </span>
             )}
           </div>
         );
@@ -577,13 +612,16 @@ const ProjectDetailsTable = ({
         const newStatusIndex = statusSteps.indexOf(newStatus);
 
         // Check if all selected rows have completed previous process or no previous process
-        const allPreviousCompleted = selectedRowKeys.every(key => {
-            const row = tableData.find(row => row.srNo === key); // Changed from catchNumber to srNo
-            return !row.previousProcessData || row.previousProcessData.status === 2;
-        });
+          const allPreviousCompleted = selectedRowKeys.every(key => {
+              const row = tableData.find(row => row.srNo === key);
+              return !row.previousProcessData || 
+                     row.previousProcessData.status === 2 || 
+                     (row.previousProcessData.thresholdQty != null && 
+                      row.previousProcessData.thresholdQty > row.previousProcessData.interimQuantity);
+          });
 
         if (!allPreviousCompleted) {
-            alert("Cannot change status - previous process must be completed for all selected items");
+            showNotification('error', 'Status Update Failed', 'Previous process must be completed for all selected items');
             return;
         }
 
@@ -595,7 +633,7 @@ const ProjectDetailsTable = ({
             });
 
             if (hasIncompleteQuantity) {
-                alert("Cannot set status to Completed - Interim Quantity must equal Quantity for all selected items");
+                showNotification('error', 'Status Update Failed', 'Interim Quantity must equal Quantity for all selected items');
                 return;
             }
         }
@@ -635,6 +673,7 @@ const ProjectDetailsTable = ({
                     await API.post('/Transactions', postData);
                 } catch (error) {
                     console.error(`Error updating status for ${key}:`, error);
+                    throw error;
                 }
             }
         });
@@ -642,13 +681,17 @@ const ProjectDetailsTable = ({
         try {
             await Promise.all(updates);
             clearSelections();
-            await fetchTransactions(); // Refresh data after all updates are complete
+            await fetchTransactions();
+            const updatedCatches = selectedRowKeys.map(key => tableData.find(row => row.srNo === key)?.catchNumber).filter(Boolean).join(', ');
+            showNotification('success', 'statusUpdateSuccess', 'statusUpdateDescription', `(Catches: ${updatedCatches})`);
         } catch (error) {
+            showNotification('error', 'statusUpdateError', 'statusUpdateErrorDescription');
             console.error('Error updating statuses:', error);
         }
     };
 
-  const getSelectedStatus = () => {
+  
+    const getSelectedStatus = () => {
     if (selectedRowKeys.length > 0) {
       const selectedRows = tableData.filter((row) =>
         selectedRowKeys.includes(row.srNo)
@@ -701,95 +744,132 @@ const ProjectDetailsTable = ({
     }
   };
 
-  const handleSelectZoneSave = (zone) => {
-    const updatedData = tableData.map((row) => {
-      if (selectedRowKeys.includes(row.srNo)) {
-        return { ...row, zone }; // Update the zone or any other necessary field
-      }
-      return row;
-    });
-    setTableData(updatedData);
-    setSelectedRowKeys([]); // Deselect all rows
-    setSelectAll(false);
-    setShowOptions(false); // Reset options visibility
-    fetchTransactions();
-  };
-
-  const handleSelectMachineSave = (machine) => {
-    const updatedData = tableData.map((row) => {
-      if (selectedRowKeys.includes(row.srNo)) {
-        return { ...row, machine }; // Update the zone or any other necessary field
-      }
-      return row;
-    });
-    setTableData(updatedData);
-    setSelectedRowKeys([]); // Deselect all rows
-    setSelectAll(false);
-    setShowOptions(false); // Reset options visibility
-    fetchTransactions();
-  };
-
-
-  const handleAlarmSave = (alarm) => {
-    const updatedData = tableData.map((row) => {
-      if (selectedRowKeys.includes(row.srNo)) {
-        return { ...row, alerts: alarm };
-      }
-      return row;
-    });
-    setTableData(updatedData);
-    setSelectedRowKeys([]); // Deselect all rows
-    setSelectAll(false);
-    setShowOptions(false); // Reset options visibility
-    fetchTransactions();
-  };
-
-  const handleInterimQuantitySave = (interimQuantity) => {
-    const updatedData = tableData.map((row) => {
-      if (selectedRowKeys.includes(row.srNo)) {
-        // Use srNo for comparison
-        return { ...row, interimQuantity };
-      }
-      return row;
-    });
-    setTableData(updatedData);
-    setSelectedRowKeys([]); // Deselect all rows
-    setSelectAll(false);
-    setShowOptions(false); // Reset options visibility
-    fetchTransactions();
-  };
-
-  const handleRemarksSave = (remarks, mediaBlobUrl) => {
-    const updatedData = tableData.map((row) => {
-      if (selectedRowKeys.includes(row.srNo)) {
-        return { ...row, remarks, mediaBlobUrl };
-      }
-      return row;
-    });
-    setTableData(updatedData);
-    setSelectedRowKeys([]); // Deselect all rows
-    setSelectAll(false);
-    setShowOptions(false); // Reset options visibility
-    fetchTransactions();
-  };
-
-  const handleCatchDetailSave = (alarm) =>{
-        const updatedData = tableData.map((row) => {
-            if (selectedRowKeys.includes(row.srNo)) {
-                return { ...row, alerts: alarm };
-            }
-            return row;
-        });
-        setTableData(updatedData);
-        setSelectedRowKeys([]); // Deselect all rows
-    setSelectAll(false);
-        setShowOptions(false); // Reset options visibility
-        fetchTransactions();
+  const handleSelectZoneSave = async (zone) => {
+    try {
+      const updatedData = tableData.map((row) => {
+        if (selectedRowKeys.includes(row.srNo)) {
+          return { ...row, zone };
+        }
+        return row;
+      });
+      setTableData(updatedData);
+      setSelectedRowKeys([]);
+      setSelectAll(false);
+      setShowOptions(false);
+      await fetchTransactions();
+      const updatedCatches = selectedRowKeys.map(key => tableData.find(row => row.srNo === key)?.catchNumber).filter(Boolean).join(', ');
+      showNotification('success', 'zoneUpdateSuccess', 'zoneUpdateDescription', `(Catches: ${updatedCatches})`);
+    } catch (error) {
+      showNotification('error', 'zoneUpdateError', 'zoneUpdateErrorDescription');
     }
+  };
+
+  const handleSelectMachineSave = async (machine) => {
+    try {
+      const updatedData = tableData.map((row) => {
+        if (selectedRowKeys.includes(row.srNo)) {
+          return { ...row, machine };
+        }
+        return row;
+      });
+      setTableData(updatedData);
+      setSelectedRowKeys([]);
+      setSelectAll(false);
+      setShowOptions(false);
+      await fetchTransactions();
+      const updatedCatches = selectedRowKeys.map(key => tableData.find(row => row.srNo === key)?.catchNumber).filter(Boolean).join(', ');
+      showNotification('success', 'machineUpdateSuccess', 'machineUpdateDescription', `(Catches: ${updatedCatches})`);
+    } catch (error) {
+      showNotification('error', 'machineUpdateError', 'machineUpdateErrorDescription');
+    }
+  };
+
+
+  const handleAlarmSave = async (alarm) => {
+    try {
+      const updatedData = tableData.map((row) => {
+        if (selectedRowKeys.includes(row.srNo)) {
+          return { ...row, alerts: alarm };
+        }
+        return row;
+      });
+      setTableData(updatedData);
+      setSelectedRowKeys([]);
+      setSelectAll(false);
+      setShowOptions(false);
+      await fetchTransactions();
+      const updatedCatches = selectedRowKeys.map(key => tableData.find(row => row.srNo === key)?.catchNumber).filter(Boolean).join(', ');
+      showNotification('success', 'alarmUpdateSuccess', 'alarmUpdateDescription', `(Catches: ${updatedCatches})`);
+    } catch (error) {
+      showNotification('error', 'alarmUpdateError', 'alarmUpdateErrorDescription');
+    }
+  };
+
+  const handleInterimQuantitySave = async (interimQuantity) => {
+    try {
+      const updatedData = tableData.map((row) => {
+        if (selectedRowKeys.includes(row.srNo)) {
+          return { ...row, interimQuantity };
+        }
+        return row;
+      });
+      setTableData(updatedData);
+      setSelectedRowKeys([]);
+      setSelectAll(false);
+      setShowOptions(false);
+      await fetchTransactions();
+      const updatedCatches = selectedRowKeys.map(key => tableData.find(row => row.srNo === key)?.catchNumber).filter(Boolean).join(', ');
+      showNotification('success', 'quantityUpdateSuccess', 'quantityUpdateDescription', `(Catches: ${updatedCatches})`);
+    } catch (error) {
+      showNotification('error', 'quantityUpdateError', 'quantityUpdateErrorDescription');
+    }
+  };
+  
+
+  const handleRemarksSave = async (remarks, mediaBlobUrl) => {
+    try {
+      const updatedData = tableData.map((row) => {
+        if (selectedRowKeys.includes(row.srNo)) {
+          return { ...row, remarks, mediaBlobUrl };
+        }
+        return row;
+      });
+      setTableData(updatedData);
+      setSelectedRowKeys([]);
+      setSelectAll(false);
+      setShowOptions(false);
+      await fetchTransactions();
+      const updatedCatches = selectedRowKeys.map(key => tableData.find(row => row.srNo === key)?.catchNumber).filter(Boolean).join(', ');
+      showNotification('success', 'remarksUpdateSuccess', 'remarksUpdateDescription', `(Catches: ${updatedCatches})`);
+    } catch (error) {
+      showNotification('error', 'remarksUpdateError', 'remarksUpdateErrorDescription');
+    }
+  };
+  
+
+  const handleCatchDetailSave = async (alarm) => {
+    try {
+      const updatedData = tableData.map((row) => {
+        if (selectedRowKeys.includes(row.srNo)) {
+          return { ...row, alerts: alarm };
+        }
+        return row;
+      });
+      setTableData(updatedData);
+      setSelectedRowKeys([]);
+      setSelectAll(false);
+      setShowOptions(false);
+      await fetchTransactions();
+      showNotification('success', 'Details Updated', 'Catch details have been successfully updated');
+    } catch (error) {
+      showNotification('error', 'Update Failed', 'Failed to update catch details. Please try again.');
+    }
+  };
 
   const selectedRows = tableData.filter((row) =>
     selectedRowKeys.includes(row.srNo)
   );
+
   const isCompleted = selectedRows.every((row) => row.status === 2);
   const isStarted = selectedRows.every((row) => row.status == 1);
 
@@ -863,6 +943,18 @@ const ProjectDetailsTable = ({
       default:
         return "";
     }
+  };
+
+  const handleAssignTeamSuccess = () => {
+    showNotification('success', 'Team Assigned', 'Team has been successfully assigned');
+    setSelectedRowKeys([]);
+    setSelectAll(false);
+    setShowOptions(false);
+  };
+
+  const handleAssignTeamError = (error) => {
+    showNotification('error', 'Assignment Failed', 'Failed to assign team. Please try again.');
+    console.error('Error assigning team:', error);
   };
 
   return (
@@ -1187,6 +1279,8 @@ const ProjectDetailsTable = ({
         fetchTransactions={fetchTransactions}
         data={assignTeamModalData}
         processId={processId}
+        onSuccess={handleAssignTeamSuccess}
+        onError={handleAssignTeamError}
       />
     </>
   );

@@ -23,24 +23,35 @@ const DispatchPage = ({ projectId, processId, lotNo, fetchTransactions }) => {
 
   const checkPreviousProcessStatus = async () => {
     try {
+      console.log('Checking process status for projectId:', projectId);
       const { processes } = await getProcessLotPercentages(projectId);
-      
-      // Check if all processes before current process are 100% complete
-      const isAllPreviousComplete = processes.every((process) => {
-        // Skip checking current process and process 10
-        if (process.processId === processId || process.processId === 10) {
+      console.log('Received processes:', processes);
+
+      // Find current lot's completion status across all processes
+      const currentLotStatus = processes.map(process => {
+        const currentLot = process.lots.find(lot => lot.lotNumber === lotNo);
+        return {
+          processId: process.processId,
+          isComplete: currentLot?.percentage === 100
+        };
+      });
+
+      // Check if current lot is complete in all processes except current and process 10
+      const isLotCompleteInAll = currentLotStatus.every(status => {
+        if (status.processId === processId || status.processId === 10) {
           return true;
         }
-        // For processes before current one, check if complete
-        if (process.processId < processId) {
-          return process.statistics.overallPercentage === 100;
+        if (status.processId < processId) {
+          return status.isComplete;
         }
         return true;
       });
 
-      setPreviousProcessStatus(isAllPreviousComplete);
+      console.log('Current lot complete in all previous processes?', isLotCompleteInAll);
+      setPreviousProcessStatus(isLotCompleteInAll);
     } catch (error) {
       console.error("Error checking process status:", error);
+      console.error("Error details:", error.message);
       setPreviousProcessStatus(false);
     }
   };
@@ -121,7 +132,9 @@ const DispatchPage = ({ projectId, processId, lotNo, fetchTransactions }) => {
     try {
       await updateDispatch(dispatch.id, {
         ...dispatch,
-        status: true
+        status: true,
+        completedAt: new Date(new Date().getTime() + (5.5 * 60 * 60 * 1000)).toISOString(),
+        updatedAt: new Date(new Date().getTime() + (5.5 * 60 * 60 * 1000)).toISOString()
       });
       message.success(t("statusUpdateSuccess"));
       fetchDispatchData();
@@ -190,7 +203,7 @@ const DispatchPage = ({ projectId, processId, lotNo, fetchTransactions }) => {
                       </span>
                     </td>
                   </tr>
-                  {!dispatch.status && previousProcessStatus && (
+                  {!dispatch.status &&  (
                     <tr>
                       <th>{t("actions")}</th>
                       <td>

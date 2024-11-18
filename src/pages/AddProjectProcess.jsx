@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Table, Spin, message, Button, Collapse, Checkbox, Select } from 'antd';
+import { Table, Spin, message, Button, Collapse, Checkbox, Select, InputNumber } from 'antd';
 import API from '../CustomHooks/MasterApiHooks/api'; // Adjust the path as necessary
 import { SortableContainer, SortableElement, SortableHandle } from 'react-sortable-hoc';
 
@@ -10,7 +10,7 @@ const DragHandle = SortableHandle(() => (
   <span style={{ cursor: 'grab', marginRight: '8px', opacity: 1 }}>⣿</span>
 ));
 
-const SortableRow = SortableElement(({ process, index, features, editingProcessId, editingFeatures, handleFeatureChange, handleSaveFeatures, handleCancelEdit, handleEdit, independentProcesses }) => {
+const SortableRow = SortableElement(({ process, index, features, editingProcessId, editingFeatures, handleFeatureChange, handleSaveFeatures, handleCancelEdit, handleEdit, independentProcesses, handleThresholdChange }) => {
   return (
     <tr style={{ opacity: 1, background: 'white', margin: '10px' }}>
       <td>
@@ -46,6 +46,17 @@ const SortableRow = SortableElement(({ process, index, features, editingProcessI
       </td>
       <td>{process.weightage}</td>
       <td>{process.relativeWeightage.toFixed(4)}%</td>
+      <td>
+        {editingProcessId === process.id ? (
+          <InputNumber 
+            min={0}
+            value={process.thresholdQty}
+            onChange={(value) => handleThresholdChange(process.id, value)}
+          />
+        ) : (
+          process.thresholdQty ? process.thresholdQty : ''
+        )}
+      </td>
       <td>
         {editingProcessId === process.id ? (
           <>
@@ -196,6 +207,16 @@ const AddProjectProcess = ({ selectedProject }) => {
     });
   };
 
+  const handleThresholdChange = (processId, value) => {
+    setProjectProcesses(prevProcesses => 
+      prevProcesses.map(process => 
+        process.id === processId 
+          ? { ...process, thresholdQty: value }
+          : process
+      )
+    );
+  };
+
   const calculatedWeightage = (processes) => {
     const totalWeightage = processes.reduce((sum, process) => sum + (process.weightage || 0), 0);
     return processes.map(process => ({
@@ -215,7 +236,8 @@ const AddProjectProcess = ({ selectedProject }) => {
         weightage: process.relativeWeightage,
         sequence: index+1,
         featuresList: process.installedFeatures,
-        userId: process.userId || []
+        userId: process.userId || [],
+        thresholdQty: process.thresholdQty || 0
       };
     });
 
@@ -251,10 +273,12 @@ const AddProjectProcess = ({ selectedProject }) => {
   };
 
   const handleSaveFeatures = async (processId) => {
+    const process = projectProcesses.find(p => p.id === processId);
     const updatedProcess = {
       projectId: selectedProject,
       processId: processId,
       featuresList: editingFeatures,
+      thresholdQty: process.thresholdQty
     };
 
     try {
@@ -268,9 +292,9 @@ const AddProjectProcess = ({ selectedProject }) => {
           return process;
         });
       });
-      message.success('Features updated successfully!');
+      message.success('Process updated successfully!');
     } catch (error) {
-      message.error('Error updating features. Please try again.');
+      message.error('Error updating process. Please try again.');
     } finally {
       setEditingProcessId(null);
       setEditingFeatures([]);
@@ -325,10 +349,11 @@ const AddProjectProcess = ({ selectedProject }) => {
           <thead>
             <tr>
               <th style={{ padding: '5px', textAlign: 'left', width: '20%' }}>Process Name</th>
-              <th style={{ padding: '5px', textAlign: 'left', width: '30%' }}>Installed Features</th>
+              <th style={{ padding: '5px', textAlign: 'left', width: '25%' }}>Installed Features</th>
               <th style={{ padding: '5px', textAlign: 'left', width: '15%' }}>Weightage</th>
               <th style={{ padding: '5px', textAlign: 'left', width: '15%' }}>Relative Weightage</th>
-              <th style={{ padding: '5px', textAlign: 'left', width: '20%' }}>Action</th>
+              <th style={{ padding: '5px', textAlign: 'left', width: '10%' }}>Threshold Qty</th>
+              <th style={{ padding: '5px', textAlign: 'left', width: '15%' }}>Action</th>
             </tr>
           </thead>
           <SortableBody
@@ -353,6 +378,7 @@ const AddProjectProcess = ({ selectedProject }) => {
                 handleCancelEdit={handleCancelEdit}
                 handleEdit={handleEdit}
                 independentProcesses={independentProcesses}
+                handleThresholdChange={handleThresholdChange}
               />
             ))}
           </SortableBody>

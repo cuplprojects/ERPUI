@@ -326,7 +326,7 @@ useEffect(() => {
               className="dcard shadow-lg mb-3"
               style={{ height: "500px", background: "rgba(255,255,255,0.6)" }}
             >
-              <BarChart lots={selectedLots || (data[0] && data[0].lots) || []} />
+              <BarChart projectId={clickData.projectId} />
             </Card>
           </Col>
         )}
