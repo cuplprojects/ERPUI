@@ -19,7 +19,7 @@ import Message from '../pages/Message/Message';
 import Labels from '../pages/Message/Labels';
 import Reports from '../pages/Reports';
 import CuDashboard from '../pages/CuDashboard';
-import AddProjectProcess from '../pages/AddProjectProcess';
+import AddProjectProcess from '../pages/ProjectMaster/Tabs/AddProjectProcess';
 import ProtectedRoute from '../Security/ProtectedRoute';
 
 const Userlayout = () => {
