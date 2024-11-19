@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Table, Spin, message, Button, Collapse, Checkbox, Select, InputNumber } from 'antd';
-import API from '../CustomHooks/MasterApiHooks/api'; // Adjust the path as necessary
+import API from '../../../CustomHooks/MasterApiHooks/api';
 import { SortableContainer, SortableElement, SortableHandle } from 'react-sortable-hoc';
 
 const { Panel } = Collapse;
@@ -12,9 +12,9 @@ const DragHandle = SortableHandle(({ disabled }) => (
     marginRight: '8px', 
     opacity: disabled ? 0.5 : 1,
     display: disabled ? 'none' : 'inline' 
-  }}>⣿</span>
+  }} aria-hidden={disabled ? "true" : "false"}>⣿</span>
 ));
-const SortableRow = SortableElement(({ process, index, features, editingProcessId, editingFeatures, handleFeatureChange, handleSaveFeatures, handleCancelEdit, handleEdit, independentProcesses, disabled }) => {
+const SortableRow = SortableElement(({ process, index, features, editingProcessId, editingFeatures, handleFeatureChange, handleSaveFeatures, handleCancelEdit, handleEdit, independentProcesses, disabled, handleThresholdChange }) => {
 
   return (
     <tr style={{ opacity: 1, background: 'white', margin: '10px' }}>
@@ -104,6 +104,7 @@ const AddProjectProcess = ({ selectedProject }) => {
   const [independentProcesses, setIndependentProcesses] = useState([]);
   const [projectName, setProjectName] = useState('');
   const [isTransactionExists, setIsTransactionExists] = useState(false);
+  const tableRef = useRef(null);
 
   useEffect(() => {
     const fetchRequiredProcesses = async (typeId) => {
@@ -225,13 +226,14 @@ const AddProjectProcess = ({ selectedProject }) => {
   };
 
   const handleThresholdChange = (processId, value) => {
-    setProjectProcesses(prevProcesses => 
-      prevProcesses.map(process => 
+    setProjectProcesses(prevProcesses => {
+      const updatedProcesses = prevProcesses.map(process => 
         process.id === processId 
           ? { ...process, thresholdQty: value }
           : process
-      )
-    );
+      );
+      return calculatedWeightage(updatedProcesses);
+    });
   };
 
   const calculatedWeightage = (processes) => {
@@ -340,6 +342,17 @@ const AddProjectProcess = ({ selectedProject }) => {
     });
   }, [projectProcesses, independentProcesses, isTransactionExists]);
 
+  const handleSomeAction = () => {
+    if (tableRef.current) {
+      const tableData = {
+        processes: projectProcesses,
+        features: features,
+        selectedProcessIds: selectedProcessIds
+      };
+      console.log('Table data:', tableData);
+    }
+  };
+
   if (loading || projectProcesses.length === 0) {
     return <Spin tip="Loading..." />;
   }
@@ -349,13 +362,14 @@ const AddProjectProcess = ({ selectedProject }) => {
       <h4>Project: {projectName}</h4>
 
       <Collapse defaultActiveKey={['1']}>
-        <Panel header="Manage Processes" key="1">
+        <Panel header="Manage Processes" key="1" inert={isTransactionExists ? "true" : undefined}>
           {allProcesses.map(process => (
             <Checkbox
               key={process.id}
               checked={selectedProcessIds.includes(process.id)}
               onChange={() => handleProcessSelect(process.id)}
               disabled={requiredProcessIds.includes(process.id) || isTransactionExists}
+              aria-hidden={requiredProcessIds.includes(process.id) || isTransactionExists}
             >
               {process.name}
             </Checkbox>
@@ -364,7 +378,7 @@ const AddProjectProcess = ({ selectedProject }) => {
       </Collapse>
 
       <div style={{ padding: '10px', overflowX: 'auto' }}>
-        <table className="table table-striped table-bordered" style={{ minWidth: '800px', tableLayout: 'fixed', borderCollapse: 'collapse' }}>
+        <table ref={tableRef} className="table table-striped table-bordered" style={{ minWidth: '800px', tableLayout: 'fixed', borderCollapse: 'collapse' }}>
           <thead>
             <tr>
               <th style={{ padding: '5px', textAlign: 'left', width: '20%' }}>Process Name</th>
@@ -399,6 +413,7 @@ const AddProjectProcess = ({ selectedProject }) => {
                 handleEdit={handleEdit}
                 independentProcesses={independentProcesses}
                 disabled={isTransactionExists}
+                handleThresholdChange={handleThresholdChange}
               />
             ))}
           </SortableBody>
