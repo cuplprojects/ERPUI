@@ -165,13 +165,6 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
             alert("Cannot change status - previous process must be completed first");
             return;
         }
-
-        // Check if trying to set status to Completed when interimQuantity != quantity
-        if (newStatusIndex === 2 && updatedRow.interimQuantity !== updatedRow.quantity) {
-            alert("Cannot set status to Completed - Interim Quantity must equal Quantity");
-            return;
-        }
-
         try {
             // Fetch the existing transaction data if transactionId exists
             let existingTransactionData;
@@ -397,7 +390,6 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
             key: 'status',
             align: 'center',
             render: (text, record) => {
-                // Add debug logging
                 console.log('Status render called with:', {
                     text, 
                     record,
@@ -415,7 +407,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                 const initialStatusIndex = text !== undefined ? text : 0;
         
                 const hasAlerts = Boolean(record.alerts?.length);
-                
+        
                 // Check if previous process exists and is completed
                 const isPreviousProcessCompleted = !record.previousProcessData || record.previousProcessData.status === 2;
                 console.log('Previous process check:', {
@@ -423,8 +415,8 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                     isPreviousProcessCompleted,
                     previousStatus: record.previousProcessData?.status
                 });
-                
-                // Check if 'Assign Team' and 'Select Zone' data is populated 
+        
+                // Check if 'Assign Team' and 'Select Zone' data is populated
                 const isZoneAssigned = Boolean(record.zoneId);
                 const isTeamAssigned = Boolean(record.teamId?.length);
                 console.log('Assignment checks:', {
@@ -433,14 +425,14 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                     teamId: record.teamId,
                     isTeamAssigned
                 });
-            
+        
                 // Check if 'Select Machine' is required
                 const hasSelectMachinePermission = hasFeaturePermission(10);
                 console.log('Machine permission check:', {
                     hasSelectMachinePermission,
                     machineId: record.machineId
                 });
-            
+        
                 // Determine if status can be changed
                 const canChangeStatus = isPreviousProcessCompleted && (
                     hasSelectMachinePermission
@@ -449,25 +441,18 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                 );
         
                 const canBeCompleted = record.interimQuantity === record.quantity; // Ensure interimQuantity equals quantity for "completed" status
-                
-                console.log('Final status check:', {
-                    canChangeStatus,
-                    conditions: {
-                        isPreviousProcessCompleted,
-                        hasSelectMachinePermission,
-                        machineAssigned: record.machineId !== 0 && record.machineId !== null,
-                        isZoneAssigned,
-                        isTeamAssigned,
-                        canBeCompleted
-                    }
-                });
+                console.log('canBeCompleted:', canBeCompleted);
         
                 // Disable the toggle for "Completed" status if interimQuantity !== quantity
-                const isCompletedStatusDisabled = initialStatusIndex === 2 && !canBeCompleted;
+                const isCompletedStatusDisabled = initialStatusIndex === 1 && !canBeCompleted;
+                console.log('isCompletedStatusDisabled:', isCompletedStatusDisabled);
+        
+                // Check if the user has permission 7 to view the alert
+                const hasFeaturePermission7 = hasFeaturePermission(7);
         
                 return (
                     <div className="d-flex justify-content-center">
-                        {hasAlerts ? (
+                        {hasAlerts && hasFeaturePermission7 ? (
                             <span className="text-danger" title="Status cannot be changed due to alerts.">
                                 <StatusToggle
                                     initialStatusIndex={initialStatusIndex}
@@ -481,7 +466,21 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
                         ) : (
                             <StatusToggle
                                 initialStatusIndex={initialStatusIndex}
-                                onStatusChange={(newIndex) => handleRowStatusChange(record.srNo, newIndex)}
+                                onStatusChange={(newIndex) => {
+                                    // If the user is trying to set status to "Completed" (index 2)
+                                    if (newIndex === 2) {
+                                        if (!canBeCompleted) {
+                                            // Prevent status change to "Completed" if interimQuantity doesn't match quantity
+                                            if (hasFeaturePermission7) {
+                                                alert("Cannot set status to Completed - Interim Quantity must equal Quantity");
+                                            }
+                                            return; // Prevent the status toggle
+                                        }
+                                    }
+        
+                                    // Call the original function to handle status change
+                                    handleRowStatusChange(record.srNo, newIndex);
+                                }}
                                 statusSteps={statusSteps.map((status, index) => ({
                                     status,
                                     color: index === 0 ? "red" : index === 1 ? "blue" : "green"
@@ -501,8 +500,8 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
             }
         }
         
-               
-
+        
+        
     ];
 
     const clearSelections = () => {
@@ -527,16 +526,14 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
         }
 
         // Check if trying to set status to Completed when interimQuantity != quantity for any row
-        if (newStatusIndex === 2) {
-            const hasIncompleteQuantity = selectedRowKeys.some(key => {
-                const row = tableData.find(row => row.srNo === key);
-                return row.interimQuantity !== row.quantity;
-            });
+        const hasFeaturePermission7 = hasFeaturePermission(7);
 
-            if (hasIncompleteQuantity) {
-                alert("Cannot set status to Completed - Interim Quantity must equal Quantity for all selected items");
-                return;
+        // Check if trying to set status to Completed when interimQuantity != quantity
+        if (newStatusIndex === 2 && updatedRow.interimQuantity !== updatedRow.quantity) {
+            if (hasFeaturePermission7) {
+                alert("Cannot set status to Completed - Interim Quantity must equal Quantity");
             }
+            return;  // Prevent the status change to "Completed" regardless of permission
         }
 
         // Iterate over selectedRowKeys and update status
@@ -648,6 +645,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
         setTableData(updatedData);
         setSelectedRowKeys([]); // Deselect all rows
         setShowOptions(false); // Reset options visibility
+        setSelectAll(false);
         fetchTransactions();
     };
 
@@ -661,6 +659,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
         setTableData(updatedData);
         setSelectedRowKeys([]); // Deselect all rows
         setShowOptions(false); // Reset options visibility
+        setSelectAll(false);
         fetchTransactions();
     };
 
@@ -675,6 +674,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
         setTableData(updatedData);
         setSelectedRowKeys([]); // Deselect all rows
         setShowOptions(false); // Reset options visibility
+        setSelectAll(false);
         fetchTransactions();
     };
 
@@ -688,6 +688,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
         setTableData(updatedData);
         setSelectedRowKeys([]); // Deselect all rows
         setShowOptions(false); // Reset options visibility
+        setSelectAll(false);
         fetchTransactions();
     };
 
@@ -724,7 +725,7 @@ const ProjectDetailsTable = ({ tableData, setTableData, projectId, hasFeaturePer
 
     const menu = (
         <Menu>
-            {hasFeaturePermission(3) && !isCompleted && (
+            {hasFeaturePermission(3) && !isCompleted && selectedRowKeys.length === 1 &&(
                 <Menu.Item onClick={() => handleDropdownSelect('Alarm')}>
                     {t("alarm")}
                 </Menu.Item>

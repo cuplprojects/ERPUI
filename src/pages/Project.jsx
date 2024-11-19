@@ -128,7 +128,7 @@ const Project = () => {
       setIsModalVisible(false);
       message.success(t('projectAddedSuccessfully'));
       setActiveTabKey("2"); // Switch to Select Process tab
-      setSelectedProject(response.data.projectId); 
+      setSelectedProject(response.data.projectId);
     } catch (error) {
       console.error('Error adding project:', error);
       message.error(t('errorAddingProject'));
@@ -176,7 +176,7 @@ const Project = () => {
       sorter: (a, b) => a.name.localeCompare(b.name),
       sortOrder: sortedInfo.columnKey === 'name' && sortedInfo.order,
       render: (text, record, index) =>
-      
+
         editingIndex === index ? (
           <Input
             value={editingName}
@@ -185,14 +185,14 @@ const Project = () => {
             onBlur={() => handleEditSave(index)}
           />
         ) : (
-          <a 
-          onClick={() => {
-            setActiveTabKey("2"); // Switch to Select Process tab
-            setSelectedProject(record.projectId); // Navigate to process
-          }}
-        >
-          {text}
-        </a>
+          <a
+            onClick={() => {
+              setActiveTabKey("2"); // Switch to Select Process tab
+              setSelectedProject(record.projectId); // Navigate to process
+            }}
+          >
+            {text}
+          </a>
           //<span>{text}</span>
         ),
     },
@@ -302,7 +302,7 @@ const Project = () => {
   );
 
   return (
- 
+
     <Card
       title={t('projects')}
       bordered={true}
@@ -361,11 +361,11 @@ const Project = () => {
                       label={<span className={customDarkText}>{t('numberOfSeries')}</span>}
                       rules={[{ required: true, message: t('pleaseEnterNumberOfSeries') }]}
                     >
-                      <Select 
+                      <Select
                         placeholder={t('selectNumberOfSeries')}
                         onChange={handleNumberOfSeriesChange}
                       >
-                        {[1,2,3,4,5,6,7,8].map(num => (
+                        {[1, 2, 3, 4, 5, 6, 7, 8].map(num => (
                           <Option key={num} value={num}>{num}</Option>
                         ))}
                       </Select>
@@ -416,23 +416,23 @@ const Project = () => {
           </Modal>
         </TabPane>
         <TabPane tab={t('selectProcess')} key="2">
-  {/* Content for Select Process */}
-  <div>
-    <AddProjectProcess selectedProject={selectedProject} />
-    <Button 
-      type="primary" 
-      onClick={() => setActiveTabKey("3")} 
-      style={{ marginTop: '20px' }}
-    >
-      {t('next')}
-    </Button>
-  </div>
-</TabPane>
+          {/* Content for Select Process */}
+          <div>
+            <AddProjectProcess selectedProject={selectedProject} />
+            <Button
+              type="primary"
+              onClick={() => setActiveTabKey("3")}
+              style={{ marginTop: '20px' }}
+            >
+              {t('next')}
+            </Button>
+          </div>
+        </TabPane>
 
         <TabPane tab={t('allocateProcess')} key="3">
           {/* Content for Allocate Process */}
           <div>
-            <ProjectUserAllocation selectedProject={selectedProject}/>
+            <ProjectUserAllocation selectedProject={selectedProject} />
           </div>
         </TabPane>
       </Tabs>
