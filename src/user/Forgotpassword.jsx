@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Container, Row, Col, Form, Button, Spinner } from 'react-bootstrap';
+import { Container, Row, Col, Form, Button, Spinner, Dropdown } from 'react-bootstrap';
 import { useNavigate, Link } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useMediaQuery } from 'react-responsive';
 import themeStore from './../store/themeStore';
+import languageStore from './../store/languageStore'; // Added languageStore
 import { useStore } from 'zustand';
 import Logo1 from "./../assets/Logos/CUPLLogoTheme.png";
 import redBrain from "./../assets/bgImages/brain/brainRed.png";
@@ -19,12 +20,13 @@ import defaultBrain from "./../assets/bgImages/brain/brainDefault.png";
 import { AiFillEyeInvisible } from "react-icons/ai";
 import { AiFillEye } from "react-icons/ai";
 import API from '../CustomHooks/MasterApiHooks/api';
+import IndianFlag from './../assets/Icons/Hindi.png';
+import UKFlag from './../assets/Icons/English.png';
+import { useTranslation } from 'react-i18next';
 const ForgotPassword = () => {
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
-  const customDark = cssClasses[0];
-  const customBtn = cssClasses[3];
-  const customDarkText = cssClasses[4];
+  const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
   const themeImages = {
     "purple-dark": purpleBrain,
     "blue-dark": blueBrain,
@@ -48,11 +50,18 @@ const ForgotPassword = () => {
   const [userQuestions, setUserQuestions] = useState([]);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const { setLanguage } = useStore(languageStore);
+  const { t, i18n } = useTranslation();
+
+  const handleLanguageChange = (lang) => {
+    setLanguage(lang);
+    i18n.changeLanguage(lang);
+  };
 
   const handleUserNameSubmit = async (e) => {
     e.preventDefault();
     if (!userName.trim()) {
-      toast.error('Please enter your username');
+      toast.error(t('pleaseEnterYourUserName'));
       return;
     }
     setLoading(true);
@@ -63,12 +72,12 @@ const ForgotPassword = () => {
       setUserQuestions(response.data)
       console.log(response.data)
       setCurrentStep(2); // Move to Step 2
-      toast.success('Security questions loaded successfully');
+      toast.success(t('securityQuestionsLoadedSuccessfully'));
     } catch (error) {
       if (error.response.status === 404) {
-        toast.error('No security questions found for this username');
+        toast.error(t('noSecurityQuestionsFoundForThisUsername'));
       } else {
-        toast.error('An error occurred while fetching security questions');
+        toast.error(t('anErrorOccurredWhileFetchingSecurityQuestions'));
       }
     } finally {
       setLoading(false);
@@ -78,7 +87,7 @@ const ForgotPassword = () => {
   const handleSubmitAnswers = async (e) => {
     e.preventDefault();
     if (answers.some(answer => !answer.trim())) {
-      toast.error('Please answer all security questions');
+      toast.error(t('pleaseAnswerAllSecurityQuestions'));
       return;
     }
     const data = {
@@ -90,12 +99,12 @@ const ForgotPassword = () => {
     try {
       const res = await API.post('/Login/forgotPassword/verifySecurityAnswers', data)
       setCurrentStep(3); // Move to Step 3
-      toast.success('Security answers verified successfully');
+      toast.success(t('securityAnswersVerifiedSuccessfully'));
     } catch (error) {
       if (error.response.status === 401) {
-        toast.error('Security answers are incorrect');
+        toast.error(t('securityAnswersAreIncorrect'));
       } else {
-        toast.error('An error occurred while verifying security answers');
+        toast.error(t('anErrorOccurredWhileVerifyingSecurityAnswers'));
       }
     }
   };
@@ -103,11 +112,11 @@ const ForgotPassword = () => {
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
-      toast.error('Passwords do not match');
+      toast.error(t('passwordsDoNotMatch'));
       return;
     }
     if (newPassword.length < 8) {
-      toast.error('Password must be at least 8 characters long');
+      toast.error(t('passwordMustBeAtLeast8CharactersLong'));
       return;
     }
 
@@ -122,15 +131,15 @@ const ForgotPassword = () => {
 
       const response = await API.post('/Login/forgotPassword/setNewPassword', payload);
       if (response.status === 200) {
-        toast.success('Password reset successfully', {
+        toast.success(t('passwordResetSuccessfully'), {
           autoClose: 1500,
           onClose: () => navigate('/')
         });
       } else {
-        toast.error('An error occurred while resetting password');
+        toast.error(t('anErrorOccurredWhileResettingPassword'));
       }
     } catch (error) {
-      toast.error('An error occurred while resetting password');
+      toast.error(t('anErrorOccurredWhileResettingPassword'));
     } finally {
       setLoading(false);
     }
@@ -145,6 +154,35 @@ const ForgotPassword = () => {
   return (
     <Container fluid className="vh-100 position-relative overflow-hidden">
       <ToastContainer className="responsive-toast" autoClose={1500}/>
+      <Dropdown className={`position-absolute ${customDarkBorder} rounded-3`} style={{ top: '20px', left: '20px', zIndex: 2 }}>
+        <Dropdown.Toggle variant="light" id="language-dropdown" className="d-flex align-items-center">
+          <img 
+            src={i18n.language === 'hi' ? IndianFlag : UKFlag} 
+            alt="Selected Language" 
+            style={{ width: '20px', marginRight: '5px' }}
+          />
+          {i18n.language === 'hi' ? 'हिंदी' : 'English'}
+        </Dropdown.Toggle>
+
+        <Dropdown.Menu>
+          <Dropdown.Item onClick={() => handleLanguageChange('en')} className="d-flex align-items-center">
+            <img 
+              src={UKFlag} 
+              alt="UK Flag" 
+              style={{ width: '20px', marginRight: '5px' }}
+            />
+            English
+          </Dropdown.Item>
+          <Dropdown.Item onClick={() => handleLanguageChange('hi')} className="d-flex align-items-center">
+            <img 
+              src={IndianFlag} 
+              alt="Indian Flag" 
+              style={{ width: '20px', marginRight: '5px' }}
+            />
+            हिंदी
+          </Dropdown.Item>
+        </Dropdown.Menu>
+      </Dropdown>
       {isMediumOrSmaller && (
         <div
           style={{
@@ -177,12 +215,12 @@ const ForgotPassword = () => {
             {/* Step 1: Enter Username */}
             {currentStep === 1 && (
               <Form onSubmit={handleUserNameSubmit} className="bg-white p-3 rounded-4 shadow-sm shadow-lg">
-                <h3 className="text-center mb-4">Reset Password</h3>
+                <h3 className="text-center mb-4">{t('resetPassword')}</h3>
                 <Form.Group controlId="formBasicUserName" className="mb-3">
-                  <Form.Label>Enter Username</Form.Label>
+                  <Form.Label>{t('enterUsername')}</Form.Label>
                   <Form.Control
                     type="text"
-                    placeholder="Enter Username"
+                    placeholder={t('enterUsername')}
                     value={userName}
                     onChange={(e) => setUserName(e.target.value)}
                     required
@@ -194,11 +232,11 @@ const ForgotPassword = () => {
                   className={`w-100 border-0 ${customBtn} custom-zoom-btn`}
                   disabled={loading}
                 >
-                  {loading ? <Spinner animation="border" size="sm" /> : 'Submit Username'}
+                  {loading ? <Spinner animation="border" size="sm" /> : t('submitUsername')}
                 </Button>
                 <div className="text-center mt-3 custom-zoom-btn">
                   <Link to="/" className={`${customDark === "dark-dark" ? `text-dark` : `${customDarkText}`}`}>
-                    Back to login
+                    {t('backToLogin')}
                   </Link>
                 </div>
               </Form>
@@ -207,13 +245,13 @@ const ForgotPassword = () => {
             {/* Step 2: Answer Security Questions */}
             {currentStep === 2 && (
               <Form onSubmit={handleSubmitAnswers} className="bg-white p-3 rounded-4 shadow-sm shadow-lg">
-                <h3 className="text-center mb-4">Answer Security Questions</h3>
+                <h3 className="text-center mb-4">{t("answerSecurityQuestions")}</h3>
                 {userQuestions.map((question, index) => (
                   <Form.Group controlId={`securityQuestion${index}`} className="mb-3" key={index}>
-                    <Form.Label>{`Question ${index + 1}: ${question.question}`}</Form.Label>
+                    <Form.Label>{`${t("question")} ${index + 1}: ${question.question}`}</Form.Label>
                     <Form.Control
                       type="text"
-                      placeholder="Your Answer"
+                      placeholder={t("yourAnswer")}
                       value={answers[index]}
                       onChange={(e) => handleAnswerChange(index, e.target.value)}
                       required
@@ -226,11 +264,11 @@ const ForgotPassword = () => {
                   className={`w-100 border-0 ${customBtn} custom-zoom-btn`}
                   disabled={loading}
                 >
-                  {loading ? <Spinner animation="border" size="sm" /> : 'Submit Answers'}
+                  {loading ? <Spinner animation="border" size="sm" /> : t('submitAnswers')}
                 </Button>
                 <div className="text-center mt-3 custom-zoom-btn">
                   <Link to="/" className={`${customDark === "dark-dark" ? `text-dark` : `${customDarkText}`}`}>
-                    Back to login
+                    {t("backToLogin")}
                   </Link>
                 </div>
               </Form>
@@ -239,13 +277,13 @@ const ForgotPassword = () => {
             {/* Step 3: Reset Password */}
             {currentStep === 3 && (
               <Form onSubmit={handlePasswordSubmit} className="bg-white p-3 rounded-4 shadow-sm shadow-lg">
-                <h3 className="text-center mb-4">Set New Password</h3>
+                <h3 className="text-center mb-4">{t("setNewPassword")}</h3>
                 <Form.Group controlId="formNewPassword" className="mb-3">
-                  <Form.Label>New Password</Form.Label>
+                  <Form.Label>{t("newPassword")}</Form.Label>
                   <div className="position-relative">
                     <Form.Control
                       type={showNewPassword ? "text" : "password"}
-                      placeholder="Enter New Password"
+                      placeholder={t("enterNewPassword")}
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       minLength="8"
@@ -262,11 +300,11 @@ const ForgotPassword = () => {
                 </Form.Group>
 
                 <Form.Group controlId="formConfirmPassword" className="mb-3">
-                  <Form.Label>Confirm New Password</Form.Label>
+                  <Form.Label>{t("confirmNewPassword")}</Form.Label>
                   <div className="position-relative">
                     <Form.Control
                       type={showConfirmPassword ? "text" : "password"}
-                      placeholder="Confirm New Password"
+                      placeholder={t("confirmNewPassword")}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       minLength="8"
@@ -292,11 +330,11 @@ const ForgotPassword = () => {
                     newPassword !== confirmPassword
                   }
                 >
-                  {loading ? <Spinner animation="border" size="sm" /> : 'Reset Password'}
+                  {loading ? <Spinner animation="border" size="sm" /> :t('resetPassword')}
                 </Button>
                 <div className="text-center mt-3 custom-zoom-btn">
                   <Link to="/" className={`${customDark === "dark-dark" ? `text-dark` : `${customDarkText}`}`}>
-                    Back to login
+                    {t("backToLogin")}
                   </Link>
                 </div>
               </Form>
@@ -322,4 +360,3 @@ const ForgotPassword = () => {
 };
 
 export default ForgotPassword;
-

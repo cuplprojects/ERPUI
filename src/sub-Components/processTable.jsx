@@ -370,7 +370,12 @@ const ProcessTable = () => {
       const transactionsData = response.data;
 
       if (Array.isArray(transactionsData)) {
-        const formDataGet = transactionsData.map((item) => {
+        // Filter transactions that contain current processId in processIds array
+        const validTransactions = transactionsData.filter(item => 
+          item.processIds?.includes(Number(processId))
+        );
+
+        const formDataGet = validTransactions.map((item) => {
           const previousProcessData = previousProcessTransactions.find(
             (prevTrans) => prevTrans.quantitySheetId === item.quantitySheetId
           );
@@ -418,7 +423,7 @@ const ProcessTable = () => {
             teamId: item.transactions[0]?.teamId || [],
             teamUserNames: item.transactions[0]?.teamUserNames || ["No Team Assigned"],
             alarmMessage: item.transactions[0]?.alarmMessage || null,
-            processIds: item.processIds || [],
+            processIds: item.processIds || [], // like [1,3,4,5]
           };
         });
 
@@ -431,7 +436,7 @@ const ProcessTable = () => {
         setTableData(filteredData);
 
         const uniqueLots = [
-          ...new Set(transactionsData.map((item) => item.lotNo)),
+          ...new Set(validTransactions.map((item) => item.lotNo)),
         ].sort((a, b) => a - b);
         setProjectLots(uniqueLots.map((lotNo) => ({ lotNo })));
       }

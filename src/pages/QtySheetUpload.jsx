@@ -11,6 +11,7 @@ import { IoMdEye } from "react-icons/io";
 import API from '../CustomHooks/MasterApiHooks/api';
 import { useTranslation } from 'react-i18next';
 import { decrypt } from '../Security/Security';
+import { BsCheckCircleFill } from "react-icons/bs";
 
 // Helper function to convert Excel date number to JS Date
 const convertExcelDate = (excelDate) => {
@@ -47,6 +48,7 @@ const QtySheetUpload = () => {
     const [lots, setLots] = useState([]);
     const [selectedLotNo, setSelectedLotNo] = useState(null);
     const [projectName, setProjectName] = useState('');
+    const [dispatchedLots, setDispatchedLots] = useState([]);
 
     useEffect(() => {
         const fetchProjectName = async () => {
@@ -59,6 +61,20 @@ const QtySheetUpload = () => {
         };
 
         fetchProjectName();
+    }, [projectId]);
+
+    useEffect(() => {
+        const fetchDispatchedLots = async () => {
+            try {
+                const response = await API.get(`/Dispatch/project/${projectId}`);
+                const dispatchedLotNos = response.data.map(dispatch => dispatch.lotNo);
+                setDispatchedLots(dispatchedLotNos);
+            } catch (error) {
+                console.error('Failed to fetch dispatched lots:', error);
+            }
+        };
+
+        fetchDispatchedLots();
     }, [projectId]);
 
     const handleUpload = async () => {
@@ -309,16 +325,24 @@ const QtySheetUpload = () => {
                         </Form.Item>
                         <Form.Item>
                             <div className="d-flex flex-wrap gap-2">
-                                {lots.map((lotNo, index) => (
-                                    <Button
-                                        key={index}
-                                        className={`${selectedLotNo === lotNo ? 'bg-white text-dark border-dark' : customBtn} ${customDark === "dark-dark" ? 'border' : 'custom-light-border'} d-flex align-items-center justify-content-center p-3 `}
-                                        type="primary"
-                                        onClick={() => handleLotClick(lotNo)}
-                                    >
-                                        {t('lot')} - {lotNo} <IoMdEye className={`ms-1 ${selectedLotNo === lotNo ? '' : ''} `}/>
-                                    </Button>
-                                ))}
+                                {lots.map((lotNo, index) => {
+                                    const isDispatched = dispatchedLots.includes(lotNo);
+                                    return (
+                                        <Button
+                                            key={index}
+                                            className={`${selectedLotNo === lotNo ? 'bg-white text-dark border-dark' : customBtn} ${customDark === "dark-dark" ? 'border' : 'custom-light-border'} d-flex align-items-center justify-content-center p-3 `}
+                                            type="primary"
+                                            onClick={() => handleLotClick(lotNo)}
+                                        >
+                                            {t('lot')} - {lotNo} {' '}
+                                            {isDispatched ? (
+                                                <BsCheckCircleFill className="ms-1 text-success" />
+                                            ) : (
+                                                <IoMdEye className={`ms-1 ${selectedLotNo === lotNo ? '' : ''}`} />
+                                            )}
+                                        </Button>
+                                    );
+                                })}
                             </div>
                             <div className="">
                                 <ViewQuantitySheet project={projectId} selectedLotNo={selectedLotNo} showBtn={showBtn} showTable={showTable} lots={lots}/>

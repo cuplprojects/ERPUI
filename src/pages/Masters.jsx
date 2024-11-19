@@ -13,7 +13,7 @@ import { FaBookOpenReader, FaScrewdriverWrench } from "react-icons/fa6";
 import { BiSolidCctv } from "react-icons/bi";
 import { BsQuestionSquareFill } from "react-icons/bs";
 import GroupManager from './Group';
-import Project from './Project';
+import Project from './ProjectMaster/Project';
 import Zone from './Zone';
 import Type from './Type';
 import AlarmMaster from './Alarm';
