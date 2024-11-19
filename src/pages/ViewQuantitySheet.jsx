@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Select, Table, Input, Checkbox } from 'antd';
+import { Button, Select, Table, Input, Checkbox, Tag } from 'antd';
 import { useStore } from 'zustand';
 import { Modal as BootstrapModal } from 'react-bootstrap';
 import themeStore from './../store/themeStore';
@@ -48,6 +48,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
     const [isConfirmed, setIsConfirmed] = useState(false);
     const [searchText, setSearchText] = useState('');
     const [pageSize, setPageSize] = useState(5);
+    const [dispatchedLots, setDispatchedLots] = useState([]);
 
     const columns = [
         {
@@ -55,21 +56,25 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
             dataIndex: 'selection',
             key: 'selection', 
             width: '2%',
-            render: (_, record) => (
-                <Checkbox
-                    checked={selectedCatches.some(item => item.id === record.quantitySheetId)}
-                    onChange={(e) => {
-                        if (e.target.checked) {
-                            setSelectedCatches([...selectedCatches, {
-                                id: record.quantitySheetId,
-                                catchNo: record.catchNo
-                            }]);
-                        } else {
-                            setSelectedCatches(selectedCatches.filter(item => item.id !== record.quantitySheetId));
-                        }
-                    }}
-                />
-            )
+            render: (_, record) => {
+                const isDispatched = dispatchedLots.includes(selectedLotNo);
+                return (
+                    <Checkbox
+                        disabled={isDispatched}
+                        checked={selectedCatches.some(item => item.id === record.quantitySheetId)}
+                        onChange={(e) => {
+                            if (e.target.checked) {
+                                setSelectedCatches([...selectedCatches, {
+                                    id: record.quantitySheetId,
+                                    catchNo: record.catchNo
+                                }]);
+                            } else {
+                                setSelectedCatches(selectedCatches.filter(item => item.id !== record.quantitySheetId));
+                            }
+                        }}
+                    />
+                );
+            }
         },
         {
             title: t('catchNo'),
@@ -146,7 +151,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
             sorter: (a, b) => a.quantity - b.quantity,
         },
         {
-            title: t('process'),
+            title: t('Process'),
             dataIndex: 'processId',
             key: 'processId',
             width: 100,
@@ -166,26 +171,32 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
             key: 'operation',
             fixed: 'right',
             width: 150,
-            render: (_, record) => (
-                <>
-                    <Button
-                        icon={<EditOutlined />}
-                        onClick={() => handleEditButtonClick(record.key)}
-                        style={{ marginRight: 8 }}
-                    />
-                    <Button
-                        icon={<DeleteOutlined />}
-                        onClick={() => handleRemoveButtonClick(record.key)}
-                        style={{ marginRight: 8 }}
-                        danger
-                    />
-                    <Button
-                        icon={<StopOutlined />}
-                        onClick={() => handleStopButtonClick(record.key)}
-                        danger
-                    />
-                </>
-            ),
+            render: (_, record) => {
+                const isDispatched = dispatchedLots.includes(selectedLotNo);
+                return (
+                    <>
+                        <Button
+                            icon={<EditOutlined />}
+                            onClick={() => handleEditButtonClick(record.key)}
+                            style={{ marginRight: 8 }}
+                            disabled={isDispatched}
+                        />
+                        <Button
+                            icon={<DeleteOutlined />}
+                            onClick={() => handleRemoveButtonClick(record.key)}
+                            style={{ marginRight: 8 }}
+                            danger
+                            disabled={isDispatched}
+                        />
+                        <Button
+                            icon={<StopOutlined />}
+                            onClick={() => handleStopButtonClick(record.key)}
+                            danger
+                            disabled={isDispatched}
+                        />
+                    </>
+                );
+            },
         }
     ];
 
@@ -211,6 +222,20 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
             fetchQuantity(selectedLotNo);
         }
     }, [selectedLotNo]);
+
+    useEffect(() => {
+        const fetchDispatchedLots = async () => {
+            try {
+                const response = await API.get(`/Dispatch/project/${projectId}`);
+                const dispatchedLotNos = response.data.map(dispatch => dispatch.lotNo);
+                setDispatchedLots(dispatchedLotNos);
+            } catch (error) {
+                console.error('Failed to fetch dispatched lots:', error);
+            }
+        };
+
+        fetchDispatchedLots();
+    }, [projectId]);
 
     const fetchProcess = async () => {
         try {
@@ -337,12 +362,13 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
                 innerEnvelope: newRowData.innerEnvelope,
                 outerEnvelope: newRowData.outerEnvelope,
                 lotNo: selectedLotNo,
-                examDate: newRowData.examDate,
-                examTime: newRowData.examTime,
                 quantity: parseInt(newRowData.quantity, 10),
                 percentageCatch: 0,
                 projectId: projectId,
+                examDate: newRowData.examDate,
+                examTime: newRowData.examTime,
                 processId: [],
+
             }
         ];
 
@@ -360,8 +386,6 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
                 innerEnvelope: '',
                 outerEnvelope: '',
                 quantity: 0,
-                examDate: '',
-                examTime: '',
                 percentageCatch: 0,
                 projectId: projectId,
             });
@@ -395,7 +419,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
                             allowClear
                         />
                         <div>
-                            {selectedCatches.length > 0 && (
+                            {selectedCatches.length > 0 && !dispatchedLots.includes(selectedLotNo) && (
                                 <Button 
                                     type="primary" 
                                     className={`${customBtn} ${customDark === "dark-dark" ? `border` : `border-0`} me-2`}
@@ -404,7 +428,12 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
                                     {t('transferCatch')}
                                 </Button>
                             )}
-                            <Button onClick={() => setShowNewRow(prev => !prev)} type="primary" className={`${customBtn} ${customDark === "dark-dark" ? `border` : `border-0`}`}>
+                            <Button 
+                                onClick={() => setShowNewRow(prev => !prev)} 
+                                type="primary" 
+                                className={`${customBtn} ${customDark === "dark-dark" ? `border` : `border-0`}`}
+                                disabled={dispatchedLots.includes(selectedLotNo)}
+                            >
                                 {showNewRow ? t('cancel') : t('addNewCatch')}
                             </Button>
                         </div>
@@ -507,6 +536,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
                 fetchQuantity={fetchQuantity}
                 lots={lots}
                 selectedLotNo={selectedLotNo}
+                dispatchedLots={dispatchedLots}
             />
         </div>
     );

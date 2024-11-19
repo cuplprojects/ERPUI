@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Modal, Input, Switch, Select, notification } from 'antd';
+import { Table, Button, Input, Switch, Select, notification } from 'antd';
 import { EditOutlined } from '@ant-design/icons';
 import API from '../../CustomHooks/MasterApiHooks/api';
+import { useTranslation } from 'react-i18next';
+import { useStore } from 'zustand';
+import themeStore from '../../store/themeStore';
+import { Modal } from 'react-bootstrap';
 
 const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
+    const { t } = useTranslation();
     const [processModalVisible, setProcessModalVisible] = useState(false);
     const [processes, setProcesses] = useState([]);
     const [features, setFeatures] = useState([]);
@@ -17,6 +22,12 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
     const [processType, setProcessType] = useState('');
     const [rangeStart, setRangeStart] = useState('');
     const [rangeEnd, setRangeEnd] = useState('');
+    const [searchText, setSearchText] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(5);
+    const { getCssClasses } = useStore(themeStore);
+    const cssClasses = getCssClasses();
+    const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
 
     const fetchProcesses = async () => {
         try {
@@ -27,7 +38,7 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
             })));
         } catch (error) {
             console.error('Error fetching processes:', error);
-            notification.error({ message: 'Failed to fetch processes' });
+            notification.error({ message: t('failedToFetchProcesses') });
         }
     };
 
@@ -41,7 +52,7 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
             })));
         } catch (error) {
             console.error('Error fetching features:', error);
-            notification.error({ message: 'Failed to fetch features' });
+            notification.error({ message: t('failedToFetchFeatures') });
         }
     };
 
@@ -67,6 +78,8 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
                 setRangeStart(process.rangeStart || '');
                 setRangeEnd(process.rangeEnd || '');
             }
+            // Set rangeStart and rangeEnd based on the process IDs (mapping to names for UI)
+
         } else {
             setProcessName('');
             setProcessStatus(true);
@@ -84,36 +97,36 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
 
     const handleAddProcess = async () => {
         if (!processName) {
-            notification.error({ message: 'Process name cannot be empty!' });
+            notification.error({ message: t('processNameEmpty') });
             return;
         }
 
         const isDuplicate = processes.some(process => process.name === processName && process.id !== editingProcessId);
         if (isDuplicate) {
-            notification.error({ message: 'Process with this name already exists!' });
+            notification.error({ message: t('processDuplicateName') });
             return;
         }
 
         const isExistingOrder = processes.some(process => process.processIdInput === processIdInput && process.id !== editingProcessId);
         if (isExistingOrder) {
-            notification.error({ message: 'Process with this order already exists!' });
+            notification.error({ message: t('processDuplicateOrder') });
             return;
         }
         const rangeStartNum = parseFloat(rangeStart);
         const rangeEndNum = parseFloat(rangeEnd);
-    
+
         // Validate rangeStart and rangeEnd
         if (processType === 'Independent') {
             if (isNaN(rangeStartNum) || isNaN(rangeEndNum)) {
-                notification.error({ message: 'Range Start and Range End must be valid numbers!' });
+                notification.error({ message: t('invalidRangeNumbers') });
                 return;
             }
             if (rangeStartNum > processIdInput || rangeStartNum > rangeEndNum) {
-                notification.error({ message: 'Range Start must be greater than or equal to Process Order and less than Range End!' });
+                notification.error({ message: t('invalidRangeStartOrder') });
                 return;
             }
             if (rangeEndNum < processIdInput || rangeEndNum <= rangeStartNum) {
-                notification.error({ message: 'Range End must be greater than or equal to Process Order and greater than Range Start!' });
+                notification.error({ message: t('invalidRangeEndOrder') });
                 return;
             }
         }
@@ -144,8 +157,8 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
             let processWithKey;
             if (response.status === 204) {
                 // Handle 204 No Content response
-                notification.success({ message: isEditingProcess ? 'Process updated successfully!' : 'Process added successfully!' });
-                setProcessModalVisible(false); 
+                notification.success({ message: isEditingProcess ? t('processUpdateSuccess') : t('processAddSuccess') });
+                setProcessModalVisible(false);
                 fetchProcesses();
                 return; // No further processing needed
             } else if (response && response.data) {
@@ -175,169 +188,280 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
 
             setProcessModalVisible(false);
             onUpdateProcesses([...processes, processWithKey]);
-           
+
         } catch (error) {
             console.error('Error saving process:', error);
-            notification.error({ message: error.message || 'Failed to save process' });
+            notification.error({ message: error.message || t('processSaveError') });
         }
     };
 
-
-
-
-
     const processColumns = [
-        { title: 'ID', dataIndex: 'key', key: 'key' },
-        { title: 'Process Name', dataIndex: 'name', key: 'name' },
-        { title: 'Weightage', dataIndex: 'weightage', key: 'weightage' },
         {
-            title: 'Status',
+            title: t('id'),
+            dataIndex: 'key',
+            key: 'key',
+            sorter: (a, b) => a.key - b.key
+        },
+        {
+            title: t('processName'),
+            dataIndex: 'name',
+            key: 'name',
+            sorter: (a, b) => a.name.localeCompare(b.name)
+        },
+        {
+            title: t('weightage'),
+            dataIndex: 'weightage',
+            key: 'weightage',
+            sorter: (a, b) => a.weightage - b.weightage
+        },
+        {
+            title: t('status'),
             dataIndex: 'status',
             key: 'status',
+            sorter: (a, b) => a.status - b.status,
             render: status => <Switch checked={status} disabled />
         },
         {
-            title: 'Installed Features',
+            title: t('installedFeatures'),
             dataIndex: 'featureNames',
             key: 'featureNames',
+            sorter: (a, b) => (a.featureNames?.join(',') || '').localeCompare(b.featureNames?.join(',') || ''),
             render: features => features?.join(', ') || 'None',
         },
-        { title: 'Process Order', dataIndex: 'processIdInput', key: 'processIdInput' },
-        { title: 'Process Type', dataIndex: 'processType', key: 'processType' },
         {
-            title: 'Actions',
+            title: t('processOrder'),
+            dataIndex: 'processIdInput',
+            key: 'processIdInput',
+            sorter: (a, b) => a.processIdInput - b.processIdInput
+        },
+        {
+            title: t('processType'),
+            dataIndex: 'processType',
+            key: 'processType',
+            sorter: (a, b) => a.processType.localeCompare(b.processType)
+        },
+        {
+            title: t('actions'),
             key: 'actions',
             render: (text, record) => (
                 <Button
                     icon={<EditOutlined />}
                     onClick={() => showAddProcessModal(record)}
-                />
+                    className={`${customBtn}`}
+                >
+                    {t('edit')}
+                </Button>
             )
         }
     ];
 
+    const filteredProcesses = processes.filter(process => {
+        const searchContent = Object.values(process).join(' ').toLowerCase();
+        return searchContent.includes(searchText.toLowerCase());
+    });
+
+    const handleTableChange = (pagination) => {
+        setCurrentPage(pagination.current);
+        setPageSize(pagination.pageSize);
+    };
+
+    const paginatedData = filteredProcesses.slice(
+        (currentPage - 1) * pageSize,
+        currentPage * pageSize
+    );
+
     return (
         <div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
-                <Button type="primary" onClick={() => showAddProcessModal()}>
-                    Add New Process
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', alignItems: 'center' }}>
+                <Input.Search
+                    placeholder={t('searchProcesses')}
+                    allowClear
+                    onChange={e => setSearchText(e.target.value)}
+                    style={{ width: 300 }}
+                />
+                <Button type="primary" onClick={() => showAddProcessModal()} className={`${customDark} text-white `}>
+                    {t('addNewProcess')}
                 </Button>
             </div>
 
-            <Table columns={processColumns} dataSource={processes} pagination={false} />
+            <Table
+                columns={processColumns}
+                dataSource={paginatedData}
+                onChange={handleTableChange}
+                pagination={{
+                    current: currentPage,
+                    pageSize: pageSize,
+                    total: filteredProcesses.length,
+                    showSizeChanger: true,
+                    pageSizeOptions: [5, 10, 15],
+                    // showQuickJumper: true,
+                    showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
+                    className: `bg-white p-3 rounded rounded-top-0`
+                }}
+                className={`${customDark === "default-dark" ? "thead-default" : ""}
+             ${customDark === "red-dark" ? "thead-red" : ""}
+             ${customDark === "green-dark" ? "thead-green" : ""}
+             ${customDark === "blue-dark" ? "thead-blue" : ""}
+             ${customDark === "dark-dark" ? "thead-dark" : ""}
+             ${customDark === "pink-dark" ? "thead-pink" : ""}
+             ${customDark === "purple-dark" ? "thead-purple" : ""}
+             ${customDark === "light-dark" ? "thead-light" : ""}
+             ${customDark === "brown-dark" ? "thead-brown" : ""} custom-pagination`}
+            />
 
             <Modal
-                title={isEditingProcess ? 'Edit Process' : 'Add Process'}
-                open={processModalVisible}
-                onCancel={() => setProcessModalVisible(false)}
-                onOk={handleAddProcess}
+                show={processModalVisible}
+                onHide={() => setProcessModalVisible(false)}
+                className={``}
             >
-                <div style={{ marginBottom: '16px' }}>
-                    <label htmlFor="processName">Process Name:</label>
-                    <Input
-                        id="processName"
-                        placeholder="Process Name"
-                        value={processName}
-                        onChange={e => setProcessName(e.target.value)}
-                        style={{ width: '100%' }}
-                    />
-                </div>
-                <div style={{ marginBottom: '16px' }}>
-                    <label htmlFor="processWeightage">Weightage:</label>
-                    <Input
-                        id="processWeightage"
-                        placeholder="Weightage"
-                        type="number"
-                        value={processWeightage || ''}
-                        onChange={e => setProcessWeightage(e.target.value ? parseFloat(e.target.value) : '')}
-                        style={{ width: '100%' }}
-                    />
-                </div>
-                <div style={{ marginBottom: '16px' }}>
-                    <label htmlFor="processOrder">Process Order:</label>
-                    <Input
-                        id="processOrder"
-                        placeholder="Process Order"
-                        type="number"
-                        value={processIdInput || ''}
-                        onChange={e => setProcessIdInput(e.target.value ? parseInt(e.target.value) : 0)}
-                        style={{ width: '100%' }}
-                    />
-                </div>
-                <div style={{ marginBottom: '16px' }}>
-                    <label htmlFor="processType">Process Type:</label>
-                    <Select
-                        id="processType"
-                        placeholder="Process Type"
-                        value={processType}
-                        onChange={(value) => {
-                            setProcessType(value);
-                            if (value === 'Dependent') {
-                                setRangeStart('');
-                                setRangeEnd('');
-                            } else {
-                                setRangeStart('');
-                                setRangeEnd('');
-                            }
-                        }}
-                        style={{ width: '100%' }}
-                    >
-                        <Select.Option value="Independent">Independent</Select.Option>
-                        <Select.Option value="Dependent">Dependent</Select.Option>
-                    </Select>
-                </div>
-                <div style={{ marginBottom: '16px' }}>
-                    <label htmlFor="processStatus">Status:</label>
-                    <Switch
-                        id="processStatus"
-                        checked={processStatus}
-                        onChange={setProcessStatus}
-                        checkedChildren="Active"
-                        unCheckedChildren="Inactive"
-                        style={{ width: '22%' }}
-                    />
-                </div>
-                <div style={{ marginBottom: '16px' }}>
-                    <label htmlFor="processInstalledFeatures">Installed Features:</label>
-                    <Select
-                        id="processInstalledFeatures"
-                        mode="multiple"
-                        placeholder="Installed Features"
-                        value={processInstalledFeatures}
-                        onChange={setProcessInstalledFeatures}
-                        style={{ width: '100%' }}
-                    >
-                        {features.map(feature => (
-                            <Select.Option key={feature.key} value={feature.id}>
-                                {feature.name}
-                            </Select.Option>
-                        ))}
-                    </Select>
-                </div>
-                {processType === 'Independent' && (
-                    <div>
-                        <div style={{ marginBottom: '16px' }}>
-                            <label htmlFor="rangeStart">Range Start:</label>
-                            <Input
-                                id="rangeStart"
-                                placeholder="Range Start"
-                                value={rangeStart}
-                                onChange={e => setRangeStart(e.target.value)}
-                                style={{ width: '100%' }}
-                            />
-                        </div>
-                        <div style={{ marginBottom: '16px' }}>
-                            <label htmlFor="rangeEnd">Range End:</label>
-                            <Input
-                                id="rangeEnd"
-                                placeholder="Range End"
-                                value={rangeEnd}
-                                onChange={e => setRangeEnd(e.target.value)}
-                                style={{ width: '100%' }}
-                            />
-                        </div>
+                <Modal.Header closeButton className={`${customDark}`}>
+                    <Modal.Title className={`${customLightText}`}>{isEditingProcess ? t('editProcess') : t('addProcess')}</Modal.Title>
+                </Modal.Header>
+                <Modal.Body className={`${customLight}`}>
+                    <div style={{ marginBottom: '16px' }}>
+                        <label htmlFor="processName" className={`${customDarkText}`}>{t('.processNameLabel')}:</label>
+                        <Input
+                            id="processName"
+                            placeholder={t('processName')}
+                            value={processName}
+                            onChange={e => setProcessName(e.target.value)}
+                            style={{ width: '100%' }}
+                            className={` ${customDarkText}`}
+                        />
                     </div>
-                )}
+                    <div style={{ marginBottom: '16px' }}>
+                        <label htmlFor="processWeightage" className={`${customDarkText}`}>{t('weightageLabel')}:</label>
+                        <Input
+                            id="processWeightage"
+                            placeholder={t('weightage')}
+                            type="number"
+                            value={processWeightage || ''}
+                            onChange={e => setProcessWeightage(e.target.value ? parseFloat(e.target.value) : '')}
+                            style={{ width: '100%' }}
+                            className={` ${customDarkText}`}
+                        />
+                    </div>
+                    <div style={{ marginBottom: '16px' }}>
+                        <label htmlFor="processOrder" className={`${customDarkText}`}>{t('processOrderLabel')}:</label>
+                        <Input
+                            id="processOrder"
+                            placeholder={t('processOrder')}
+                            type="number"
+                            value={processIdInput || ''}
+                            onChange={e => setProcessIdInput(e.target.value ? parseInt(e.target.value) : 0)}
+                            style={{ width: '100%' }}
+                            className={`${customDarkText}`}
+                        />
+                    </div>
+                    <div style={{ marginBottom: '16px' }}>
+                        <label htmlFor="processType" className={`${customDarkText}`}>{t('processTypeLabel')}:</label>
+                        <Select
+                            id="processType"
+                            placeholder={t('processType')}
+                            value={processType}
+                            onChange={(value) => {
+                                setProcessType(value);
+                                if (value === 'Dependent') {
+                                    setRangeStart('');
+                                    setRangeEnd('');
+                                } else {
+                                    setRangeStart('');
+                                    setRangeEnd('');
+                                }
+                            }}
+                            style={{ width: '100%' }}
+                            className={`${customLight} ${customDarkText}`}
+                        >
+                            <Select.Option value="Independent">{t('independent')}</Select.Option>
+                            <Select.Option value="Dependent">{t('dependent')}</Select.Option>
+                        </Select>
+                    </div>
+                    <div style={{ marginBottom: '16px' }}>
+                        <label htmlFor="processStatus" className={`${customDarkText}`}>{t('statusLabel')}:</label>
+                        <Switch
+                            id="processStatus"
+                            checked={processStatus}
+                            onChange={setProcessStatus}
+                            checkedChildren={t('active')}
+                            unCheckedChildren={t('inactive')}
+                            style={{ width: '22%' }}
+                            className={`ms-3`}
+                        />
+                    </div>
+                    <div style={{ marginBottom: '16px' }}>
+                        <label htmlFor="processInstalledFeatures" className={`${customDarkText}`}>{t('installedFeaturesLabel')}:</label>
+                        <Select
+                            id="processInstalledFeatures"
+                            mode="multiple"
+                            placeholder={t('installedFeatures')}
+                            value={processInstalledFeatures}
+                            onChange={setProcessInstalledFeatures}
+                            style={{ width: '100%' }}
+                            className={`${customLight} ${customDarkText}`}
+                        >
+                            {features.map(feature => (
+                                <Select.Option key={feature.key} value={feature.id}>
+                                    {feature.name}
+                                </Select.Option>
+                            ))}
+                        </Select>
+                    </div>
+                    {processType === 'Independent' && (
+                        <div>
+                            <div style={{ marginBottom: '16px' }}>
+                                <label htmlFor="rangeStart" className={`${customDarkText}`}>{t('rangeStartLabel')}:</label>
+                                <Select
+                                    id="rangeStart"
+                                    placeholder={
+                                        rangeStart
+                                            ? processes.find(process => process.id === parseInt(rangeStart))?.name || t('selectProcess')
+                                            : t('selectProcess')
+                                    }
+                                    value={rangeStart}
+                                    onChange={value => setRangeStart(value)}
+                                    style={{ width: '100%' }}
+                                    className={`${customLight} ${customDarkText}`}
+                                >
+                                    {processes.map(process => (
+                                        <Select.Option key={process.id} value={process.id}>
+                                            {process.name} {/* Display the process name */}
+                                        </Select.Option>
+                                    ))}
+                                </Select>
+                            </div>
+                            <div style={{ marginBottom: '16px' }}>
+                                <label htmlFor="rangeEnd" className={`${customDarkText}`}>{t('rangeEndLabel')}:</label>
+                                <Select
+                                    id="rangeEnd"
+                                    placeholder={
+                                        rangeEnd
+                                            ? processes.find(process => process.id === parseInt(rangeEnd))?.name || t('selectProcess')
+                                            : t('selectProcess')
+                                    }
+                                    value={rangeEnd}
+                                    onChange={value => setRangeEnd(value)}
+                                    style={{ width: '100%' }}
+                                    className={`${customLight} ${customDarkText}`}
+                                >
+                                    {processes.map(process => (
+                                        <Select.Option key={process.id} value={process.id}>
+                                            {process.name} {/* Display the process name */}
+                                        </Select.Option>
+                                    ))}
+                                </Select>
+                            </div>
+                        </div>
+                    )}
+
+                </Modal.Body>
+                <Modal.Footer className={`${customDark}`}>
+                    <Button variant="secondary" onClick={() => setProcessModalVisible(false)} className={`${customBtn}`}>
+                        {t('cancel')}
+                    </Button>
+                    <Button variant="primary" onClick={handleAddProcess} className={`${customBtn}`}>
+                        {t('save')}
+                    </Button>
+                </Modal.Footer>
             </Modal>
         </div>
     );

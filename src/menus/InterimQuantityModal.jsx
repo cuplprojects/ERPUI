@@ -1,23 +1,39 @@
 import React, { useState } from 'react';
 import { Modal, Button, Form } from 'react-bootstrap';
-import API from '../CustomHooks/MasterApiHooks/api'; // Adjust import as necessary
+import API from '../CustomHooks/MasterApiHooks/api';
+import { useTranslation } from 'react-i18next';
+import { useStore } from 'zustand';
+import themeStore from '../store/themeStore';
+import { useMemo } from 'react';
 
 const statusMapping = {
-    0: 'Pending',
-    1: 'Started',
-    2: 'Completed',
+    0: 'pending',
+    1: 'started', 
+    2: 'completed',
 };
+
 const InterimQuantityModal = ({ show, handleClose, handleSave, data, processId }) => {
     const [interimQuantity, setInterimQuantity] = useState('');
-
+    const { t } = useTranslation();
+    const themeState = useStore(themeStore);
+    const cssClasses = useMemo(() => themeState.getCssClasses(), [themeState]);
+    const [
+        customDark,
+        customMid,
+        customLight,
+        customBtn,
+        customDarkText,
+        customLightText,
+        customLightBorder,
+        customDarkBorder,
+        customThead
+    ] = cssClasses;
 
     const handleSubmit = async () => {
-        // Calculate total interim quantity including existing and new
         const totalInterimQuantity = data.interimQuantity + parseFloat(interimQuantity);
 
-        // Ensure total interim quantity is not greater than total quantity
         if (totalInterimQuantity > data.quantity) {
-            alert("Total interim quantity cannot be greater than total quantity.");
+            alert(t("interimQuantityError"));
             return;
         }
 
@@ -44,68 +60,83 @@ const InterimQuantityModal = ({ show, handleClose, handleSave, data, processId }
                 voiceRecording: existingTransactionData? existingTransactionData.voiceRecording : ""             
             };
 
-            // Always use POST
             const response = await API.post('/Transactions', postData);
             console.log('Response:', response.data);
             
             handleSave(interimQuantity);
             setInterimQuantity('');
-            handleClose(); // Close modal
+            handleClose();
         } catch (error) {
             console.error('Error updating interim quantity:', error);
         }
     };
 
     return (
-        <Modal show={show} onHide={handleClose}>
-            <Modal.Header closeButton>
-                <Modal.Title>Set Interim Quantity</Modal.Title>
+        <Modal show={show} onHide={handleClose} >
+            <Modal.Header closeButton={false} className={customDark}>
+                <Modal.Title className={customLightText}>{t("setInterimQuantity")}</Modal.Title>
             </Modal.Header>
-            <Modal.Body>
+            <Modal.Body className={customDark}>
                 {data ? (
                     <>
                         <div className="details mb-3 d-flex justify-content-between align-items-center">
                             <div>
-                                <span className="fw-bold">Catch No </span>: {data.catchNumber}
+                                <span className={`fw-bold ${customLightText} me-1`}>{t("catchNo")} :</span> 
+                                <span className={customLightText}>{data.catchNumber}</span>
                             </div>
                             <div>
-                                <span className="fw-bold ">Status </span>:
-                                <span className={`fw-bold ${data.status === 0 ? 'text-danger' :
+                                <span className={`fw-bold ${customLightText}`}>{t("status")} :</span>
+                                <span className={`ms-1 fw-bold ${data.status === 0 ? 'text-danger' :
                                         data.status === 1 ? 'text-primary' :
                                         data.status === 2 ? 'text-success' : ''
                                     }`}>
-                                    {statusMapping[data.status]}
+                                    {t(statusMapping[data.status])}
                                 </span>
                             </div>
                         </div>
                         <div className="details mb-3 d-flex justify-content-between align-items-center">
                             <div>
-                                <span className="fw-bold">Total Quantity </span>: {data.quantity}
+                                <span className={`me-1 fw-bold ${customLightText}`}>{t("totalQuantity")} :</span> 
+                                <span className={customLightText}>{data.quantity}</span>
                             </div>
                             <div>
-                                <span className="fw-bold ">Interim Quantity </span>:{data.interimQuantity}
+                                <span className={`me-1 fw-bold ${customLightText}`}>{t("interimQuantity")} :</span>
+                                <span className={customLightText}>{data.interimQuantity}</span>
+                            </div>
+                        </div>
+                        <div className="details mb-3 d-flex justify-content-between align-items-center">
+                            <div>
+                                <span className={`me-1 fw-bold ${customLightText}`}>{t("remainingQuantity")} :</span>
+                                <span className={customLightText}>{data.quantity - data.interimQuantity}</span>
                             </div>
                         </div>
                     </>
                 ) : (
-                    <div>No data available</div>
+                    <div className={customLightText}>{t("noDataAvailable")}</div>
                 )}
                 <Form.Group controlId="formInterimQuantity">
-                    <Form.Label>Interim Quantity</Form.Label>
+                    <Form.Label className={customLightText}>{t("interimQuantity")}</Form.Label>
                     <Form.Control
                         type="number"
-                        placeholder="Enter interim quantity"
+                        placeholder={t("enterInterimQuantity")}
                         value={interimQuantity}
                         onChange={(e) => setInterimQuantity(e.target.value)}
                     />
                 </Form.Group>
             </Modal.Body>
-            <Modal.Footer>
-                <Button variant="danger" onClick={handleClose}>
-                    Close
+            <Modal.Footer className={customDark}>
+                <Button 
+                    variant="danger" 
+                    onClick={handleClose}
+                    className={customDark === "red-dark" || customDark === "dark-dark" ? "border border-white" : ""}
+                >
+                    {t("close")}
                 </Button>
-                <Button className='custom-theme-dark-btn custom-theme-dark-border' onClick={handleSubmit}>
-                    Save Changes
+                <Button 
+                    className={`${customDark === 'red-dark' ? 'border-0 bg-white text-danger' : `border-white ${customBtn}`}`} 
+                    onClick={handleSubmit}
+                >
+                    {t("saveChanges")}
                 </Button>
             </Modal.Footer>
         </Modal>

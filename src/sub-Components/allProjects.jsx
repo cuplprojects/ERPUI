@@ -26,6 +26,7 @@ import { useTranslation } from 'react-i18next';
 import { t } from 'i18next';
 
 import { getCombinedPercentages } from '../CustomHooks/ApiServices/transacationService';
+import DashBarChart from './DashBarChart';
 
 Chart.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip);
 import { hasPermission } from "../CustomHooks/Services/permissionUtils";
@@ -321,82 +322,12 @@ const AllProjects = () => {
         </Col>
 
         <Col xs={12} lg={4}>
-          <Card className="shadow-lg" style={{ height: "400px" }}>
-            <Card.Body
-              style={{
-                height: "90%",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-              }}
-            >
-              <div
-                className="mt-3"
-                style={{
-                  width: "100%",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <h4 className="text-dark">
-                  {selectedChart.label} {selectedChart.lotNumber}
-                </h4>
-              </div>
-              <div style={{ width: "100%", height: "90%" }}>
-                <Bar
-                  className="mt-2"
-                  data={{
-                    labels: lotsData,
-                    datasets: [
-                      {
-                        data: lotsData.map(() => Math.random() * 100),
-                        backgroundColor: [
-                          "rgba(255, 99, 132, 0.6)",
-                          "rgba(255, 159, 64, 0.6)",
-                          "rgba(255, 205, 86, 0.6)",
-                          "rgba(75, 192, 192, 0.6)",
-                          "rgba(54, 162, 235, 0.6)",
-                          "rgba(153, 102, 255, 0.6)",
-                          "rgba(201, 203, 207, 0.6)",
-                        ],
-                        borderColor: [
-                          "rgb(255, 125, 132)",
-                          "rgb(255, 159, 64)",
-                          "rgb(255, 205, 86)",
-                          "rgb(75, 192, 192)",
-                          "rgb(54, 162, 235)",
-                          "rgb(153, 102, 255)",
-                          "rgb(201, 203, 207)",
-                        ],
-                        borderWidth: 1,
-                        borderRadius: 5,
-                      },
-                    ],
-                  }}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    onClick: (event, elements) => handleBarClick(elements),
-                    plugins: {
-                      legend: {
-                        display: false,
-                      },
-                      tooltip: {
-                        enabled: true,
-                        callbacks: {
-                          label: (tooltipItem) => {
-                            return `${tooltipItem.label}: ${tooltipItem.raw.toFixed(2)}%`;
-                          },
-                        },
-                      },
-                    },
-                  }}
-                  height={300}
-                />
-              </div>
-            </Card.Body>
-          </Card>
+          <DashBarChart 
+            selectedChart={selectedChart}
+            lotsData={lotsData}
+            handleBarClick={handleBarClick}
+            projectId={projectId}
+          />
         </Col>
       </Row>
       <Modal

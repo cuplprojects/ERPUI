@@ -137,7 +137,6 @@ const Machine = () => {
             value={editingValue}
             onChange={(e) => setEditingValue(e.target.value)}
             onPressEnter={() => handleEditSave(index)}
-            onBlur={() => handleEditSave(index)}
           />
         ) : (
           <span>{text}</span>
@@ -170,7 +169,7 @@ const Machine = () => {
       width: '30%',
     },
     {
-      title: t('Status'),
+      title: t('status'),
       dataIndex: 'status',
       key: 'status',
       sorter: (a, b) => a.status - b.status,
@@ -203,12 +202,19 @@ const Machine = () => {
             </Button>
           </div>
         ) : (
-          <Button type="link" icon={<EditOutlined />} onClick={() => {
-            setEditingIndex(index);
-            setEditingValue(record.machineName);
-            setEditingProcessId(record.processId);
-            setEditingStatus(record.status);
-          }} className={`${customBtn} text-white me-1 border-0`}>{t('edit')}</Button>
+          <Button 
+            type="link" 
+            onClick={() => {
+              setEditingIndex(index);
+              setEditingValue(record.machineName);
+              setEditingProcessId(record.processId);
+              setEditingStatus(record.status);
+            }} 
+            className={`${customBtn} text-white me-1 border-0`}
+            style={{display: 'inline-flex', alignItems: 'center', gap: '4px'}}
+          >
+            <EditOutlined /> {t('edit')}
+          </Button>
         )
       ),
     },
