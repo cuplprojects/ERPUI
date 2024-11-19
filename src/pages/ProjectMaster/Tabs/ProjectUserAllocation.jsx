@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Select, Table, Button, message } from 'antd';
-import API from '../CustomHooks/MasterApiHooks/api';
+import API from '../../../CustomHooks/MasterApiHooks/api';
 
 const { Option } = Select;
 
