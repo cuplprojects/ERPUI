@@ -4,9 +4,8 @@ import { useTranslation } from 'react-i18next';
 import AddProjectProcess from './AddProjectProcess';
 import ProjectUserAllocation from './ProjectUserAllocation';
 
-
 import { Table, Tabs, Button, Input, Switch, Form, message, Card, Row, Col, Select, Pagination } from 'antd';
-import { Modal } from 'antd'; // Change this import to use Ant Design's Modal
+import { Modal } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import API from '../CustomHooks/MasterApiHooks/api';
 import themeStore from './../store/themeStore';
@@ -22,18 +21,14 @@ const Project = () => {
   const cssClasses = getCssClasses();
   const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
 
-  const SERIES_1 = "ABCDEFGH";
-  const SERIES_2 = "PQRSTUVW";
-
   const [projects, setProjects] = useState([]);
   const [groups, setGroups] = useState([]);
   const [types, setTypes] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [form] = Form.useForm();
-  const [editingIndex, setEditingIndex] = useState(null);
-  const [editingName, setEditingName] = useState('');
-  const [editingDescription, setEditingDescription] = useState('');
-  const [editingStatus, setEditingStatus] = useState(false);
+  const [editForm] = Form.useForm();
+  const [editingProject, setEditingProject] = useState(null);
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [selectedType, setSelectedType] = useState(null);
   const [showSeriesFields, setShowSeriesFields] = useState(false);
@@ -41,9 +36,8 @@ const Project = () => {
   const navigate = useNavigate();
 
   const { TabPane } = Tabs;
-  const [activeTabKey, setActiveTabKey] = useState("1"); // State for active tab
+  const [activeTabKey, setActiveTabKey] = useState("1");
   const [selectedProject, setSelectedProject] = useState();
-
 
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
@@ -60,10 +54,8 @@ const Project = () => {
       return Promise.resolve();
     }
 
-    // Convert to uppercase for validation
     value = value.toUpperCase();
 
-    // Check if characters are sequential but can start from any letter
     const startCharCode = value.charCodeAt(0);
     for (let i = 1; i < value.length; i++) {
       if (value.charCodeAt(i) !== startCharCode + i) {
@@ -112,7 +104,7 @@ const Project = () => {
   }, []);
 
   const handleAddProject = async (values) => {
-    const { name, status, description, numberOfSeries, seriesName } = values;
+    const { name, status, description, numberOfSeries, seriesName, quantityThreshold } = values;
 
     const existingProject = projects.find(
       (project) => project.name.toLowerCase() === name.toLowerCase()
@@ -129,7 +121,8 @@ const Project = () => {
       groupId: selectedGroup?.id || 0,
       typeId: selectedType?.typeId || 0,
       noOfSeries: numberOfSeries,
-      seriesName
+      seriesName,
+      quantityThreshold
     };
 
     try {
@@ -140,30 +133,39 @@ const Project = () => {
       form.resetFields();
       setIsModalVisible(false);
       message.success(t('projectAddedSuccessfully'));
-      setActiveTabKey("2"); // Switch to Select Process tab
-      setSelectedProject(response.data.projectId); 
+      setActiveTabKey("2");
+      setSelectedProject(response.data.projectId);
     } catch (error) {
       console.error('Error adding project:', error);
       message.error(t('errorAddingProject'));
     }
   };
 
-  const handleEditSave = async (index) => {
+  const handleEditSave = async (values) => {
     const updatedProject = {
-      ...projects[index],
-      name: editingName,
-      description: editingDescription,
-      status: editingStatus,
+      ...editingProject,
+      name: values.name,
+      description: values.description,
+      status: values.status,
+      quantityThreshold: values.quantityThreshold,
+      groupId: values.group,
+      typeId: values.type,
+      noOfSeries: values.numberOfSeries,
+      seriesName: values.seriesName
     };
 
     try {
-      await API.put(`/Project/${updatedProject.projectId}`, updatedProject, {
+      await API.put(`/Project/${editingProject.projectId}`, updatedProject, {
         headers: { 'Content-Type': 'application/json' },
       });
-      const updatedProjects = [...projects];
-      updatedProjects[index] = updatedProject;
+      
+      const updatedProjects = projects.map(p => 
+        p.projectId === editingProject.projectId ? updatedProject : p
+      );
+      
       setProjects(updatedProjects);
-      setEditingIndex(null);
+      setIsEditModalVisible(false);
+      setEditingProject(null);
       message.success(t('projectUpdatedSuccessfully'));
     } catch (error) {
       console.error('Failed to update project:', error);
@@ -179,7 +181,6 @@ const Project = () => {
 
   const columns = [
     {
-      // width: '1%',
       align: 'center',
       title: t('sn'),
       dataIndex: 'serial',
@@ -192,40 +193,19 @@ const Project = () => {
       key: 'name',
       sorter: (a, b) => a.name.localeCompare(b.name),
       sortOrder: sortedInfo.columnKey === 'name' && sortedInfo.order,
-      render: (text, record, index) =>
-      
-        editingIndex === index ? (
-          <Input
-            value={editingName}
-            onChange={(e) => setEditingName(e.target.value)}
-            onPressEnter={() => handleEditSave(index)}
-          />
-        ) : (
-          <a 
-          onClick={() => {
-            setActiveTabKey("2"); // Switch to Select Process tab
-            setSelectedProject(record.projectId); // Navigate to process
-          }}
-        >
+      render: (text, record) => (
+        <a onClick={() => {
+          setActiveTabKey("2");
+          setSelectedProject(record.projectId);
+        }}>
           {text}
         </a>
-          //<span>{text}</span>
-        ),
+      ),
     },
     {
       title: t('projectDescription'),
       dataIndex: 'description',
       key: 'description',
-      render: (text, record, index) =>
-        editingIndex === index ? (
-          <Input
-            value={editingDescription}
-            onChange={(e) => setEditingDescription(e.target.value)}
-            onPressEnter={() => handleEditSave(index)}
-          />
-        ) : (
-          <span>{text}</span>
-        ),
     },
     {
       title: t('status'),
@@ -233,58 +213,40 @@ const Project = () => {
       key: 'status',
       sorter: (a, b) => a.status - b.status,
       sortOrder: sortedInfo.columnKey === 'status' && sortedInfo.order,
-      render: (status, record, index) =>
-        editingIndex === index ? (
-          <Switch
-            checked={editingStatus}
-            onChange={(checked) => setEditingStatus(checked)}
-            checkedChildren={t('active')}
-            unCheckedChildren={t('inactive')}
-          />
-        ) : (
-          <Switch
-            checked={status}
-            disabled
-            checkedChildren={t('active')}
-            unCheckedChildren={t('inactive')}
-          />
-        ),
+      render: (status) => (
+        <Switch
+          checked={status}
+          disabled
+          checkedChildren={t('active')}
+          unCheckedChildren={t('inactive')}
+        />
+      ),
     },
     {
       title: t('action'),
       key: 'action',
-      render: (_, record, index) =>
-        editingIndex === index ? (
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <Button 
-              className={`${customBtn} d-flex align-items-center justify-content-center`}
-              onClick={() => handleEditSave(index)}
-              icon={<SaveOutlined />}
-            >
-              {t('save')}
-            </Button>
-            <Button 
-              className={`${customBtn} d-flex align-items-center justify-content-center`}
-              onClick={() => setEditingIndex(null)}
-              icon={<CloseOutlined />}
-            >
-              {t('cancel')}
-            </Button>
-          </div>
-        ) : (
-          <Button
-            className={`${customBtn} d-flex align-items-center justify-content-center`}
-            onClick={() => {
-              setEditingIndex(index);
-              setEditingName(record.name);
-              setEditingDescription(record.description);
-              setEditingStatus(record.status);
-            }}
-            icon={<EditOutlined />}
-          >
-            {t('edit')}
-          </Button>
-        ),
+      render: (_, record) => (
+        <Button
+          className={`${customBtn} d-flex align-items-center justify-content-center`}
+          onClick={() => {
+            setEditingProject(record);
+            editForm.setFieldsValue({
+              name: record.name,
+              description: record.description,
+              status: record.status,
+              group: record.groupId,
+              type: record.typeId,
+              numberOfSeries: record.noOfSeries,
+              seriesName: record.seriesName,
+              quantityThreshold: record.quantityThreshold
+            });
+            setIsEditModalVisible(true);
+          }}
+          icon={<EditOutlined />}
+        >
+          {t('edit')}
+        </Button>
+      ),
     },
   ];
 
@@ -299,6 +261,12 @@ const Project = () => {
     setSelectedType(null);
     setShowSeriesFields(false);
     setNumberOfSeries(0);
+  };
+
+  const handleEditCancel = () => {
+    editForm.resetFields();
+    setIsEditModalVisible(false);
+    setEditingProject(null);
   };
 
   const handleGroupChange = (value) => {
@@ -325,13 +293,11 @@ const Project = () => {
     )
   );
 
-  // Get current projects for pagination
   const indexOfLastProject = currentPage * pageSize;
   const indexOfFirstProject = indexOfLastProject - pageSize;
   const currentProjects = filteredProjects.slice(indexOfFirstProject, indexOfLastProject);
 
   return (
- 
     <Card
       title={t('projects')}
       bordered={true}
@@ -365,7 +331,6 @@ const Project = () => {
                 pageSize: pageSize,
                 total: filteredProjects.length,
                 showSizeChanger: true,
-                // showQuickJumper: true,
                 showTotal: (total, range) => `${range[0]}-${range[1]} ${t('of')} ${total} ${t('items')}`,
                 pageSizeOptions: ['10', '15','20']
               }}
@@ -383,6 +348,8 @@ const Project = () => {
                   ${customDark === "brown-dark" ? "thead-brown" : ""} custom-pagination`}
             />
           </div>
+
+          {/* Add Modal */}
           <Modal
             title={t('addNewProject')}
             visible={isModalVisible}
@@ -476,6 +443,15 @@ const Project = () => {
                 </Col>
                 <Col xs={24}>
                   <Form.Item
+                    name="quantityThreshold"
+                    label={<span className={customDarkText}>{t('quantityThreshold')}</span>}
+                    tooltip={t('quantityThresholdTooltip')}
+                  >
+                    <Input type="number" min={0} placeholder={t('enterQuantityThreshold')} />
+                  </Form.Item>
+                </Col>
+                <Col xs={24}>
+                  <Form.Item
                     name="status"
                     label={t('status')}
                     valuePropName="checked"
@@ -496,9 +472,128 @@ const Project = () => {
               </Row>
             </Form>
           </Modal>
+
+          {/* Edit Modal */}
+          <Modal
+            title={t('editProject')}
+            visible={isEditModalVisible}
+            onCancel={handleEditCancel}
+            footer={null}
+            width="95%"
+            style={{ maxWidth: '600px' }}
+          >
+            <Form form={editForm} onFinish={handleEditSave} layout="vertical">
+              <Row gutter={[16, 0]}>
+                <Col xs={24} sm={24}>
+                  <Form.Item
+                    name="group"
+                    label={t('group')}
+                    rules={[{ required: true, message: t('pleaseSelectGroup') }]}
+                  >
+                    <Select placeholder={t('selectGroup')}>
+                      {groups.map((group) => (
+                        <Option key={group.id} value={group.id}>{group.name}</Option>
+                      ))}
+                    </Select>
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={24}>
+                  <Form.Item
+                    name="type"
+                    label={<span className={customDarkText}>{t('type')}</span>}
+                    rules={[{ required: true, message: t('pleaseSelectType') }]}
+                  >
+                    <Select placeholder={t('selectType')}>
+                      {types.map((type) => (
+                        <Option key={type.typeId} value={type.typeId}>{type.types}</Option>
+                      ))}
+                    </Select>
+                  </Form.Item>
+                </Col>
+              </Row>
+              {showSeriesFields && (
+                <Row gutter={[16, 0]}>
+                  <Col xs={24} sm={12}>
+                    <Form.Item
+                      name="numberOfSeries"
+                      label={<span className={customDarkText}>{t('numberOfSeries')}</span>}
+                      rules={[{ required: true, message: t('pleaseEnterNumberOfSeries') }]}
+                    >
+                      <Select placeholder={t('selectNumberOfSeries')}>
+                        {[1,2,3,4,5,6,7,8].map(num => (
+                          <Option key={num} value={num}>{num}</Option>
+                        ))}
+                      </Select>
+                    </Form.Item>
+                  </Col>
+                  <Col xs={24} sm={12}>
+                    <Form.Item
+                      name="seriesName"
+                      label={<span className={customDarkText}>{t('seriesName')}</span>}
+                      rules={[
+                        { required: true, message: t('pleaseEnterSeriesName') },
+                        { validator: validateSeriesInput }
+                      ]}
+                    >
+                      <Input 
+                        placeholder={t('enterSeriesName')}
+                        style={{ textTransform: 'uppercase' }}
+                      />
+                    </Form.Item>
+                  </Col>
+                </Row>
+              )}
+              <Row gutter={[16, 0]}>
+                <Col xs={24}>
+                  <Form.Item
+                    name="name"
+                    label={<span className={customDarkText}>{t('projectName')}</span>}
+                    rules={[{ required: true, message: t('pleaseEnterProjectName') }]}
+                  >
+                    <Input placeholder={t('enterProjectName')} />
+                  </Form.Item>
+                </Col>
+                <Col xs={24}>
+                  <Form.Item
+                    name="description"
+                    label={<span className={customDarkText}>{t('description')}</span>}
+                  >
+                    <Input.TextArea rows={4} placeholder={t('enterDescription')} />
+                  </Form.Item>
+                </Col>
+                <Col xs={24}>
+                  <Form.Item
+                    name="quantityThreshold"
+                    label={<span className={customDarkText}>{t('quantityThreshold')}</span>}
+                    tooltip={t('quantityThresholdTooltip')}
+                  >
+                    <Input type="number" min={0} placeholder={t('enterQuantityThreshold')} />
+                  </Form.Item>
+                </Col>
+                <Col xs={24}>
+                  <Form.Item
+                    name="status"
+                    label={t('status')}
+                    valuePropName="checked"
+                  >
+                    <Switch />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Row justify="end" gutter={[8, 0]}>
+                <Col>
+                  <Button onClick={handleEditCancel}>{t('cancel')}</Button>
+                </Col>
+                <Col>
+                  <Button type="primary" htmlType="submit">
+                    {t('save')}
+                  </Button>
+                </Col>
+              </Row>
+            </Form>
+          </Modal>
         </TabPane>
         <TabPane tab={t('selectProcess')} key="2" disabled={!selectedProject}>
-
           <div className="responsive-container">
             <AddProjectProcess selectedProject={selectedProject} />
             <Button 
@@ -511,9 +606,7 @@ const Project = () => {
           </div>
         </TabPane>
 
-
         <TabPane tab={t('allocateProcess')} key="3" disabled={!selectedProject}>
-
           <div className="responsive-container">
             <ProjectUserAllocation selectedProject={selectedProject}/>
           </div>
