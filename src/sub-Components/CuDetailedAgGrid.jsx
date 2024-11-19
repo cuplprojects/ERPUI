@@ -4,27 +4,65 @@ import '@ag-grid-community/styles/ag-grid.css';
 import '@ag-grid-community/styles/ag-theme-quartz.css';
 import { ClientSideRowModelModule } from '@ag-grid-community/client-side-row-model';
 import { ModuleRegistry } from '@ag-grid-community/core';
+import API from '../CustomHooks/MasterApiHooks/api';
 
 // Register AG Grid Modules
 ModuleRegistry.registerModules([ClientSideRowModelModule]);
 
-const CuDetailedAgGrid = ({ clickData }) => {
+const CuDetailedAgGrid = ({ projectId }) => {
   const containerStyle = useMemo(() => ({ width: '100%', height: '100%' }), []);
   const gridStyle = useMemo(() => ({ height: '100%', width: '100%' }), []);
 
   const [rowData, setRowData] = useState([]);
+  const [processNames, setProcessNames] = useState({});
 
   useEffect(() => {
-    if (clickData && clickData.processes) { console.log(clickData);
-      setRowData(clickData.processes);
+    // Fetch process names
+    const fetchProcessNames = async () => {
+      try {
+        const response = await API.get('/Processes');
+        const processMap = {};
+        response.data.forEach(process => {
+          processMap[process.id] = process.name;
+        });
+        setProcessNames(processMap);
+      } catch (error) {
+        console.error('Error fetching process names:', error);
+      }
+    };
+
+    fetchProcessNames();
+  }, []);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (projectId) {
+        try {
+          const response = await API.get(`/Transactions/process-lot-percentages?projectId=${projectId}`);
+          const processData = response.data.processes.map(process => ({
+            processName: processNames[process.processId] || `Process ${process.processId}`,
+            totalCatch: process.statistics.totalSheets,
+            remainingCatch: process.statistics.totalSheets - process.statistics.completedSheets,
+            totalQuantity: process.statistics.totalQuantity,
+            // remainingQuantity: process.statistics.totalQuantity * (1 - process.statistics.overallPercentage / 100)
+          }));
+          setRowData(processData);
+        } catch (error) {
+          console.error('Error fetching process data:', error);
+        }
+      }
+    };
+
+    if (Object.keys(processNames).length > 0) {
+      fetchData();
     }
-  }, [clickData]);
+  }, [projectId, processNames]);
 
   // Default column definition for styling headers
   const defaultColDef = useMemo(() => ({
     autoHeaderHeight: true,
     headerClass: 'header-wrap',
-    cellStyle: { borderRight: '1px solid #ccc' } // Add vertical line between columns
+    cellStyle: { borderRight: '1px solid #ccc' }
   }), []);
 
   const columnDefs = useMemo(() => [
@@ -39,8 +77,7 @@ const CuDetailedAgGrid = ({ clickData }) => {
     { field: 'totalCatch', headerName: 'Total Catch', minWidth: 100, cellStyle: { textAlign: 'center', borderRight: '1px solid #ccc' } },
     { field: 'remainingCatch', headerName: 'Remaining Catch', minWidth: 100, cellStyle: { textAlign: 'center' } },
     { field: 'totalQuantity', headerName: 'Total Quantity', minWidth: 95, cellStyle: { textAlign: 'center', borderRight: '1px solid #ccc' } },
-    { field: 'remainingQuantity', headerName: 'Remaining Quantity', minWidth: 100, cellStyle: { textAlign: 'center', borderRight: '1px solid #ccc' } }
-    
+    // { field: 'remainingQuantity', headerName: 'Remaining Quantity', minWidth: 100, cellStyle: { textAlign: 'center', borderRight: '1px solid #ccc' } }
   ], []);
 
   const getRowClass = useCallback((params) => {
