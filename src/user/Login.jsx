@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Container, Row, Col, Form, Button } from 'react-bootstrap';
+import { Container, Row, Col, Form, Button, Dropdown } from 'react-bootstrap';
 import { AiFillEye, AiFillEyeInvisible } from 'react-icons/ai';
 import BlueTheme from './../assets/bgImages/Factory.svg';
 import PurpleTheme from './../assets/bgImages/FactoryPurple.png';
@@ -18,6 +18,9 @@ import { useMediaQuery } from 'react-responsive';
 import { useTranslation } from 'react-i18next';
 import { toast, ToastContainer } from 'react-toastify';
 import AuthService from '../CustomHooks/ApiServices/AuthService';
+import IndianFlag from './../assets/Icons/Hindi.png';
+import UKFlag from './../assets/Icons/English.png';
+import languageStore from './../store/languageStore';
 
 const Login = () => {
   const isLoggedIn = AuthService.isLoggedIn();
@@ -25,15 +28,12 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   // Theme Change Section
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
-  const customDark = cssClasses[0];
-  const customMid = cssClasses[1];
-  const customBtn = cssClasses[3];
-  const customDarkText = cssClasses[4];
+  const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
 
   const themeImages = {
     "purple-dark": PurpleTheme,
@@ -54,6 +54,13 @@ const Login = () => {
 
   const appliedClass = !isMediumOrSmaller ? customDark : "";
 
+  const { setLanguage } = useStore(languageStore);
+
+  const handleLanguageChange = (lang) => {
+    setLanguage(lang);
+    i18n.changeLanguage(lang);
+  };
+
   useEffect(() => {
     if (isLoggedIn) {
       navigate('/cudashboard');
@@ -64,7 +71,7 @@ const Login = () => {
     e.preventDefault();
 
     try {
-      toast.info("Processing...", {
+      toast.info(t("processing..."), {
         autoClose: 1000,
         toastId: "processing",
       });
@@ -72,8 +79,8 @@ const Login = () => {
       const response = await AuthService.login(userName, password);
 
       if (response.status === 200) {
-        toast.dismiss("processing");
-        toast.success("Successfully logged in!");
+        toast.dismiss(t("processing"));
+        toast.success(t('loginSuccessful'));
 
         const { autogenPass } = response.data;
         
@@ -87,45 +94,45 @@ const Login = () => {
           }, 1500);
         }
       } else {
-        toast.dismiss("processing");
-        toast.error("Unexpected response from the server.");
+        toast.dismiss(t("processing"));
+        toast.error(t("unexpectedResponse"));
       }
     } catch (error) {
-      toast.dismiss("processing");
+      toast.dismiss(t("processing"));
 
       if (error.response) {
         switch (error.response.status) {
           case 400:
-            toast.error("Bad Request. Please check your input.");
+            toast.error(t("badRequest"));
             break;
           case 401:
-            toast.error("Invalid User Name or Password.");
+            toast.error(t("invalidUserNameOrPassword"));
             break;
           case 403:
-            toast.error("Forbidden. You do not have access.");
+            toast.error(t("forbiddenYouDoNotHaveAccess"));
             break;
           case 404:
-            toast.error("Invalid User Name or Password.");
+            toast.error(t("invalidUserNameOrPassword"));
             break;
           case 500:
-            toast.error("Server Error. Please try again later.");
+            toast.error(t("serverErrorPleaseTryAgainLater"));
             break;
           default:
             toast.error(
-              `Error: ${error.response.data.message || "An error occurred."}`
+              `Error: ${error.response.data.message || t("anErrorOccurred")}`
             );
         }
       } else if (error.request) {
-        toast.error("No response from the server. Please check your network.");
+        toast.error(t("noResponseFromTheServerPleaseCheckYourNetwork"));
       } else {
-        toast.error(`Error: ${error.message}`);
+        toast.error(`${t("error")}: ${error.message}`);
       }
     }
   };
 
   useEffect(() => {
     if (localStorage.getItem('loggedOut')) {
-      toast.success('Successfully logged out!', {
+      toast.success(t('successfullyLoggedOut'), {
         position: 'top-right',
         autoClose: 1000,
         hideProgressBar: false,
@@ -134,13 +141,42 @@ const Login = () => {
         draggable: true,
         progress: undefined,
       });
-      localStorage.removeItem('loggedOut');
+      localStorage.removeItem(t('loggedOut'));
     }
   }, []);
 
   return (
     <Container fluid className="vh-100 position-relative overflow-hidden">
       <ToastContainer autoClose={1500} />
+      <Dropdown className={`position-absolute ${customDarkBorder} rounded-3`} style={{ top: '20px', right: '20px', zIndex: 2 }}>
+        <Dropdown.Toggle variant="light" id="language-dropdown" className="d-flex align-items-center">
+          <img 
+            src={i18n.language === 'hi' ? IndianFlag : UKFlag} 
+            alt="Selected Language" 
+            style={{ width: '20px', marginRight: '5px' }}
+          />
+          {i18n.language === 'hi' ? 'हिंदी' : 'English'}
+        </Dropdown.Toggle>
+
+        <Dropdown.Menu>
+          <Dropdown.Item onClick={() => handleLanguageChange('en')} className="d-flex align-items-center">
+            <img 
+              src={UKFlag} 
+              alt="UK Flag" 
+              style={{ width: '20px', marginRight: '5px' }}
+            />
+            English
+          </Dropdown.Item>
+          <Dropdown.Item onClick={() => handleLanguageChange('hi')} className="d-flex align-items-center">
+            <img 
+              src={IndianFlag} 
+              alt="Indian Flag" 
+              style={{ width: '20px', marginRight: '5px' }}
+            />
+            हिंदी
+          </Dropdown.Item>
+        </Dropdown.Menu>
+      </Dropdown>
       {isTabletPortrait && (
         <img
           src={themeImages[customDark] || DefaultTheme}
@@ -188,10 +224,10 @@ const Login = () => {
               </h2>
 
               <Form.Group controlId="formBasicuserName">
-                <Form.Label>User Name</Form.Label>
+                <Form.Label>{t("username")}</Form.Label>
                 <Form.Control
                   type="text"
-                  placeholder="Enter User Name"
+                  placeholder={t("enterUsername")}
                   value={userName}
                   onChange={(e) => setUserName(e.target.value)}
                   required
@@ -199,11 +235,11 @@ const Login = () => {
               </Form.Group>
 
               <Form.Group controlId="formBasicPassword" className="mt-3">
-                <Form.Label>Password</Form.Label>
+                <Form.Label>{t("password")}</Form.Label>
                 <div className="position-relative">
                   <Form.Control
                     type={showPassword ? "text" : "password"}
-                    placeholder="Password"
+                    placeholder={t("password")}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     minLength={8}
@@ -228,7 +264,7 @@ const Login = () => {
                   } custom-zoom-btn `}
                 type="submit"
               >
-                Login
+                {t("login")}
               </Button>
               <div className="text-center mt-3 custom-zoom-btn">
                 <Link
@@ -238,7 +274,7 @@ const Login = () => {
                     : `${customDarkText}`
                     } `}
                 >
-                  Forgot Password?
+                  {t("forgotPassword")}
                 </Link>
               </div>
             </Form>
