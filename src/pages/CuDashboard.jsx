@@ -314,7 +314,7 @@ useEffect(() => {
                 {clickData.name || t('selectProject')}
               </h4>
               <div style={{ flex: 1, overflow: "hidden", padding: "0 15px" }}>
-                <CuDetailedAgGrid clickData={clickData} />
+                <CuDetailedAgGrid projectId={clickData.projectId} />
               </div>
             </Card>
           </Col>

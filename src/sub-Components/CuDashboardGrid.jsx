@@ -1,3 +1,5 @@
+// This component has not been used yet
+
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { AgGridReact } from '@ag-grid-community/react';
 import '@ag-grid-community/styles/ag-grid.css';
@@ -11,6 +13,7 @@ import { useNavigate } from 'react-router-dom';
 ModuleRegistry.registerModules([ClientSideRowModelModule]);
 
 const CuDashboardGrid = ({ setClickData }) => {
+  console.log(setClickData);
   const containerStyle = useMemo(() => ({ width: '100%', height: '100%' }), []);
   const gridStyle = useMemo(() => ({ height: '100%', width: '100%' }), []);
 
@@ -89,6 +92,7 @@ const CuDashboardGrid = ({ setClickData }) => {
     <div style={containerStyle}>
       <div id="grid-wrapper" style={{ width: '100%', height: '100%' }}>
         <div style={gridStyle} className="ag-theme-quartz-dark">
+          {console.log(rowData)}
           <AgGridReact
             rowData={rowData}
             columnDefs={columnDefs}
