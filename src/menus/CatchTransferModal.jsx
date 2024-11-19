@@ -267,6 +267,8 @@ const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots =
                                     format="DD-MM-YYYY"
                                     className={`w-100 ${customDarkText}`}
                                     placeholder={t('selectDate')}
+                                    minDate={dateRange.start}
+                                    maxDate={dateRange.end}
                                 />
                             </div>
                             {dateRange.start && dateRange.end && (

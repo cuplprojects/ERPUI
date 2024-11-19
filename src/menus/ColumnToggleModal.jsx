@@ -15,11 +15,24 @@ const ColumnToggleModal = ({ show, handleClose, columnVisibility, setColumnVisib
         // This empty dependency array ensures cssClasses are always fresh
     }, [cssClasses]);
 
+    // Load saved column visibility from localStorage on initial render
+    useEffect(() => {
+        const savedVisibility = localStorage.getItem('columnVisibility');
+        if (savedVisibility) {
+            setColumnVisibility(JSON.parse(savedVisibility));
+        }
+    }, [setColumnVisibility]);
+
     const handleToggle = (column) => {
-        setColumnVisibility((prevVisibility) => ({
-            ...prevVisibility,
-            [column]: !prevVisibility[column],
-        }));
+        setColumnVisibility((prevVisibility) => {
+            const newVisibility = {
+                ...prevVisibility,
+                [column]: !prevVisibility[column],
+            };
+            // Save to localStorage whenever visibility changes
+            localStorage.setItem('columnVisibility', JSON.stringify(newVisibility));
+            return newVisibility;
+        });
     };
 
     const columns = [

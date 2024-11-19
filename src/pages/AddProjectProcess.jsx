@@ -6,15 +6,20 @@ import { SortableContainer, SortableElement, SortableHandle } from 'react-sortab
 const { Panel } = Collapse;
 const { Option } = Select;
 
-const DragHandle = SortableHandle(() => (
-  <span style={{ cursor: 'grab', marginRight: '8px', opacity: 1 }}>⣿</span>
+const DragHandle = SortableHandle(({ disabled }) => (
+  <span style={{ 
+    cursor: disabled ? 'not-allowed' : 'grab', 
+    marginRight: '8px', 
+    opacity: disabled ? 0.5 : 1,
+    display: disabled ? 'none' : 'inline' 
+  }}>⣿</span>
 ));
+const SortableRow = SortableElement(({ process, index, features, editingProcessId, editingFeatures, handleFeatureChange, handleSaveFeatures, handleCancelEdit, handleEdit, independentProcesses, disabled }) => {
 
-const SortableRow = SortableElement(({ process, index, features, editingProcessId, editingFeatures, handleFeatureChange, handleSaveFeatures, handleCancelEdit, handleEdit, independentProcesses, handleThresholdChange }) => {
   return (
     <tr style={{ opacity: 1, background: 'white', margin: '10px' }}>
       <td>
-        {independentProcesses.some(p => p.id === process.id) && <DragHandle />}
+        {independentProcesses.some(p => p.id === process.id) && <DragHandle disabled={disabled} />}
         {process.name}
       </td>
       <td>
@@ -98,6 +103,7 @@ const AddProjectProcess = ({ selectedProject }) => {
   const [previousFeatures, setPreviousFeatures] = useState([]);
   const [independentProcesses, setIndependentProcesses] = useState([]);
   const [projectName, setProjectName] = useState('');
+  const [isTransactionExists, setIsTransactionExists] = useState(false);
 
   useEffect(() => {
     const fetchRequiredProcesses = async (typeId) => {
@@ -170,6 +176,16 @@ const AddProjectProcess = ({ selectedProject }) => {
       }
     };
 
+    const checkTransactions = async () => {
+      try {
+        const response = await API.get(`/Transactions/exists/${selectedProject}`);
+        setIsTransactionExists(response.data);
+      } catch (error) {
+        message.error('Error checking transaction status');
+      }
+    };
+
+    checkTransactions();
     fetchFeatures();
     fetchProcessesOfProject();
     fetchAllProcesses();
@@ -180,6 +196,7 @@ const AddProjectProcess = ({ selectedProject }) => {
   }, [projectProcesses]);
 
   const handleProcessSelect = (processId) => {
+    if (isTransactionExists) return;
     const process = allProcesses.find(p => p.id === processId);
 
     setSelectedProcessIds((prev) => {
@@ -302,6 +319,8 @@ const AddProjectProcess = ({ selectedProject }) => {
   };
 
   const onSortEnd = useCallback(({ oldIndex, newIndex }) => {
+    if (isTransactionExists) return;
+    
     const process = projectProcesses[oldIndex];
     const processWithRange = independentProcesses.find(p => p.id === process.id);
     
@@ -319,7 +338,7 @@ const AddProjectProcess = ({ selectedProject }) => {
       const newProcesses = arrayMove(prevProcesses, oldIndex, newIndex);
       return calculatedWeightage(newProcesses);
     });
-  }, [projectProcesses, independentProcesses]);
+  }, [projectProcesses, independentProcesses, isTransactionExists]);
 
   if (loading || projectProcesses.length === 0) {
     return <Spin tip="Loading..." />;
@@ -336,7 +355,7 @@ const AddProjectProcess = ({ selectedProject }) => {
               key={process.id}
               checked={selectedProcessIds.includes(process.id)}
               onChange={() => handleProcessSelect(process.id)}
-              disabled={requiredProcessIds.includes(process.id)}
+              disabled={requiredProcessIds.includes(process.id) || isTransactionExists}
             >
               {process.name}
             </Checkbox>
@@ -364,6 +383,7 @@ const AddProjectProcess = ({ selectedProject }) => {
             lockOffset={["30%", "50%"]}
             useDragHandle={true}
             helperClass="row-dragging"
+            disabled={isTransactionExists}
           >
             {projectProcesses.map((process, index) => (
               <SortableRow
@@ -378,14 +398,19 @@ const AddProjectProcess = ({ selectedProject }) => {
                 handleCancelEdit={handleCancelEdit}
                 handleEdit={handleEdit}
                 independentProcesses={independentProcesses}
-                handleThresholdChange={handleThresholdChange}
+                disabled={isTransactionExists}
               />
             ))}
           </SortableBody>
         </table>
       </div>
 
-      <Button type="primary" onClick={handleSubmit} style={{ marginTop: '16px' }}>
+      <Button 
+        type="primary" 
+        onClick={handleSubmit} 
+        style={{ marginTop: '16px' }}
+        disabled={isTransactionExists}
+      >
         Submit Processes
       </Button>
 
