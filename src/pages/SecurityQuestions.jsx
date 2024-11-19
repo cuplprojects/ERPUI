@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Button, InputGroup, FormControl } from 'react-bootstrap';
+import { Form, Button, InputGroup, FormControl, Dropdown } from 'react-bootstrap';
 import { Table, Input } from 'antd';
 import API from '../CustomHooks/MasterApiHooks/api';
 import themeStore from '../store/themeStore';
@@ -7,6 +7,8 @@ import { useStore } from 'zustand';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import { message } from 'antd';
+import IndianFlag from './../assets/Icons/Hindi.png';
+import UKFlag from './../assets/Icons/English.png';
 
 const { Search } = Input;
 
@@ -14,6 +16,7 @@ const SecurityQuestions = () => {
   const { t } = useTranslation();
   const { getCssClasses } = useStore(themeStore);
   const [customDark, customMid, customLight, customBtn, customDarkText, customLightText] = getCssClasses();
+  const { setLanguage } = useStore(languageStore);
 
   const [questions, setQuestions] = useState([]);
   const [newQuestion, setNewQuestion] = useState('');
@@ -74,6 +77,11 @@ const SecurityQuestions = () => {
     }
   };
 
+  const handleLanguageChange = (lang) => {
+    setLanguage(lang);
+    i18n.changeLanguage(lang);
+  };
+
   const columns = [
     {
       title: t('sr'),
@@ -110,6 +118,36 @@ const SecurityQuestions = () => {
 
   return (
     <div className="container-fluid">
+      <Dropdown className="position-absolute" style={{ top: '20px', right: '20px', zIndex: 2 }}>
+        <Dropdown.Toggle variant="light" id="language-dropdown" className="d-flex align-items-center">
+          <img 
+            src={i18n.language === 'hi' ? IndianFlag : UKFlag} 
+            alt="Selected Language" 
+            style={{ width: '20px', marginRight: '5px' }}
+          />
+          {i18n.language === 'hi' ? 'हिंदी' : 'English'}
+        </Dropdown.Toggle>
+
+        <Dropdown.Menu>
+          <Dropdown.Item onClick={() => handleLanguageChange('en')} className="d-flex align-items-center">
+            <img 
+              src={UKFlag} 
+              alt="UK Flag" 
+              style={{ width: '20px', marginRight: '5px' }}
+            />
+            English
+          </Dropdown.Item>
+          <Dropdown.Item onClick={() => handleLanguageChange('hi')} className="d-flex align-items-center">
+            <img 
+              src={IndianFlag} 
+              alt="Indian Flag" 
+              style={{ width: '20px', marginRight: '5px' }}
+            />
+            हिंदी
+          </Dropdown.Item>
+        </Dropdown.Menu>
+      </Dropdown>
+
       <div className="row mb-3">
         <div className="col-12 col-md-4 mb-3 mb-md-0">
           <Search
