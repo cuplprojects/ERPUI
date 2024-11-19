@@ -78,6 +78,8 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
                 setRangeStart(process.rangeStart || '');
                 setRangeEnd(process.rangeEnd || '');
             }
+            // Set rangeStart and rangeEnd based on the process IDs (mapping to names for UI)
+
         } else {
             setProcessName('');
             setProcessStatus(true);
@@ -450,6 +452,7 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
                             </div>
                         </div>
                     )}
+
                 </Modal.Body>
                 <Modal.Footer className={`${customDark}`}>
                     <Button variant="secondary" onClick={() => setProcessModalVisible(false)} className={`${customBtn}`}>

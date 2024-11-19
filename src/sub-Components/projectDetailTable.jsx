@@ -187,7 +187,7 @@ const ProjectDetailsTable = ({
     const alertsCondition = showOnlyAlerts
       ? item.alerts && item.alerts.trim() !== ""
       : true;
-     const previousProcessCondition = showOnlyCompletedPreviousProcess ? (!item.previousProcessData || item.previousProcessData.status === 2) : true;
+     const previousProcessCondition = showOnlyCompletedPreviousProcess ? (!item.previousProcessData || item.previousProcessData.status === 2 || (item.previousProcessData.thresholdQty != null && item.previousProcessData.thresholdQty > item.previousProcessData.interimQuantity)) : true;
 
     return (
       matchesSearchText &&
@@ -214,11 +214,13 @@ const ProjectDetailsTable = ({
 
     const updatedRow = tableData.find((row) => row.srNo === srNo);
 
-    // Check if previous process exists and is not completed
+    // Check if previous process exists and is not completed, with threshold exception
     if (
       updatedRow.previousProcessData &&
       updatedRow.previousProcessData !== null &&
-      updatedRow.previousProcessData.status !== 2
+      updatedRow.previousProcessData.status !== 2 &&
+      !(updatedRow.previousProcessData.thresholdQty != null && 
+        updatedRow.previousProcessData.thresholdQty > updatedRow.previousProcessData.interimQuantity)
     ) {
       showNotification('error', 'Status Update Failed', 'Previous process must be completed first');
       return;
@@ -335,11 +337,20 @@ const ProjectDetailsTable = ({
               <div className="d-inline">
                 {record.previousProcessData &&
                   record.previousProcessData.status === 2 ? (
-                  <IoCheckmarkDoneCircleSharp
-                    size={20}
-                    color="green"
-                    className=""
-                  />
+                  record.previousProcessData.thresholdQty != null && 
+                  record.previousProcessData.thresholdQty > record.previousProcessData.interimQuantity ? (
+                    <IoCheckmarkDoneCircleSharp
+                      size={20}
+                      color="yellow"
+                      className=""
+                    />
+                  ) : (
+                    <IoCheckmarkDoneCircleSharp
+                      size={20}
+                      color="green"
+                      className=""
+                    />
+                  )
                 ) : (
                   <MdPending size={20} color="orange" className="" />
                 )}
@@ -489,17 +500,15 @@ const ProjectDetailsTable = ({
       : []),
     {
       title: t("status"),
-      dataIndex: "status",
+      dataIndex: "status", 
       key: "status",
       align: "center",
       render: (text, record) => {
-        // Add debug loggin
-
+        // Add debug logging
         if (!record || text === undefined || text === null) {
           console.log("Invalid data detected:", { record, text });
           return <span>Invalid Data</span>;
         }
-
 
         const statusSteps = [t("pending"), t("started"), t("completed")];
         const initialStatusIndex = text !== undefined ? text : 0;
@@ -507,38 +516,52 @@ const ProjectDetailsTable = ({
         const hasAlerts = Boolean(record.alerts?.length);
 
         // Check if previous process exists and is completed
-        const isPreviousProcessCompleted =
+        const isPreviousProcessCompleted = 
           !record.previousProcessData ||
-          record.previousProcessData.status === 2;
-    
+          record.previousProcessData.status === 2 ||
+          (record.previousProcessData.thresholdQty != null && 
+           record.previousProcessData.thresholdQty > record.previousProcessData.interimQuantity);
 
         // Check if 'Assign Team' and 'Select Zone' data is populated
         const isZoneAssigned = Boolean(record.zoneId);
         const isTeamAssigned = Boolean(record.teamId?.length);
-               // Check if 'Select Machine' is required
+        
+        // Check if 'Select Machine' is required
         const hasSelectMachinePermission = hasFeaturePermission(10);
-       
 
-        // Determine if status can be changed
+        const requirements = []; // Array to hold the reasons
+
         const canChangeStatus =
           isPreviousProcessCompleted &&
           (hasSelectMachinePermission
             ? record.machineId !== 0 &&
-            record.machineId !== null &&
-            isZoneAssigned &&
-            isTeamAssigned
+              record.machineId !== null &&
+              isZoneAssigned &&
+              isTeamAssigned
             : isZoneAssigned && isTeamAssigned);
 
         const canBeCompleted = record.interimQuantity === record.quantity;
 
-      
+        // Populate the requirements array based on conditions
+        if (hasAlerts) {
+          requirements.push("Status cannot be changed due to alerts.");
+        }
+        if (!isPreviousProcessCompleted) {
+          requirements.push("Previous process must be completed.");
+        }
+        if (!canChangeStatus) {
+          requirements.push("Ensure all required fields are filled (Zone, Team, Machine).");
+        }
+        if (initialStatusIndex === 1 && !canBeCompleted) {
+          requirements.push("Cannot set status to Completed - Interim Quantity must equal Quantity.");
+        }
+
+        const isDisabled = requirements.length > 0; // Determine if the toggle is disabled based on requirements
+
         return (
           <div className="d-flex justify-content-center">
             {hasAlerts ? (
-              <span
-                className="text-danger"
-                title="Status cannot be changed due to alerts."
-              >
+              <span className="text-danger" title={requirements.join(', ')}>
                 <StatusToggle
                   initialStatusIndex={initialStatusIndex}
                   statusSteps={statusSteps.map((status, index) => ({
@@ -549,20 +572,21 @@ const ProjectDetailsTable = ({
                 />
               </span>
             ) : (
-              <StatusToggle
-                initialStatusIndex={initialStatusIndex}
-                onStatusChange={(newIndex) =>
-                  handleRowStatusChange(record.srNo, newIndex)
-                }
-                statusSteps={statusSteps.map((status, index) => ({
-                  status,
-                  color: index === 0 ? "red" : index === 1 ? "blue" : "green",
-                }))}
-                disabled={
-                  !canChangeStatus ||
-                  (initialStatusIndex === 1 && !canBeCompleted)
-                } // Disable the toggle if status can't be changed (based on Select Machine or Zone/Team)
-              />
+              <span
+                title={isDisabled ? requirements.join('\n') : ""} // Join requirements with newline for display
+              >
+                <StatusToggle
+                  initialStatusIndex={initialStatusIndex}
+                  onStatusChange={(newIndex) =>
+                    handleRowStatusChange(record.srNo, newIndex)
+                  }
+                  statusSteps={statusSteps.map((status, index) => ({
+                    status,
+                    color: index === 0 ? "red" : index === 1 ? "blue" : "green",
+                  }))}
+                  disabled={isDisabled} // Disable the toggle if status can't be changed
+                />
+              </span>
             )}
           </div>
         );
@@ -588,10 +612,13 @@ const ProjectDetailsTable = ({
         const newStatusIndex = statusSteps.indexOf(newStatus);
 
         // Check if all selected rows have completed previous process or no previous process
-        const allPreviousCompleted = selectedRowKeys.every(key => {
-            const row = tableData.find(row => row.srNo === key); // Changed from catchNumber to srNo
-            return !row.previousProcessData || row.previousProcessData.status === 2;
-        });
+          const allPreviousCompleted = selectedRowKeys.every(key => {
+              const row = tableData.find(row => row.srNo === key);
+              return !row.previousProcessData || 
+                     row.previousProcessData.status === 2 || 
+                     (row.previousProcessData.thresholdQty != null && 
+                      row.previousProcessData.thresholdQty > row.previousProcessData.interimQuantity);
+          });
 
         if (!allPreviousCompleted) {
             showNotification('error', 'Status Update Failed', 'Previous process must be completed for all selected items');
