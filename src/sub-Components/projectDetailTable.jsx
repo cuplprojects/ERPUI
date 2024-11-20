@@ -1292,5 +1292,6 @@ const ProjectDetailsTable = ({
       />
     </>
   );
-};
+            }
+        }
 export default ProjectDetailsTable;

@@ -27,6 +27,8 @@ const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots =
         previousLot: [],
         nextLot: []
     });
+    const [isFirstLot, setIsFirstLot] = useState(false);
+    const [isLastLot, setIsLastLot] = useState(false);
 
     useEffect(() => {
         const fetchProjectName = async () => {
@@ -64,78 +66,31 @@ const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots =
         fetchAvailableDates();
     }, [selectedLot]);
 
-    // Function to fetch dates for a specific lot
-    const fetchLotDates = async (lotNo) => {
-        try {
-            const response = await API.get(`/QuantitySheet/exam-dates?projectId=${projectId}&lotNo=${lotNo}`);
-            return response.data.map(date => dayjs(date));
-        } catch (error) {
-            console.error(`Failed to fetch dates for lot ${lotNo}:`, error);
-            return [];
-        }
-    };
-
-    // Calculate valid date range when target lot is selected
+    // Fetch date range from backend when lot is selected
     useEffect(() => {
-        const calculateDateRange = async () => {
+        const fetchDateRange = async () => {
             if (!selectedLot) return;
 
-            const sortedLots = [...lots].sort((a, b) => a - b);
-            const selectedLotIndex = sortedLots.indexOf(parseInt(selectedLot));
-            const isFirstLot = selectedLotIndex === 0;
-            const isLastLot = selectedLotIndex === sortedLots.length - 1;
-            
-            let startDate = null;
-            let endDate = null;
-
             try {
-                // Case 1 & 2: Transfer to middle lot or last lot
-                if (!isFirstLot) {
-                    const previousLotDates = await fetchLotDates(sortedLots[selectedLotIndex - 1]);
-                    if (previousLotDates.length > 0) {
-                        // Get the last date of previous lot and add one day
-                        const lastDateOfPreviousLot = dayjs(previousLotDates[previousLotDates.length - 1]);
-                        startDate = lastDateOfPreviousLot.add(1, 'day');
-                        setLotDates(prev => ({ ...prev, previousLot: previousLotDates }));
-                    }
-                }
+                const response = await API.get(`/QuantitySheet/calculate-date-range?projectId=${projectId}&selectedLot=${selectedLot}`);
+                const { startDate, endDate, isFirstLot, isLastLot } = response.data;
 
-                // Case 1 & 3: Transfer to middle lot or first lot
-                if (!isLastLot) {
-                    const nextLotDates = await fetchLotDates(sortedLots[selectedLotIndex + 1]);
-                    if (nextLotDates.length > 0) {
-                        // Get the first date of next lot and subtract one day
-                        const firstDateOfNextLot = dayjs(nextLotDates[0]);
-                        endDate = firstDateOfNextLot.subtract(1, 'day');
-                        setLotDates(prev => ({ ...prev, nextLot: nextLotDates }));
-                    }
-                }
-
-                // Case 2: Special handling for last lot
-                if (isLastLot && startDate) {
-                    endDate = startDate.add(3, 'months'); // Allow dates up to 3 months from start
-                }
-
-                // Case 3: Special handling for first lot
-                if (isFirstLot && endDate) {
-                    startDate = endDate.subtract(3, 'months'); // Allow dates up to 3 months before end
-                }
-
-                setDateRange({ start: startDate, end: endDate });
-                console.log('Date Range:', { 
-                    start: startDate?.format('DD-MM-YYYY'), 
-                    end: endDate?.format('DD-MM-YYYY'),
-                    isFirstLot,
-                    isLastLot
+                // Set date range based on backend response
+                setDateRange({
+                    start: dayjs(startDate),
+                    end: dayjs(endDate)
                 });
 
+                // Set flags for first/last lot
+                setIsFirstLot(isFirstLot);
+                setIsLastLot(isLastLot);
             } catch (error) {
-                console.error('Failed to calculate date range:', error);
+                console.error('Failed to fetch date range:', error);
             }
         };
 
-        calculateDateRange();
-    }, [selectedLot, lots]);
+        fetchDateRange();
+    }, [selectedLot, projectId]);
 
     // Custom date disabling function
     const disabledDate = (current) => {
@@ -149,13 +104,7 @@ const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots =
         // Check if date is outside the valid range
         const isOutsideRange = currentDate.isBefore(startDate) || currentDate.isAfter(endDate);
 
-        // Check if date exists in adjacent lots
-        const isInAdjacentLots = [
-            ...lotDates.previousLot,
-            ...lotDates.nextLot
-        ].some(date => currentDate.isSame(dayjs(date).startOf('day')));
-
-        return isOutsideRange || isInAdjacentLots;
+        return isOutsideRange;
     };
 
     // Update the date selection handler
@@ -271,14 +220,6 @@ const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots =
                                     maxDate={dateRange.end}
                                 />
                             </div>
-                            {dateRange.start && dateRange.end && (
-                                <small className={`${customDarkText} mt-1 d-block`}>
-                                    {t('validDateRange')}: {dateRange.start.format('DD-MM-YYYY')} - {dateRange.end.format('DD-MM-YYYY')}
-                                    <br />
-                                    {lots.indexOf(parseInt(selectedLot)) === 0 && t('firstLotDateNote')}
-                                    {lots.indexOf(parseInt(selectedLot)) === lots.length - 1 && t('lastLotDateNote')}
-                                </small>
-                            )}
                         </div>
                     )}
 

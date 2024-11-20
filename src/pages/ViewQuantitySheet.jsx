@@ -32,6 +32,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
         examTime: '',
         quantity: 0,
         percentageCatch: 0,
+        status: 0,
         projectId: projectId,
         quantitySheetId:quantitySheetId,
     });
@@ -368,7 +369,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
                 examDate: newRowData.examDate,
                 examTime: newRowData.examTime,
                 processId: [],
-
+                status: 0
             }
         ];
 
@@ -388,6 +389,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
                 quantity: 0,
                 percentageCatch: 0,
                 projectId: projectId,
+                status: 0
             });
             fetchQuantity(selectedLotNo);
         } catch (error) {
