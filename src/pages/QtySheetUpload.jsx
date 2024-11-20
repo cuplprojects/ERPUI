@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Row, Col } from 'react-bootstrap';
-import { Form, Upload, Button, Select, message } from 'antd';
+import { Form, Upload, Button, Select, message, Modal,Menu, Dropdown } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import * as XLSX from 'xlsx';
 import themeStore from './../store/themeStore';
@@ -16,13 +16,13 @@ import { BsCheckCircleFill } from "react-icons/bs";
 // Helper function to convert Excel date number to JS Date
 const convertExcelDate = (excelDate) => {
     if (!excelDate) return null;
-    
+
     // Check if excelDate is a number (Excel serial date)
     if (!isNaN(excelDate)) {
         // Excel dates are number of days since 1/1/1900
         return new Date((excelDate - 25569) * 86400 * 1000);
     }
-    
+
     // If it's already a date string, parse it
     return new Date(excelDate);
 };
@@ -47,8 +47,15 @@ const QtySheetUpload = () => {
     const [dataSource, setDataSource] = useState([]);
     const [lots, setLots] = useState([]);
     const [selectedLotNo, setSelectedLotNo] = useState(null);
+    const [isDropdownVisible, setIsDropdownVisible] = useState(false);
     const [projectName, setProjectName] = useState('');
     const [dispatchedLots, setDispatchedLots] = useState([]);
+    const [isLotsFetched, setIsLotsFetched] = useState(false);
+    const [existingLots, setExistingLots] = useState([]);  // To hold the existing lots in the system
+    const [mappedLots, setMappedLots] = useState([]);  // To hold the mapped lots from the file
+    const [isModalVisible, setIsModalVisible] = useState(false);  // Modal visibility
+    const [skipLots, setSkipLots] = useState([]);  // Lots to be skipped based on matching
+const[mappedData,setMappeddata] = useState([]);
 
     useEffect(() => {
         const fetchProjectName = async () => {
@@ -77,20 +84,48 @@ const QtySheetUpload = () => {
         fetchDispatchedLots();
     }, [projectId]);
 
-    const handleUpload = async () => {
-        setUploading(true);
-        const mappedData = await createMappedData();
+    const handleRightClick = (e, lotNo) => {
+        e.preventDefault();  // Prevent the default context menu
+        setSelectedLotNo(lotNo);  // Set the selected lot number
+        setIsDropdownVisible(true);
+    };
 
+    const releaseForProduction = async () => {
+        try {
+            const lotNo = selectedLotNo;
+            
+            // Using axios to make the POST request
+            const response = await API.post('/QuantitySheet/ReleaseForProduction', {
+                lotNo: lotNo,
+            });
+    
+            // Check if the response was successful
+            if (response.status === 200) {
+                message.success(`Lot ${lotNo} released for production`);
+            } else {
+                message.error('Failed to release lot');
+            }
+        } catch (error) {
+            console.error('Error releasing lot:', error);
+            message.error('Error releasing lot');
+        }
+    };
+    
+
+    const handleUpload = async (data) => {
+        setUploading(true);
+        const mappedData = data || await createMappedData();
         if (!mappedData || !Array.isArray(mappedData) || mappedData.length === 0) {
             console.error(t('mappedDataInvalidOrEmpty'));
             setUploading(false);
+            resetState()
             return;
         }
 
         const finalPayload = mappedData.map(item => {
             // Convert Excel date to proper date format
             const examDate = item.ExamDate ? convertExcelDate(item.ExamDate) : null;
-            
+
             return {
                 catchNo: item.CatchNo || "",
                 paper: item.Paper || "",
@@ -105,6 +140,7 @@ const QtySheetUpload = () => {
                 percentageCatch: Number(item.percentageCatch) || 0,
                 projectId: projectId,
                 processId: [0],
+                status: 0
             };
         });
 
@@ -138,7 +174,7 @@ const QtySheetUpload = () => {
                 const firstSheetName = workbook.SheetNames[0];
                 const worksheet = workbook.Sheets[firstSheetName];
                 const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-    
+
                 const rows = jsonData.slice(1);
                 const mappedData = rows.map((row) => {
                     const rowData = {};
@@ -146,7 +182,7 @@ const QtySheetUpload = () => {
                         const header = fieldMappings[property];
                         const index = jsonData[0].indexOf(header);
                         let value = index !== -1 ? row[index] : '';
-                        
+
                         // Handle special cases
                         if (property === 'quantity') {
                             value = parseFloat(value) || 0;
@@ -156,20 +192,74 @@ const QtySheetUpload = () => {
                         } else {
                             value = String(value || '');
                         }
-                        
+
                         rowData[property] = value;
                     }
-                    
+
                     console.log(t('rowDataMapped'), rowData);
                     rowData['projectId'] = projectId;
                     rowData['percentageCatch'] = '0';
                     return rowData;
                 });
+                setMappeddata(mappedData)
                 resolve(mappedData);
             };
             reader.readAsArrayBuffer(selectedFile);
         });
     };
+
+
+    const handleUpdate = async () => {
+        try {
+            // Fetch the mapped data from the file
+            const mappedData = await createMappedData();  // This will contain the processed Excel data
+
+            // Extract LotNo values from the mapped data and existing data
+            const mappedLotNos = [...new Set(mappedData.map(item => item.LotNo))];
+            console.log(mappedLotNos);
+
+            // Find matching lots between mapped data and existing lots
+            const matchingLots = mappedLotNos.filter(lotNo => lots.includes(lotNo));
+            console.log(matchingLots)
+
+            // Get unique lots to skip by using Set to deduplicate lot numbers
+            const uniqueLotsToSkip = Array.from(new Set(mappedData
+                .filter(item => matchingLots.includes(item.LotNo))
+                .map(item => item.LotNo)))
+                .map(lotNo => ({ LotNo: lotNo }));
+            console.log(uniqueLotsToSkip)
+
+            if (uniqueLotsToSkip.length > 0) {
+                // If there are matching lots, show the modal with unique lots
+                setSkipLots(uniqueLotsToSkip);
+                setIsModalVisible(true);
+            } else {
+                // No matching lots, proceed directly with the upload
+                handleUpload(mappedData);
+            }
+        } catch (error) {
+            console.error('Failed to process data:', error);
+        }
+    };
+
+    const handleSkipUpdate = () => {
+        // Remove the skipped lots from the mapped data
+        console.log(mappedData)
+        console.log(skipLots)
+        const skipLotNos = skipLots.map(item => item.LotNo);
+        console.log(skipLotNos)
+        const remainingMappedData = mappedData.filter(item => !skipLotNos.includes(item.LotNo));
+        console.log(remainingMappedData)
+        handleUpload(remainingMappedData); // Call handleUpload with the filtered data
+        setIsModalVisible(false);
+    };
+
+    const handleCancelSkip = () => {
+        // Cancel the skip action
+        setIsModalVisible(false);
+    };
+
+
 
     const getColumns = async () => {
         try {
@@ -199,33 +289,33 @@ const QtySheetUpload = () => {
             const workbook = XLSX.read(data, { type: 'array' });
             const firstSheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[firstSheetName];
-    
+
             // Convert the sheet to JSON
             const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-    
+
             // Filter out rows where all cells are empty
             const filteredData = jsonData.filter(row => row.some(cell => cell !== null && cell !== ''));
-    
+
             if (filteredData.length === 0) {
                 console.warn(t('noValidDataFoundInFile'));
                 return;
             }
-    
+
             const excelHeaders = filteredData[0];
             setHeaders(excelHeaders);
             setShowMappingFields(true);
-    
+
             const autoMappings = {};
             columns.forEach((col) => {
                 const matchingHeader = excelHeaders.find(header => header?.toLowerCase() === col?.toLowerCase());
                 autoMappings[col] = matchingHeader || '';
             });
-    
+
             setFieldMappings(autoMappings);
         };
         reader.readAsArrayBuffer(file);
     };
-    
+
     const handleMappingChange = (property, value) => {
         setFieldMappings(prev => ({ ...prev, [property]: value }));
     };
@@ -249,10 +339,14 @@ const QtySheetUpload = () => {
     const fetchLots = async () => {
         try {
             const response = await API.get(`/QuantitySheet/Lots?ProjectId=${projectId}`)
-            setLots(response.data)
+            const lotsData = response.data;
+            setLots(lotsData);
+            setExistingLots(lotsData)
+            setIsLotsFetched(lotsData.length > 0);
         }
         catch (error) {
             console.error(t('failedToFetchLots'))
+            setIsLotsFetched(false);
         }
     }
 
@@ -273,6 +367,14 @@ const QtySheetUpload = () => {
             setShowBtn(true);
         }
     };
+
+    const menu = (
+        <Menu>
+            <Menu.Item key="1" onClick={releaseForProduction}>
+                {t('releaseForProduction')}
+            </Menu.Item>
+        </Menu>
+    );
 
     return (
         <div className={`container ${customDarkText} rounded shadow-lg ${customLight} ${customLightBorder}`}>
@@ -312,16 +414,24 @@ const QtySheetUpload = () => {
                             </Upload>
                         </Form.Item>
                         <Form.Item>
-                            {fileList.length > 0 && (  // Check if any file is selected
+                            {fileList.length > 0 && isLotsFetched ? (  // Check if file is selected and lots are fetched
                                 <Button
                                     className={`${customBtn}`}
                                     type="primary"
-                                    onClick={handleUpload}
+                                    onClick={handleUpdate}  // Update button logic
+                                >
+                                    {t('updateLots')}
+                                </Button>
+                            ) : (fileList.length > 0 ? (
+                                <Button
+                                    className={`${customBtn}`}
+                                    type="primary"
+                                    onClick={handleUpload}  // Upload button logic
                                     loading={uploading}
                                 >
                                     {uploading ? t('uploading') : t('upload')}
                                 </Button>
-                            )}
+                            ) : null)}
                         </Form.Item>
                         <Form.Item>
                             <div className="d-flex flex-wrap gap-2">
@@ -333,6 +443,7 @@ const QtySheetUpload = () => {
                                             className={`${selectedLotNo === lotNo ? 'bg-white text-dark border-dark' : customBtn} ${customDark === "dark-dark" ? 'border' : 'custom-light-border'} d-flex align-items-center justify-content-center p-3 `}
                                             type="primary"
                                             onClick={() => handleLotClick(lotNo)}
+                                            onContextMenu={(e) => handleRightClick(e, lotNo)} 
                                         >
                                             {t('lot')} - {lotNo} {' '}
                                             {isDispatched ? (
@@ -345,12 +456,36 @@ const QtySheetUpload = () => {
                                 })}
                             </div>
                             <div className="">
-                                <ViewQuantitySheet project={projectId} selectedLotNo={selectedLotNo} showBtn={showBtn} showTable={showTable} lots={lots}/>
+                                <ViewQuantitySheet project={projectId} selectedLotNo={selectedLotNo} showBtn={showBtn} showTable={showTable} lots={lots} />
                             </div>
                         </Form.Item>
                     </Form>
                 </Col>
             </Row>
+            {isDropdownVisible && (
+                <Dropdown overlay={menu} visible={isDropdownVisible} onVisibleChange={setIsDropdownVisible}>
+                    <div />
+                </Dropdown>
+            )}
+            <Modal
+                title={t('confirmUpdate')}
+                open={isModalVisible}
+                onOk={handleSkipUpdate}
+                onCancel={handleCancelSkip}
+                okText={t('yes')}
+                cancelText={t('no')}
+            >
+                <div>
+                    <p>{t('existingLotsMessage')}</p>
+                    <ul>
+                        {skipLots.map((lot, index) => (
+                            <li key={index}>{t('lotNo')}: {lot.LotNo} {t('existsMessage')}</li>
+                        ))}
+                    </ul>
+                    <p>{t('skipTheseLotsMessage')}</p>
+                </div>
+            </Modal>
+
 
             {showMappingFields && headers.length > 0 && (
                 <Row className='mt-2 mb-2'>
