@@ -110,7 +110,7 @@ const AllProjects = () => {
   useEffect(() => {
     const fetchLotsData = async () => {
       try {
-        const response = await API.get(`/QuantitySheet/Lots?ProjectId=${projectId}`);
+        const response = await API.get(`/QuantitySheet/ReleasedLots?ProjectId=${projectId}`);
         setLotsData(response.data);
         if (response.data.length > 0) {
           setSelectedChart({
