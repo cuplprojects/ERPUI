@@ -33,6 +33,7 @@ const ProtectedRoute = ({ component: Component, permission }) => {
   }
 
   return <>
+  <ToastContainer />
   <Component />
   </>;
 };
