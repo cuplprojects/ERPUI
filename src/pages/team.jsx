@@ -1,14 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Button, Form, Input, Select, Table, Card, Typography, Divider, Tag, Checkbox, notification, Switch } from 'antd';
-import { PlusOutlined, TeamOutlined } from '@ant-design/icons';
+import { Button, Form, Input, Select, Table, Card, Typography, Divider, Tag, notification, Switch } from 'antd';
+import { EditOutlined } from '@ant-design/icons';
 import API from '../CustomHooks/MasterApiHooks/api';
-import i18next from 'i18next';
-import { useTranslation, initReactI18next } from 'react-i18next';
+import { useTranslation } from 'react-i18next';
 import themeStore from '../store/themeStore';
 import { useStore } from 'zustand';
 import { Modal } from 'react-bootstrap';
 import { useUserData } from '../store/userDataStore';
-import { EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
 import { FaSearch } from 'react-icons/fa';
 
 const { Option } = Select;
@@ -131,8 +129,6 @@ const getProcesses = async () => {
 
   const handleEdit = (team) => {
     setEditingTeam(team);
-    console.log("Selected Process ID:", team.processId);
-    console.log("Processes:", processes);
     form.setFieldsValue({
       
       teamName: team.teamName,
@@ -199,69 +195,63 @@ const getProcesses = async () => {
       });
   };
 
-  const columns = React.useMemo(() => {
-    const baseColumns = [
-      {
-        title: t('srNo'),
-        dataIndex: 'sn',
-        key: 'sn',
-        render: (text, record, index) => ((currentPage - 1) * pageSize) + index + 1,
-        sorter: (a, b) => a.sn - b.sn,
-      },
-      {
-        title: t('teamName'),
-        dataIndex: 'teamName',
-        key: 'teamName',
-        sorter: (a, b) => a.teamName.localeCompare(b.teamName),
-      },
-      {
-        title: t('members'),
-        dataIndex: 'userNames',
-        key: 'userNames',
-        sorter: (a, b) => a.userNames.localeCompare(b.userNames),
-        render: (userNames) => (
-            <>
-                {userNames ? userNames.split(', ').map((name, index) => (
-                    <Tag key={index}>{name}</Tag>
-                )) : <span>{t('noMembers')}</span>} 
-            </>
-        ),
+  const columns = [
+    {
+      title: t('srNo'),
+      dataIndex: 'sn',
+      key: 'sn',
+      render: (text, record, index) => ((currentPage - 1) * pageSize) + index + 1,
+      sorter: (a, b) => a.sn - b.sn,
     },
-      {
-        title: t('status'),
-        dataIndex: 'status',
-        key: 'status',
-        sorter: (a, b) => a.status - b.status,
-        render: (status, record) => (
-          <Switch
-            checkedChildren={t('active')}
-            unCheckedChildren={t('inactive')}
-            checked={status}
-            onChange={(checked) => handleStatusChange(record.teamId, checked)}
-          />
-        ),
-      },
-      {
-        title: t('action'),
-        key: 'action',
-        render: (text, record) => (
-          <div className="d-flex justify-content-start">
-            <Button 
-              className={`${customBtn} d-flex align-items-center justify-content-center`}
-              onClick={() => handleEdit(record)}
-              icon={<EditOutlined />}
-            >
-              {t('edit')}
-            </Button>
-          </div>
-        ),
-      },
-    ];
-
-   
-
-  return baseColumns;
-}, [currentPage, pageSize]);
+    {
+      title: t('teamName'),
+      dataIndex: 'teamName',
+      key: 'teamName',
+      sorter: (a, b) => a.teamName.localeCompare(b.teamName),
+    },
+    {
+      title: t('members'),
+      dataIndex: 'userNames',
+      key: 'userNames',
+      sorter: (a, b) => a.userNames.localeCompare(b.userNames),
+      render: (userNames) => (
+          <>
+              {userNames ? userNames.split(', ').map((name, index) => (
+                  <Tag key={index}>{name}</Tag>
+              )) : <span>{t('noMembers')}</span>} 
+          </>
+      ),
+    },
+    {
+      title: t('status'),
+      dataIndex: 'status',
+      key: 'status',
+      sorter: (a, b) => a.status - b.status,
+      render: (status, record) => (
+        <Switch
+          checkedChildren={t('active')}
+          unCheckedChildren={t('inactive')}
+          checked={status}
+          onChange={(checked) => handleStatusChange(record.teamId, checked)}
+        />
+      ),
+    },
+    {
+      title: t('action'),
+      key: 'action',
+      render: (text, record) => (
+        <div className="d-flex justify-content-start">
+          <Button 
+            className={`${customBtn} d-flex align-items-center justify-content-center`}
+            onClick={() => handleEdit(record)}
+            icon={<EditOutlined />}
+          >
+            {t('edit')}
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   useEffect(() => {
     getUsers();
@@ -296,36 +286,37 @@ const getProcesses = async () => {
         </div>
 
         <Divider className={`fs-3 ${customDarkText}`}>{t('existingTeams')}</Divider>
-        <Table
-          columns={columns}
-          dataSource={filteredTeams}
-          pagination={{
-            className: 'bg-white p-3 rounded rounded-top-0',
-            current: currentPage,
-            pageSize: pageSize,
-            total: filteredTeams.length,
-            onChange: (page, pageSize) => {
-              setCurrentPage(page);
-              setPageSize(pageSize);
-            },
-            showTotal: (total, range) => `${range[0]}-${range[1]} ${t('of')} ${total} ${t('items')}`,
-            showSizeChanger: true,
-            // showQuickJumper: true,
-            pageSizeOptions: ['10', '20', '30', '40']
-          }}
-          bordered
-          style={{ marginTop: '20px' }}
-          className={`${customDark === "default-dark" ? "thead-default" : ""}
-          ${customDark === "red-dark" ? "thead-red" : ""}
-          ${customDark === "green-dark" ? "thead-green" : ""}
-          ${customDark === "blue-dark" ? "thead-blue" : ""}
-          ${customDark === "dark-dark" ? "thead-dark" : ""}
-          ${customDark === "pink-dark" ? "thead-pink" : ""}
-          ${customDark === "purple-dark" ? "thead-purple" : ""}
-          ${customDark === "light-dark" ? "thead-light" : ""}
-          ${customDark === "brown-dark" ? "thead-brown" : ""} custom-pagination`}
-          rowClassName={(record, index) => (index % 2 === 0 ? 'table-row-light' : 'table-row-dark')}
-        />
+        <div className="table-responsive">
+          <Table
+            columns={columns}
+            dataSource={filteredTeams}
+            pagination={{
+              className: 'bg-white p-3 rounded rounded-top-0',
+              current: currentPage,
+              pageSize: pageSize,
+              total: filteredTeams.length,
+              onChange: (page, pageSize) => {
+                setCurrentPage(page);
+                setPageSize(pageSize);
+              },
+              showTotal: (total, range) => `${range[0]}-${range[1]} ${t('of')} ${total} ${t('items')}`,
+              showSizeChanger: true,
+              pageSizeOptions: ['10', '20', '30', '40']
+            }}
+            bordered
+            style={{ marginTop: '20px' }}
+            className={`${customDark === "default-dark" ? "thead-default" : ""}
+            ${customDark === "red-dark" ? "thead-red" : ""}
+            ${customDark === "green-dark" ? "thead-green" : ""}
+            ${customDark === "blue-dark" ? "thead-blue" : ""}
+            ${customDark === "dark-dark" ? "thead-dark" : ""}
+            ${customDark === "pink-dark" ? "thead-pink" : ""}
+            ${customDark === "purple-dark" ? "thead-purple" : ""}
+            ${customDark === "light-dark" ? "thead-light" : ""}
+            ${customDark === "brown-dark" ? "thead-brown" : ""} custom-pagination`}
+            rowClassName={(record, index) => (index % 2 === 0 ? 'table-row-light' : 'table-row-dark')}
+          />
+        </div>
       </Card>
 
       <Modal

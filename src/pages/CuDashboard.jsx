@@ -314,7 +314,7 @@ useEffect(() => {
                 {clickData.name || t('selectProject')}
               </h4>
               <div style={{ flex: 1, overflow: "hidden", padding: "0 15px" }}>
-                <CuDetailedAgGrid clickData={clickData} />
+                <CuDetailedAgGrid projectId={clickData.projectId} />
               </div>
             </Card>
           </Col>
@@ -326,7 +326,7 @@ useEffect(() => {
               className="dcard shadow-lg mb-3"
               style={{ height: "500px", background: "rgba(255,255,255,0.6)" }}
             >
-              <BarChart lots={selectedLots || (data[0] && data[0].lots) || []} />
+              <BarChart projectId={clickData.projectId} />
             </Card>
           </Col>
         )}

@@ -8,13 +8,34 @@ import { useTranslation } from 'react-i18next';
 const { TextArea } = Input;
 const { Text } = Typography;
 
-
-const CatchDetailModal = ({ show, handleClose, data, processId, fetchTransaction }) => {
+const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) => {
+    const { t } = useTranslation();
 
     const [isPlaying, setIsPlaying] = useState(false);
     const [audioElement, setAudioElement] = useState(null);
+    const [processes, setProcesses] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    // Clean up audio when modal closes
+    useEffect(() => {
+        const fetchProcesses = async () => {
+            try {
+                const response = await API.get('/Processes');
+                setProcesses(response.data);
+                setLoading(false);
+            } catch (error) {
+                console.error('Error fetching processes:', error);
+                message.error('Failed to fetch processes');
+                setLoading(false);
+            }
+        };
+
+        if (show) {
+            fetchProcesses();
+        }
+
+        return () => setProcesses([]);
+    }, [show]);
+
     useEffect(() => {
         if (!show && audioElement) {
             audioElement.pause();
@@ -25,32 +46,76 @@ const CatchDetailModal = ({ show, handleClose, data, processId, fetchTransaction
 
     if (!show) return null;
 
-    // Capitalize and format keys for better display
     const formatKey = (key) => {
         return key.replace(/([A-Z])/g, ' $1')
             .replace(/^./, (str) => str.toUpperCase());
     };
 
-    // Prepare data for the table
+    const getProcessName = (processId) => {
+        const process = processes.find(p => p.id === processId);
+        return process ? process.name : 'Unknown Process';
+    };
+
+    const formatDate = (dateString) => {
+        if (!dateString) return 'NA';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-IN', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+    };
+
     const tableData = Object.keys(data || {})
-        .filter(key => !['serialNumber', 'voiceRecording', 'teamUserNames', 'teamId', 'transactionId', 'srNo', 'projectId', 'processIds'].includes(key))
+        .filter(key => !['serialNumber', 'voiceRecording', 'teamUserNames', 'teamId', 'transactionId', 'srNo', 'projectId', 'processIds', 'previousProcessData'].includes(key))
         .map((key, index) => {
             let value = data[key];
+            
+            if (typeof value === 'object' && value !== null) {
+                if (Array.isArray(value)) {
+                    value = value.join(', ');
+                } else {
+                    value = JSON.stringify(value);
+                }
+            }
+
+            if (key === 'processId') {
+                value = getProcessName(data[key]);
+            }
             if (key === 'team') {
                 value = data.teamUserNames?.join(', ') || 'No team assigned';
             }
-            // Convert value to string if it's an object
-            if (typeof value === 'object' && value !== null) {
-                value = JSON.stringify(value);
+            if (key === 'examDate') {
+                value = formatDate(value);
+            }
+
+            if (key === 'percentageCatch' && value !== null && value !== undefined) {
+                value = Number(value).toFixed(2) + '%'; //add percentage symbol
+            }
+
+            // Convert status numbers to text
+            if (key === 'status') {
+                switch (value) {
+                    case 0:
+                        value = 'Pending';
+                        break;
+                    case 1:
+                        value = 'Started';
+                        break;
+                    case 2:
+                        value = 'Completed';
+                        break;
+                    default:
+                        value = 'N/A';
+                }
             }
             return {
                 key: index,
                 label: formatKey(key),
-                value: value || 'NA',
+                value: value || `No ${key}`,
             };
         });
 
-    // Add team members row
     if (data?.teamUserNames?.length) {
         tableData.push({
             key: 'team',
@@ -59,7 +124,6 @@ const CatchDetailModal = ({ show, handleClose, data, processId, fetchTransaction
         });
     }
 
-    // Update handleAudioPlay function
     const handleAudioPlay = async (audioData) => {
         if (!audioData) {
             message.info('No audio recording available');
@@ -73,7 +137,6 @@ const CatchDetailModal = ({ show, handleClose, data, processId, fetchTransaction
                 return;
             }
 
-            // Convert base64 to blob
             const byteCharacters = atob(audioData);
             const byteNumbers = new Array(byteCharacters.length);
             for (let i = 0; i < byteCharacters.length; i++) {
@@ -82,11 +145,9 @@ const CatchDetailModal = ({ show, handleClose, data, processId, fetchTransaction
             const byteArray = new Uint8Array(byteNumbers);
             const blob = new Blob([byteArray], { type: 'audio/wav' });
 
-            // Create audio URL and play
             const audioUrl = URL.createObjectURL(blob);
             const audio = new Audio(audioUrl);
 
-            // Add event listeners
             audio.onplay = () => setIsPlaying(true);
             audio.onpause = () => setIsPlaying(false);
             audio.onended = () => {
@@ -103,7 +164,6 @@ const CatchDetailModal = ({ show, handleClose, data, processId, fetchTransaction
         }
     };
 
-    // Update the render function for the audio control
     const renderAudioControl = (voiceRecording) => {
         if (!voiceRecording) {
             return (
@@ -150,23 +210,37 @@ const CatchDetailModal = ({ show, handleClose, data, processId, fetchTransaction
     };
 
     const handleResolve = async () => {
-        console.log("data", data);
         try {
+            let existingTransactionData;
+            if (data.transactionId) {
+                const response = await API.get(`/Transactions/${data.transactionId}`);
+                existingTransactionData = response.data;
+            }
+            const postData = {
+                transactionId: data.transactionId || 0,
+                interimQuantity: existingTransactionData ? existingTransactionData.interimQuantity : 0,
+                remarks: existingTransactionData ? existingTransactionData.remarks : "",
+                projectId: data.projectId,
+                quantitysheetId: data.srNo || 0,
+                processId: processId,
+                zoneId: existingTransactionData ? existingTransactionData.zoneId : 0,
+                machineId: existingTransactionData ? existingTransactionData.machineId : 0,
+                status: existingTransactionData ? existingTransactionData.status : 0,
+                alarmId: "0",
+                lotNo: data.lotNo,
+                teamId: existingTransactionData ? existingTransactionData.teamId : [],
+                voiceRecording: existingTransactionData ? existingTransactionData.voiceRecording : ""
+            };
 
-            await API.put(`/Transactions/${data.transactionId}`, {
-                ...data,
-                alarmId: "0"
-            });
+            await API.post('/Transactions', postData);
 
+            handleSave("0");
             handleClose();
-            message.success('Alert resolved successfully');
         } catch (error) {
-
-            console.error('Error resolving alert:', error);
+            console.error('Error saving alarm:', error);
         }
     };
 
-    // Define table columns
     const columns = [
         {
             title: 'Field',
@@ -183,19 +257,17 @@ const CatchDetailModal = ({ show, handleClose, data, processId, fetchTransaction
                 if (record.label === 'Remarks' || record.label === 'Alerts') {
                     return (
                         <>
-
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <TextArea
-                                value={value}
-                                readOnly
-                                autoSize={{ minRows: 2, maxRows: 6 }}
-                                bordered={false}
-                                style={{ flex: 1, marginRight: '10px', overflow: 'hidden', wordWrap: 'break-word' }}
-                            />
-                            {record.label === 'Remarks' && renderAudioControl(data?.voiceRecording)}
-                        </div>
-                           { record?.label === 'Alerts' && value !== "0" &&
-                            value !== 'NA' && (
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <TextArea
+                                    value={value}
+                                    readOnly
+                                    autoSize={{ minRows: 2, maxRows: 6 }}
+                                    bordered={false}
+                                    style={{ flex: 1, marginRight: '10px', overflow: 'hidden', wordWrap: 'break-word' }}
+                                />
+                                {record.label === 'Remarks' && renderAudioControl(data?.voiceRecording)}
+                            </div>
+                            {record?.label === 'Alerts' && value !== "0" && value !== 'NA' && (
                                 <Button
                                     style={{ fontSize: '18px', cursor: 'pointer' }}
                                     onClick={handleResolve}
@@ -204,8 +276,6 @@ const CatchDetailModal = ({ show, handleClose, data, processId, fetchTransaction
                                     Resolve
                                 </Button>
                             )}
-                       
-
                         </>
                     );
                 }

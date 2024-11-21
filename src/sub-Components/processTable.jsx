@@ -40,8 +40,9 @@ const ProcessTable = () => {
   const userData = useUserData();
   const { t } = useTranslation();
 
-  const { getCssClasses } = useStore(themeStore);
-  const cssClasses = useMemo(() => getCssClasses(), [getCssClasses]);
+  // Subscribe to theme store changes
+  const themeState = useStore(themeStore);
+  const cssClasses = useMemo(() => themeState.getCssClasses(), [themeState]);
   const [
     customDark,
     customMid,
@@ -53,8 +54,13 @@ const ProcessTable = () => {
     customDarkBorder,
   ] = cssClasses;
 
+  // Force re-render when theme changes
+  useEffect(() => {
+    // This empty dependency array ensures cssClasses are always fresh
+  }, [cssClasses]);
+
   const [tableData, setTableData] = useState([]);
-  const [showBarChart, setShowBarChart] = useState(true);
+  const [showBarChart, setShowBarChart] = useState(false);
   const [catchDetailModalShow, setCatchDetailModalShow] = useState(false);
   const [catchDetailModalData, setCatchDetailModalData] = useState(null);
   const [selectedLot, setSelectedLot] = useState(lotNo);
@@ -103,7 +109,19 @@ const ProcessTable = () => {
             );
             if (!previousProcessData) break;
 
-            if (previousProcessData.processType === "Dependent") {
+            if (previousProcessData.processType === "Dependent" || 
+                (previousProcessData.processType === "Independent" && 
+                 previousProcessData.rangeStart <= processData.sequence &&
+                 previousProcessData.rangeEnd >= processData.sequence)) {
+              
+              // If current process is Independent, set previous process to min range
+              if (processData.processType === "Independent" && processData.rangeStart) {
+                previousProcessData = await getProjectProcessByProjectAndSequence(
+                  selectedProject?.value || id,
+                  processData.rangeStart
+                );
+              }
+
               setPreviousProcess(previousProcessData);
               const prevTransactions = await API.get(
                 `/Transactions/GetProjectTransactionsData?projectId=${
@@ -112,7 +130,6 @@ const ProcessTable = () => {
               );
               setPreviousProcessTransactions(prevTransactions.data);
               break;
-
             }
             previousSequence--;
           } while (previousSequence > 0);
@@ -302,7 +319,7 @@ const ProcessTable = () => {
               previousSequence
             );
             if (!previousProcessData) break;
-
+            console.log(previousProcessData);
             if (previousProcessData.processType === "Dependent") {
               setPreviousProcess(previousProcessData);
               const prevTransactions = await API.get(
@@ -353,7 +370,12 @@ const ProcessTable = () => {
       const transactionsData = response.data;
 
       if (Array.isArray(transactionsData)) {
-        const formDataGet = transactionsData.map((item) => {
+        // Filter transactions that contain current processId in processIds array
+        const validTransactions = transactionsData.filter(item => 
+          item.processIds?.includes(Number(processId))
+        );
+
+        const formDataGet = validTransactions.map((item) => {
           const previousProcessData = previousProcessTransactions.find(
             (prevTrans) => prevTrans.quantitySheetId === item.quantitySheetId
           );
@@ -388,16 +410,20 @@ const ProcessTable = () => {
                     previousProcessData.transactions[0]?.teamUserNames || [],
                   alarmMessage:
                     previousProcessData.transactions[0]?.alarmMessage || null,
+                  thresholdQty:null
                 }
               : null,
             voiceRecording: item.transactions[0]?.voiceRecording || "",
             transactionId: item.transactions[0]?.transactionId || null,
             zoneId: item.transactions[0]?.zoneId || 0,
             machineId: item.transactions[0]?.machineId || 0,
+            machinename : item.transactions[0]?.machinename || "No Machine Assigned",
+            zoneNo: item.transactions?.[0]?.zoneNo || "No Zone Assigned",
+
             teamId: item.transactions[0]?.teamId || [],
-            teamUserNames: item.transactions[0]?.teamUserNames || [],
+            teamUserNames: item.transactions[0]?.teamUserNames || ["No Team Assigned"],
             alarmMessage: item.transactions[0]?.alarmMessage || null,
-            processIds: item.processIds || [],
+            processIds: item.processIds || [], // like [1,3,4,5]
           };
         });
 
@@ -410,7 +436,7 @@ const ProcessTable = () => {
         setTableData(filteredData);
 
         const uniqueLots = [
-          ...new Set(transactionsData.map((item) => item.lotNo)),
+          ...new Set(validTransactions.map((item) => item.lotNo)),
         ].sort((a, b) => a - b);
         setProjectLots(uniqueLots.map((lotNo) => ({ lotNo })));
       }
@@ -572,7 +598,7 @@ const ProcessTable = () => {
         </Col>
       </Row>
 
-      { processName !== "Dispatch" || true && (
+      { processName !== "Dispatch"  && (
         <Row className="mb-5">
           <Col lg={12} md={12}>
           <CatchProgressBar data={combinedTableData} />
@@ -610,7 +636,7 @@ const ProcessTable = () => {
         </Col>
       </Row>
 
-      {processName === "Dispatch" || true ? (
+      {processName === "Dispatch" ? (
         <DispatchPage
           projectId={selectedProject?.value || id}
           processId={processId}

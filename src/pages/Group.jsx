@@ -69,6 +69,7 @@ const Group = () => {
       await API.post('/Groups', newGroup);
       setGroups([...groups, newGroup]);
       setFilteredGroups([...filteredGroups, newGroup]);
+      fetchGroups();
       form.resetFields();
       setIsModalVisible(false);
       message.success(t('groupAddedSuccessfully'));
@@ -99,6 +100,7 @@ const Group = () => {
       setFilteredGroups(updatedGroups.filter(group =>
         group.name.toLowerCase().includes(searchText.toLowerCase())
       ));
+      fetchGroups();
       message.success(t('groupUpdatedSuccessfully'));
     } catch (error) {
       message.error(t('failedToUpdateGroup'));
@@ -212,13 +214,13 @@ const Group = () => {
       render: (_, record, index) => (
         editingIndex === index ? (
           <div style={{ display: 'flex', justifyContent: '' }}>
-            <Button type="link" onClick={() => handleEditSave(record)} className={`${customDark === "dark-dark" ? `${customMid} border` : `${customLight} ${customDarkBorder}`} text-white `}>
+            <Button type="link" onClick={() => handleEditSave(record)} className={`${customDark === "dark-dark" ? `${customMid} border` : `${customLight} ${customDarkBorder}`} text-white d-flex align-items-center`}>
               <SaveOutlined className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}/> 
-              <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}>{t('save')}</span> 
+              <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } ms-1`}>{t('save')}</span> 
             </Button>
-            <Button type="link" onClick={handleCancelEdit} className={`${customDark === "dark-dark" ? `${customMid} border` : `${customLight} ${customDarkBorder}`} text-white ms-3`}>
+            <Button type="link" onClick={handleCancelEdit} className={`${customDark === "dark-dark" ? `${customMid} border` : `${customLight} ${customDarkBorder}`} text-white ms-3 d-flex align-items-center`}>
               <CloseOutlined className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}/> 
-              <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}>{t('cancel')}</span> 
+              <span className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } ms-1`}>{t('cancel')}</span> 
             </Button>
           </div>
         ) : (
@@ -230,10 +232,10 @@ const Group = () => {
               setEditingStatus(record.status);
               setOriginalData(record);
             }}
-            className={`${customBtn}`}
+            className={`${customBtn} d-flex align-items-center`}
           >
-            <EditOutlined className={`${customBtn} text-white me-1`} />
-            {t('edit')}
+            <EditOutlined className={`${customBtn} text-white`} />
+            <span className="ms-1">{t('edit')}</span>
           </Button>
         )
       ),

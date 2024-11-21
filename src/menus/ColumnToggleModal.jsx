@@ -1,20 +1,38 @@
-import React, { useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal, Button, Form, Row, Col } from 'react-bootstrap';
 import themeStore from '../store/themeStore';
 import { useStore } from 'zustand';
 import { useTranslation } from 'react-i18next';
 
-const ColumnToggleModal = ({ show, handleClose, columnVisibility, setColumnVisibility, featureData,hasFeaturePermission }) => {
-    const { getCssClasses } = useStore(themeStore);
-    const cssClasses = useMemo(() => getCssClasses(), [getCssClasses]);
+const ColumnToggleModal = ({ show, handleClose, columnVisibility, setColumnVisibility, featureData, hasFeaturePermission }) => {
+    const themeState = useStore(themeStore);
+    const cssClasses = themeState.getCssClasses();
     const { t } = useTranslation();
     const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
 
+    // Force re-render when theme changes
+    useEffect(() => {
+        // This empty dependency array ensures cssClasses are always fresh
+    }, [cssClasses]);
+
+    // Load saved column visibility from localStorage on initial render
+    useEffect(() => {
+        const savedVisibility = localStorage.getItem('columnVisibility');
+        if (savedVisibility) {
+            setColumnVisibility(JSON.parse(savedVisibility));
+        }
+    }, [setColumnVisibility]);
+
     const handleToggle = (column) => {
-        setColumnVisibility((prevVisibility) => ({
-            ...prevVisibility,
-            [column]: !prevVisibility[column],
-        }));
+        setColumnVisibility((prevVisibility) => {
+            const newVisibility = {
+                ...prevVisibility,
+                [column]: !prevVisibility[column],
+            };
+            // Save to localStorage whenever visibility changes
+            localStorage.setItem('columnVisibility', JSON.stringify(newVisibility));
+            return newVisibility;
+        });
     };
 
     const columns = [
@@ -23,6 +41,8 @@ const ColumnToggleModal = ({ show, handleClose, columnVisibility, setColumnVisib
         { key: 'Team Assigned', label: 'teamAssigned' },
         { key: 'Paper', label: 'paper' },
         { key: 'Course', label: 'course' },
+        { key: 'Machine', label: 'machine' },
+        { key: 'Zone', label: 'zone' },
         { key: 'Subject', label: 'subject' }
     ];
 

@@ -3,8 +3,7 @@ import {
   BrowserRouter as Router,
   Routes,
   Route,
-  HashRouter,
-} from "react-router-dom";
+  } from "react-router-dom";
 import "./App.css";
 import Login from "./user/Login";
 import Setpassword from "./user/Setpassword";
@@ -26,7 +25,7 @@ function App() {
   }, [initializeLanguage]);
   return (
     <>
-      <HashRouter className="">
+      <Router className="">
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/setpassword" element={<Setpassword />} />
@@ -34,7 +33,7 @@ function App() {
           <Route path="/server-error" element={<ErrorPage />} />
           <Route path="/*" element={<Userlayout />} />
         </Routes>
-      </HashRouter>
+      </Router>
     </>
   );
 }

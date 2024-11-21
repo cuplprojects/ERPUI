@@ -3,12 +3,13 @@ import { Row, Col } from "react-bootstrap";
 import { Button, message, Modal, Card } from "antd";
 import {
   getAllDispatches,
-  updateDispatch,
+  updateDispatch
 } from "../../CustomHooks/ApiServices/dispatchService";
 import DispatchFormModal from "../../menus/DispatchFormModal";
 import { useStore } from 'zustand';
 import themeStore from '../../store/themeStore';
 import { useTranslation } from 'react-i18next';
+import { getProcessLotPercentages } from "../../CustomHooks/ApiServices/transacationService";
 
 const DispatchPage = ({ projectId, processId, lotNo, fetchTransactions }) => {
   const { t } = useTranslation();
@@ -18,7 +19,42 @@ const DispatchPage = ({ projectId, processId, lotNo, fetchTransactions }) => {
 
   const [dispatchData, setDispatchData] = useState([]);
   const [dispatchModalVisible, setDispatchModalVisible] = useState(false);
-  const [previousProcessStatus, setPreviousProcessStatus] = useState(true);
+  const [previousProcessStatus, setPreviousProcessStatus] = useState(false);
+
+  const checkPreviousProcessStatus = async () => {
+    try {
+      console.log('Checking process status for projectId:', projectId);
+      const { processes } = await getProcessLotPercentages(projectId);
+      console.log('Received processes:', processes);
+
+      // Find current lot's completion status across all processes
+      const currentLotStatus = processes.map(process => {
+        const currentLot = process.lots.find(lot => lot.lotNumber === lotNo);
+        return {
+          processId: process.processId,
+          isComplete: currentLot?.percentage === 100
+        };
+      });
+
+      // Check if current lot is complete in all processes except current and process 10
+      const isLotCompleteInAll = currentLotStatus.every(status => {
+        if (status.processId === processId || status.processId === 10) {
+          return true;
+        }
+        if (status.processId < processId) {
+          return status.isComplete;
+        }
+        return true;
+      });
+
+      console.log('Current lot complete in all previous processes?', isLotCompleteInAll);
+      setPreviousProcessStatus(isLotCompleteInAll);
+    } catch (error) {
+      console.error("Error checking process status:", error);
+      console.error("Error details:", error.message);
+      setPreviousProcessStatus(false);
+    }
+  };
 
   const fetchDispatchData = async () => {
     try {
@@ -32,6 +68,7 @@ const DispatchPage = ({ projectId, processId, lotNo, fetchTransactions }) => {
   useEffect(() => {
     if (projectId && processId && lotNo) {
       fetchDispatchData();
+      checkPreviousProcessStatus();
     }
   }, [projectId, processId, lotNo]);
 
@@ -95,7 +132,9 @@ const DispatchPage = ({ projectId, processId, lotNo, fetchTransactions }) => {
     try {
       await updateDispatch(dispatch.id, {
         ...dispatch,
-        status: true
+        status: true,
+        completedAt: new Date(new Date().getTime() + (5.5 * 60 * 60 * 1000)).toISOString(),
+        updatedAt: new Date(new Date().getTime() + (5.5 * 60 * 60 * 1000)).toISOString()
       });
       message.success(t("statusUpdateSuccess"));
       fetchDispatchData();
@@ -164,7 +203,7 @@ const DispatchPage = ({ projectId, processId, lotNo, fetchTransactions }) => {
                       </span>
                     </td>
                   </tr>
-                  {!dispatch.status && previousProcessStatus && (
+                  {!dispatch.status &&  (
                     <tr>
                       <th>{t("actions")}</th>
                       <td>
@@ -186,7 +225,7 @@ const DispatchPage = ({ projectId, processId, lotNo, fetchTransactions }) => {
       ) : (
         <Col xs={12} md={6}>
           <Card className={customLight}>
-            <div className={`text-center p-3 ${customDarkText}`}>
+            <div className={`text-center p-3 ${customDarkText} fs-4 fw-bold`}>
               {t("noDispatchData")}
             </div>
           </Card>

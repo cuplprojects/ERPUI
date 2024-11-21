@@ -15,11 +15,10 @@ import ProcessTable from './../sub-Components/processTable';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import QtySheetUpload from '../pages/QtySheetUpload';
-import Message from '../pages/Message/Message';
-import Labels from '../pages/Message/Labels';
+import Labels from '../pages/Message/Message';
 import Reports from '../pages/Reports';
 import CuDashboard from '../pages/CuDashboard';
-import AddProjectProcess from '../pages/AddProjectProcess';
+import AddProjectProcess from '../pages/ProjectMaster/Tabs/AddProjectProcess';
 import ProtectedRoute from '../Security/ProtectedRoute';
 
 const Userlayout = () => {
@@ -58,7 +57,6 @@ const Userlayout = () => {
 
               <Route path="/quantity-sheet-uploads/:encryptedProjectId" element={<ProtectedRoute component={QtySheetUpload} permission="2.4"/>} />
               <Route path="/project-details/:encryptedProjectId/:encryptedLotNo" element={<ProtectedRoute component={ProcessTable} permission="2.4"/>} />
-              <Route path="/message" element={<ProtectedRoute component={Message} permission="3"/>} />
               <Route path="/labels" element={<ProtectedRoute component={Labels} permission="3"/>} />
               <Route path="/reports" element={<ProtectedRoute component={Reports} permission="3"/>} />
 

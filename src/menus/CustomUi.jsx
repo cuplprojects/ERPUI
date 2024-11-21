@@ -18,6 +18,7 @@ import LanguageSwitcher from './LanguageSwitcher';
 import { AiFillCloseSquare } from "react-icons/ai";
 import useShowLabelIdStore from './../store/showLabelIdStore';
 import { useTranslation } from 'react-i18next';
+import { hasPermission } from '../CustomHooks/Services/permissionUtils';
 
 const CustomUi = () => {
   const { t } = useTranslation();
@@ -189,18 +190,20 @@ const CustomUi = () => {
               />
             </Col>
           </Row>
-          <Row className="mt-4 align-items-center">
-            <Col>
-              <Form.Label>{t('showLabelId')}</Form.Label>
-              <Form.Check
-                type="switch"
-                id="showLabelIdSwitch"
-                checked={showLabelId}
-                onChange={toggleShowLabelId}
-                label={showLabelId ? t('on') : t('off')}
-              />
-            </Col>
-          </Row>
+          {hasPermission('3') && (
+            <Row className="mt-4 align-items-center">
+              <Col>
+                <Form.Label>{t('showLabelId')}</Form.Label>
+                <Form.Check
+                  type="switch"
+                  id="showLabelIdSwitch"
+                  checked={showLabelId}
+                  onChange={toggleShowLabelId}
+                  label={showLabelId ? t('on') : t('off')}
+                />
+              </Col>
+            </Row>
+          )}
           <Row className="mt-4 align-items-center">
             <Col>
               <ThemeSelector />

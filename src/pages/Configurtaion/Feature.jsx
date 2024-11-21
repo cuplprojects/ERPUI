@@ -19,21 +19,24 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
     const [isEditingFeature, setIsEditingFeature] = useState(false);
     const [editingFeatureId, setEditingFeatureId] = useState(null);
     const [featureName, setFeatureName] = useState('');
-    const [pageSize, setPageSize] = useState(5); // Default page size set to 5
+
+    const [pageSize, setPageSize] = useState(5);
+    const [currentPage, setCurrentPage] = useState(1);
+
     const [searchText, setSearchText] = useState('');
 
     // Fetch features
-    useEffect(() => {
-        const fetchFeatures = async () => {
-            try {
-                const response = await API.get('/Features');
-                setFeatures(response.data.map(feature => ({ key: feature.featureId, name: feature.features })));
-            } catch (error) {
-                console.error('Error fetching features:', error);
-                notification.error({ message: t('failedToFetchFeaturesPleaseTryAgain') });
-            }
-        };
+    const fetchFeatures = async () => {
+        try {
+            const response = await API.get('/Features');
+            setFeatures(response.data.map(feature => ({ key: feature.featureId, name: feature.features })));
+        } catch (error) {
+            console.error('Error fetching features:', error);
+            notification.error({ message: t('failedToFetchFeaturesPleaseTryAgain') });
+        }
+    };
 
+    useEffect(() => {
         fetchFeatures();
     }, []);
 
@@ -88,39 +91,32 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
             features: featureName,
         };
 
-        if (isEditingFeature) {
-            // Update existing feature
-            try {
-                const response = await API.put(`/Features/${editingFeatureId}`, featurePayload);
-                setFeatures(prevFeatures =>
-                    prevFeatures.map(feature =>
-                        feature.key === editingFeatureId ? { ...feature, name: featureName } : feature
-                    )
-                );
-                notification.success({ message: t('featureUpdatedSuccessfully') });
-            } catch (error) {
-                console.error('Error updating feature:', error);
-                notification.error({ message: t('failedToUpdateFeature') });
-            }
-        } else {
-            // Add new feature
-            try {
+        try {
+            if (isEditingFeature) {
+                // Update existing feature
+                await API.put(`/Features/${editingFeatureId}`, featurePayload);
+                notification.success({ 
+                    message: t('featureUpdatedSuccessfully'),
+                    duration: 0,
+                    onClose: () => {}
+                });
+            } else {
+                // Add new feature
                 const response = await API.post('/Features', featurePayload);
                 const addedFeature = response.data;
-                const newFeature = { key: addedFeature.featureId, name: addedFeature.features };
-                setFeatures([...features, newFeature]);
+                onAddFeature({ key: addedFeature.featureId, name: addedFeature.features });
                 notification.success({ message: t('featureAddedSuccessfully') });
-                
-                // Notify parent component to update Feature Configuration
-                onAddFeature(newFeature);
-            } catch (error) {
-                console.error('Error adding feature:', error);
-                notification.error({ message: t('failedToAddFeature') });
             }
+            
+            setFeatureModalVisible(false);
+            await fetchFeatures(); // Refresh data after successful operation
+            
+        } catch (error) {
+            console.error('Error handling feature:', error);
+            notification.error({ 
+                message: isEditingFeature ? t('failedToUpdateFeature') : t('failedToAddFeature')
+            });
         }
-
-        setFeatureModalVisible(false);
-        onUpdateFeatures(features); // Call the parent update function
     };
 
     // Handle key down event in the Input
@@ -133,6 +129,7 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
     // Handle search
     const handleSearch = (value) => {
         setSearchText(value);
+        setCurrentPage(1); // Reset to first page when searching
     };
 
     // Filter features based on search text
@@ -141,13 +138,19 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
         feature.key.toString().includes(searchText)
     );
 
+    // Handle pagination change
+    const handleTableChange = (pagination) => {
+        setCurrentPage(pagination.current);
+        setPageSize(pagination.pageSize);
+    };
+
     // Columns for Feature table
     const featureColumns = [
         { 
             title: t('sn'), 
             dataIndex: 'key', 
             key: 'key',
-            width: '15%',
+            width: '8%',
             align: 'center',
             sorter: (a, b) => a.key - b.key
         },
@@ -160,21 +163,21 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
         },
         {
             title: t('actions'),
-            key: 'actions', 
-            width: '20%',
+
+            key: 'actions',
+            width: '10%',
             align: 'center',
             render: (text, record) => (
-                <div className="d-flex justify-content-center">
-                    <Button 
-                        icon={<EditOutlined />}
-                        onClick={() => showAddFeatureModal(record)}
-                        type="primary"
-                        size="large"
-                        className={`${customBtn} d-flex align-items-center justify-content-center gap-2`}
-                    >
-                        {t('edit')}
-                    </Button>
-                </div>
+                <Button 
+                    icon={<EditOutlined />} 
+                    onClick={() => showAddFeatureModal(record)}
+                    type="primary"
+                    size="large"
+                    className={`${customBtn} d-flex align-items-center gap-1`}
+                >
+                    {t('edit')}
+                </Button>
+
             ),
         },
     ];
@@ -211,15 +214,22 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
                 columns={featureColumns}
                 rowKey="key"
                 pagination={{ 
+                    total: filteredFeatures.length,
                     pageSize: pageSize,
-                    current: 1,
+                    current: currentPage,
                     showSizeChanger: true,
                     pageSizeOptions: ['5', '10', '15'],
-                    onShowSizeChange: (current, size) => {
-                        setPageSize(size);
+                    onChange: (page, pageSize) => {
+                        setCurrentPage(page);
+                        setPageSize(pageSize);
                     },
-                    className: `bg-white p-3 rounded rounded-top-0`
+                    onShowSizeChange: (current, size) => {
+                        setCurrentPage(1);
+                        setPageSize(size);
+
+                    },
                 }}
+                onChange={handleTableChange}
                 bordered
                 size="small"
                 scroll={{ x: 'max-content' }}

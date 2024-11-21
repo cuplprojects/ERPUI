@@ -9,6 +9,7 @@ import {
   Select,
   Modal,
 } from "antd";
+import { notification } from 'antd';
 import ColumnToggleModal from "./../menus/ColumnToggleModal";
 import AlarmModal from "./../menus/AlarmModal";
 import InterimQuantityModal from "./../menus/InterimQuantityModal";
@@ -46,16 +47,20 @@ const ProjectDetailsTable = ({
   lotNo,
   fetchTransactions,
 }) => {
-  console.log(lotNo);
-  console.log(tableData);
-  console.log(processId);
   //Theme Change Section
   const { t } = useTranslation();
   const { getCssClasses } = useStore(themeStore);
-  const cssClasses = getCssClasses();
-  const customDark = cssClasses[0];
-  const customBtn = cssClasses[3];
-  const customDarkText = cssClasses[4];
+  const [
+    customDark,
+    customMid,
+    customLight, 
+    customBtn,
+    customDarkText,
+    customLightText,
+    customLightBorder,
+    customDarkBorder,
+    customThead
+  ] = getCssClasses();
   const [initialTableData, setInitialTableData] = useState(tableData);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [columnVisibility, setColumnVisibility] = useState({
@@ -100,6 +105,15 @@ const ProjectDetailsTable = ({
   const [paperData, setPaperData] = useState([]);
   const [courseData, setCourseData] = useState([]);
   const [subjectData, setSubjectData] = useState([]);
+
+  const showNotification = (type, messageKey, descriptionKey, details = '') => {
+    notification[type]({
+      message: t(messageKey),
+      description: `${t(descriptionKey)} ${details}`,
+      placement: 'topRight',
+      duration: 3,
+    });
+  };
 
   // Add resize listener for responsive column visibility
   useEffect(() => {
@@ -173,11 +187,13 @@ const ProjectDetailsTable = ({
     const alertsCondition = showOnlyAlerts
       ? item.alerts && item.alerts.trim() !== ""
       : true;
+     const previousProcessCondition = showOnlyCompletedPreviousProcess ? (!item.previousProcessData || item.previousProcessData.status === 2 || (item.previousProcessData.thresholdQty != null && item.previousProcessData.thresholdQty > item.previousProcessData.interimQuantity)) : true;
+
     return (
       matchesSearchText &&
       statusCondition &&
       remarksCondition &&
-      alertsCondition
+      alertsCondition && previousProcessCondition
     );
   });
 
@@ -198,13 +214,20 @@ const ProjectDetailsTable = ({
 
     const updatedRow = tableData.find((row) => row.srNo === srNo);
 
-    // Check if previous process exists and is not completed
+    // Check if previous process exists and is not completed, with threshold exception
     if (
       updatedRow.previousProcessData &&
       updatedRow.previousProcessData !== null &&
-      updatedRow.previousProcessData.status !== 2
+      updatedRow.previousProcessData.status !== 2 &&
+      !(updatedRow.previousProcessData.thresholdQty != null && 
+        updatedRow.previousProcessData.thresholdQty > updatedRow.previousProcessData.interimQuantity)
     ) {
-      alert("Cannot change status - previous process must be completed first");
+      showNotification('error', 'Status Update Failed', 'Previous process must be completed first');
+      return;
+    }
+
+    if (newStatusIndex === 2 && updatedRow.interimQuantity !== updatedRow.quantity) {
+      showNotification('error', 'Status Update Failed', 'Interim Quantity must equal Quantity');
       return;
     }
 
@@ -219,7 +242,7 @@ const ProjectDetailsTable = ({
       }
 
       const postData = {
-        transactionId: updatedRow?.transactionId || 0, // Use the transactionId from the updated row
+        transactionId: updatedRow?.transactionId || 0,
         interimQuantity: existingTransactionData
           ? existingTransactionData.interimQuantity
           : 0,
@@ -231,7 +254,7 @@ const ProjectDetailsTable = ({
         machineId: existingTransactionData
           ? existingTransactionData.machineId
           : 0,
-        status: newStatusIndex, // Change only this field
+        status: newStatusIndex,
         alarmId: existingTransactionData ? existingTransactionData.alarmId : "",
         teamId: existingTransactionData ? existingTransactionData.teamId : [],
         lotNo: existingTransactionData ? existingTransactionData.lotNo : lotNo,
@@ -240,13 +263,13 @@ const ProjectDetailsTable = ({
           : "",
       };
 
-      // Always use POST regardless of whether transaction exists or not
-      const response = await API.post("/Transactions", postData);
-      console.log("Create Response:", response.data);
-
-      fetchTransactions(); // Refresh data
+      await API.post("/Transactions", postData);
+      await fetchTransactions();
+      const catchNumber = tableData.find(row => row.srNo === srNo)?.catchNumber;
+      showNotification('success', 'rowStatusUpdateSuccess', 'rowStatusUpdateDescription', `(Catch: ${catchNumber})`);
     } catch (error) {
-      console.error("Error updating status:", error);
+      showNotification('error', 'rowStatusUpdateError', 'rowStatusUpdateErrorDescription');
+      console.error('Error updating status:', error);
     }
   };
 
@@ -313,12 +336,21 @@ const ProjectDetailsTable = ({
             <Col lg={3} md={3} sm={3} xs={3}>
               <div className="d-inline">
                 {record.previousProcessData &&
-                record.previousProcessData.status === 2 ? (
-                  <IoCheckmarkDoneCircleSharp
-                    size={20}
-                    color="green"
-                    className=""
-                  />
+                  record.previousProcessData.status === 2 ? (
+                  record.previousProcessData.thresholdQty != null && 
+                  record.previousProcessData.thresholdQty > record.previousProcessData.interimQuantity ? (
+                    <IoCheckmarkDoneCircleSharp
+                      size={20}
+                      color="yellow"
+                      className=""
+                    />
+                  ) : (
+                    <IoCheckmarkDoneCircleSharp
+                      size={20}
+                      color="green"
+                      className=""
+                    />
+                  )
                 ) : (
                   <MdPending size={20} color="orange" className="" />
                 )}
@@ -389,102 +421,94 @@ const ProjectDetailsTable = ({
     },
     ...(columnVisibility["Interim Quantity"] && hasFeaturePermission(7)
       ? [
-          {
+        {
 
-            title: t("interimQuantity"),
-            dataIndex: "interimQuantity",
-            align: "center",
-            key: "interimQuantity",
-            sorter: (a, b) => a.interimQuantity - b.interimQuantity,
-          },
-        ]
+          title: t("interimQuantity"),
+          dataIndex: "interimQuantity",
+          align: "center",
+          key: "interimQuantity",
+          sorter: (a, b) => a.interimQuantity - b.interimQuantity,
+        },
+      ]
       : []),
     ...(columnVisibility.Remarks
       ? [
-          {
-            title: t("remarks"),
-            dataIndex: "remarks",
-            key: "remarks",
-            align: "center",
-            sorter: (a, b) => a.remarks.localeCompare(b.remarks),
-          },
-        ]
+        {
+          title: t("remarks"),
+          dataIndex: "remarks",
+          key: "remarks",
+          align: "center",
+          sorter: (a, b) => a.remarks.localeCompare(b.remarks),
+        },
+      ]
       : []),
     ...(columnVisibility["Team Assigned"] && hasFeaturePermission(5)
       ? [
-          {
-            title: t("teamAssigned"),
-
-            dataIndex: "teamUserNames",
-            // width: '20%',
-            align: "center",
-            key: "teamUserNames",
-
-            sorter: (a, b) => a.teamUserNames - b.teamUserNames,
+        {
+          title: t("teamAssigned"),
+          dataIndex: "teamUserNames",
+          align: "center", 
+          key: "teamUserNames",
+          render: (teamUserNames) => teamUserNames?.join(", "),
+          sorter: (a, b) => {
+            const aNames = a.teamUserNames?.join(", ") || "";
+            const bNames = b.teamUserNames?.join(", ") || "";
+            return aNames.localeCompare(bNames);
           },
-        ]
+        },
+      ]
       : []),
     ...(columnVisibility["Course"] && hasFeaturePermission(13)
       ? [
-          {
-            title: t("course"),
+        {
+          title: t("course"),
 
-            dataIndex: "course",
-            // width: '20%',
-            align: "center",
-            key: "course",
+          dataIndex: "course",
+          // width: '20%',
+          align: "center",
+          key: "course",
 
-            sorter: (a, b) => a.course - b.course,
-          },
-        ]
+          sorter: (a, b) => a.course - b.course,
+        },
+      ]
       : []),
     ...(columnVisibility["Subject"] && hasFeaturePermission(14)
       ? [
-          {
-            title: t("subject"),
-            dataIndex: "subject",
-            width: "20%",
-            align: "center",
-            key: "subject",
+        {
+          title: t("subject"),
+          dataIndex: "subject",
+          width: "20%",
+          align: "center",
+          key: "subject",
 
-            sorter: (a, b) => a.subject - b.subject,
-          },
-        ]
+          sorter: (a, b) => a.subject - b.subject,
+        },
+      ]
       : []),
     ...(columnVisibility["Paper"] && hasFeaturePermission(15)
       ? [
-          {
-            title: t("questionPaper"),
+        {
+          title: t("questionPaper"),
 
-            dataIndex: "paper",
-            width: "20%",
-            align: "center",
-            key: "paper",
-            sorter: (a, b) => a.paper - b.paper,
-          },
-        ]
+          dataIndex: "paper",
+          width: "20%",
+          align: "center",
+          key: "paper",
+          sorter: (a, b) => a.paper - b.paper,
+        },
+      ]
       : []),
     {
       title: t("status"),
-      dataIndex: "status",
+      dataIndex: "status", 
       key: "status",
       align: "center",
       render: (text, record) => {
         // Add debug logging
-        console.log("Status render called with:", {
-          text,
-          record,
-          recordExists: !!record,
-          textValue: text,
-          previousProcess: record?.previousProcessData,
-
-        });
-
         if (!record || text === undefined || text === null) {
           console.log("Invalid data detected:", { record, text });
           return <span>Invalid Data</span>;
         }
-
 
         const statusSteps = [t("pending"), t("started"), t("completed")];
         const initialStatusIndex = text !== undefined ? text : 0;
@@ -492,34 +516,21 @@ const ProjectDetailsTable = ({
         const hasAlerts = Boolean(record.alerts?.length);
 
         // Check if previous process exists and is completed
-        const isPreviousProcessCompleted =
+        const isPreviousProcessCompleted = 
           !record.previousProcessData ||
-          record.previousProcessData.status === 2;
-        console.log("Previous process check:", {
-          previousProcessData: record.previousProcessData,
-          isPreviousProcessCompleted,
-          previousStatus: record.previousProcessData?.status,
-        });
+          record.previousProcessData.status === 2 ||
+          (record.previousProcessData.thresholdQty != null && 
+           record.previousProcessData.thresholdQty > record.previousProcessData.interimQuantity);
 
         // Check if 'Assign Team' and 'Select Zone' data is populated
         const isZoneAssigned = Boolean(record.zoneId);
         const isTeamAssigned = Boolean(record.teamId?.length);
-        console.log("Assignment checks:", {
-          zoneId: record.zoneId,
-          isZoneAssigned,
-          teamId: record.teamId,
-          isTeamAssigned,
-
-        });
-
+        
         // Check if 'Select Machine' is required
         const hasSelectMachinePermission = hasFeaturePermission(10);
-        console.log("Machine permission check:", {
-          hasSelectMachinePermission,
-          machineId: record.machineId,
-        });
 
-        // Determine if status can be changed
+        const requirements = []; // Array to hold the reasons
+
         const canChangeStatus =
           isPreviousProcessCompleted &&
           (hasSelectMachinePermission
@@ -531,26 +542,26 @@ const ProjectDetailsTable = ({
 
         const canBeCompleted = record.interimQuantity === record.quantity;
 
-        console.log("Final status check:", {
-          canChangeStatus,
-          conditions: {
-            isPreviousProcessCompleted,
-            hasSelectMachinePermission,
-            machineAssigned:
-              record.machineId !== 0 && record.machineId !== null,
-            isZoneAssigned,
-            isTeamAssigned,
-          },
-        });
+        // Populate the requirements array based on conditions
+        if (hasAlerts) {
+          requirements.push("Status cannot be changed due to alerts.");
+        }
+        if (!isPreviousProcessCompleted) {
+          requirements.push("Previous process must be completed.");
+        }
+        if (!canChangeStatus) {
+          requirements.push("Ensure all required fields are filled (Zone, Team, Machine).");
+        }
+        if (initialStatusIndex === 1 && !canBeCompleted) {
+          requirements.push("Cannot set status to Completed - Interim Quantity must equal Quantity.");
+        }
 
+        const isDisabled = requirements.length > 0; // Determine if the toggle is disabled based on requirements
 
         return (
           <div className="d-flex justify-content-center">
             {hasAlerts ? (
-              <span
-                className="text-danger"
-                title="Status cannot be changed due to alerts."
-              >
+              <span className="text-danger" title={requirements.join(', ')}>
                 <StatusToggle
                   initialStatusIndex={initialStatusIndex}
                   statusSteps={statusSteps.map((status, index) => ({
@@ -561,20 +572,21 @@ const ProjectDetailsTable = ({
                 />
               </span>
             ) : (
-              <StatusToggle
-                initialStatusIndex={initialStatusIndex}
-                onStatusChange={(newIndex) =>
-                  handleRowStatusChange(record.srNo, newIndex)
-                }
-                statusSteps={statusSteps.map((status, index) => ({
-                  status,
-                  color: index === 0 ? "red" : index === 1 ? "blue" : "green",
-                }))}
-                disabled={
-                  !canChangeStatus ||
-                  (initialStatusIndex === 2 && !canBeCompleted)
-                } // Disable the toggle if status can't be changed (based on Select Machine or Zone/Team)
-              />
+              <span
+                title={isDisabled ? requirements.join('\n') : ""} // Join requirements with newline for display
+              >
+                <StatusToggle
+                  initialStatusIndex={initialStatusIndex}
+                  onStatusChange={(newIndex) =>
+                    handleRowStatusChange(record.srNo, newIndex)
+                  }
+                  statusSteps={statusSteps.map((status, index) => ({
+                    status,
+                    color: index === 0 ? "red" : index === 1 ? "blue" : "green",
+                  }))}
+                  disabled={isDisabled} // Disable the toggle if status can't be changed
+                />
+              </span>
             )}
           </div>
         );
@@ -596,62 +608,89 @@ const ProjectDetailsTable = ({
   };
 
   const handleStatusChange = async (newStatus) => {
-    const statusSteps = ["Pending", "Started", "Completed"];
-    const newStatusIndex = statusSteps.indexOf(newStatus);
+        const statusSteps = ["Pending", "Started", "Completed"];
+        const newStatusIndex = statusSteps.indexOf(newStatus);
 
-    // Check if all selected rows have completed previous process or no previous process
-    const allPreviousCompleted = selectedRowKeys.every((key) => {
-      const row = tableData.find((row) => row.catchNumber === key);
-      return (
-        !row.previousProcessData?.status == 2 ||
-        row.previousProcessData === null ||
-        row.previousProcessData.status === 2
-      );
-    });
+        // Check if all selected rows have completed previous process or no previous process
+          const allPreviousCompleted = selectedRowKeys.every(key => {
+              const row = tableData.find(row => row.srNo === key);
+              return !row.previousProcessData || 
+                     row.previousProcessData.status === 2 || 
+                     (row.previousProcessData.thresholdQty != null && 
+                      row.previousProcessData.thresholdQty > row.previousProcessData.interimQuantity);
+          });
 
-    if (!allPreviousCompleted) {
-      alert(
-        "Cannot change status - previous process must be completed for all selected items"
-      );
-      return;
-    }
-
-    // Iterate over selectedRowKeys and update status
-    const updates = selectedRowKeys.map(async (key) => {
-      const updatedRow = tableData.find((row) => row.srNo === key);
-      if (updatedRow) {
-        const postData = {
-          transactionId: updatedRow.transactionId || 0,
-          interimQuantity: updatedRow?.interimQuantity || 0,
-          remarks: updatedRow?.remarks || "",
-          projectId: projectId,
-          quantitysheetId: updatedRow?.srNo || 0,
-          processId: processId,
-          zoneId: updatedRow?.zoneId || 0,
-          status: newStatusIndex,
-          alarmId: updatedRow?.alarmId || "",
-          machineId: updatedRow?.machineId || 0,
-          lotNo: updatedRow?.lotNo || lotNo,
-          voiceRecording: updatedRow?.voiceRecording || "",
-          teamId: updatedRow?.teamId || [],
-        };
-
-        try {
-          // Always use POST regardless of whether transaction exists or not
-          await API.post("/Transactions", postData);
-        } catch (error) {
-          console.error(`Error updating status for ${key}:`, error);
+        if (!allPreviousCompleted) {
+            showNotification('error', 'Status Update Failed', 'Previous process must be completed for all selected items');
+            return;
         }
-      }
-    });
 
-    // Wait for all updates to finish
-    await Promise.all(updates);
-    clearSelections();
-    fetchTransactions();
-  };
+        // Check if trying to set status to Completed when interimQuantity != quantity for any row
+        if (newStatusIndex === 2) {
+            const hasIncompleteQuantity = selectedRowKeys.some(key => {
+                const row = tableData.find(row => row.srNo === key);
+                return row.interimQuantity !== row.quantity;
+            });
 
-  const getSelectedStatus = () => {
+            if (hasIncompleteQuantity) {
+                showNotification('error', 'Status Update Failed', 'Interim Quantity must equal Quantity for all selected items');
+                return;
+            }
+        }
+
+        // Iterate over selectedRowKeys and update status
+        const updates = selectedRowKeys.map(async (key) => {
+            const updatedRow = tableData.find(row => row.srNo === key);
+            if (updatedRow) {
+                // Fetch existing transaction data if transactionId exists
+                let existingTransactionData;
+                if (updatedRow.transactionId) {
+                    try {
+                        const response = await API.get(`/Transactions/${updatedRow.transactionId}`);
+                        existingTransactionData = response.data;
+                    } catch (error) {
+                        console.error(`Error fetching transaction data for ${key}:`, error);
+                    }
+                }
+
+                const postData = {
+                    transactionId: updatedRow.transactionId || 0,
+                    interimQuantity: existingTransactionData ? existingTransactionData.interimQuantity : 0,
+                    remarks: existingTransactionData ? existingTransactionData.remarks : "",
+                    projectId: projectId,
+                    quantitysheetId: updatedRow.srNo,
+                    processId: processId,
+                    zoneId: existingTransactionData ? existingTransactionData.zoneId : (updatedRow.zoneId || 0),
+                    machineId: existingTransactionData ? existingTransactionData.machineId : (updatedRow.machineId || 0),
+                    status: newStatusIndex,
+                    alarmId: existingTransactionData ? existingTransactionData.alarmId : (updatedRow.alarmId || ""),
+                    teamId: existingTransactionData ? existingTransactionData.teamId : (updatedRow.teamId || []),
+                    lotNo: existingTransactionData ? existingTransactionData.lotNo : lotNo,
+                    voiceRecording: existingTransactionData ? existingTransactionData.voiceRecording : ""
+                };
+
+                try {
+                    await API.post('/Transactions', postData);
+                } catch (error) {
+                    console.error(`Error updating status for ${key}:`, error);
+                    throw error;
+                }
+            }
+        });
+        try {
+            await Promise.all(updates);
+            clearSelections();
+            await fetchTransactions();
+            const updatedCatches = selectedRowKeys.map(key => tableData.find(row => row.srNo === key)?.catchNumber).filter(Boolean).join(', ');
+            showNotification('success', 'statusUpdateSuccess', 'statusUpdateDescription', `(Catches: ${updatedCatches})`);
+        } catch (error) {
+            showNotification('error', 'statusUpdateError', 'statusUpdateErrorDescription');
+            console.error('Error updating statuses:', error);
+        }
+    };
+
+  
+    const getSelectedStatus = () => {
     if (selectedRowKeys.length > 0) {
       const selectedRows = tableData.filter((row) =>
         selectedRowKeys.includes(row.srNo)
@@ -704,138 +743,170 @@ const ProjectDetailsTable = ({
     }
   };
 
-  const handleSelectZoneSave = (zone) => {
-    const updatedData = tableData.map((row) => {
-      if (selectedRowKeys.includes(row.srNo)) {
-        return { ...row, zone }; // Update the zone or any other necessary field
-      }
-      return row;
-    });
-    setTableData(updatedData);
-    setSelectedRowKeys([]); // Deselect all rows
-    setShowOptions(false); // Reset options visibility
-    fetchTransactions();
+  const handleSelectZoneSave = async (zone) => {
+    try {
+      const updatedData = tableData.map((row) => {
+        if (selectedRowKeys.includes(row.srNo)) {
+          return { ...row, zone };
+        }
+        return row;
+      });
+      setTableData(updatedData);
+      setSelectedRowKeys([]);
+      setSelectAll(false);
+      setShowOptions(false);
+      await fetchTransactions();
+      const updatedCatches = selectedRowKeys.map(key => tableData.find(row => row.srNo === key)?.catchNumber).filter(Boolean).join(', ');
+      showNotification('success', 'zoneUpdateSuccess', 'zoneUpdateDescription', `(Catches: ${updatedCatches})`);
+    } catch (error) {
+      showNotification('error', 'zoneUpdateError', 'zoneUpdateErrorDescription');
+    }
   };
 
-  const handleSelectMachineSave = (machine) => {
-    const updatedData = tableData.map((row) => {
-      if (selectedRowKeys.includes(row.srNo)) {
-        return { ...row, machine }; // Update the zone or any other necessary field
-      }
-      return row;
-    });
-    setTableData(updatedData);
-    setSelectedRowKeys([]); // Deselect all rows
-    setShowOptions(false); // Reset options visibility
-    fetchTransactions();
+  const handleSelectMachineSave = async (machine) => {
+    try {
+      const updatedData = tableData.map((row) => {
+        if (selectedRowKeys.includes(row.srNo)) {
+          return { ...row, machine };
+        }
+        return row;
+      });
+      setTableData(updatedData);
+      setSelectedRowKeys([]);
+      setSelectAll(false);
+      setShowOptions(false);
+      await fetchTransactions();
+      const updatedCatches = selectedRowKeys.map(key => tableData.find(row => row.srNo === key)?.catchNumber).filter(Boolean).join(', ');
+      showNotification('success', 'machineUpdateSuccess', 'machineUpdateDescription', `(Catches: ${updatedCatches})`);
+    } catch (error) {
+      showNotification('error', 'machineUpdateError', 'machineUpdateErrorDescription');
+    }
   };
 
-  const handleAssignTeamSave = (team) => {
-    const updatedData = tableData.map((row) => {
-      if (selectedRowKeys.includes(row.srNo)) {
-        return { ...row, team };
-      }
-      return row;
-    });
-    setTableData(updatedData);
-    setSelectedRowKeys([]); // Deselect all rows
-    setShowOptions(false); // Reset options visibility
+
+  const handleAlarmSave = async (alarm) => {
+    try {
+      const updatedData = tableData.map((row) => {
+        if (selectedRowKeys.includes(row.srNo)) {
+          return { ...row, alerts: alarm };
+        }
+        return row;
+      });
+      setTableData(updatedData);
+      setSelectedRowKeys([]);
+      setSelectAll(false);
+      setShowOptions(false);
+      await fetchTransactions();
+      const updatedCatches = selectedRowKeys.map(key => tableData.find(row => row.srNo === key)?.catchNumber).filter(Boolean).join(', ');
+      showNotification('success', 'alarmUpdateSuccess', 'alarmUpdateDescription', `(Catches: ${updatedCatches})`);
+    } catch (error) {
+      showNotification('error', 'alarmUpdateError', 'alarmUpdateErrorDescription');
+    }
   };
 
-  const handleAlarmSave = (alarm) => {
-    const updatedData = tableData.map((row) => {
-      if (selectedRowKeys.includes(row.srNo)) {
-        return { ...row, alerts: alarm };
-      }
-      return row;
-    });
-    setTableData(updatedData);
-    setSelectedRowKeys([]); // Deselect all rows
-    setShowOptions(false); // Reset options visibility
-    fetchTransactions();
+  const handleInterimQuantitySave = async (interimQuantity) => {
+    try {
+      const updatedData = tableData.map((row) => {
+        if (selectedRowKeys.includes(row.srNo)) {
+          return { ...row, interimQuantity };
+        }
+        return row;
+      });
+      setTableData(updatedData);
+      setSelectedRowKeys([]);
+      setSelectAll(false);
+      setShowOptions(false);
+      await fetchTransactions();
+      const updatedCatches = selectedRowKeys.map(key => tableData.find(row => row.srNo === key)?.catchNumber).filter(Boolean).join(', ');
+      showNotification('success', 'quantityUpdateSuccess', 'quantityUpdateDescription', `(Catches: ${updatedCatches})`);
+    } catch (error) {
+      showNotification('error', 'quantityUpdateError', 'quantityUpdateErrorDescription');
+    }
   };
+  
 
-  const handleInterimQuantitySave = (interimQuantity) => {
-    const updatedData = tableData.map((row) => {
-      if (selectedRowKeys.includes(row.srNo)) {
-        // Use srNo for comparison
-        return { ...row, interimQuantity };
-      }
-      return row;
-    });
-    setTableData(updatedData);
-    setSelectedRowKeys([]); // Deselect all rows
-    setShowOptions(false); // Reset options visibility
-    fetchTransactions();
+  const handleRemarksSave = async (remarks, mediaBlobUrl) => {
+    try {
+      const updatedData = tableData.map((row) => {
+        if (selectedRowKeys.includes(row.srNo)) {
+          return { ...row, remarks, mediaBlobUrl };
+        }
+        return row;
+      });
+      setTableData(updatedData);
+      setSelectedRowKeys([]);
+      setSelectAll(false);
+      setShowOptions(false);
+      await fetchTransactions();
+      const updatedCatches = selectedRowKeys.map(key => tableData.find(row => row.srNo === key)?.catchNumber).filter(Boolean).join(', ');
+      showNotification('success', 'remarksUpdateSuccess', 'remarksUpdateDescription', `(Catches: ${updatedCatches})`);
+    } catch (error) {
+      showNotification('error', 'remarksUpdateError', 'remarksUpdateErrorDescription');
+    }
   };
+  
 
-  const handleRemarksSave = (remarks, mediaBlobUrl) => {
-    const updatedData = tableData.map((row) => {
-      if (selectedRowKeys.includes(row.srNo)) {
-        return { ...row, remarks, mediaBlobUrl };
-      }
-      return row;
-    });
-    setTableData(updatedData);
-    setSelectedRowKeys([]); // Deselect all rows
-    setShowOptions(false); // Reset options visibility
-    fetchTransactions();
+  const handleCatchDetailSave = async (alarm) => {
+    try {
+      const updatedData = tableData.map((row) => {
+        if (selectedRowKeys.includes(row.srNo)) {
+          return { ...row, alerts: alarm };
+        }
+        return row;
+      });
+      setTableData(updatedData);
+      setSelectedRowKeys([]);
+      setSelectAll(false);
+      setShowOptions(false);
+      await fetchTransactions();
+      showNotification('success', 'Details Updated', 'Catch details have been successfully updated');
+    } catch (error) {
+      showNotification('error', 'Update Failed', 'Failed to update catch details. Please try again.');
+    }
   };
 
   const selectedRows = tableData.filter((row) =>
     selectedRowKeys.includes(row.srNo)
   );
+
   const isCompleted = selectedRows.every((row) => row.status === 2);
   const isStarted = selectedRows.every((row) => row.status == 1);
 
   const menu = (
-    <Menu>
-      {hasFeaturePermission(3) && !isCompleted && (
-        <Menu.Item onClick={() => handleDropdownSelect("Alarm")}>
-          {t("alarm")}
-        </Menu.Item>
-      )}
-      {hasFeaturePermission(7) && !isCompleted && isStarted && (
-        <Menu.Item onClick={() => handleDropdownSelect("Interim Quantity")}>
-          {t("interimQuantity")}
-        </Menu.Item>
-      )}
-      {!isCompleted && (
-        <Menu.Item onClick={() => handleDropdownSelect("Remarks")}>
-          {t("remarks")}
-        </Menu.Item>
-      )}
-      <Menu.Item onClick={() => setColumnModalShow(true)}>
-        {t("columns")}
-      </Menu.Item>
-      {hasFeaturePermission(4) && (
-        <Menu.Item
-          onClick={() => handleDropdownSelect("Select Zone")}
-          disabled={selectedRowKeys.length === 0}
-        >
-          {t("selectZone")}
-        </Menu.Item>
-      )}
-      {hasFeaturePermission(10) && (
-        <Menu.Item
-          onClick={() => handleDropdownSelect("Select Machine")}
-          disabled={selectedRowKeys.length === 0}
-        >
-          {t("selectMachine")}
-        </Menu.Item>
-      )}
-      {hasFeaturePermission(5) && (
-        <Menu.Item
-          onClick={() => handleDropdownSelect("Assign Team")}
-          disabled={selectedRowKeys.length === 0}
-        >
-          {t("assignTeam")}
-        </Menu.Item>
-      )}
-    </Menu>
-  );
+        <Menu>
+            {hasFeaturePermission(3) && !isCompleted && selectedRowKeys.length === 1 && (
+                <Menu.Item onClick={() => handleDropdownSelect('Alarm')}>
+                    {t("alarm")}
+                </Menu.Item>
+            )}
+            {hasFeaturePermission(7) && !isCompleted && isStarted && selectedRowKeys.length === 1 && (
+                <Menu.Item onClick={() => handleDropdownSelect('Interim Quantity')}>
+                    {t("interimQuantity")}
+                </Menu.Item>
+            )}
+            {!isCompleted && selectedRowKeys.length === 1 && (
+                <Menu.Item onClick={() => handleDropdownSelect('Remarks')}>
+                    {t("remarks")}
+                </Menu.Item>
+            )}
+            <Menu.Item onClick={() => setColumnModalShow(true)}>{t("columns")}</Menu.Item>
+            {hasFeaturePermission(4) && (
+                <Menu.Item onClick={() => handleDropdownSelect('Select Zone')}
+                    disabled={selectedRowKeys.length === 0}>{t("selectZone")}</Menu.Item>
+            )}
+            {hasFeaturePermission(10) && (
+                <Menu.Item onClick={() => handleDropdownSelect('Select Machine')}
+                    disabled={selectedRowKeys.length === 0}>{t("selectMachine")}</Menu.Item>
+            )}
+            {hasFeaturePermission(5) && (
+                <Menu.Item onClick={() => handleDropdownSelect('Assign Team')}
+                    disabled={selectedRowKeys.length === 0}>{t('assignTeam')}</Menu.Item>
+            )}
+        </Menu>
+    );
 
   const customPagination = {
+    className: `bg-white p-3 rounded rounded-top-0 mt-0  ${customDark==="dark-dark" ? `` : ``}`,
     current: currentPage,
     pageSize,
     pageSizeOptions: [5, 10, 25, 50, 100],
@@ -871,6 +942,18 @@ const ProjectDetailsTable = ({
       default:
         return "";
     }
+  };
+
+  const handleAssignTeamSuccess = () => {
+    showNotification('success', 'Team Assigned', 'Team has been successfully assigned');
+    setSelectedRowKeys([]);
+    setSelectAll(false);
+    setShowOptions(false);
+  };
+
+  const handleAssignTeamError = (error) => {
+    showNotification('error', 'Assignment Failed', 'Failed to assign team. Please try again.');
+    console.error('Error assigning team:', error);
   };
 
   return (
@@ -957,11 +1040,10 @@ const ProjectDetailsTable = ({
                   padding: 0,
                   width: "30px",
                 }}
-                className={`p- border ${
-                  customDark === "dark-dark"
+                className={`p- border ${customDark === "dark-dark"
                     ? `${customDark} text-white`
                     : "bg-white"
-                }`}
+                  }`}
               >
                 <FaFilter size={20} className={`${customDarkText}`} />
               </Button>
@@ -974,11 +1056,10 @@ const ProjectDetailsTable = ({
           {selectedRowKeys.length > 1 && getSelectedStatus() !== null && (
             <div className="mt-1 d-flex align-items-center">
               <span
-                className={`me-2 ${
-                  customDark === "dark-dark"
+                className={`me-2 ${customDark === "dark-dark"
                     ? "text-white"
                     : "custom-theme-dark-text"
-                } fs-6 fw-bold`}
+                  } fs-6 fw-bold`}
               >
                 Update Status:
               </span>
@@ -1004,10 +1085,10 @@ const ProjectDetailsTable = ({
                   const hasSelectMachinePermission = hasFeaturePermission(10); // Check if Select Machine permission exists
 
                   const canChangeStatus = hasSelectMachinePermission
-                    ? row.machineId !== 0 && row.machineId !== null // Machine must be assigned if permission exists
+                    ? row.machineId !== 0 && row.machineId !== null && isZoneAssigned && isTeamAssigned // Machine must be assigned if permission exists
                     : isZoneAssigned && isTeamAssigned; // Otherwise, Zone and Team must be assigned
                   const canBeCompleted =
-                    record.interimQuantity === record.quantity;
+                    row.interimQuantity === row.quantity;
                   return (
                     row.alerts ||
                     !canChangeStatus ||
@@ -1081,9 +1162,8 @@ const ProjectDetailsTable = ({
               >
                 <PiDotsNineBold
                   size={30}
-                  className={` ${
-                    customDark === "dark-dark" ? "text-white" : customDarkText
-                  }`}
+                  className={` ${customDark === "dark-dark" ? "text-white" : customDarkText
+                    }`}
                 />
               </Button>
             </Dropdown>
@@ -1095,46 +1175,38 @@ const ProjectDetailsTable = ({
           <Table
             rowClassName={rowClassName}
             className={`${customDark === "default-dark" ? "thead-default" : ""}
-                                    ${
-                                      customDark === "red-dark"
-                                        ? "thead-red"
-                                        : ""
-                                    }
-                                    ${
-                                      customDark === "green-dark"
-                                        ? "thead-green"
-                                        : ""
-                                    }
-                                    ${
-                                      customDark === "blue-dark"
-                                        ? "thead-blue"
-                                        : ""
-                                    }
-                                    ${
-                                      customDark === "dark-dark"
-                                        ? "thead-dark"
-                                        : ""
-                                    }
-                                    ${
-                                      customDark === "pink-dark"
-                                        ? "thead-pink"
-                                        : ""
-                                    }
-                                    ${
-                                      customDark === "purple-dark"
-                                        ? "thead-purple"
-                                        : ""
-                                    }
-                                    ${
-                                      customDark === "light-dark"
-                                        ? "thead-light"
-                                        : ""
-                                    }
-                                    ${
-                                      customDark === "brown-dark"
-                                        ? "thead-brown"
-                                        : ""
-                                    } `}
+                                    ${customDark === "red-dark"
+                ? "thead-red"
+                : ""
+              }
+                                    ${customDark === "green-dark"
+                ? "thead-green"
+                : ""
+              }
+                                    ${customDark === "blue-dark"
+                ? "thead-blue"
+                : ""
+              }
+                                    ${customDark === "dark-dark"
+                ? "thead-dark"
+                : ""
+              }
+                                    ${customDark === "pink-dark"
+                ? "thead-pink"
+                : ""
+              }
+                                    ${customDark === "purple-dark"
+                ? "thead-purple"
+                : ""
+              }
+                                    ${customDark === "light-dark"
+                ? "thead-light"
+                : ""
+              }
+                                    ${customDark === "brown-dark"
+                ? "thead-brown"
+                : ""
+              } `}
             rowKey="srNo"
             columns={columns}
             dataSource={filteredData}
@@ -1183,6 +1255,8 @@ const ProjectDetailsTable = ({
         show={catchDetailModalShow}
         handleClose={() => setCatchDetailModalShow(false)}
         data={catchDetailModalData}
+        handleSave={handleCatchDetailSave}
+                processId={processId}
       />
       <SelectZoneModal
         show={selectZoneModalShow}
@@ -1201,9 +1275,11 @@ const ProjectDetailsTable = ({
       <AssignTeamModal
         show={assignTeamModalShow}
         handleClose={() => setAssignTeamModalShow(false)}
-        handleSave={handleAssignTeamSave}
+        fetchTransactions={fetchTransactions}
         data={assignTeamModalData}
         processId={processId}
+        onSuccess={handleAssignTeamSuccess}
+        onError={handleAssignTeamError}
       />
     </>
   );
