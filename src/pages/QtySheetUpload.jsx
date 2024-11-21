@@ -55,7 +55,21 @@ const QtySheetUpload = () => {
     const [mappedLots, setMappedLots] = useState([]);  // To hold the mapped lots from the file
     const [isModalVisible, setIsModalVisible] = useState(false);  // Modal visibility
     const [skipLots, setSkipLots] = useState([]);  // Lots to be skipped based on matching
-    const[mappedData,setMappeddata] = useState([]);
+    const [mappedData,setMappeddata] = useState([]);
+    const [transactionExist, setTransactionExist] = useState(false);
+
+    useEffect(() => {
+        const checkTransactionExistence = async () => {
+            try {
+                const response = await API.get(`/Transactions/exists/${projectId}`);
+                setTransactionExist(response.data);
+            } catch (error) {
+                console.error('Failed to check transaction existence:', error);
+            }
+        };
+
+        checkTransactionExistence();
+    }, []);
 
     useEffect(() => {
         const fetchProjectName = async () => {
@@ -435,6 +449,7 @@ const QtySheetUpload = () => {
                                     danger
                                     onClick={handleDelete}
                                     className="ms-2 d-flex align-items-center"
+                                    disabled={transactionExist}
                                 >
                                     <DeleteOutlined />
                                     <span>{t('deleteFile')}</span>
