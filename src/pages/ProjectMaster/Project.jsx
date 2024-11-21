@@ -20,6 +20,15 @@ const Project = () => {
 
   const [activeTabKey, setActiveTabKey] = useState("1");
   const [selectedProject, setSelectedProject] = useState();
+  const [activetab3, setActiveTab3] = useState(false);
+
+  useEffect(() => {
+    if (activeTabKey === "1") {
+      setActiveTab3(false);
+      setSelectedProject(null);
+    }
+  }, [activeTabKey]);
+
 
   const items = [
     {
@@ -41,7 +50,7 @@ const Project = () => {
           <AddProjectProcess selectedProject={selectedProject} />
           <Button 
             type="primary" 
-            onClick={() => setActiveTabKey("3")} 
+            onClick={() => {setActiveTabKey("3"); setActiveTab3(true);}} 
             style={{ marginTop: '20px' }}
           >
             {t('next')}
@@ -52,10 +61,10 @@ const Project = () => {
     {
       key: "3",
       label: t('allocateProcess'),
-      disabled: !selectedProject,
+      disabled: !selectedProject || !activetab3,
       children: (
         <div className="responsive-container">
-          <ProjectUserAllocation selectedProject={selectedProject}/>
+          <ProjectUserAllocation selectedProject={selectedProject} activeKey={activeTabKey}/>
         </div>
       )
     }
