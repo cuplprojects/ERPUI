@@ -29,3 +29,13 @@ export const getProcessLotPercentages = async (projectId) => {
     throw error;
   }
 }
+
+export const getProcessPercentages = async (projectId) => {
+  try {
+    const response = await API.get(`/Transactions/process-percentages?projectId=${projectId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching process lot percentages:', error);
+    throw error;
+  }
+}

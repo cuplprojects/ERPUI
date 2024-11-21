@@ -25,6 +25,13 @@ function App() {
   }, [initializeLanguage]);
   return (
     <>
+    <style>
+        {`
+          .Toastify__toast-container {
+            margin-top: 40px !important;
+          }
+        `}
+      </style>
       <Router className="">
         <Routes>
           <Route path="/login" element={<Login />} />
