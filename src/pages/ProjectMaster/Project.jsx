@@ -25,6 +25,7 @@ const Project = () => {
   useEffect(() => {
     if (activeTabKey === "1") {
       setActiveTab3(false);
+      setSelectedProject(null);
     }
   }, [activeTabKey]);
 
