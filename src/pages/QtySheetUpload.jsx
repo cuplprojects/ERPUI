@@ -55,7 +55,7 @@ const QtySheetUpload = () => {
     const [mappedLots, setMappedLots] = useState([]);  // To hold the mapped lots from the file
     const [isModalVisible, setIsModalVisible] = useState(false);  // Modal visibility
     const [skipLots, setSkipLots] = useState([]);  // Lots to be skipped based on matching
-const[mappedData,setMappeddata] = useState([]);
+    const[mappedData,setMappeddata] = useState([]);
 
     useEffect(() => {
         const fetchProjectName = async () => {
@@ -114,11 +114,18 @@ const[mappedData,setMappeddata] = useState([]);
 
     const handleUpload = async (data) => {
         setUploading(true);
-        const mappedData = data || await createMappedData();
+        let mappedData;
+        
+        if (data) {
+            mappedData = data;
+        } else {
+            mappedData = await createMappedData();
+        }
+
         if (!mappedData || !Array.isArray(mappedData) || mappedData.length === 0) {
             console.error(t('mappedDataInvalidOrEmpty'));
             setUploading(false);
-            resetState()
+            resetState();
             return;
         }
 
@@ -426,7 +433,7 @@ const[mappedData,setMappeddata] = useState([]);
                                 <Button
                                     className={`${customBtn}`}
                                     type="primary"
-                                    onClick={handleUpload}  // Upload button logic
+                                    onClick={() => handleUpload()}  // Upload button logic
                                     loading={uploading}
                                 >
                                     {uploading ? t('uploading') : t('upload')}
