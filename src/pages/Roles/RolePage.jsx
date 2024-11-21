@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Card, Table, Input, Switch, message, Tabs } from 'antd';
+import { Button, Card, Table, Input, Switch, Tabs } from 'antd';
 import { Modal } from 'react-bootstrap';
 import { EditOutlined } from '@ant-design/icons';
 import themeStore from '../../store/themeStore';
@@ -8,6 +8,7 @@ import Permissions from './Permissions';
 import API from '../../CustomHooks/MasterApiHooks/api';
 import { AiFillCloseSquare } from "react-icons/ai";
 import { useTranslation } from 'react-i18next';
+import { success, error } from '../../CustomHooks/Services/AlertMessageService';
 
 const { TabPane } = Tabs;
 
@@ -29,7 +30,7 @@ const RolesAndDepartments = () => {
       const response = await API.get('/Roles');
       console.log(response.data);
       setRoles(response.data);
-    } catch (error) {
+    } catch (err) {
       console.error('Failed to fetch roles');
     }
   };
@@ -52,17 +53,17 @@ const RolesAndDepartments = () => {
   const handleRoleOk = async () => {
     const trimmedRoleName = newRole.roleName.trim();
     if (!trimmedRoleName) {
-      message.error(t('Role name cannot be empty'));
+      error(t('Role name cannot be empty'));
       return;
     }
     if (/[^a-zA-Z\s]/.test(trimmedRoleName)) {
-      message.error(t('Role name should contain only alphabetic characters'));
+      error(t('Role name should contain only alphabetic characters'));
       return;
     }
   
     const isPriorityOrderExists = roles.some(role => role.priorityOrder === newRole.priorityOrder && role.roleId !== newRole.roleId);
     if (isPriorityOrderExists) {
-      message.error(t('Priority order must be unique'));
+      error(t('Priority order must be unique'));
       return;
     }
   
@@ -76,7 +77,7 @@ const RolesAndDepartments = () => {
           permissionList: newRole.permissions.map(permission => permission.toString()),
         });
         setRoles([...roles, { ...response.data }]);
-        message.success(t('Role added successfully'));
+        success(t('Role added successfully'));
       } else {
         response = await API.put(`/Roles/${newRole.roleId}`, {
           roleId: newRole.roleId,
@@ -88,13 +89,13 @@ const RolesAndDepartments = () => {
         });
         const updatedRoles = roles.map(role => (role.roleId === newRole.roleId ? response.data : role));
         setRoles(updatedRoles);
-        message.success(t('Role updated successfully'));
+        success(t('Role updated successfully'));
       }
   
       handleRoleCancel();
       fetchRoles();
-    } catch (error) {
-      message.error(t('Failed to process the role'));
+    } catch (err) {
+      console.error('Failed to process the role');
     }
   };
 
@@ -127,9 +128,9 @@ const RolesAndDepartments = () => {
         role.roleId === roleId ? { ...role, status: checked } : role
       );
       setRoles(updatedRoles);
-      message.success(t('Role status updated'));
-    } catch (error) {
-      message.error(t('Failed to update role status'));
+      success(t('Role status updated'));
+    } catch (err) {
+      console.error('Failed to update role status');
     }
   };
 

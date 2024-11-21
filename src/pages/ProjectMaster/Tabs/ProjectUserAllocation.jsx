@@ -1,15 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Select, Table, Button, message } from 'antd';
-import API from '../../../CustomHooks/MasterApiHooks/api';
+import API from '../CustomHooks/MasterApiHooks/api';
 
 const { Option } = Select;
 
-const ProjectUserAllocation = ({ selectedProject }) => {
+const ProjectUserAllocation = ({ selectedProject, activeKey }) => {
   const [processes, setProcesses] = useState([]);
   const [users, setUsers] = useState([]);
   const [userSelections, setUserSelections] = useState({});
   const [projectName, setProjectName] = useState(''); // State for project name
-
 
   useEffect(() => {
     if (selectedProject) {
@@ -17,22 +16,18 @@ const ProjectUserAllocation = ({ selectedProject }) => {
       fetchProcessesWithUsers();
     }
     fetchUsers();
-  }, [selectedProject]);
+  }, [selectedProject, activeKey]);
+  
   const fetchProjectName = async (projectId) => {
     try {
       const response = await API.get(`/Project/${projectId}`);
       setProjectName(response.data.name); // Assuming response has a 'name' field
     } catch (error) {
       console.error("Failed to fetch project name", error);
-      message.error("Failed to fetch project name");
     }
   };
 
 
-  useEffect(() => {
-    fetchProcessesWithUsers();
-    fetchUsers();
-  }, [selectedProject]); // Fetch when selectedProject changes
 
   const fetchUsers = async () => {
     try {
@@ -41,28 +36,51 @@ const ProjectUserAllocation = ({ selectedProject }) => {
       setUsers(filteredUsers);
     } catch (error) {
       console.error("Failed to fetch users", error);
-      message.error("Failed to fetch users");
     }
   };
 
   const fetchProcessesWithUsers = async () => {
     try {
+      // Fetch processes for the selected project
       const response = await API.get(`/ProjectProcess/GetProcessesWithUsers/${selectedProject}`);
       const { processes } = response.data;
-
+  
       setProcesses(processes);
-
+  
       // Prepare userSelections based on the fetched processes
       const newUserSelections = {};
-      processes.forEach(process => {
-        newUserSelections[process.processId] = process.userId || []; // Default to an empty array if userId is not present
-      });
+  
+      // Check each process
+      for (const process of processes) {
+        if (process.userId && process.userId.length > 0) {
+          // If userId is present, map it directly
+          newUserSelections[process.processId] = process.userId;
+        } else {
+          // If userId is not present, fetch the previous project's userId for the same processId
+          const previousProjectResponse = await API.get(`/ProjectProcess/GetProcessesWithUsers/${selectedProject - 1}`);
+          const previousProcesses = previousProjectResponse.data.processes;
+  
+          // Find the process from the previous project with the same processId
+          const previousProcess = previousProcesses.find(p => p.processId === process.processId);
+  
+          // If a corresponding process is found, use its userId
+          if (previousProcess && previousProcess.userId && previousProcess.userId.length > 0) {
+            newUserSelections[process.processId] = previousProcess.userId;
+          } else {
+            // If no userId is found in the previous project, set as an empty array
+            newUserSelections[process.processId] = [];
+          }
+        }
+      }
+  
+      // Set the user selections
       setUserSelections(newUserSelections);
+  
     } catch (error) {
       console.error("Failed to fetch processes", error);
-      message.error("Failed to fetch processes");
     }
   };
+  
 
   const handleUserChange = (processId, selectedUsers) => {
     setUserSelections(prev => ({

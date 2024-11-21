@@ -116,6 +116,7 @@ const LockOverlay = () => {
                                     onChange={(e) => setPassword(e.target.value)}
                                     className='rounded-bottom-5'
                                     style={{ width: "200px", textAlign: "center" }}
+                                    autoComplete="off"
                                 />
                             </Form.Group>
                         </Form>
