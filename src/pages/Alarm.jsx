@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Input, Button, message, Modal, Spin } from 'antd';
+import { Table, Input, Button,  Modal, Spin } from 'antd';
 import { v4 as uuidv4 } from 'uuid'; 
 import API from '../CustomHooks/MasterApiHooks/api';
 import { useTranslation } from 'react-i18next';
@@ -7,6 +7,9 @@ import { useStore } from 'zustand';
 import themeStore from '../store/themeStore';
 import { EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
 import { FaSearch } from 'react-icons/fa';
+import { success, error } from '../CustomHooks/Services/AlertMessageService';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const AlarmMaster = () => {
   const { t } = useTranslation();
@@ -60,13 +63,13 @@ const AlarmMaster = () => {
     setAlarms([...alarms, { ...newAlarm, alarmId: uuidv4() }]);
     setNewAlarmMessage('');
     setIsModalVisible(false);
-    message.success(t('alarmAddedSuccess'));
+    success(t('alarmAddedSuccess'));
 
     try {
       await API.post('/Alarms', newAlarm);
       fetchAlarms();
-    } catch (error) {
-      message.error(t('failedToAddAlarm'));
+    } catch (err) {
+      error(t('failedToAddAlarm'));
       setAlarms(prev => prev.filter(alarm => alarm.alarmId !== newAlarm.alarmId));
     }
   };
@@ -79,7 +82,7 @@ const AlarmMaster = () => {
     );
 
     if (existingAlarm) {
-      message.error(t('alarmMessageExists'));
+      error(t('alarmMessageExists'));
       return;
     }
 
@@ -91,14 +94,14 @@ const AlarmMaster = () => {
       return newAlarms;
     });
 
-    message.success(t('alarmUpdatedSuccess'));
+    success(t('alarmUpdatedSuccess'));
     setEditingIndex(null);
     setEditingValue('');
 
     try {
       await API.put(`/Alarms/${alarms[index].alarmId}`, updatedAlarm);
-    } catch (error) {
-      message.error(t('failedToUpdateAlarm'));
+    } catch (err) {
+      error(t('failedToUpdateAlarm'));
       fetchAlarms();
     }
   };
@@ -178,6 +181,7 @@ const AlarmMaster = () => {
   ];
 
   return (
+    <>
     <div style={{ padding: '20px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)' }}>
       <h2 style={{ marginBottom: '20px', textAlign: 'center' }}>{t('alarmMaster')}</h2>
       <div className="d-flex justify-content-between align-items-center mb-3">
@@ -241,6 +245,8 @@ const AlarmMaster = () => {
         </div>
       </Modal>
     </div>
+   
+    </>
   );
 };
 

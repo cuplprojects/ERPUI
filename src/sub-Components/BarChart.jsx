@@ -56,21 +56,21 @@ const BarChart = ({ projectId }) => {
         scales: {
           x: {
             ticks: {
-              color: '#000000'
+              color: '#000000', // Set x-axis label color to dark black
             }
           },
           y: {
             beginAtZero: true,
             max: 100,
             ticks: {
-              color: '#000000'
+              color: '#000000', // Set y-axis label color to dark black
             }
           }
         },
         plugins: {
           legend: {
             labels: {
-              color: '#000000'
+              color: '#000000', // Set legend text color to dark black
             }
           }
         }

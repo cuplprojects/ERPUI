@@ -16,11 +16,13 @@ import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import { useMediaQuery } from 'react-responsive';
 import { useTranslation } from 'react-i18next';
-import { toast, ToastContainer } from 'react-toastify';
+import { ToastContainer } from 'react-toastify';
 import AuthService from '../CustomHooks/ApiServices/AuthService';
 import IndianFlag from './../assets/Icons/Hindi.png';
 import UKFlag from './../assets/Icons/English.png';
 import languageStore from './../store/languageStore';
+import { success, error, info } from '../CustomHooks/Services/AlertMessageService';
+
 
 const Login = () => {
   const isLoggedIn = AuthService.isLoggedIn();
@@ -71,16 +73,12 @@ const Login = () => {
     e.preventDefault();
 
     try {
-      toast.info(t("processing..."), {
-        autoClose: 1000,
-        toastId: "processing",
-      });
+      info(t("processing..."), true);
 
       const response = await AuthService.login(userName, password);
 
       if (response.status === 200) {
-        toast.dismiss(t("processing"));
-        toast.success(t('loginSuccessful'));
+        success(t('loginSuccessful'));
 
         const { autogenPass } = response.data;
         
@@ -94,60 +92,47 @@ const Login = () => {
           }, 1500);
         }
       } else {
-        toast.dismiss(t("processing"));
-        toast.error(t("unexpectedResponse"));
+        error(t("unexpectedResponse"));
       }
-    } catch (error) {
-      toast.dismiss(t("processing"));
-
-      if (error.response) {
-        switch (error.response.status) {
+    } catch (err) {
+      if (err.response) {
+        switch (err.response.status) {
           case 400:
-            toast.error(t("badRequest"));
+            error(t("badRequest"));
             break;
           case 401:
-            toast.error(t("invalidUserNameOrPassword"));
+            error(t("invalidUserNameOrPassword"));
             break;
           case 403:
-            toast.error(t("forbiddenYouDoNotHaveAccess"));
+            error(t("forbiddenYouDoNotHaveAccess"));
             break;
           case 404:
-            toast.error(t("invalidUserNameOrPassword"));
+            error(t("invalidUserNameOrPassword"));
             break;
           case 500:
-            toast.error(t("serverErrorPleaseTryAgainLater"));
+            error(t("serverErrorPleaseTryAgainLater"));
             break;
           default:
-            toast.error(
-              `Error: ${error.response.data.message || t("anErrorOccurred")}`
-            );
+            error(t(`Error: ${err.response.data.message || "anErrorOccurred"}`));
         }
-      } else if (error.request) {
-        toast.error(t("noResponseFromTheServerPleaseCheckYourNetwork"));
+      } else if (err.request) {
+        error(t("noResponseFromTheServerPleaseCheckYourNetwork"));
       } else {
-        toast.error(`${t("error")}: ${error.message}`);
+        error(t(`error: ${err.message}`));
       }
     }
   };
 
   useEffect(() => {
     if (localStorage.getItem('loggedOut')) {
-      toast.success(t('successfullyLoggedOut'), {
-        position: 'top-right',
-        autoClose: 1000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
-      localStorage.removeItem(t('loggedOut'));
+      success(t('successfullyLoggedOut'));
+      localStorage.removeItem('loggedOut');
     }
   }, []);
 
   return (
     <Container fluid className="vh-100 position-relative overflow-hidden">
-      <ToastContainer autoClose={1500} />
+      <ToastContainer />
       <Dropdown className={`position-absolute ${customDarkBorder} rounded-3`} style={{ top: '20px', right: '20px', zIndex: 2 }}>
         <Dropdown.Toggle variant="light" id="language-dropdown" className="d-flex align-items-center">
           <img 

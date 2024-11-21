@@ -4,6 +4,7 @@ import { useUserToken } from '../store/useUserToken';
 import { jwtDecode } from 'jwt-decode';
 import { hasPermission } from '../CustomHooks/Services/permissionUtils';
 import AuthService from '../CustomHooks/ApiServices/AuthService';
+import { ToastContainer } from 'react-toastify';
 
 const ProtectedRoute = ({ component: Component, permission }) => {
   const token = useUserToken();
@@ -31,7 +32,10 @@ const ProtectedRoute = ({ component: Component, permission }) => {
     return <Navigate to="/login" replace />;
   }
 
-  return <Component />;
+  return <>
+  <ToastContainer />
+  <Component />
+  </>;
 };
 
 export default ProtectedRoute;

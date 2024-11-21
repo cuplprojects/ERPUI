@@ -6,6 +6,7 @@ import { ToastContainer } from 'react-toastify';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import { useTranslation } from 'react-i18next';
+import AuthService from '../CustomHooks/ApiServices/AuthService';
 
 const LockOverlay = () => {
     const { t } = useTranslation();
@@ -59,12 +60,19 @@ const LockOverlay = () => {
         }, 100);
     }, []);
 
-    const handleSubmit = useCallback(() => {
-        if (password === '123') {
-            setIsLocked(false);
-            setShowModal(false);
-            setPassword('');
-            resetTimer();
+    const handleSubmit = useCallback(async () => {
+        if (password.length > 2) {
+            try {
+                const response = await AuthService.unlockScreen(password);
+                if (response.status === 200) {
+                    setIsLocked(false);
+                    setShowModal(false);
+                    setPassword('');
+                    resetTimer();
+                }
+            } catch (error) {
+                console.log('Pin is incorrect');
+            }
         }
     }, [password, resetTimer]);
 
@@ -84,7 +92,7 @@ const LockOverlay = () => {
     }, [resetTimer, isLocked]);
 
     useEffect(() => {
-        if (password) handleSubmit();
+        if (password.length > 2) handleSubmit();
     }, [password, handleSubmit]);
 
     return (
@@ -108,6 +116,7 @@ const LockOverlay = () => {
                                     onChange={(e) => setPassword(e.target.value)}
                                     className='rounded-bottom-5'
                                     style={{ width: "200px", textAlign: "center" }}
+                                    autoComplete="off"
                                 />
                             </Form.Group>
                         </Form>

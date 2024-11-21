@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Form, Button } from 'react-bootstrap';
-import { FaPencilAlt } from 'react-icons/fa';
+import { Container, Row, Col, Form, Button, OverlayTrigger, Tooltip } from 'react-bootstrap';
+import { FaPencilAlt, FaLock } from 'react-icons/fa';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
@@ -9,6 +9,7 @@ import "./../styles/Profile.css";
 import { useUserData, useUserDataActions } from '../store/userDataStore';
 import API from '../CustomHooks/MasterApiHooks/api';
 import { useTranslation } from 'react-i18next';
+import ScreenLockPin from './ScreenLockPin';
 
 const UserProfile = () => {
   const { t } = useTranslation();
@@ -25,6 +26,7 @@ const UserProfile = () => {
   const [profileImageKey, setProfileImageKey] = useState(Date.now());
   const [roles, setRoles] = useState([]);
   const [userRole, setUserRole] = useState('');
+  const [showPinModal, setShowPinModal] = useState(false);
 
   const APIUrlBase = import.meta.env.VITE_API_BASE_URL;
 
@@ -183,37 +185,64 @@ const userName = userData.firstName;
             }).format(currentDateTime)}
           </p>
         </div>
+        <OverlayTrigger
+          placement="top"
+          overlay={<Tooltip>{t('changeScreenLockPin')}</Tooltip>}
+        >
+          <Button 
+            variant="link"
+            size="sm"
+            className={`${customDark === 'dark-dark' ? customDark : customLight}`}
+            onClick={() => setShowPinModal(true)}
+          >
+            <FaLock size={24} className={customDarkText} />
+          </Button>
+        </OverlayTrigger>
+        <ScreenLockPin 
+          show={showPinModal} 
+          onHide={() => setShowPinModal(false)} 
+        />
       </div>
       <div className={`p-4 rounded-bottom shadow-lg ${customLight} ${customDark === 'dark-dark' ? `${customDarkBorder} border-1` : "border-light"}`}>
         <Row className="align-items-center mb-4">
           <Col xs={12} sm={3} md={2} className="text-center position-relative">
-            <img
-              src={getProfileImageUrl(userData.profilePicturePath)}
-              alt={t('profilePicture')}
-              width="100px"
-              height="100px"
-              className={`rounded-circle ${customDarkBorder}`}
-              onClick={handleImageClick}
-            />
+            <OverlayTrigger
+              placement="top"
+              overlay={<Tooltip>{t('clickToZoom')}</Tooltip>}
+            >
+              <img
+                src={getProfileImageUrl(userData.profilePicturePath)}
+                alt={t('profilePicture')}
+                width="100px"
+                height="100px"
+                className={`rounded-circle ${customDarkBorder}`}
+                onClick={handleImageClick}
+              />
+            </OverlayTrigger>
             <sub>
-              <Button
-                variant="link"
-                className={`position-absolute p-0 rounded-circle ${customDark === "dark-dark" ? `${customMid} ${customDarkText} ${customDarkBorder} border-2` : `${customDarkText} ${customMid} ${customDarkBorder}`}`}
-                style={{
-                  bottom: '0',
-                  right: '0',
-                  transform: 'translate(50%, 50%)',
-                  width: '30px',
-                  height: '30px',
-                  padding: '0',
-                }}
-                onClick={handleEditImageClick}
+              <OverlayTrigger
+                placement="bottom"
+                overlay={<Tooltip>{t('editProfilePicture')}</Tooltip>}
               >
-                <FaPencilAlt
-                  className="p-1"
-                  style={{ width: '100%', height: '100%' }}
-                />
-              </Button>
+                <Button
+                  variant="link"
+                  className={`position-absolute p-0 rounded-circle ${customDark === "dark-dark" ? `${customMid} ${customDarkText} ${customDarkBorder} border-2` : `${customDarkText} ${customMid} ${customDarkBorder}`}`}
+                  style={{
+                    bottom: '0',
+                    right: '0',
+                    transform: 'translate(50%, 50%)',
+                    width: '30px',
+                    height: '30px',
+                    padding: '0',
+                  }}
+                  onClick={handleEditImageClick}
+                >
+                  <FaPencilAlt
+                    className="p-1"
+                    style={{ width: '100%', height: '100%' }}
+                  />
+                </Button>
+              </OverlayTrigger>
             </sub>
             {isZoomed && (
               <div className={`zoomed-image rounded-circle ${isZoomed ? 'show' : 'hide'}`} onClick={handleZoomedImageClick}>
@@ -225,6 +254,7 @@ const userName = userData.firstName;
             <h4 className={`${customDarkText}`}>{userData.userName}</h4>
             <p className={`text-muted mb-0 ${customDarkText}`}>{`${userData.firstName} ${userData.middleName} ${userData.lastName}`}</p>
           </Col>
+          
         </Row>
         <Form>
           <Row className="mb-3">
