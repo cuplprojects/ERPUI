@@ -544,16 +544,16 @@ const ProjectDetailsTable = ({
 
         // Populate the requirements array based on conditions
         if (hasAlerts) {
-          requirements.push("Status cannot be changed due to alerts.");
+          requirements.push(t("statusCannotBeChangedDueToAlerts"));
         }
         if (!isPreviousProcessCompleted) {
-          requirements.push("Previous process must be completed.");
+          requirements.push(t("previousProcessErrorDescription"));
         }
         if (!canChangeStatus) {
-          requirements.push("Ensure all required fields are filled (Zone, Team, Machine).");
+          requirements.push(t("ensureAllRequiredFieldsAreFilled"));
         }
         if (initialStatusIndex === 1 && !canBeCompleted) {
-          requirements.push("Cannot set status to Completed - Interim Quantity must equal Quantity.");
+          requirements.push(t("cannotSetStatusToCompletedInterimQuantityMustEqualQuantity"));
         }
 
         const isDisabled = requirements.length > 0; // Determine if the toggle is disabled based on requirements
