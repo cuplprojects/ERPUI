@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
 import { Container, Row, Col, Form, Button, Spinner, Dropdown } from 'react-bootstrap';
 import { useNavigate, Link } from 'react-router-dom';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import { useMediaQuery } from 'react-responsive';
 import themeStore from './../store/themeStore';
-import languageStore from './../store/languageStore'; // Added languageStore
+import languageStore from './../store/languageStore';
 import { useStore } from 'zustand';
 import Logo1 from "./../assets/Logos/CUPLLogoTheme.png";
 import redBrain from "./../assets/bgImages/brain/brainRed.png";
@@ -23,6 +21,9 @@ import API from '../CustomHooks/MasterApiHooks/api';
 import IndianFlag from './../assets/Icons/Hindi.png';
 import UKFlag from './../assets/Icons/English.png';
 import { useTranslation } from 'react-i18next';
+import { error, success } from '../CustomHooks/Services/AlertMessageService';
+import { ToastContainer } from 'react-toastify';
+
 const ForgotPassword = () => {
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
@@ -61,23 +62,21 @@ const ForgotPassword = () => {
   const handleUserNameSubmit = async (e) => {
     e.preventDefault();
     if (!userName.trim()) {
-      toast.error(t('pleaseEnterYourUserName'));
+      error(t('pleaseEnterYourUserName'));
       return;
     }
     setLoading(true);
 
     try {
-      // Fetch the security question IDs
       const response = await API.get(`/Login/forgotPassword/securityQuestions/${userName}`);
-      setUserQuestions(response.data)
-      console.log(response.data)
-      setCurrentStep(2); // Move to Step 2
-      toast.success(t('securityQuestionsLoadedSuccessfully'));
-    } catch (error) {
-      if (error.response.status === 404) {
-        toast.error(t('noSecurityQuestionsFoundForThisUsername'));
+      setUserQuestions(response.data);
+      setCurrentStep(2);
+      success(t('securityQuestionsLoadedSuccessfully'));
+    } catch (err) {
+      if (err.response?.status === 404) {
+        error(t('noSecurityQuestionsFoundForThisUsername'));
       } else {
-        toast.error(t('anErrorOccurredWhileFetchingSecurityQuestions'));
+        error(t('anErrorOccurredWhileFetchingSecurityQuestions'));
       }
     } finally {
       setLoading(false);
@@ -86,25 +85,25 @@ const ForgotPassword = () => {
 
   const handleSubmitAnswers = async (e) => {
     e.preventDefault();
-    if (answers.some(answer => !answer.trim())) {
-      toast.error(t('pleaseAnswerAllSecurityQuestions'));
+    if (answers.some(answer => !answer?.trim())) {
+      error(t('pleaseAnswerAllSecurityQuestions'));
       return;
     }
     const data = {
       userName: userName,
       securityAnswer1: answers[0],
       securityAnswer2: answers[1]
-    }
-    console.log(data)
+    };
+
     try {
-      const res = await API.post('/Login/forgotPassword/verifySecurityAnswers', data)
-      setCurrentStep(3); // Move to Step 3
-      toast.success(t('securityAnswersVerifiedSuccessfully'));
-    } catch (error) {
-      if (error.response.status === 401) {
-        toast.error(t('securityAnswersAreIncorrect'));
+      await API.post('/Login/forgotPassword/verifySecurityAnswers', data);
+      setCurrentStep(3);
+      success(t('securityAnswersVerifiedSuccessfully'));
+    } catch (err) {
+      if (err.response?.status === 401) {
+        error(t('securityAnswersAreIncorrect'));
       } else {
-        toast.error(t('anErrorOccurredWhileVerifyingSecurityAnswers'));
+        error(t('anErrorOccurredWhileVerifyingSecurityAnswers'));
       }
     }
   };
@@ -112,11 +111,11 @@ const ForgotPassword = () => {
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
-      toast.error(t('passwordsDoNotMatch'));
+      error(t('passwordsDoNotMatch'));
       return;
     }
     if (newPassword.length < 8) {
-      toast.error(t('passwordMustBeAtLeast8CharactersLong'));
+      error(t('passwordMustBeAtLeast8CharactersLong'));
       return;
     }
 
@@ -126,20 +125,20 @@ const ForgotPassword = () => {
       const payload = {
         userName: userName.toLowerCase(),
         newPassword: newPassword,
-        securityAnswersVerified: true // This is the new requirement
+        securityAnswersVerified: true
       };
 
       const response = await API.post('/Login/forgotPassword/setNewPassword', payload);
       if (response.status === 200) {
-        toast.success(t('passwordResetSuccessfully'), {
+        success(t('passwordResetSuccessfully'), {
           autoClose: 1500,
           onClose: () => navigate('/')
         });
       } else {
-        toast.error(t('anErrorOccurredWhileResettingPassword'));
+        error(t('anErrorOccurredWhileResettingPassword'));
       }
-    } catch (error) {
-      toast.error(t('anErrorOccurredWhileResettingPassword'));
+    } catch (err) {
+      error(t('anErrorOccurredWhileResettingPassword'));
     } finally {
       setLoading(false);
     }
@@ -153,7 +152,7 @@ const ForgotPassword = () => {
 
   return (
     <Container fluid className="vh-100 position-relative overflow-hidden">
-      <ToastContainer className="responsive-toast" autoClose={1500}/>
+      <ToastContainer />
       <Dropdown className={`position-absolute ${customDarkBorder} rounded-3`} style={{ top: '20px', left: '20px', zIndex: 2 }}>
         <Dropdown.Toggle variant="light" id="language-dropdown" className="d-flex align-items-center">
           <img 
@@ -212,7 +211,6 @@ const ForgotPassword = () => {
               <img src={Logo1} alt="Company Logo" className="img-fluid" style={{ maxWidth: '150px' }} />
             </div>
 
-            {/* Step 1: Enter Username */}
             {currentStep === 1 && (
               <Form onSubmit={handleUserNameSubmit} className="bg-white p-3 rounded-4 shadow-sm shadow-lg">
                 <h3 className="text-center mb-4">{t('resetPassword')}</h3>
@@ -242,7 +240,6 @@ const ForgotPassword = () => {
               </Form>
             )}
 
-            {/* Step 2: Answer Security Questions */}
             {currentStep === 2 && (
               <Form onSubmit={handleSubmitAnswers} className="bg-white p-3 rounded-4 shadow-sm shadow-lg">
                 <h3 className="text-center mb-4">{t("answerSecurityQuestions")}</h3>
@@ -252,7 +249,7 @@ const ForgotPassword = () => {
                     <Form.Control
                       type="text"
                       placeholder={t("yourAnswer")}
-                      value={answers[index]}
+                      value={answers[index] || ''}
                       onChange={(e) => handleAnswerChange(index, e.target.value)}
                       required
                     />
@@ -274,7 +271,6 @@ const ForgotPassword = () => {
               </Form>
             )}
 
-            {/* Step 3: Reset Password */}
             {currentStep === 3 && (
               <Form onSubmit={handlePasswordSubmit} className="bg-white p-3 rounded-4 shadow-sm shadow-lg">
                 <h3 className="text-center mb-4">{t("setNewPassword")}</h3>
@@ -315,7 +311,7 @@ const ForgotPassword = () => {
                       style={{ right: '10px', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer' }}
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     >
-                      {showConfirmPassword ? <AiFillEye size={20} /> : <AiFillEyeInvisible size={20} />}
+                      {showConfirmPassword ? <AiFillEye size={20} className={`${customDark === "dark-dark" ? `` : `${customDarkText}`}`} /> : <AiFillEyeInvisible size={20} className={`${customDark === "dark-dark" ? `` : `${customDarkText}`}`} />}
                     </span>
                   </div>
                 </Form.Group>
@@ -330,7 +326,7 @@ const ForgotPassword = () => {
                     newPassword !== confirmPassword
                   }
                 >
-                  {loading ? <Spinner animation="border" size="sm" /> :t('resetPassword')}
+                  {loading ? <Spinner animation="border" size="sm" /> : t('resetPassword')}
                 </Button>
                 <div className="text-center mt-3 custom-zoom-btn">
                   <Link to="/" className={`${customDark === "dark-dark" ? `text-dark` : `${customDarkText}`}`}>
@@ -338,10 +334,7 @@ const ForgotPassword = () => {
                   </Link>
                 </div>
               </Form>
-
             )}
-
-
           </div>
         </Col>
         {!isMediumOrSmaller && (

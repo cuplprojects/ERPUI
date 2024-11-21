@@ -152,7 +152,7 @@ const SetPassword = () => {
         backgroundPosition: 'center',
       }}
     >
-      <ToastContainer autoClose={1500} />
+      <ToastContainer />
 
       <Dropdown className="position-absolute" style={{ top: '20px', right: '20px', zIndex: 2 }}>
         <Dropdown.Toggle variant="light" id="language-dropdown" className="d-flex align-items-center">
