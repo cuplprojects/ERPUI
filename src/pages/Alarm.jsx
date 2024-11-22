@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Input, Button,  Modal, Spin } from 'antd';
+import { Table, Input, Button, Spin } from 'antd';
+import { Modal } from 'react-bootstrap';
 import { v4 as uuidv4 } from 'uuid'; 
 import API from '../CustomHooks/MasterApiHooks/api';
 import { useTranslation } from 'react-i18next';
@@ -227,22 +228,25 @@ const AlarmMaster = () => {
       )}
 
       <Modal
-        title={t('addNewAlarm')}
-        open={isModalVisible}
-        onCancel={() => setIsModalVisible(false)}
-        footer={null}
+        show={isModalVisible}
+        onHide={() => setIsModalVisible(false)}
       >
-        <Input
-          placeholder={t('typeAlarmMessage')}
-          value={newAlarmMessage}
-          onChange={(e) => setNewAlarmMessage(e.target.value)}
-          onPressEnter={handleAddAlarm}
-        />
-        {errorMessage && <div style={{ color: 'red', marginTop: '8px' }}>{errorMessage}</div>}
-        <div style={{ textAlign: 'right', marginTop: '16px' }}>
-          <Button onClick={() => setIsModalVisible(false)} style={{ marginRight: '8px' }}>{t('cancel')}</Button>
-          <Button type="primary" onClick={handleAddAlarm}>{t('add')}</Button>
-        </div>
+        <Modal.Header closeButton={false} className={`${customDark} ${customLightText}`}>
+          <Modal.Title>{t('addNewAlarm')}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className={`${customLight}`}>
+          <Input
+            placeholder={t('typeAlarmMessage')}
+            value={newAlarmMessage}
+            onChange={(e) => setNewAlarmMessage(e.target.value)}
+            onPressEnter={handleAddAlarm}
+          />
+          {errorMessage && <div style={{ color: 'red', marginTop: '8px' }}>{errorMessage}</div>}
+        </Modal.Body>
+        <Modal.Footer className={`${customDark} `}>
+          <Button onClick={() => setIsModalVisible(false)} className={`${customBtn} border`}>{t('cancel')}</Button>
+          <Button type="primary" onClick={handleAddAlarm} className={`${customBtn} border`}>{t('add')}</Button>
+        </Modal.Footer>
       </Modal>
     </div>
    
