@@ -428,6 +428,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
                                     {t('transferCatch')}
                                 </Button>
                             )}
+                            
                             <Button 
                                 onClick={() => setShowNewRow(prev => !prev)} 
                                 type="primary" 
