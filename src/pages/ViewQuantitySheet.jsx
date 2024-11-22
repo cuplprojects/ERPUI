@@ -10,7 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { decrypt } from '../Security/Security';
 import CatchTransferModal from '../menus/CatchTransferModal';
 
-const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
+const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
     const { t } = useTranslation();
     const [modalMessage, setModalMessage] = useState('');
     const { encryptedProjectId } = useParams();
@@ -32,8 +32,9 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
         examTime: '',
         quantity: 0,
         percentageCatch: 0,
+        status: 0,
         projectId: projectId,
-        quantitySheetId:quantitySheetId,
+        quantitySheetId: quantitySheetId,
     });
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [showTransferModal, setShowTransferModal] = useState(false);
@@ -49,12 +50,15 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
     const [searchText, setSearchText] = useState('');
     const [pageSize, setPageSize] = useState(5);
     const [dispatchedLots, setDispatchedLots] = useState([]);
+    const [dates, setDates] = useState([]);
+    const [minDate, setMinDate] = useState(null);
+    const [maxDate, setMaxDate] = useState(null);
 
     const columns = [
         {
             title: t('select'),
             dataIndex: 'selection',
-            key: 'selection', 
+            key: 'selection',
             width: '2%',
             render: (_, record) => {
                 const isDispatched = dispatchedLots.includes(selectedLotNo);
@@ -81,9 +85,6 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
             dataIndex: 'catchNo',
             key: 'catchNo',
             width: 100,
-            filteredValue: [searchText],
-            onFilter: (value, record) => 
-                record.catchNo.toString().toLowerCase().includes(value.toLowerCase()),
             sorter: (a, b) => a.catchNo.localeCompare(b.catchNo)
         },
         {
@@ -116,8 +117,8 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
             render: (text, record) => (
                 <span>
                     {text}
-                    {record.isExamDateOverlapped && 
-                        <WarningOutlined style={{color: '#ff4d4f', marginLeft: '5px'}} />
+                    {record.isExamDateOverlapped &&
+                        <WarningOutlined style={{ color: '#ff4d4f', marginLeft: '5px' }} />
                     }
                 </span>
             )
@@ -200,14 +201,54 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
         }
     ];
 
+    const getFilteredData = () => {
+        if (!searchText) return dataSource;
+
+        return dataSource.filter(record => {
+            return Object.keys(record).some(key => {
+                // Skip processId and other non-string fields
+                if (key === 'processId' || key === 'key' || key === 'quantitySheetId' || key === 'status' || key === 'projectId') return false;
+
+                const value = record[key];
+                if (value === null || value === undefined) return false;
+
+                return value.toString().toLowerCase().includes(searchText.toLowerCase());
+            });
+        });
+    };
+
     const fetchQuantity = async (lotNo) => {
         try {
             const response = await API.get(`/QuantitySheet/Catch?ProjectId=${projectId}&lotNo=${lotNo}`);
-            console.log("lot data in qty sheet",response.data);
+            console.log("lot data in qty sheet", response.data);
             const dataWithKeys = response.data.map(item => ({
                 ...item, key: item.quantitySheetId
             }));
             setDataSource(dataWithKeys);
+        } catch (error) {
+            console.error(t('failedToFetchQuantity'), error);
+        }
+    };
+
+    const formatDate = (dateString) => {
+        const [day, month, year] = dateString.split('-');  // Split the DD-MM-YYYY format
+        return new Date(`${year}-${month}-${day}`);        // Convert to YYYY-MM-DD format for Date constructor
+    };
+
+    const getAvailableDates = async (lotNo) => {
+        try {
+            const response = await API.get(`/QuantitySheet/exam-dates?projectId=${projectId}&lotNo=${lotNo}`);
+            console.log("Exam data in quantity sheet", response.data);
+
+            // Convert dates to proper Date objects and sort them
+            const availableDates = response.data.map(formatDate);
+            const sortedDates = availableDates.sort((a, b) => a - b);  // Sort by date in ascending order
+
+            // Set the sorted dates and the min/max values
+            setDates(sortedDates);
+            setMinDate(sortedDates[0].toISOString().split('T')[0]);  // Convert back to YYYY-MM-DD string
+            setMaxDate(sortedDates[sortedDates.length - 1].toISOString().split('T')[0]);
+
         } catch (error) {
             console.error(t('failedToFetchQuantity'), error);
         }
@@ -220,6 +261,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
     useEffect(() => {
         if (selectedLotNo) {
             fetchQuantity(selectedLotNo);
+            getAvailableDates(selectedLotNo)
         }
     }, [selectedLotNo]);
 
@@ -263,7 +305,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
         if (modalMessage === 'switchToDigitalPrintingQuestion') {
             updatedProcessIds = updatedProcessIds.filter(id => id !== CTP_ID && id !== OFFSET_PRINTING_ID);
             updatedProcessIds.push(DIGITAL_PRINTING_ID);
-        } else if (modalMessage === 'switchToOffsetPrintingQuestion'){
+        } else if (modalMessage === 'switchToOffsetPrintingQuestion') {
             updatedProcessIds = updatedProcessIds.filter(id => id !== DIGITAL_PRINTING_ID);
             updatedProcessIds.push(CTP_ID);
             updatedProcessIds.push(OFFSET_PRINTING_ID);
@@ -312,7 +354,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
         setSelectedProcessIds([]);
         setIsConfirmed(false);
         setSelectedCatches([]);
-        
+
     };
 
     const handleEditButtonClick = (key) => {
@@ -368,7 +410,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
                 examDate: newRowData.examDate,
                 examTime: newRowData.examTime,
                 processId: [],
-
+                status: 0
             }
         ];
 
@@ -383,11 +425,14 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
                 paper: '',
                 course: '',
                 subject: '',
+                examDate: '',
+                examTime: '',
                 innerEnvelope: '',
                 outerEnvelope: '',
                 quantity: 0,
                 percentageCatch: 0,
                 projectId: projectId,
+                status: 0
             });
             fetchQuantity(selectedLotNo);
         } catch (error) {
@@ -413,15 +458,15 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
                 <>
                     <div className="d-flex justify-content-between align-items-center mb-3 mt-3">
                         <Input.Search
-                            placeholder={t('searchByCatchNo')}
+                            placeholder={t('searchAllFields')}
                             onChange={(e) => setSearchText(e.target.value)}
                             style={{ width: '250px' }}
                             allowClear
                         />
                         <div>
                             {selectedCatches.length > 0 && !dispatchedLots.includes(selectedLotNo) && (
-                                <Button 
-                                    type="primary" 
+                                <Button
+                                    type="primary"
                                     className={`${customBtn} ${customDark === "dark-dark" ? `border` : `border-0`} me-2`}
                                     onClick={() => setShowTransferModal(true)}
                                 >
@@ -432,6 +477,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
                             <Button 
                                 onClick={() => setShowNewRow(prev => !prev)} 
                                 type="primary" 
+
                                 className={`${customBtn} ${customDark === "dark-dark" ? `border` : `border-0`}`}
                                 disabled={dispatchedLots.includes(selectedLotNo)}
                             >
@@ -448,6 +494,20 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
                                         <td><Input size="small" placeholder={t('paper')} name="paper" value={newRowData.paper} onChange={handleNewRowChange} /></td>
                                         <td><Input size="small" placeholder={t('course')} name="course" value={newRowData.course} onChange={handleNewRowChange} /></td>
                                         <td><Input size="small" placeholder={t('subject')} name="subject" value={newRowData.subject} onChange={handleNewRowChange} /></td>
+                                        {console.log(maxDate)}
+                                        {console.log(minDate)}
+                                        <td><Input
+                                            size="small"
+                                            type="date"
+                                            placeholder={t('subject')}
+                                            name="examDate"
+                                            value={newRowData.examDate}
+                                            onChange={handleNewRowChange}
+                                            min={minDate}  // Disable dates before the minDate
+                                            max={maxDate}  // Disable dates after the maxDate
+                                            disabled={dates.length === 0}  // Disable input if no dates are available
+                                        /></td>
+                                        <td><Input size="small" placeholder={t('subject')} name="examTime" value={newRowData.examTime} onChange={handleNewRowChange} /></td>
                                         <td><Input size="small" placeholder={t('innerEnvelope')} name="innerEnvelope" value={newRowData.innerEnvelope} onChange={handleNewRowChange} /></td>
                                         <td><Input size="small" placeholder={t('outerEnvelope')} name="outerEnvelope" value={newRowData.outerEnvelope} onChange={handleNewRowChange} /></td>
                                         <td><Input size="small" placeholder={t('quantity')} type="number" name="quantity" value={newRowData.quantity} onChange={handleNewRowChange} /></td>
@@ -463,28 +523,27 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
             {showTable && (
                 <Table
                     columns={columns}
-                    dataSource={dataSource}
+                    dataSource={getFilteredData()}
                     pagination={{
                         pageSize: pageSize,
                         showSizeChanger: true,
                         pageSizeOptions: ['5', '10', '25', '50', '100'],
-                        total: dataSource.length,
+                        total: getFilteredData().length,
                         showTotal: (total, range) => `${range[0]}-${range[1]} ${t('of')} ${total} ${t('items')}`,
                         onShowSizeChange: handlePageSizeChange,
                         className: `p-2 rounded rounded-top-0 ${customDark === "dark-dark" ? `bg-white` : ``} mt`
                     }}
                     scroll={{ x: true }}
-                    className={`${
-                        customDark === "default-dark" ? "thead-default" :
-                        customDark === "red-dark" ? "thead-red" :
-                        customDark === "green-dark" ? "thead-green" :
-                        customDark === "blue-dark" ? "thead-blue" :
-                        customDark === "dark-dark" ? "thead-dark" :
-                        customDark === "pink-dark" ? "thead-pink" :
-                        customDark === "purple-dark" ? "thead-purple" :
-                        customDark === "light-dark" ? "thead-light" :
-                        customDark === "brown-dark" ? "thead-brown" : ""
-                    }`}
+                    className={`${customDark === "default-dark" ? "thead-default" :
+                            customDark === "red-dark" ? "thead-red" :
+                                customDark === "green-dark" ? "thead-green" :
+                                    customDark === "blue-dark" ? "thead-blue" :
+                                        customDark === "dark-dark" ? "thead-dark" :
+                                            customDark === "pink-dark" ? "thead-pink" :
+                                                customDark === "purple-dark" ? "thead-purple" :
+                                                    customDark === "light-dark" ? "thead-light" :
+                                                        customDark === "brown-dark" ? "thead-brown" : ""
+                        }`}
                     size="small"
                     tableLayout="auto"
                     responsive={['sm', 'md', 'lg', 'xl']}
@@ -497,7 +556,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
                         <BootstrapModal.Title>{t('editProcess')} - {t('catchNo')}: {dataSource.find(item => item.key === editingRow)?.catchNo}</BootstrapModal.Title>
                     </BootstrapModal.Header>
                     <BootstrapModal.Body>
-                        {t(modalMessage) } 
+                        {t(modalMessage)}
                         <div className="mt-3">
                             <Checkbox checked={isConfirmed} onChange={(e) => setIsConfirmed(e.target.checked)}>
                                 {modalMessage === "switchToDigitalPrintingQuestion" ? t('switchFromOffsetToDigital') :
@@ -528,7 +587,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
                 </BootstrapModal>
             )}
 
-            <CatchTransferModal 
+            <CatchTransferModal
                 visible={showTransferModal}
                 onClose={handleModalClose}
                 catches={selectedCatches}

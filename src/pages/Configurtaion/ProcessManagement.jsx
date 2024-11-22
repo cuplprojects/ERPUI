@@ -67,7 +67,6 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
             setProcessStatus(process.status);
             setProcessWeightage(process.weightage);
             setProcessInstalledFeatures(process.installedFeatures || []);
-            setProcessIdInput(process.processIdInput);
             setProcessType(process.processType);
             setIsEditingProcess(true);
             setEditingProcessId(process.id);
@@ -85,7 +84,6 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
             setProcessStatus(true);
             setProcessWeightage(0);
             setProcessInstalledFeatures([]);
-            setProcessIdInput(0);
             setProcessType('');
             setIsEditingProcess(false);
             setEditingProcessId(null);
@@ -104,12 +102,6 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
         const isDuplicate = processes.some(process => process.name === processName && process.id !== editingProcessId);
         if (isDuplicate) {
             notification.error({ message: t('processDuplicateName') });
-            return;
-        }
-
-        const isExistingOrder = processes.some(process => process.processIdInput === processIdInput && process.id !== editingProcessId);
-        if (isExistingOrder) {
-            notification.error({ message: t('processDuplicateOrder') });
             return;
         }
         const rangeStartNum = parseFloat(rangeStart);
@@ -137,7 +129,6 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
             weightage: processWeightage,
             status: processStatus,
             installedFeatures: processInstalledFeatures.map(Number),
-            processIdInput,
             processType,
             rangeStart: processType === 'Dependent' ? 0 : (rangeStart || 0),
             rangeEnd: processType === 'Dependent' ? 0 : (rangeEnd || 0),
@@ -160,6 +151,7 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
                 notification.success({ message: isEditingProcess ? t('processUpdateSuccess') : t('processAddSuccess') });
                 setProcessModalVisible(false);
                 fetchProcesses();
+                fetchFeatures();
                 return; // No further processing needed
             } else if (response && response.data) {
                 processWithKey = response.data;
@@ -227,12 +219,6 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
             key: 'featureNames',
             sorter: (a, b) => (a.featureNames?.join(',') || '').localeCompare(b.featureNames?.join(',') || ''),
             render: features => features?.join(', ') || 'None',
-        },
-        {
-            title: t('processOrder'),
-            dataIndex: 'processIdInput',
-            key: 'processIdInput',
-            sorter: (a, b) => a.processIdInput - b.processIdInput
         },
         {
             title: t('processType'),
@@ -319,7 +305,7 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
                 </Modal.Header>
                 <Modal.Body className={`${customLight}`}>
                     <div style={{ marginBottom: '16px' }}>
-                        <label htmlFor="processName" className={`${customDarkText}`}>{t('.processNameLabel')}:</label>
+                        <label htmlFor="processName" className={`${customDarkText}`}>{t('.processNameLabel')}<span style={{color: 'red'}}>*</span>:</label>
                         <Input
                             id="processName"
                             placeholder={t('processName')}
@@ -330,7 +316,7 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
                         />
                     </div>
                     <div style={{ marginBottom: '16px' }}>
-                        <label htmlFor="processWeightage" className={`${customDarkText}`}>{t('weightageLabel')}:</label>
+                        <label htmlFor="processWeightage" className={`${customDarkText}`}>{t('weightageLabel')}<span style={{color: 'red'}}>*</span>:</label>
                         <Input
                             id="processWeightage"
                             placeholder={t('weightage')}
@@ -342,19 +328,7 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
                         />
                     </div>
                     <div style={{ marginBottom: '16px' }}>
-                        <label htmlFor="processOrder" className={`${customDarkText}`}>{t('processOrderLabel')}:</label>
-                        <Input
-                            id="processOrder"
-                            placeholder={t('processOrder')}
-                            type="number"
-                            value={processIdInput || ''}
-                            onChange={e => setProcessIdInput(e.target.value ? parseInt(e.target.value) : 0)}
-                            style={{ width: '100%' }}
-                            className={`${customDarkText}`}
-                        />
-                    </div>
-                    <div style={{ marginBottom: '16px' }}>
-                        <label htmlFor="processType" className={`${customDarkText}`}>{t('processTypeLabel')}:</label>
+                        <label htmlFor="processType" className={`${customDarkText}`}>{t('processTypeLabel')}<span style={{color: 'red'}}>*</span>:</label>
                         <Select
                             id="processType"
                             placeholder={t('processType')}
@@ -377,7 +351,7 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
                         </Select>
                     </div>
                     <div style={{ marginBottom: '16px' }}>
-                        <label htmlFor="processStatus" className={`${customDarkText}`}>{t('statusLabel')}:</label>
+                        <label htmlFor="processStatus" className={`${customDarkText}`}>{t('statusLabel')}<span style={{color: 'red'}}>*</span>:</label>
                         <Switch
                             id="processStatus"
                             checked={processStatus}
@@ -389,7 +363,7 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
                         />
                     </div>
                     <div style={{ marginBottom: '16px' }}>
-                        <label htmlFor="processInstalledFeatures" className={`${customDarkText}`}>{t('installedFeaturesLabel')}:</label>
+                        <label htmlFor="processInstalledFeatures" className={`${customDarkText}`}>{t('installedFeaturesLabel')}<span style={{color: 'red'}}>*</span>:</label>
                         <Select
                             id="processInstalledFeatures"
                             mode="multiple"
@@ -409,7 +383,7 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
                     {processType === 'Independent' && (
                         <div>
                             <div style={{ marginBottom: '16px' }}>
-                                <label htmlFor="rangeStart" className={`${customDarkText}`}>{t('rangeStartLabel')}:</label>
+                                <label htmlFor="rangeStart" className={`${customDarkText}`}>{t('rangeStartLabel')}<span style={{color: 'red'}}>*</span>:</label>
                                 <Select
                                     id="rangeStart"
                                     placeholder={
@@ -430,7 +404,7 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
                                 </Select>
                             </div>
                             <div style={{ marginBottom: '16px' }}>
-                                <label htmlFor="rangeEnd" className={`${customDarkText}`}>{t('rangeEndLabel')}:</label>
+                                <label htmlFor="rangeEnd" className={`${customDarkText}`}>{t('rangeEndLabel')}<span style={{color: 'red'}}>*</span>:</label>
                                 <Select
                                     id="rangeEnd"
                                     placeholder={
