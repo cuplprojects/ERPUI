@@ -21,8 +21,7 @@ const DashboardGrid = ({ projectId, lotNo }) => {
   const [rowData, setRowData] = useState([]);
   const [transactionData, setTransactionData] = useState([]); // Added to hold transaction data
 
-  const [columnDefs, setColumnDefs] = useState([
-
+  const getColumnDefs = useCallback(() => [
     { field: "quantitySheetId", headerName: t('srNo'), cellStyle: { textAlign: "center" }, headerClass: "center-header" },
     { field: "catchNo", headerName: t('catchNo'), cellStyle: { textAlign: "center" }, headerClass: "center-header" },
     { field: "paper", headerName: t('paper'), cellStyle: { textAlign: "center" }, headerClass: "center-header" },
@@ -43,7 +42,9 @@ const DashboardGrid = ({ projectId, lotNo }) => {
           return t('pending');
       }
     } },
-  ]);
+  ], [t, transactionData]);
+
+  const [columnDefs, setColumnDefs] = useState(getColumnDefs());
 
   const defaultColDef = useMemo(() => ({
     editable: true,
@@ -86,6 +87,10 @@ const DashboardGrid = ({ projectId, lotNo }) => {
     fetchTransactions();
     fetchTransactionData();
   }, [projectId, lotNo]);
+
+  useEffect(() => {
+    setColumnDefs(getColumnDefs());
+  }, [t, transactionData, getColumnDefs]);
 
   const localeTextFunc = useCallback((key, defaultValue) => {
     // Map AG Grid's pagination text keys to your translation keys

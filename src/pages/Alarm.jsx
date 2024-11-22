@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Input, Button,  Modal, Spin } from 'antd';
+import { Table, Input, Button,  Modal, Spin, Divider } from 'antd';
 import { v4 as uuidv4 } from 'uuid'; 
 import API from '../CustomHooks/MasterApiHooks/api';
 import { useTranslation } from 'react-i18next';
@@ -183,7 +183,9 @@ const AlarmMaster = () => {
   return (
     <>
     <div style={{ padding: '20px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)' }}>
-      <h2 style={{ marginBottom: '20px', textAlign: 'center' }}>{t('alarmMaster')}</h2>
+    <Divider className={`fs-3 mt-0 ${customDarkText}`}>
+        {t("existingAlarms")}
+    </Divider>
       <div className="d-flex justify-content-between align-items-center mb-3">
         <Button type="primary" onClick={() => setIsModalVisible(true)} className={`${customBtn} d-flex align-items-center justify-content-center gap-2 custom-zoom-btn`}>{t('addNewAlarm')}</Button>
         <div className="d-flex align-items-center" style={{ width: '300px' }}>
