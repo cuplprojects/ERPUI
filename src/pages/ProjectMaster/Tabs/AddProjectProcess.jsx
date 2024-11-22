@@ -8,7 +8,6 @@ const { Panel } = Collapse;
 const { Option } = Select;
 
 const DragHandle = SortableHandle(({ disabled }) => {
-  const { t } = useTranslation();
   return (
     <span style={{ 
       cursor: disabled ? 'not-allowed' : 'grab', 
@@ -21,7 +20,18 @@ const DragHandle = SortableHandle(({ disabled }) => {
 
 const SortableRow = SortableElement(({ process, index, features, editingProcessId, editingFeatures, handleFeatureChange, handleSaveFeatures, handleCancelEdit, handleEdit, independentProcesses, disabled, handleThresholdChange }) => {
   const { t } = useTranslation();
-  
+
+// const DragHandle = SortableHandle(({ disabled }) => (
+//   <span style={{ 
+//     cursor: disabled ? 'not-allowed' : 'grab', 
+//     marginRight: '8px', 
+//     opacity: disabled ? 0.5 : 1,
+//     display: disabled ? 'none' : 'inline' 
+//   }} aria-hidden={disabled ? "true" : "false"}>⣿</span>
+// ));
+
+// const SortableRow = SortableElement(({ process, index, features, editingProcessId, editingFeatures, handleFeatureChange, handleSaveFeatures, handleCancelEdit, handleEdit, independentProcesses, disabled, handleThresholdChange }) => {
+
   return (
     <tr style={{ opacity: 1, background: 'white', margin: '10px' }}>
       <td>
@@ -97,6 +107,10 @@ const arrayMove = (array, from, to) => {
 };
 
 const AddProjectProcess = ({ selectedProject }) => {
+  if (!selectedProject) {
+    return null;
+  }
+
   const [projectProcesses, setProjectProcesses] = useState([]);
   const [features, setFeatures] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -118,7 +132,7 @@ const AddProjectProcess = ({ selectedProject }) => {
         const response = await API.get(`/PaperTypes/${typeId}/RequiredProcesses`);
         setRequiredProcessIds(response.data.map(process => process.id));
       } catch (error) {
-        message.error(t('unableToFetchRequiredProcessesPleaseTryAgainLater'));
+        console.error('unableToFetchRequiredProcessesPleaseTryAgainLater', error);
       }
     };
 
@@ -139,7 +153,7 @@ const AddProjectProcess = ({ selectedProject }) => {
           await fetchProjectProcesses(typeId);
         }
       } catch (error) {
-        message.error(t('unableToFetchProjectProcessesPleaseTryAgainLater'));
+        console.error('unableToFetchProjectProcessesPleaseTryAgainLater', error);
       } finally {
         setLoading(false);
       }
@@ -151,7 +165,7 @@ const AddProjectProcess = ({ selectedProject }) => {
         const independentOnly = response.data.filter(process => process.processType !== "Dependent");
         setProjectProcesses(calculatedWeightage(independentOnly));
       } catch (error) {
-        message.error(t('unableToFetchProjectProcessesPleaseTryAgainLater'));
+        console.error('unableToFetchProjectProcessesPleaseTryAgainLater', error);
       }
     };
 
@@ -160,7 +174,7 @@ const AddProjectProcess = ({ selectedProject }) => {
         const response = await API.get('/Features');
         setFeatures(response.data);
       } catch (error) {
-        message.error(t('unableToFetchProjectProcessesPleaseTryAgainLater'));
+        console.error('unableToFetchProjectProcessesPleaseTryAgainLater', error);
       }
     };
 
@@ -179,7 +193,7 @@ const AddProjectProcess = ({ selectedProject }) => {
         setIndependentProcesses(independentOnly);
 
       } catch (error) {
-        message.error(t('unableToFetchProjectProcessesPleaseTryAgainLater'));
+        console.error('unableToFetchProjectProcessesPleaseTryAgainLater', error);
       }
     };
 
@@ -188,7 +202,7 @@ const AddProjectProcess = ({ selectedProject }) => {
         const response = await API.get(`/Transactions/exists/${selectedProject}`);
         setIsTransactionExists(response.data);
       } catch (error) {
-        message.error('errorCheckingTransactionStatus');
+        console.error('errorCheckingTransactionStatus', error);
       }
     };
 

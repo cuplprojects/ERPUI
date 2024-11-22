@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
+
 import { Table, Input, Button, Spin } from 'antd';
 import { Modal } from 'react-bootstrap';
+
 import { v4 as uuidv4 } from 'uuid'; 
 import API from '../CustomHooks/MasterApiHooks/api';
 import { useTranslation } from 'react-i18next';
@@ -185,6 +187,7 @@ const AlarmMaster = () => {
     <>
     <div style={{ padding: '20px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)' }}>
       <h2 style={{ marginBottom: '20px', textAlign: 'left' }} className={`${customDark === "dark-dark" ? "" : customDarkText} `}>{t('alarmMaster')}</h2>
+
       <div className="d-flex justify-content-between align-items-center mb-3">
         <Button type="primary" onClick={() => setIsModalVisible(true)} className={`${customBtn} d-flex align-items-center justify-content-center gap-2 custom-zoom-btn`}>{t('addNewAlarm')}</Button>
         <div className="d-flex align-items-center" style={{ width: '300px' }}>

@@ -223,8 +223,14 @@ const permissionOptions = [
 
 const Permissions = ({ selectedPermissions = [], onChange }) => {
   const { t } = useTranslation();
+  const defaultCheckedKeys = [...selectedPermissions, '5'];
+
   const onCheck = (checkedKeys) => {
-    onChange(checkedKeys);
+    if (checkedKeys.includes('5')) {
+      onChange(checkedKeys.filter(key => key !== '5'));
+    } else {
+      onChange(checkedKeys);
+    }
   };
 
   const renderTreeNodes = (data) =>
@@ -254,7 +260,7 @@ const Permissions = ({ selectedPermissions = [], onChange }) => {
     <div className={`${customLight} ${customDarkText}`} style={{ width: '100%', overflowX: 'auto' }}>
       <Tree
         checkable
-        checkedKeys={selectedPermissions}
+        checkedKeys={defaultCheckedKeys}
         onCheck={onCheck}
         selectable={false}
         defaultExpandAll={false}
