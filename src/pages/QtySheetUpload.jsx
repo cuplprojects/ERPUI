@@ -16,13 +16,11 @@ import { BsCheckCircleFill } from "react-icons/bs";
 // Helper function to convert Excel date number to JS Date
 const convertExcelDate = (excelDate) => {
     if (!excelDate) return null;
-
     // Check if excelDate is a number (Excel serial date)
     if (!isNaN(excelDate)) {
         // Excel dates are number of days since 1/1/1900
         return new Date((excelDate - 25569) * 86400 * 1000);
     }
-
     // If it's already a date string, parse it
     return new Date(excelDate);
 };
@@ -57,6 +55,7 @@ const QtySheetUpload = () => {
     const [skipLots, setSkipLots] = useState([]);  // Lots to be skipped based on matching
     const [mappedData,setMappeddata] = useState([]);
     const [transactionExist, setTransactionExist] = useState(false);
+    const [isUpdateMode, setIsUpdateMode] = useState(false);
 
     useEffect(() => {
         const checkTransactionExistence = async () => {
@@ -175,12 +174,12 @@ const QtySheetUpload = () => {
             });
             console.log(t('uploadSuccessful'), response.data);
             setDataSource(finalPayload);
-            message.success(t('quantitySheetUploadedSuccessfully'))
+            message.success(isUpdateMode ? t('quantitySheetUpdatedSuccessfully') : t('quantitySheetUploadedSuccessfully'));
             fetchLots();
             resetState();
         } catch (error) {
             console.error(t('uploadFailed'), error.response?.data || error.message);
-            message.error(t('failedToUploadQuantitySheet'))
+            message.error(isUpdateMode ? t('failedToUpdateQuantitySheet') : t('failedToUploadQuantitySheet'));
         } finally {
             setUploading(false);
         }
@@ -231,6 +230,7 @@ const QtySheetUpload = () => {
 
 
     const handleUpdate = async () => {
+        setIsUpdateMode(true);
         try {
             // Fetch the mapped data from the file
             const mappedData = await createMappedData();  // This will contain the processed Excel data
@@ -355,6 +355,7 @@ const QtySheetUpload = () => {
         setSelectedFile(null);
         setFileList([]);
         setShowTable(false);
+        setIsUpdateMode(false);
     };
 
     const fetchLots = async () => {
@@ -400,6 +401,7 @@ const QtySheetUpload = () => {
     const handleDelete = async () => {
         try {
             await API.delete(`/QuantitySheet/DeleteByProjectId/${projectId}`);
+            fetchLots()
             message.success(t('quantitySheetDeletedSuccessfully'));
         } catch (error) {
             console.error('Failed to delete quantity sheet:', error);
@@ -427,6 +429,7 @@ const QtySheetUpload = () => {
                     <Form layout="vertical" form={form}>
                         <Form.Item name="file" rules={[{ required: true, message: t('pleaseSelectAFile') }]}>
                             <div className="d-flex align-items-center">
+                            {!isLotsFetched ? (
                                 <Upload
                                     onRemove={(file) => {
                                         const index = fileList.indexOf(file);
@@ -444,6 +447,19 @@ const QtySheetUpload = () => {
                                         <span className='d-inline d-sm-none'>{t('upload')}</span>
                                     </Button>
                                 </Upload>
+                            ):(
+                                <Button
+                                    className={`${customBtn}`}
+                                    type="primary"
+                                    onClick={() => {
+                                        setIsLotsFetched(false);
+                                        setIsUpdateMode(true);
+                                    }}
+                                >
+                                    {t('updateFile')}
+                                </Button>
+                            )}
+                                {isLotsFetched && (
                                 <Button
                                     type="primary"
                                     danger
@@ -454,27 +470,20 @@ const QtySheetUpload = () => {
                                     <DeleteOutlined />
                                     <span>{t('deleteFile')}</span>
                                 </Button>
+                                )}
                             </div>
                         </Form.Item>
                         <Form.Item>
-                            {fileList.length > 0 && isLotsFetched ? (  // Check if file is selected and lots are fetched
+                            {fileList.length > 0 && (
                                 <Button
                                     className={`${customBtn}`}
                                     type="primary"
-                                    onClick={handleUpdate}  // Update button logic
-                                >
-                                    {t('updateLots')}
-                                </Button>
-                            ) : (fileList.length > 0 ? (
-                                <Button
-                                    className={`${customBtn}`}
-                                    type="primary"
-                                    onClick={() => handleUpload()}  // Upload button logic
+                                    onClick={isUpdateMode ? handleUpdate : () => handleUpload()}
                                     loading={uploading}
                                 >
-                                    {uploading ? t('uploading') : t('upload')}
+                                    {uploading ? t('uploading') : (isUpdateMode ? t('update') : t('upload'))}
                                 </Button>
-                            ) : null)}
+                            )}
                         </Form.Item>
                         <Form.Item>
                             <div className="d-flex flex-wrap gap-2">
