@@ -2,10 +2,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Chart, registerables } from 'chart.js';
 import API from '../CustomHooks/MasterApiHooks/api';
+import { useTranslation } from 'react-i18next';
 
 Chart.register(...registerables);
 
 const BarChart = ({ projectId }) => {
+  const { t } = useTranslation();
   const chartRef = useRef(null);
   const [lotData, setLotData] = useState(null);
 
@@ -34,15 +36,15 @@ const BarChart = ({ projectId }) => {
     const chartInstance = new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: lotNumbers.map(num => `Lot ${num}`),
+        labels: lotNumbers.map(num => `${t("lot")} ${num}`),
         datasets: [
           {
-            label: 'Completion %',
+            label: t('completion%'),
             data: percentages,
             backgroundColor: '#29ce6a',
           },
           {
-            label: 'Remaining %',
+            label: t('remaining%'),
             data: percentages.map(value => 100 - value),
             backgroundColor: '#ff6384',
           },
@@ -55,30 +57,30 @@ const BarChart = ({ projectId }) => {
           x: {
             ticks: {
               color: '#000000', // Set x-axis label color to dark black
-            },
+            }
           },
           y: {
             beginAtZero: true,
             max: 100,
             ticks: {
               color: '#000000', // Set y-axis label color to dark black
-            },
-          },
+            }
+          }
         },
         plugins: {
           legend: {
             labels: {
               color: '#000000', // Set legend text color to dark black
-            },
-          },
-        },
-      },
+            }
+          }
+        }
+      }
     });
 
     return () => {
       chartInstance.destroy();
     };
-  }, [lotData]);
+  }, [lotData, t]);
 
   return <canvas ref={chartRef} style={{ width: '100%', height: '100%' }} />;
 };

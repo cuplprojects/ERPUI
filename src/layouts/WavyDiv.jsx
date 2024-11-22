@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { useStore } from 'zustand';
 import themeStore from './../store/themeStore';
 
@@ -6,9 +6,11 @@ const WavyDiv = () => {
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
   const customMid = cssClasses[1];
+  const wavyDivRef = useRef(null); // Added ref directly to the element
 
   return (
     <div
+      ref={wavyDivRef} // Added ref to the div element
       className={`fixed-bottom w-100 border ${customMid}`}
       style={{
         zIndex: "1",

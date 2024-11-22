@@ -9,7 +9,9 @@ import DispatchFormModal from "../../menus/DispatchFormModal";
 import { useStore } from 'zustand';
 import themeStore from '../../store/themeStore';
 import { useTranslation } from 'react-i18next';
-import { getProcessLotPercentages } from "../../CustomHooks/ApiServices/transacationService";
+import { getProcessPercentages } from "../../CustomHooks/ApiServices/transacationService";
+import { FaInfoCircle } from 'react-icons/fa';
+import API from "../../CustomHooks/MasterApiHooks/api";
 
 const DispatchPage = ({ projectId, processId, lotNo, fetchTransactions }) => {
   const { t } = useTranslation();
@@ -20,38 +22,40 @@ const DispatchPage = ({ projectId, processId, lotNo, fetchTransactions }) => {
   const [dispatchData, setDispatchData] = useState([]);
   const [dispatchModalVisible, setDispatchModalVisible] = useState(false);
   const [previousProcessStatus, setPreviousProcessStatus] = useState(false);
+  const [processDetailsModalVisible, setProcessDetailsModalVisible] = useState(false);
+  const [selectedDispatch, setSelectedDispatch] = useState(null);
+  const [processPercentages, setProcessPercentages] = useState([]);
+  const [projectProcesses, setProjectProcesses] = useState([]);
+
+  const fetchProjectProcesses = async () => {
+    try {
+      const response = await API.get(`/Processes`);
+      const mappedProcesses = response.data
+        .filter(process => process.id !== 10)
+        .map(process => ({
+          id: process.id,
+          name: process.name,
+          weightage: process.weightage,
+          status: process.status,
+          installedFeatures: process.installedFeatures,
+          featureNames: process.featureNames,
+          processType: process.processType,
+          rangeStart: process.rangeStart,
+          rangeEnd: process.rangeEnd
+        }));
+      setProjectProcesses(mappedProcesses);
+    } catch (error) {
+      console.error("Error fetching project processes:", error);
+    }
+  };
 
   const checkPreviousProcessStatus = async () => {
     try {
-      console.log('Checking process status for projectId:', projectId);
-      const { processes } = await getProcessLotPercentages(projectId);
-      console.log('Received processes:', processes);
-
-      // Find current lot's completion status across all processes
-      const currentLotStatus = processes.map(process => {
-        const currentLot = process.lots.find(lot => lot.lotNumber === lotNo);
-        return {
-          processId: process.processId,
-          isComplete: currentLot?.percentage === 100
-        };
-      });
-
-      // Check if current lot is complete in all processes except current and process 10
-      const isLotCompleteInAll = currentLotStatus.every(status => {
-        if (status.processId === processId || status.processId === 10) {
-          return true;
-        }
-        if (status.processId < processId) {
-          return status.isComplete;
-        }
-        return true;
-      });
-
-      console.log('Current lot complete in all previous processes?', isLotCompleteInAll);
-      setPreviousProcessStatus(isLotCompleteInAll);
+      const { processes } = await getProcessPercentages(projectId);
+      const filteredProcesses = processes.filter(process => process.processId !== 10);
+      setProcessPercentages(filteredProcesses);
     } catch (error) {
       console.error("Error checking process status:", error);
-      console.error("Error details:", error.message);
       setPreviousProcessStatus(false);
     }
   };
@@ -59,7 +63,21 @@ const DispatchPage = ({ projectId, processId, lotNo, fetchTransactions }) => {
   const fetchDispatchData = async () => {
     try {
       const response = await getAllDispatches(projectId, lotNo);
-      setDispatchData(response);
+      const mappedDispatchData = response.map(dispatch => ({
+        ...dispatch,
+        processes: processPercentages.map(process => {
+          const lotData = process.lots.find(lot => lot.lotNumber === dispatch.lotNo);
+          const projectProcess = projectProcesses.find(pp => pp.id === process.processId);
+          return {
+            processId: process.processId,
+            percentage: lotData?.percentage || 0,
+            sequence: projectProcess?.sequence,
+            weightage: projectProcess?.weightage,
+            name: projectProcess?.name
+          };
+        }).sort((a, b) => a.sequence - b.sequence)
+      }));
+      setDispatchData(mappedDispatchData);
     } catch (error) {
       console.error("Error fetching dispatch data:", error);
     }
@@ -67,10 +85,16 @@ const DispatchPage = ({ projectId, processId, lotNo, fetchTransactions }) => {
 
   useEffect(() => {
     if (projectId && processId && lotNo) {
-      fetchDispatchData();
       checkPreviousProcessStatus();
+      fetchProjectProcesses();
     }
   }, [projectId, processId, lotNo]);
+
+  useEffect(() => {
+    if (processPercentages.length > 0 && projectProcesses.length > 0) {
+      fetchDispatchData();
+    }
+  }, [processPercentages, projectProcesses]);
 
   const handleDispatchForm = () => {
     setDispatchModalVisible(true);
@@ -85,8 +109,19 @@ const DispatchPage = ({ projectId, processId, lotNo, fetchTransactions }) => {
   };
 
   const showConfirmModal = (dispatch) => {
+    const allProcessesComplete = processPercentages.find(process => 
+      process.lots.find(lot => lot.lotNumber === dispatch.lotNo)
+    )?.lots.find(lot => 
+      lot.lotNumber === dispatch.lotNo
+    )?.percentage === 100;
+
+    if (!allProcessesComplete) {
+      message.error(t("cannotCompleteDispatchAllProcessesIncomplete"));
+      return;
+    }
+
     Modal.confirm({
-      title: t("confirmStatusUpdate"),
+      title: t("confirmStatusUpdate"), 
       content: (
         <div>
           <p>{t("confirmDispatchComplete")}</p>
@@ -144,6 +179,11 @@ const DispatchPage = ({ projectId, processId, lotNo, fetchTransactions }) => {
     }
   };
 
+  const showProcessDetailsModal = (dispatch) => {
+    setSelectedDispatch(dispatch);
+    setProcessDetailsModalVisible(true);
+  };
+
   return (
     <Row className="mt-4 mb-4 justify-content-center">
       <Col xs={12} className="mb-3">
@@ -161,6 +201,9 @@ const DispatchPage = ({ projectId, processId, lotNo, fetchTransactions }) => {
         dispatchData.map((dispatch) => (
           <Col xs={12} md={6} key={dispatch.id}>
             <Card className={`mb-3 ${customLight}`} bordered>
+              <div className="d-flex justify-content-end">
+                <FaInfoCircle className="text-primary" size={20} title={t("processDetails")} onClick={() => showProcessDetailsModal(dispatch)} />
+              </div>
               <table className="table table-borderless m-0 table-bordered table-striped">
                 <tbody>
                   <tr>
@@ -203,7 +246,11 @@ const DispatchPage = ({ projectId, processId, lotNo, fetchTransactions }) => {
                       </span>
                     </td>
                   </tr>
-                  {!dispatch.status &&  (
+                  {!dispatch.status && processPercentages.some(process => 
+                    process.lots.some(lot => 
+                      lot.lotNumber === lotNo && lot.percentage === 100
+                    )
+                  ) && (
                     <tr>
                       <th>{t("actions")}</th>
                       <td>
@@ -240,6 +287,38 @@ const DispatchPage = ({ projectId, processId, lotNo, fetchTransactions }) => {
         lotNo={lotNo}
         fetchDispatchData={fetchDispatchData}
       />
+
+      <Modal
+        title={t("processDetails")}
+        open={processDetailsModalVisible}
+        footer={null}
+        onCancel={() => setProcessDetailsModalVisible(false)}
+      >
+        <div>
+          <div className="d-flex justify-content-around fw-bold">
+            <p>{t("lotNo")} {selectedDispatch?.lotNo}</p>
+            <p>{t("projectId")} {selectedDispatch?.projectId}</p>
+          </div>
+          <table className="table table-bordered table-sm">
+            <thead>
+              <tr>
+                <th className="text-center">{t("processId")}</th>
+                <th className="text-center">{t("processName")}</th>
+                <th className="text-center">{t("percentage")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {selectedDispatch?.processes?.map(process => (
+                <tr key={process.processId}>
+                  <td className="text-center">{process.processId}</td>
+                  <td className="ps-3">{process.name}</td>
+                  <td className="text-center">{process.percentage}%</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Modal>
     </Row>
   );
 };

@@ -40,6 +40,15 @@ const AuthService = {
     const { token } = useUserTokenStore.getState();
     console.log('AuthService: Current token:', token);
     return !!token;
+  },
+
+  unlockScreen: async (pin) => {
+    try {
+      const response = await API.post('/User/UnlockScreenByPin', { pin });
+      return response;
+    } catch (error) {
+      throw error;
+    }
   }
 };
 
