@@ -67,7 +67,7 @@ const CuDetailedAgGrid = ({ projectId }) => {
     cellStyle: { borderRight: '1px solid #ccc' }
   }), []);
 
-  const columnDefs = useMemo(() => [
+  const getColumnDefs = useCallback(() => [
     {
       headerName: t('sn'),
       valueGetter: (params) => params.node.rowIndex + 1,
@@ -79,8 +79,13 @@ const CuDetailedAgGrid = ({ projectId }) => {
     { field: 'totalCatch', headerName: t('totalCatches'), minWidth: 100, cellStyle: { textAlign: 'center', borderRight: '1px solid #ccc' } },
     { field: 'remainingCatch', headerName: t('remainingCatches'), minWidth: 100, cellStyle: { textAlign: 'center' } },
     { field: 'totalQuantity', headerName: t('totalQuantity'), minWidth: 95, cellStyle: { textAlign: 'center', borderRight: '1px solid #ccc' } },
-    // { field: 'remainingQuantity', headerName: 'Remaining Quantity', minWidth: 100, cellStyle: { textAlign: 'center', borderRight: '1px solid #ccc' } }
-  ], []);
+  ], [t]);
+
+  const [columnDefs, setColumnDefs] = useState(getColumnDefs());
+
+  useEffect(() => {
+    setColumnDefs(getColumnDefs());
+  }, [t, getColumnDefs]);
 
   const getRowClass = useCallback((params) => {
     return params.node.rowIndex % 2 === 0 ? 'striped-row' : '';
