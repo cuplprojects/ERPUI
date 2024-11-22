@@ -13,8 +13,7 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
   const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
-
-
+  const [projectName, setProjectName] = useState('');
   const [projects, setProjects] = useState([]);
   const [groups, setGroups] = useState([]);
   const [types, setTypes] = useState([]);
@@ -27,7 +26,6 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
   const [selectedType, setSelectedType] = useState(null);
   const [showSeriesFields, setShowSeriesFields] = useState(false);
   const [numberOfSeries, setNumberOfSeries] = useState(0);
-
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchText, setSearchText] = useState('');
@@ -57,7 +55,7 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
       setGroups(response.data);
     } catch (error) {
       console.error('Failed to fetch groups', error);
-      message.error(t('unableToFetchGroups')); 
+      message.error(t('unableToFetchGroups'));
     }
   };
 
@@ -72,25 +70,20 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
   };
 
   const handleAddProject = async (values) => {
-    const { name, status, description, numberOfSeries, seriesName, quantityThreshold } = values;
-
-    const existingProject = projects.find(
-      (project) => project.name.toLowerCase() === name.toLowerCase()
-    );
-    if (existingProject) {
-      message.error(t('projectNameAlreadyExists'));
+    if (!selectedGroup || !selectedType) {
+      message.error(t('pleaseSelectGroupAndType'));
       return;
     }
 
     const newProject = {
-      name,
-      status,
-      description,
-      groupId: selectedGroup?.id || 0,
-      typeId: selectedType?.typeId || 0,
-      noOfSeries: numberOfSeries,
-      seriesName,
-      quantityThreshold
+      name: projectName,
+      status: values.status || false,
+      description: values.description || '',
+      groupId: selectedGroup.id,
+      typeId: selectedType.typeId,
+      noOfSeries: values.numberOfSeries || 0,
+      seriesName: values.seriesName || '',
+      quantityThreshold: values.quantityThreshold || 0
     };
 
     try {
@@ -98,6 +91,9 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
       setProjects([...projects, response.data]);
       form.resetFields();
       setIsModalVisible(false);
+      setProjectName('');
+      setSelectedGroup(null);
+      setSelectedType(null);
       message.success(t('projectAddedSuccessfully'));
       setActiveTabKey("2");
       setSelectedProject(response.data.projectId);
@@ -122,7 +118,7 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
 
     try {
       await API.put(`/Project/${editingProject.projectId}`, updatedProject);
-      const updatedProjects = projects.map(p => 
+      const updatedProjects = projects.map(p =>
         p.projectId === editingProject.projectId ? updatedProject : p
       );
       setProjects(updatedProjects);
@@ -221,13 +217,37 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
     currentPage * pageSize
   );
 
+  const handleGroupChange = (event) => {
+    const selectedGroupId = parseInt(event.target.value, 10);
+    const selectedGroupObj = groups.find((group) => group.id === selectedGroupId);
+    setSelectedGroup(selectedGroupObj);
+    
+    if (selectedGroupObj && selectedType) {
+      setProjectName(`${selectedGroupObj.name}-${selectedType.types}`);
+    } else {
+      setProjectName('');
+    }
+  };
+
+  const handleTypeChange = (event) => {
+    const selectedTypeId = parseInt(event.target.value, 10);
+    const selectedTypeObj = types.find((type) => type.typeId === selectedTypeId);
+    setSelectedType(selectedTypeObj);
+    
+    if (selectedGroup && selectedTypeObj) {
+      setProjectName(`${selectedGroup.name}-${selectedTypeObj.types}`);
+    } else {
+      setProjectName('');
+    }
+  };
+
   return (
     <>
       <Row justify="space-between" align="middle" style={{ marginBottom: '20px' }}>
         <Col xs={24} sm={12} style={{ textAlign: 'left' }}>
-          <Button 
-            type="primary" 
-            className={`${customBtn} mt-1`} 
+          <Button
+            type="primary"
+            className={`${customBtn} mt-1`}
             onClick={() => setIsModalVisible(true)}
           >
             {t('addNewProject')}
@@ -255,7 +275,7 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
             total: filteredProjects.length,
             showSizeChanger: true,
             showTotal: (total, range) => `${range[0]}-${range[1]} ${t('of')} ${total} ${t('items')}`,
-            pageSizeOptions: ['10', '15','20']
+            pageSizeOptions: ['10', '15', '20']
           }}
           rowKey="projectId"
           bordered
@@ -277,6 +297,9 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
         onCancel={() => {
           setIsModalVisible(false);
           form.resetFields();
+          setProjectName('');
+          setSelectedGroup(null);
+          setSelectedType(null);
         }}
         form={form}
         onFinish={handleAddProject}
@@ -292,11 +315,18 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
         customLightBorder={customLightBorder}
         customDarkBorder={customDarkBorder}
         t={t}
-        handleGroupChange={setSelectedGroup}
-        handleTypeChange={setSelectedType}
+        handleGroupChange={handleGroupChange}
+        handleTypeChange={handleTypeChange}
         numberOfSeries={numberOfSeries}
         setNumberOfSeries={setNumberOfSeries}
+        projectName={projectName}
+        setProjectName={setProjectName}
+        selectedGroup={selectedGroup}
+        selectedType={selectedType}
       />
+
+
+
 
       <EditProjectModal
         visible={isEditModalVisible}

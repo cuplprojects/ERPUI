@@ -1,5 +1,5 @@
 import { Modal, Button, Form, Row, Col } from 'react-bootstrap';
-
+import { useState } from 'react';
 const AddProjectModal = ({
   visible,
   onCancel,
@@ -21,20 +21,29 @@ const AddProjectModal = ({
   handleGroupChange,
   handleTypeChange,
   numberOfSeries,
-  setNumberOfSeries
+  setNumberOfSeries,
+  projectName,
+  setProjectName,
+  selectedGroup,
+  selectedType
 }) => {
   const handleSubmit = (event) => {
     event.preventDefault();
+    form.setFieldsValue({
+      name: projectName,
+      group: selectedGroup?.id,
+      type: selectedType?.typeId
+    });
     form.validateFields().then(onFinish).catch((err) => console.log(err));
   };
-
+  // const [projectName, setProjectName] = useState('');
   return (
     <Modal show={visible} onHide={onCancel} size="lg" centered className='rounded'>
       <Modal.Header closeButton={false} className={`${customDark} ${customLightText}`}>
         <Modal.Title>{t('addNewProject')}</Modal.Title>
       </Modal.Header>
       <Modal.Body className={`${customLight}`}>
-        <Form onSubmit={handleSubmit}>
+        <Form id="addProjectForm" onSubmit={handleSubmit} form={form}>
           <Row className="mb-3">
             <Col xs={12}>
               <Form.Group controlId="group">
@@ -97,7 +106,13 @@ const AddProjectModal = ({
             <Col xs={12}>
               <Form.Group controlId="name">
                 <Form.Label className={customDarkText}>{t('projectName')}</Form.Label>
-                <Form.Control type="text" placeholder={t('enterProjectName')} />
+                <Form.Control
+                  type="text"
+                  placeholder={t('enterProjectName')}
+                  value={projectName}
+                  onChange={(e) => setProjectName(e.target.value)}
+                  disabled={!selectedGroup || !selectedType}
+                />
               </Form.Group>
             </Col>
           </Row>
@@ -134,7 +149,7 @@ const AddProjectModal = ({
         <Button variant="secondary" onClick={onCancel} className='custom-zoom-btn text-white'>
           {t('cancel')}
         </Button>
-        <Button variant="primary" type="submit" className={`${customLight} border-white ${customDarkText} custom-zoom-btn`}>
+        <Button variant="primary" type="submit" form="addProjectForm" className={`${customLight} border-white ${customDarkText} custom-zoom-btn`}>
           {t('save')}
         </Button>
       </Modal.Footer>
