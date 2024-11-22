@@ -261,7 +261,10 @@ const getProcesses = async () => {
   return (
     <div style={{ padding: '40px' }}>
       <Card style={{ boxShadow: '0 4px 8px rgba(0,0,0,0.1)', borderRadius: '10px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
+       
+                  <Divider className={`fs-3 ${customDarkText}`}>{t('existingTeams')}</Divider>
+
+         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
           <Button onClick={() => setIsModalVisible(true)} size="large" className={`${customBtn} ${customDark === "dark-dark" ? `border` : `border-0`}`}>
             {t('addTeam')}
           </Button>
@@ -284,7 +287,6 @@ const getProcesses = async () => {
 
         </div>
 
-        <Divider className={`fs-3 ${customDarkText}`}>{t('existingTeams')}</Divider>
         <div className="table-responsive">
           <Table
             columns={columns}

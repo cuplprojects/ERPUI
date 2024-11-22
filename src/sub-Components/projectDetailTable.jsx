@@ -315,7 +315,7 @@ const ProjectDetailsTable = ({
           }}
         />
       ),
-      responsive: ["sm"],
+      responsive: ["xs", "sm"], // Changed to include xs for phone view
     },
     {
       title: t("srNo"),
