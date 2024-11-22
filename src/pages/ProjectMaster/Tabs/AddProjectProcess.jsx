@@ -2,20 +2,36 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Table, Spin, message, Button, Collapse, Checkbox, Select, InputNumber } from 'antd';
 import API from '../../../CustomHooks/MasterApiHooks/api';
 import { SortableContainer, SortableElement, SortableHandle } from 'react-sortable-hoc';
+import { useTranslation } from 'react-i18next';
 
 const { Panel } = Collapse;
 const { Option } = Select;
 
-const DragHandle = SortableHandle(({ disabled }) => (
-  <span style={{ 
-    cursor: disabled ? 'not-allowed' : 'grab', 
-    marginRight: '8px', 
-    opacity: disabled ? 0.5 : 1,
-    display: disabled ? 'none' : 'inline' 
-  }} aria-hidden={disabled ? "true" : "false"}>⣿</span>
-));
+const DragHandle = SortableHandle(({ disabled }) => {
+  return (
+    <span style={{ 
+      cursor: disabled ? 'not-allowed' : 'grab', 
+      marginRight: '8px', 
+      opacity: disabled ? 0.5 : 1,
+      display: disabled ? 'none' : 'inline' 
+    }} aria-hidden={disabled ? "true" : "false"}>⣿</span>
+  );
+});
 
 const SortableRow = SortableElement(({ process, index, features, editingProcessId, editingFeatures, handleFeatureChange, handleSaveFeatures, handleCancelEdit, handleEdit, independentProcesses, disabled, handleThresholdChange }) => {
+  const { t } = useTranslation();
+
+// const DragHandle = SortableHandle(({ disabled }) => (
+//   <span style={{ 
+//     cursor: disabled ? 'not-allowed' : 'grab', 
+//     marginRight: '8px', 
+//     opacity: disabled ? 0.5 : 1,
+//     display: disabled ? 'none' : 'inline' 
+//   }} aria-hidden={disabled ? "true" : "false"}>⣿</span>
+// ));
+
+// const SortableRow = SortableElement(({ process, index, features, editingProcessId, editingFeatures, handleFeatureChange, handleSaveFeatures, handleCancelEdit, handleEdit, independentProcesses, disabled, handleThresholdChange }) => {
+
   return (
     <tr style={{ opacity: 1, background: 'white', margin: '10px' }}>
       <td>
@@ -65,11 +81,11 @@ const SortableRow = SortableElement(({ process, index, features, editingProcessI
       <td>
         {editingProcessId === process.id ? (
           <>
-            <Button onClick={() => handleSaveFeatures(process.id)} type="primary">Save</Button>
+            <Button onClick={() => handleSaveFeatures(process.id)} type="primary">{t("save")}</Button>
             <Button onClick={handleCancelEdit}>Cancel</Button>
           </>
         ) : (
-          <Button onClick={() => handleEdit(process)}>Edit</Button>
+          <Button onClick={() => handleEdit(process)}>{t("edit")}</Button>
         )}
       </td>
     </tr>
@@ -109,14 +125,14 @@ const AddProjectProcess = ({ selectedProject }) => {
   const [projectName, setProjectName] = useState('');
   const [isTransactionExists, setIsTransactionExists] = useState(false);
   const tableRef = useRef(null);
-
+  const { t } = useTranslation();
   useEffect(() => {
     const fetchRequiredProcesses = async (typeId) => {
       try {
         const response = await API.get(`/PaperTypes/${typeId}/RequiredProcesses`);
         setRequiredProcessIds(response.data.map(process => process.id));
       } catch (error) {
-        console.error('Unable to fetch required processes:', error);
+        console.error('unableToFetchRequiredProcessesPleaseTryAgainLater', error);
       }
     };
 
@@ -137,7 +153,7 @@ const AddProjectProcess = ({ selectedProject }) => {
           await fetchProjectProcesses(typeId);
         }
       } catch (error) {
-        console.error('Unable to fetch project processes:', error);
+        console.error('unableToFetchProjectProcessesPleaseTryAgainLater', error);
       } finally {
         setLoading(false);
       }
@@ -149,7 +165,7 @@ const AddProjectProcess = ({ selectedProject }) => {
         const independentOnly = response.data.filter(process => process.processType !== "Dependent");
         setProjectProcesses(calculatedWeightage(independentOnly));
       } catch (error) {
-        console.error('Unable to fetch project processes:', error);
+        console.error('unableToFetchProjectProcessesPleaseTryAgainLater', error);
       }
     };
 
@@ -158,7 +174,7 @@ const AddProjectProcess = ({ selectedProject }) => {
         const response = await API.get('/Features');
         setFeatures(response.data);
       } catch (error) {
-        console.error('Unable to fetch features:', error);
+        console.error('unableToFetchProjectProcessesPleaseTryAgainLater', error);
       }
     };
 
@@ -177,7 +193,7 @@ const AddProjectProcess = ({ selectedProject }) => {
         setIndependentProcesses(independentOnly);
 
       } catch (error) {
-        console.error('Unable to fetch processes:', error);
+        console.error('unableToFetchProjectProcessesPleaseTryAgainLater', error);
       }
     };
 
@@ -186,7 +202,7 @@ const AddProjectProcess = ({ selectedProject }) => {
         const response = await API.get(`/Transactions/exists/${selectedProject}`);
         setIsTransactionExists(response.data);
       } catch (error) {
-        console.error('Error checking transaction status:', error);
+        console.error('errorCheckingTransactionStatus', error);
       }
     };
 
@@ -272,9 +288,9 @@ const AddProjectProcess = ({ selectedProject }) => {
       if (removedProcessIds.length > 0) {
         await API.post('/ProjectProcess/DeleteProcessesFromProject', deleteData);
       }
-      message.success('Processes updated successfully!');
+      message.success('processesUpdatedSuccessfully');
     } catch (error) {
-      message.error('Error updating processes. Please try again.');
+      message.error('errorUpdatingProcessesPleaseTryAgain');
     } finally {
       setRemovedProcessIds([]);
     }
@@ -315,9 +331,9 @@ const AddProjectProcess = ({ selectedProject }) => {
           return process;
         });
       });
-      message.success('Process updated successfully!');
+      message.success(t('processUpdateSuccess'));
     } catch (error) {
-      message.error('Error updating process. Please try again.');
+      message.error(t('errorUpdatingProcessPleaseTryAgain'));
     } finally {
       setEditingProcessId(null);
       setEditingFeatures([]);
@@ -353,7 +369,7 @@ const AddProjectProcess = ({ selectedProject }) => {
         features: features,
         selectedProcessIds: selectedProcessIds
       };
-      console.log('Table data:', tableData);
+      // console.log('Table data:', tableData);
     }
   };
 
@@ -366,7 +382,7 @@ const AddProjectProcess = ({ selectedProject }) => {
       <h4>Project: {projectName}</h4>
 
       <Collapse defaultActiveKey={['1']}>
-        <Panel header="Manage Processes" key="1" inert={isTransactionExists ? "true" : undefined}>
+        <Panel header={`${t('manageProcess')}`} key="1" inert={isTransactionExists ? "true" : undefined}>
           {allProcesses.map(process => (
             <Checkbox
               key={process.id}
@@ -385,12 +401,12 @@ const AddProjectProcess = ({ selectedProject }) => {
         <table ref={tableRef} className="table table-striped table-bordered" style={{ minWidth: '800px', tableLayout: 'fixed', borderCollapse: 'collapse' }}>
           <thead>
             <tr>
-              <th style={{ padding: '5px', textAlign: 'left', width: '20%' }}>Process Name</th>
-              <th style={{ padding: '5px', textAlign: 'left', width: '25%' }}>Installed Features</th>
-              <th style={{ padding: '5px', textAlign: 'left', width: '15%' }}>Weightage</th>
-              <th style={{ padding: '5px', textAlign: 'left', width: '15%' }}>Relative Weightage</th>
-              <th style={{ padding: '5px', textAlign: 'left', width: '10%' }}>Threshold Qty</th>
-              <th style={{ padding: '5px', textAlign: 'left', width: '15%' }}>Action</th>
+              <th style={{ padding: '5px', textAlign: 'left', width: '20%' }}>{t("processName")}</th>
+              <th style={{ padding: '5px', textAlign: 'left', width: '25%' }}>{t("installedFeatures")}</th>
+              <th style={{ padding: '5px', textAlign: 'left', width: '15%' }}>{t("weightage")}</th>
+              <th style={{ padding: '5px', textAlign: 'left', width: '15%' }}>{t("relativeWeightage")}</th>
+              <th style={{ padding: '5px', textAlign: 'left', width: '10%' }}>{t("thresholdQty")}</th>
+              <th style={{ padding: '5px', textAlign: 'left', width: '15%' }}>{t("action")}</th>
             </tr>
           </thead>
           <SortableBody
@@ -430,7 +446,7 @@ const AddProjectProcess = ({ selectedProject }) => {
         style={{ marginTop: '16px' }}
         disabled={isTransactionExists}
       >
-        Submit Processes
+        {t("submitProcesses")}
       </Button>
 
       <style>

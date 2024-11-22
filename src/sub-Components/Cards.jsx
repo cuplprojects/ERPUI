@@ -1,11 +1,15 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { FaUpload, FaInfoCircle } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { encrypt } from "../Security/Security";
 import useUserDataStore from "../store/userDataStore";
 import { useTranslation } from "react-i18next";
+
 import { Tooltip as ReactTooltip } from "react-tooltip";
+
+import API from "../CustomHooks/MasterApiHooks/api";
+
 
 const Cards = ({ item, onclick, disableProject, activeCardStyle }) => {
   const navigate = useNavigate();
@@ -14,11 +18,33 @@ const Cards = ({ item, onclick, disableProject, activeCardStyle }) => {
   const supervisor = role.roleId === 5;
   const { t } = useTranslation();
 
+  const [hasProcesses, setHasProcesses] = useState(false);
+  // console.log(supervisor);
+
+
+  useEffect(() => {
+    if (item?.projectId) {
+      fetchProjectProcess();
+    }
+  }, [item?.projectId]);
+
   // Navigate to quantity sheet uploads and send projectId
   const handleUploadClick = (e) => {
     e.stopPropagation();
-    navigate(`/quantity-sheet-uploads/${encrypt(item.projectId)}`);
+    if (hasProcesses) {
+      navigate(`/quantity-sheet-uploads/${encrypt(item.projectId)}`);
+    }
   };
+
+  const fetchProjectProcess = async() => {
+    try {
+      const response = await API.get(`/ProjectProcess/GetProjectProcesses/${item.projectId}`);
+      setHasProcesses(response.data.length > 1);
+    } catch (error) {
+      console.error("Error fetching project processes:", error);
+      setHasProcesses(false);
+    }
+  }
 
   // Navigate to the dashboard and send projectId as a route parameter
   const handleCardClick = () => {
@@ -50,12 +76,15 @@ const Cards = ({ item, onclick, disableProject, activeCardStyle }) => {
       >
         <div className="header">
           <h4 className="project-name">{item.name}</h4>
+
           <div
             className="upload-button"
             onClick={handleUploadClick}
             data-tooltip-id="upload-tooltip"
             data-tooltip-content={t("Upload Quantity Sheet")}
           >
+
+ 
             <FaUpload />
           </div>
         </div>
@@ -159,12 +188,12 @@ const StyledWrapper = styled.div`
     background-color: rgba(0, 0, 0, 0.1);
   }
 
-  .info-button.disabled {
+  .info-button.disabled, .upload-button.disabled {
     opacity: 0.5;
     cursor: not-allowed;
   }
 
-  .info-button.disabled:hover {
+  .info-button.disabled:hover, .upload-button.disabled:hover {
     background-color: transparent;
   }
 

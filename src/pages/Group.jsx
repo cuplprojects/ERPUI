@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Input, Button, Switch, Form, message, Pagination } from 'antd';
+import { Table, Input, Button, Switch, Form, message, Pagination, Divider } from 'antd';
 import { Modal } from 'react-bootstrap';
 import API from '../CustomHooks/MasterApiHooks/api';
 import { useMediaQuery } from 'react-responsive';
@@ -264,7 +264,9 @@ const Group = () => {
       overflowX: 'auto'
     }}
       className={`rounded-2 ${customDark === "dark-dark" ? `${customDark} border text-white` : `${customDarkText}`}`}>
-      <h2 style={{ marginBottom: '20px', fontSize: 'clamp(1.5rem, 4vw, 2rem)' }} className=''>{t('groups')}</h2>
+      <Divider className={`fs-3 mt-0 ${customDarkText}`}>
+        {t("existingGroups")}
+      </Divider>
       <div style={{
         display: 'flex',
         flexWrap: 'wrap',

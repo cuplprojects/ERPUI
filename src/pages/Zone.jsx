@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Input, Button, Select, Table, Form, message, Pagination } from 'antd';
+import { Input, Button, Select, Table, Form, message, Pagination, Divider } from 'antd';
 import { Modal } from 'react-bootstrap';
 import API from '../CustomHooks/MasterApiHooks/api';
 import { useMediaQuery } from 'react-responsive';
@@ -29,6 +29,7 @@ const Zone = () => {
   const [searchText, setSearchText] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [editModalVisible, setEditModalVisible] = useState(false);
 
   const isMobile = useMediaQuery({ maxWidth: 767 });
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1023 });
@@ -85,6 +86,14 @@ const Zone = () => {
       return;
     }
 
+    const assignedMachines = zones.flatMap(zone => zone.machineId);
+    const alreadyAssignedMachines = machineId.filter(id => assignedMachines.includes(id));
+    if (alreadyAssignedMachines.length > 0) {
+      const machineNames = alreadyAssignedMachines.map(id => machine.find(m => m.machineId === id)?.machineName).join(', ');
+      message.error(t('The following machines are already assigned to other zones: {{machineNames}}', { machineNames }));
+      return;
+    }
+
     const newZone = {
       zoneNo,
       zoneDescription,
@@ -126,6 +135,14 @@ const Zone = () => {
       return;
     }
 
+    const assignedMachines = zones.flatMap(zone => zone.zoneId !== updatedZone.zoneId ? zone.machineId : []);
+    const alreadyAssignedMachines = updatedZone.machineId.filter(id => assignedMachines.includes(id));
+    if (alreadyAssignedMachines.length > 0) {
+      const machineNames = alreadyAssignedMachines.map(id => machine.find(m => m.machineId === id)?.machineName).join(', ');
+      message.error(t('The following machines are already assigned to other zones: {{machineNames}}', { machineNames }));
+      return;
+    }
+
     try {
       await API.put(`/Zones/${originalZone.zoneId}`, updatedZone);
       const updatedZones = [...zones];
@@ -140,6 +157,7 @@ const Zone = () => {
       setEditingIndex(null);
       setEditingZone({});
       setOriginalZone({});
+      setEditModalVisible(false);
     }
   };
 
@@ -147,6 +165,7 @@ const Zone = () => {
     setEditingIndex(null);
     setEditingZone({});
     setOriginalZone({});
+    setEditModalVisible(false);
   };
 
   const columns = [
@@ -159,112 +178,32 @@ const Zone = () => {
       title: t('Zone Name'),
       dataIndex: 'zoneNo',
       key: 'zoneNo',
-      render: (text, record, index) => (
-        editingIndex === index ? (
-          <Input
-            value={editingZone.zoneNo || record.zoneNo}
-            onChange={(e) => setEditingZone({ ...editingZone, zoneNo: e.target.value })}
-            onPressEnter={() => handleEditZone(index)}
-          />
-        ) : (
-          <span onClick={() => {
-            setEditingIndex(index);
-            setEditingZone({ zoneNo: record.zoneNo });
-            setOriginalZone(record);
-          }}>{text}</span>
-        )
-      ),
     },
     {
       title: t('Zone Description'),
       dataIndex: 'zoneDescription',
       key: 'zoneDescription',
-      render: (text, record, index) => (
-        editingIndex === index ? (
-          <Input.TextArea
-            value={editingZone.zoneDescription || record.zoneDescription}
-            onChange={(e) => setEditingZone({ ...editingZone, zoneDescription: e.target.value })}
-            onPressEnter={() => handleEditZone(index)}
-            style={{ resize: 'none' }}
-            rows={1}
-            cols={1}
-          />
-        ) : (
-          <span onClick={() => {
-            setEditingIndex(index);
-            setEditingZone({ zoneDescription: record.zoneDescription });
-            setOriginalZone(record);
-          }}>{text}</span>
-        )
-      ),
     },
     {
       title: t('Assign Camera Names'),
       dataIndex: 'cameraNames',
       key: 'cameraNames',
-      render: (cameraNames, record, index) => (
-        editingIndex === index ? (
-          <Select
-            mode="multiple"
-            value={editingZone.cameraIds || record.cameraIds}
-            onChange={(value) => setEditingZone({ ...editingZone, cameraIds: value })}
-          >
-            {camera.map(cam => (
-              <Option key={cam.cameraId} value={cam.cameraId} disabled={zones.some(zone => zone.zoneId !== record.zoneId && zone.cameraIds.includes(cam.cameraId))}>
-                {cam.name}
-              </Option>
-            ))}
-          </Select>
-        ) : (
-          <span onClick={() => {
-            setEditingIndex(index);
-            setEditingZone({ cameraIds: record.cameraIds });
-            setOriginalZone(record);
-          }}>{cameraNames.join(', ')}</span>
-        )
-      ),
+      render: (cameraNames) => cameraNames.join(', ')
     },
     {
       title: t('Assign Machine Names'),
       dataIndex: 'machineNames',
       key: 'machineNames',
-      render: (machineNames, record, index) => (
-        editingIndex === index ? (
-          <Select
-            mode="multiple"
-            value={editingZone.machineId || record.machineId}
-            onChange={(value) => setEditingZone({ ...editingZone, machineId: value })}
-
-          >
-            {machine.map(mach => (
-              <Option key={mach.machineId} value={mach.machineId}>
-                {mach.machineName}
-              </Option>
-            ))}
-          </Select>
-        ) : (
-          <span onClick={() => {
-            setEditingIndex(index);
-            setEditingZone({ machineId: record.machineId });
-            setOriginalZone(record);
-          }}>{machineNames.join(', ')}</span>
-        )
-      ),
+      render: (machineNames) => machineNames.join(', ')
     },
     {
       title: t('actions'),
       key: 'action',
       render: (_, record, index) => (
-        editingIndex === index ? (
-          <>
-
-          <div className='d-flex align-items-center gap-1'>
-            <Button type="link" icon={<SaveOutlined />} onClick={() => handleEditZone(index)} className={`${customBtn} d-flex align-items-center gap-1`}>{t('save')}</Button>
-            <Button type="link" icon={<CloseOutlined />} onClick={handleCancelEdit} className={`${customBtn} ms-2 d-flex align-items-center gap-1`}>{t('cancel')}</Button>
-          </div>
-          </>
-        ) : (
-          <Button type="link" icon={<EditOutlined />} onClick={() => {
+        <Button 
+          type="link" 
+          icon={<EditOutlined />} 
+          onClick={() => {
             setEditingIndex(index);
             setEditingZone({ 
               zoneNo: record.zoneNo, 
@@ -273,9 +212,12 @@ const Zone = () => {
               machineId: record.machineId
             });
             setOriginalZone(record);
-          }} className={`${customBtn} d-flex align-items-center gap-1`}>{t('edit')}</Button>
-
-        )
+            setEditModalVisible(true);
+          }} 
+          className={`${customBtn} d-flex align-items-center gap-1`}
+        >
+          {t('edit')}
+        </Button>
       ),
     },
   ];
@@ -300,8 +242,9 @@ const Zone = () => {
 
   return (
     <div style={{ padding: '20px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)', maxWidth: '100%', overflowX: 'auto' }} className={`${customDark === "dark-dark" ? `${customDark}` : ""}`}>
-      <h2 style={{ marginBottom: '20px', fontSize: isMobile ? '1.5rem' : '2rem' }} className={`${customDarkText}`}>{t('Zone Management')}</h2>
-
+      <Divider className={`fs-3 mt-0 ${customDarkText}`}>
+        {t('Zone Management')}
+      </Divider>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <Button onClick={showModal} className={`${customBtn}`}>
           {t('Add Zone')}
@@ -348,11 +291,14 @@ const Zone = () => {
         />
       </div>
 
+      {/* Add Zone Modal */}
       <Modal
         show={isModalVisible}
         onHide={handleCancel}
         centered
         size={isMobile ? "sm" : "lg"}
+        backdrop="static"
+        keyboard={false}
         className={`rounded-2 ${customDark === "" ? `${customDark}` : ''}  `}
       >
         <Modal.Header closeButton={false} className={`rounded-top-2 ${customDark} ${customLightText} ${customDark === "dark-dark" ? `border ` : `border-0`} border d-flex justify-content-between `}>
@@ -397,18 +343,117 @@ const Zone = () => {
             >
               <Select mode="multiple" placeholder={t("Select Machine")}>
                 {machine.map(m => (
-                  <Option key={m.machineId} value={m.machineId}>
+                  <Option 
+                    key={m.machineId} 
+                    value={m.machineId}
+                    disabled={zones.some(zone => zone.machineId.includes(m.machineId))}
+                  >
                     {m.machineName}
                   </Option>
                 ))}
               </Select>
             </Form.Item>
 
-            <Form.Item>
+            <Form.Item className="d-flex justify-content-end gap-2">
+              <Button onClick={handleCancel} className={customDark === "dark-dark" ? `${customLightBorder} text-white` : ''}>
+                {t('Cancel')}
+              </Button>
               <Button htmlType="submit" className={`${customBtn}`}>
                 {t('Add Zone')} 
               </Button>
             </Form.Item>
+          </Form>
+        </Modal.Body>
+      </Modal>
+
+      {/* Edit Zone Modal */}
+      <Modal
+        show={editModalVisible}
+        onHide={handleCancelEdit}
+        centered
+        size={isMobile ? "sm" : "lg"}
+        backdrop="static"
+        keyboard={false}
+        className={`rounded-2 ${customDark === "" ? `${customDark}` : ''}  `}
+      >
+        <Modal.Header closeButton={false} className={`rounded-top-2 ${customDark} ${customLightText} ${customDark === "dark-dark" ? `border ` : `border-0`} border d-flex justify-content-between `}>
+          <Modal.Title>{t('Edit Zone')}</Modal.Title>
+          <AiFillCloseSquare
+            size={35}
+            onClick={handleCancelEdit}
+            className={`rounded-2 ${customDark === "dark-dark" ? "text-dark bg-white " : `${customDark} custom-zoom-btn text-white  ${customDarkBorder}`}`}
+            aria-label="Close"
+            style={{ cursor: 'pointer', fontSize: '1.5rem' }}
+          />
+        </Modal.Header>
+        <Modal.Body className={`rounded-bottom-2 ${customMid} ${customDark === "dark-dark" ? `border border-top-0` : `border-0`}`}>
+          <Form layout="vertical">
+            <Form.Item 
+              label={<span className={customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`}>{t('Zone Name')} <span className="text-danger">*</span></span>}
+            >
+              <Input
+                value={editingZone.zoneNo}
+                onChange={(e) => setEditingZone({ ...editingZone, zoneNo: e.target.value })}
+                required
+              />
+            </Form.Item>
+            <Form.Item 
+              label={<span className={customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`}>{t('Zone Description')} <span className="text-danger">*</span></span>}
+            >
+              <Input.TextArea
+                value={editingZone.zoneDescription}
+                onChange={(e) => setEditingZone({ ...editingZone, zoneDescription: e.target.value })}
+                required
+              />
+            </Form.Item>
+            <Form.Item 
+              label={<span className={customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`}>{t('Assign Camera')} <span className="text-danger">*</span></span>}
+            >
+              <Select
+                mode="multiple"
+                value={editingZone.cameraIds}
+                onChange={(value) => setEditingZone({ ...editingZone, cameraIds: value })}
+                required
+              >
+                {camera.map(c => (
+                  <Option 
+                    key={c.cameraId} 
+                    value={c.cameraId}
+                    disabled={zones.some(zone => zone.zoneId !== originalZone.zoneId && zone.cameraIds.includes(c.cameraId))}
+                  >
+                    {c.name}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+            <Form.Item 
+              label={<span className={customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`}>{t('Assign Machine')}</span>}
+            >
+              <Select
+                mode="multiple"
+                value={editingZone.machineId}
+                onChange={(value) => setEditingZone({ ...editingZone, machineId: value })}
+              >
+                {machine.map(m => (
+                  <Option 
+                    key={m.machineId} 
+                    value={m.machineId}
+                    disabled={zones.some(zone => zone.zoneId !== originalZone.zoneId && zone.machineId.includes(m.machineId))}
+                  >
+                    {m.machineName}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+
+            <div className="d-flex justify-content-end gap-2">
+              <Button onClick={handleCancelEdit} className={customDark === "dark-dark" ? `${customLightBorder} text-white` : ''}>
+                {t('Cancel')}
+              </Button>
+              <Button onClick={() => handleEditZone(editingIndex)} className={`${customBtn}`}>
+                {t('Save')}
+              </Button>
+            </div>
           </Form>
         </Modal.Body>
       </Modal>
