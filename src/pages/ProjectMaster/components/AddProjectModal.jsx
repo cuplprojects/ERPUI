@@ -1,6 +1,4 @@
-import { Modal, Form, Input, Select, Switch, Row, Col, Button } from 'antd';
-
-const { Option } = Select;
+import { Modal, Button, Form, Row, Col } from 'react-bootstrap';
 
 const AddProjectModal = ({
   visible,
@@ -12,137 +10,136 @@ const AddProjectModal = ({
   showSeriesFields,
   validateSeriesInput,
   customDarkText,
+  customDark,
+  customMid,
+  customLight,
+  customBtn,
+  customLightText,
+  customLightBorder,
+  customDarkBorder,
   t,
   handleGroupChange,
   handleTypeChange,
   numberOfSeries,
   setNumberOfSeries
 }) => {
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    form.validateFields().then(onFinish).catch((err) => console.log(err));
+  };
+
   return (
-    <Modal
-      title={t('addNewProject')}
-      open={visible}
-      onCancel={onCancel}
-      footer={null}
-      width="95%"
-      style={{ maxWidth: '600px' }}
-    >
-      <Form form={form} onFinish={onFinish} layout="vertical" initialValues={{ status: true }}>
-        <Row gutter={[16, 0]}>
-          <Col xs={24} sm={24}>
-            <Form.Item
-              name="group"
-              label={t('group')}
-              rules={[{ required: true, message: t('pleaseSelectGroup') }]}
-            >
-              <Select onChange={handleGroupChange} placeholder={t('selectGroup')}>
-                {groups.map((group) => (
-                  <Option key={group.id} value={group.id}>{group.name}</Option>
-                ))}
-              </Select>
-            </Form.Item>
-          </Col>
-          <Col xs={24} sm={24}>
-            <Form.Item
-              name="type"
-              label={<span className={customDarkText}>{t('type')}</span>}
-              rules={[{ required: true, message: t('pleaseSelectType') }]}
-            >
-              <Select onChange={handleTypeChange} placeholder={t('selectType')}>
-                {types.map((type) => (
-                  <Option key={type.typeId} value={type.typeId}>{type.types}</Option>
-                ))}
-              </Select>
-            </Form.Item>
-          </Col>
-        </Row>
-        {showSeriesFields && (
-          <Row gutter={[16, 0]}>
-            <Col xs={24} sm={12}>
-              <Form.Item
-                name="numberOfSeries"
-                label={<span className={customDarkText}>{t('numberOfSeries')}</span>}
-                rules={[{ required: true, message: t('pleaseEnterNumberOfSeries') }]}
-              >
-                <Select 
-                  placeholder={t('selectNumberOfSeries')}
-                  onChange={(value) => setNumberOfSeries(value)}
-                >
-                  {[1,2,3,4,5,6,7,8].map(num => (
-                    <Option key={num} value={num}>{num}</Option>
+    <Modal show={visible} onHide={onCancel} size="lg" centered className='rounded'>
+      <Modal.Header closeButton={false} className={`${customDark} ${customLightText}`}>
+        <Modal.Title>{t('addNewProject')}</Modal.Title>
+      </Modal.Header>
+      <Modal.Body className={`${customLight}`}>
+        <Form onSubmit={handleSubmit}>
+          <Row className="mb-3">
+            <Col xs={12}>
+              <Form.Group controlId="group">
+                <Form.Label className={customDarkText}>{t('group')}</Form.Label>
+                <Form.Select onChange={handleGroupChange}>
+                  <option value="">{t('selectGroup')}</option>
+                  {groups.map((group) => (
+                    <option key={group.id} value={group.id}>
+                      {group.name}
+                    </option>
                   ))}
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item
-                name="seriesName"
-                label={<span className={customDarkText}>{t('seriesName')}</span>}
-                rules={[
-                  { required: true, message: t('pleaseEnterSeriesName') },
-                  { validator: validateSeriesInput }
-                ]}
-              >
-                <Input 
-                  placeholder={t('enterSeriesName')}
-                  maxLength={numberOfSeries}
-                  style={{ textTransform: 'uppercase' }}
-                />
-              </Form.Item>
+                </Form.Select>
+              </Form.Group>
             </Col>
           </Row>
-        )}
-        <Row gutter={[16, 0]}>
-          <Col xs={24}>
-            <Form.Item
-              name="name"
-              label={<span className={customDarkText}>{t('projectName')}</span>}
-              rules={[{ required: true, message: t('pleaseEnterProjectName') }]}
-            >
-              <Input placeholder={t('enterProjectName')} />
-            </Form.Item>
-          </Col>
-          <Col xs={24}>
-            <Form.Item
-              name="description"
-              label={<span className={customDarkText}>{t('description')}</span>}
-            >
-              <Input.TextArea rows={4} placeholder={t('enterDescription')} />
-            </Form.Item>
-          </Col>
-          <Col xs={24}>
-            <Form.Item
-              name="quantityThreshold"
-              label={<span className={customDarkText}>{t('quantityThreshold')}</span>}
-              tooltip={t('quantityThresholdTooltip')}
-            >
-              <Input type="number" min={0} placeholder={t('enterQuantityThreshold')} />
-            </Form.Item>
-          </Col>
-          <Col xs={24}>
-            <Form.Item
-              name="status"
-              label={t('status')}
-              valuePropName="checked"
-            >
-              <Switch />
-            </Form.Item>
-          </Col>
-        </Row>
-        <Row justify="end" gutter={[8, 0]}>
-          <Col>
-            <Button onClick={onCancel}>{t('cancel')}</Button>
-          </Col>
-          <Col>
-            <Button type="primary" htmlType="submit">
-              {t('save')}
-            </Button>
-          </Col>
-        </Row>
-      </Form>
+          <Row className="mb-3">
+            <Col xs={12}>
+              <Form.Group controlId="type">
+                <Form.Label className={customDarkText}>{t('type')}</Form.Label>
+                <Form.Select onChange={handleTypeChange}>
+                  <option value="">{t('selectType')}</option>
+                  {types.map((type) => (
+                    <option key={type.typeId} value={type.typeId}>
+                      {type.types}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+            </Col>
+          </Row>
+          {showSeriesFields && (
+            <Row className="mb-3">
+              <Col xs={6}>
+                <Form.Group controlId="numberOfSeries">
+                  <Form.Label className={customDarkText}>{t('numberOfSeries')}</Form.Label>
+                  <Form.Select onChange={(e) => setNumberOfSeries(e.target.value)}>
+                    <option value="">{t('selectNumberOfSeries')}</option>
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
+                      <option key={num} value={num}>
+                        {num}
+                      </option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+              <Col xs={6}>
+                <Form.Group controlId="seriesName">
+                  <Form.Label className={customDarkText}>{t('seriesName')}</Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder={t('enterSeriesName')}
+                    maxLength={numberOfSeries}
+                    style={{ textTransform: 'uppercase' }}
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
+          )}
+          <Row className="mb-3">
+            <Col xs={12}>
+              <Form.Group controlId="name">
+                <Form.Label className={customDarkText}>{t('projectName')}</Form.Label>
+                <Form.Control type="text" placeholder={t('enterProjectName')} />
+              </Form.Group>
+            </Col>
+          </Row>
+          <Row className="mb-3">
+            <Col xs={12}>
+              <Form.Group controlId="description">
+                <Form.Label className={customDarkText}>{t('description')}</Form.Label>
+                <Form.Control as="textarea" rows={2} placeholder={t('enterDescription')} />
+              </Form.Group>
+            </Col>
+          </Row>
+          <Row className="mb-3">
+            <Col xs={12}>
+              <Form.Group controlId="quantityThreshold">
+                <Form.Label className={customDarkText}>{t('quantityThreshold')}</Form.Label>
+                <Form.Control
+                  type="number"
+                  min={0}
+                  placeholder={t('enterQuantityThreshold')}
+                />
+              </Form.Group>
+            </Col>
+          </Row>
+          <Row className="mb-3">
+            <Col xs={12}>
+              <Form.Group controlId="status" className={customDarkText}>
+                <Form.Check type="switch" label={t('status')} />
+              </Form.Group>
+            </Col>
+          </Row>
+        </Form>
+      </Modal.Body>
+      <Modal.Footer className={`${customDark}`}>
+        <Button variant="secondary" onClick={onCancel} className='custom-zoom-btn text-white'>
+          {t('cancel')}
+        </Button>
+        <Button variant="primary" type="submit" className={`${customLight} border-white ${customDarkText} custom-zoom-btn`}>
+          {t('save')}
+        </Button>
+      </Modal.Footer>
     </Modal>
   );
 };
 
 export default AddProjectModal;
-

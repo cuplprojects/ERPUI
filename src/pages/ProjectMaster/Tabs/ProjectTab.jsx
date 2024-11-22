@@ -12,7 +12,8 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
   const { t } = useTranslation();
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
-  const [customDark, customMid, customLight, customBtn, customDarkText] = cssClasses;
+  const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
+
 
   const [projects, setProjects] = useState([]);
   const [groups, setGroups] = useState([]);
@@ -283,6 +284,13 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
         types={types}
         showSeriesFields={showSeriesFields}
         customDarkText={customDarkText}
+        customDark={customDark}
+        customMid={customMid}
+        customLight={customLight}
+        customBtn={customBtn}
+        customLightText={customLightText}
+        customLightBorder={customLightBorder}
+        customDarkBorder={customDarkBorder}
         t={t}
         handleGroupChange={setSelectedGroup}
         handleTypeChange={setSelectedType}
