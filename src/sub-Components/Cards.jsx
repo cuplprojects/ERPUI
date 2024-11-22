@@ -5,16 +5,22 @@ import { useNavigate } from "react-router-dom";
 import { encrypt } from "../Security/Security";
 import useUserDataStore from "../store/userDataStore";
 import { useTranslation } from "react-i18next";
+
+import { Tooltip as ReactTooltip } from "react-tooltip";
+
 import API from "../CustomHooks/MasterApiHooks/api";
 
-const Cards = ({ item, onclick, disableProject }) => {
+
+const Cards = ({ item, onclick, disableProject, activeCardStyle }) => {
   const navigate = useNavigate();
   const { userData } = useUserDataStore();
   const role = userData?.role;
   const supervisor = role.roleId === 5;
   const { t } = useTranslation();
+
   const [hasProcesses, setHasProcesses] = useState(false);
-  console.log(supervisor);
+  // console.log(supervisor);
+
 
   useEffect(() => {
     if (item?.projectId) {
@@ -42,7 +48,7 @@ const Cards = ({ item, onclick, disableProject }) => {
 
   // Navigate to the dashboard and send projectId as a route parameter
   const handleCardClick = () => {
-    if(!disableProject){
+    if (!disableProject) {
       return;
     }
     if (supervisor) {
@@ -55,7 +61,7 @@ const Cards = ({ item, onclick, disableProject }) => {
   // Handle info button click
   const handleInfoClick = (e) => {
     e.stopPropagation();
-    if(!disableProject){
+    if (!disableProject) {
       return;
     }
     onclick(item);
@@ -63,24 +69,50 @@ const Cards = ({ item, onclick, disableProject }) => {
 
   return (
     <StyledWrapper>
-      <div className="card" onClick={handleCardClick}>
+      <div
+        className="card"
+        style={{ backgroundColor: activeCardStyle ? '#8ca2ae' : 'initial' }}
+        onClick={handleCardClick}
+      >
         <div className="header">
           <h4 className="project-name">{item.name}</h4>
-          <div className={`upload-button ${!hasProcesses ? 'disabled' : ''}`} onClick={handleUploadClick}>
+
+          <div
+            className="upload-button"
+            onClick={handleUploadClick}
+            data-tooltip-id="upload-tooltip"
+            data-tooltip-content={t("Upload Quantity Sheet")}
+          >
+
+ 
             <FaUpload />
           </div>
         </div>
 
-        <p>{item.completionPercentage}% {t('completed')}</p>
-        <p>{item.remainingPercentage}% {t('remaining')}</p>
-        
+        <p>{item.completionPercentage}% {t("completed")}</p>
+        <p>{item.remainingPercentage}% {t("remaining")}</p>
+
         <div
-          className={`info-button ${!disableProject ? 'disabled' : ''}`}
+          className={`info-button ${!disableProject ? "disabled" : ""}`}
           onClick={handleInfoClick}
+          data-tooltip-id="info-tooltip"
+          data-tooltip-content={t("View Project Info")}
         >
           <FaInfoCircle />
         </div>
       </div>
+      <ReactTooltip
+        id="upload-tooltip"
+        place="top"
+        effect="solid"
+        className="custom-tooltip"
+      />
+      <ReactTooltip
+        id="info-tooltip"
+        place="top"
+        effect="solid"
+        className="custom-tooltip"
+      />
     </StyledWrapper>
   );
 };
@@ -127,7 +159,8 @@ const StyledWrapper = styled.div`
     transform: scale(0.95) rotateZ(1.7deg);
   }
 
-  .upload-button, .info-button {
+  .upload-button,
+  .info-button {
     position: absolute;
     cursor: pointer;
     transition: background-color 0.3s ease;
@@ -150,7 +183,8 @@ const StyledWrapper = styled.div`
     border-radius: 50%;
   }
 
-  .upload-button:hover, .info-button:hover {
+  .upload-button:hover,
+  .info-button:hover {
     background-color: rgba(0, 0, 0, 0.1);
   }
 
@@ -168,6 +202,18 @@ const StyledWrapper = styled.div`
     word-wrap: break-word;
     max-width: 90%;
     margin: 10px 0;
+  }
+
+  /* Custom Tooltip Styling */
+  .custom-tooltip {
+    background-color: #333;
+    border-radius: 8px; /* Rounded corners */
+    font-size: 12px; /* Smaller text */
+    font-weight: 400; /* Reduced text weight */
+    padding: 5px 10px;
+    color: white;
+    text-align: center;
+    transition: all 0.3s ease;
   }
 `;
 
