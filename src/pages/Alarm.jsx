@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Input, Button,  Modal, Spin, Divider } from 'antd';
+
+import { Table, Input, Button, Spin } from 'antd';
+import { Modal } from 'react-bootstrap';
+
 import { v4 as uuidv4 } from 'uuid'; 
 import API from '../CustomHooks/MasterApiHooks/api';
 import { useTranslation } from 'react-i18next';
@@ -183,9 +186,8 @@ const AlarmMaster = () => {
   return (
     <>
     <div style={{ padding: '20px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)' }}>
-    <Divider className={`fs-3 mt-0 ${customDarkText}`}>
-        {t("existingAlarms")}
-    </Divider>
+      <h2 style={{ marginBottom: '20px', textAlign: 'left' }} className={`${customDark === "dark-dark" ? "" : customDarkText} `}>{t('alarmMaster')}</h2>
+
       <div className="d-flex justify-content-between align-items-center mb-3">
         <Button type="primary" onClick={() => setIsModalVisible(true)} className={`${customBtn} d-flex align-items-center justify-content-center gap-2 custom-zoom-btn`}>{t('addNewAlarm')}</Button>
         <div className="d-flex align-items-center" style={{ width: '300px' }}>
@@ -194,7 +196,7 @@ const AlarmMaster = () => {
             value={searchText}
             onChange={(e) => handleSearch(e.target.value)}
             allowClear
-            className={`rounded-2 ${customDark === "dark-dark" ? `${customLightBorder} text-dark` : customDarkText} ${customDarkBorder} rounded-end-0`}
+            className={`rounded-2 ${customDark === "dark-dark" ? `border border-dark text-dark` : customDarkText} rounded-end-0`}
           />
           <Button
             className={`rounded-2 ${customBtn} ${customDark === "dark-dark" ? 'border-white' : 'border-0'} rounded-start-0`}
@@ -229,22 +231,25 @@ const AlarmMaster = () => {
       )}
 
       <Modal
-        title={t('addNewAlarm')}
-        open={isModalVisible}
-        onCancel={() => setIsModalVisible(false)}
-        footer={null}
+        show={isModalVisible}
+        onHide={() => setIsModalVisible(false)}
       >
-        <Input
-          placeholder={t('typeAlarmMessage')}
-          value={newAlarmMessage}
-          onChange={(e) => setNewAlarmMessage(e.target.value)}
-          onPressEnter={handleAddAlarm}
-        />
-        {errorMessage && <div style={{ color: 'red', marginTop: '8px' }}>{errorMessage}</div>}
-        <div style={{ textAlign: 'right', marginTop: '16px' }}>
-          <Button onClick={() => setIsModalVisible(false)} style={{ marginRight: '8px' }}>{t('cancel')}</Button>
-          <Button type="primary" onClick={handleAddAlarm}>{t('add')}</Button>
-        </div>
+        <Modal.Header closeButton={false} className={`${customDark} ${customLightText}`}>
+          <Modal.Title>{t('addNewAlarm')}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className={`${customLight}`}>
+          <Input
+            placeholder={t('typeAlarmMessage')}
+            value={newAlarmMessage}
+            onChange={(e) => setNewAlarmMessage(e.target.value)}
+            onPressEnter={handleAddAlarm}
+          />
+          {errorMessage && <div style={{ color: 'red', marginTop: '8px' }}>{errorMessage}</div>}
+        </Modal.Body>
+        <Modal.Footer className={`${customDark} `}>
+          <Button onClick={() => setIsModalVisible(false)} className={`${customBtn} border`}>{t('cancel')}</Button>
+          <Button type="primary" onClick={handleAddAlarm} className={`${customBtn} border`}>{t('add')}</Button>
+        </Modal.Footer>
       </Modal>
     </div>
    
