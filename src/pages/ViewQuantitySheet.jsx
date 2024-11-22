@@ -473,9 +473,11 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
                                     {t('transferCatch')}
                                 </Button>
                             )}
-                            <Button
-                                onClick={() => setShowNewRow(prev => !prev)}
-                                type="primary"
+                            
+                            <Button 
+                                onClick={() => setShowNewRow(prev => !prev)} 
+                                type="primary" 
+
                                 className={`${customBtn} ${customDark === "dark-dark" ? `border` : `border-0`}`}
                                 disabled={dispatchedLots.includes(selectedLotNo)}
                             >
