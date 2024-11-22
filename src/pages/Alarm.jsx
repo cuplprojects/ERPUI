@@ -183,7 +183,7 @@ const AlarmMaster = () => {
   return (
     <>
     <div style={{ padding: '20px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)' }}>
-      <h2 style={{ marginBottom: '20px', textAlign: 'center' }}>{t('alarmMaster')}</h2>
+      <h2 style={{ marginBottom: '20px', textAlign: 'left' }} className={`${customDark === "dark-dark" ? "" : customDarkText} `}>{t('alarmMaster')}</h2>
       <div className="d-flex justify-content-between align-items-center mb-3">
         <Button type="primary" onClick={() => setIsModalVisible(true)} className={`${customBtn} d-flex align-items-center justify-content-center gap-2 custom-zoom-btn`}>{t('addNewAlarm')}</Button>
         <div className="d-flex align-items-center" style={{ width: '300px' }}>
@@ -192,7 +192,7 @@ const AlarmMaster = () => {
             value={searchText}
             onChange={(e) => handleSearch(e.target.value)}
             allowClear
-            className={`rounded-2 ${customDark === "dark-dark" ? `${customLightBorder} text-dark` : customDarkText} ${customDarkBorder} rounded-end-0`}
+            className={`rounded-2 ${customDark === "dark-dark" ? `border border-dark text-dark` : customDarkText} rounded-end-0`}
           />
           <Button
             className={`rounded-2 ${customBtn} ${customDark === "dark-dark" ? 'border-white' : 'border-0'} rounded-start-0`}
