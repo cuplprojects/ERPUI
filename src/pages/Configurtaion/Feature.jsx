@@ -19,6 +19,7 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
     const [isEditingFeature, setIsEditingFeature] = useState(false);
     const [editingFeatureId, setEditingFeatureId] = useState(null);
     const [featureName, setFeatureName] = useState('');
+    const [searchText, setSearchText] = useState('');
     const [pagination, setPagination] = useState({
         current: 1,
         pageSize: 5,
@@ -121,6 +122,14 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
             handleAddFeature();
         }
     };
+
+    const handleSearch = (value) => {
+        setSearchText(value);
+    };
+
+    const filteredFeatures = features.filter(feature =>
+        feature.name.toLowerCase().includes(searchText.toLowerCase())
+    );
 
     const featureColumns = [
         {
