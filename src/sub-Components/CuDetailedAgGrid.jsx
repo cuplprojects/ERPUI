@@ -5,11 +5,13 @@ import '@ag-grid-community/styles/ag-theme-quartz.css';
 import { ClientSideRowModelModule } from '@ag-grid-community/client-side-row-model';
 import { ModuleRegistry } from '@ag-grid-community/core';
 import API from '../CustomHooks/MasterApiHooks/api';
+import { useTranslation } from 'react-i18next';
 
 // Register AG Grid Modules
 ModuleRegistry.registerModules([ClientSideRowModelModule]);
 
 const CuDetailedAgGrid = ({ projectId }) => {
+  const { t } = useTranslation();
   const containerStyle = useMemo(() => ({ width: '100%', height: '100%' }), []);
   const gridStyle = useMemo(() => ({ height: '100%', width: '100%' }), []);
 
@@ -65,20 +67,25 @@ const CuDetailedAgGrid = ({ projectId }) => {
     cellStyle: { borderRight: '1px solid #ccc' }
   }), []);
 
-  const columnDefs = useMemo(() => [
+  const getColumnDefs = useCallback(() => [
     {
-      headerName: 'S.No',
+      headerName: t('sn'),
       valueGetter: (params) => params.node.rowIndex + 1,
       minWidth: 70,
       maxWidth: 90,
-      cellStyle: { textAlign: 'center', borderRight: '1px solid #ccc', borderLeft: '1px solid #ccc' }
+      cellStyle: { textAlign: t('center'), borderRight: '1px solid #ccc', borderLeft: '1px solid #ccc' }
     },
-    { field: 'processName', headerName: 'Processes', minWidth: 150, cellStyle: { borderRight: '1px solid #ccc' } },
-    { field: 'totalCatch', headerName: 'Total Catch', minWidth: 100, cellStyle: { textAlign: 'center', borderRight: '1px solid #ccc' } },
-    { field: 'remainingCatch', headerName: 'Remaining Catch', minWidth: 100, cellStyle: { textAlign: 'center' } },
-    { field: 'totalQuantity', headerName: 'Total Quantity', minWidth: 95, cellStyle: { textAlign: 'center', borderRight: '1px solid #ccc' } },
-    // { field: 'remainingQuantity', headerName: 'Remaining Quantity', minWidth: 100, cellStyle: { textAlign: 'center', borderRight: '1px solid #ccc' } }
-  ], []);
+    { field: 'processName', headerName: t('processes'), minWidth: 150, cellStyle: { borderRight: '1px solid #ccc' } },
+    { field: 'totalCatch', headerName: t('totalCatches'), minWidth: 100, cellStyle: { textAlign: 'center', borderRight: '1px solid #ccc' } },
+    { field: 'remainingCatch', headerName: t('remainingCatches'), minWidth: 100, cellStyle: { textAlign: 'center' } },
+    { field: 'totalQuantity', headerName: t('totalQuantity'), minWidth: 95, cellStyle: { textAlign: 'center', borderRight: '1px solid #ccc' } },
+  ], [t]);
+
+  const [columnDefs, setColumnDefs] = useState(getColumnDefs());
+
+  useEffect(() => {
+    setColumnDefs(getColumnDefs());
+  }, [t, getColumnDefs]);
 
   const getRowClass = useCallback((params) => {
     return params.node.rowIndex % 2 === 0 ? 'striped-row' : '';

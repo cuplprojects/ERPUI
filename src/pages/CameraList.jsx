@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Input, Form, Card, Row, Col, message, Pagination, Spin } from 'antd';
+import { Table, Button, Input, Form, Card, Row, Col, message, Pagination, Spin, Switch } from 'antd';
 import { Modal } from 'react-bootstrap';
 import API from '../CustomHooks/MasterApiHooks/api';
 import { useStore } from 'zustand';
@@ -19,6 +19,7 @@ const CameraList = () => {
   const [form] = Form.useForm();
   const [editingIndex, setEditingIndex] = useState(null);
   const [editingName, setEditingName] = useState('');
+  const [editingStatus, setEditingStatus] = useState(true);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [sortOrder, setSortOrder] = useState('ascend');
@@ -56,7 +57,7 @@ const CameraList = () => {
 
   const handleOk = () => {
     form.validateFields().then(async (values) => {
-      const newCamera = { name: values.name };
+      const newCamera = { name: values.name, isCamera : values.status};
       try {
         const response = await API.post('/Cameras', newCamera);
         setCameras([...cameras, response.data]);
@@ -73,6 +74,7 @@ const CameraList = () => {
     const updatedCamera = {
       ...cameras[index],
       name: editingName,
+      isCamera: editingStatus
     };
 
     try {
@@ -82,6 +84,7 @@ const CameraList = () => {
       setCameras(updatedCameras);
       setEditingIndex(null);
       setEditingName('');
+      setEditingStatus(true);
       message.success(t('Camera updated successfully!'));
     } catch (error) {
       message.error(t('Failed to update camera'));
@@ -143,6 +146,20 @@ const CameraList = () => {
       width: '70%',
     },
     {
+      title: t('Status'),
+      key: 'status',
+      render: (_, record, index) => (
+        editingIndex === index ? (
+          <Switch
+            checked={editingStatus}
+            onChange={(checked) => setEditingStatus(checked)}
+          />
+        ) : (
+          <span>{record.isCamera ? t('Active') : t('Inactive')}</span>
+        )
+      ),
+    },
+    {
       title: t('actions'),
       key: 'action',
       render: (_, record, index) => (
@@ -162,6 +179,7 @@ const CameraList = () => {
           <Button type="link" icon={<EditOutlined />} onClick={() => {
             setEditingIndex(index);
             setEditingName(record.name);
+            setEditingStatus(record.isCamera);
           }} className={`${customBtn} text-white me-1 d-flex align-items-center gap-1`}>{t('edit')}</Button>
 
         )
@@ -265,6 +283,14 @@ const CameraList = () => {
             >
               <Input placeholder={t('Enter camera name')} />
             </Form.Item>
+            <Form.Item
+                name="status"
+                label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-5 `}>{t('status')}</span>}
+                valuePropName="checked"
+                initialValue={true}
+              >
+                <Switch checkedChildren={t('active')} unCheckedChildren={t('inactive')} className="" />
+              </Form.Item>
             <Form.Item>
               <Button type="primary" htmlType="submit" onClick={handleOk} className={`rounded-2 ${customBtn} ${customDark === "dark-dark" ? `` : `border-0`} custom-zoom-btn`} size="small">
                 {t('submit')}
