@@ -153,13 +153,21 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
                     
                 });
                 setProcessModalVisible(false);
-                await fetchProcesses(); // Refresh the processes list
-                return;
-            }
+await fetchProcesses();
+await fetchFeatures(); // Refresh the features list
+return; // No further processing needed
 
-            let processWithKey = response.data;
-            if (typeof processWithKey !== 'object' || Array.isArray(processWithKey)) {
-                processWithKey = { id: processWithKey, key: processWithKey.toString() };
+if (response && response.data) {
+    let processWithKey = response.data;
+    if (typeof processWithKey !== 'object' || Array.isArray(processWithKey)) {
+        console.warn('Unexpected response data type:', typeof processWithKey);
+        processWithKey = { id: processWithKey, key: processWithKey.toString() }; // Handle string responses
+    }
+} else {
+    console.error('Invalid response structure:', response);
+    throw new Error('Invalid response structure: No data found');
+}
+
             }
 
             processWithKey.key = processWithKey.id ? processWithKey.id.toString() : '';
@@ -309,7 +317,9 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
                 </Modal.Header>
                 <Modal.Body className={`${customLight}`}>
                     <div style={{ marginBottom: '16px' }}>
+
                         <label htmlFor="processName" className={`${customDarkText}`}><span className="text-danger">*</span>{t('.processNameLabel')}:</label>
+
                         <Input
                             id="processName"
                             placeholder={t('processName')}
@@ -320,7 +330,9 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
                         />
                     </div>
                     <div style={{ marginBottom: '16px' }}>
+
                         <label htmlFor="processWeightage" className={`${customDarkText}`}><span className="text-danger">*</span>{t('weightageLabel')}:</label>
+
                         <Input
                             id="processWeightage"
                             placeholder={t('weightage')}
@@ -332,7 +344,9 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
                         />
                     </div>
                     <div style={{ marginBottom: '16px' }}>
+
                         <label htmlFor="processType" className={`${customDarkText}`}><span className="text-danger">*</span>{t('processTypeLabel')}:</label>
+
                         <Select
                             id="processType"
                             placeholder={t('processType')}
@@ -356,6 +370,7 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
                     </div>
                     <div style={{ marginBottom: '16px' }}>
                         <label htmlFor="processStatus" className={`${customDarkText}`}><span className="text-danger">*</span>{t('statusLabel')}:</label>
+
                         <Switch
                             id="processStatus"
                             checked={processStatus}
@@ -368,6 +383,7 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
                     </div>
                     <div style={{ marginBottom: '16px' }}>
                         <label htmlFor="processInstalledFeatures" className={`${customDarkText}`}><span className="text-danger">*</span>{t('installedFeaturesLabel')}:</label>
+
                         <Select
                             id="processInstalledFeatures"
                             mode="multiple"
@@ -387,7 +403,9 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
                     {processType === 'Independent' && (
                         <div>
                             <div style={{ marginBottom: '16px' }}>
+
                                 <label htmlFor="rangeStart" className={`${customDarkText}`}><span className="text-danger">*</span>{t('rangeStartLabel')}:</label>
+
                                 <Select
                                     id="rangeStart"
                                     placeholder={
@@ -408,7 +426,9 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
                                 </Select>
                             </div>
                             <div style={{ marginBottom: '16px' }}>
+
                                 <label htmlFor="rangeEnd" className={`${customDarkText}`}><span className="text-danger">*</span>{t('rangeEndLabel')}:</label>
+
                                 <Select
                                     id="rangeEnd"
                                     placeholder={

@@ -32,6 +32,7 @@ const ProjectUserAllocation = ({ selectedProject, activeKey }) => {
   const fetchUsers = async () => {
     try {
       const response = await API.get("/User");
+      console.log(response);
       const filteredUsers = response.data.filter(user => user.roleId === 5 || user.roleId === 1);
       setUsers(filteredUsers);
     } catch (error) {
@@ -124,7 +125,7 @@ const ProjectUserAllocation = ({ selectedProject, activeKey }) => {
         >
           {users.map(user => (
             <Option key={user.userId} value={user.userId}>
-              {user.userName}
+              {user.firstName} {user.lastName}
             </Option>
           ))}
         </Select>

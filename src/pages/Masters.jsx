@@ -29,7 +29,7 @@ import { useStore } from 'zustand';
 import { hasPermission } from '../CustomHooks/Services/permissionUtils';
 import { useTranslation } from 'react-i18next';
 import SecurityQuestions from './SecurityQuestions';
-import Teams from './Team';
+import Teams from './team';
 
 const Sidebar = () => {
   const { t } = useTranslation();
@@ -80,15 +80,15 @@ const Sidebar = () => {
         { key: 'allUsers', icon: <FaListUl />, label: t('allUsers'), permission: '2.1.3' },
       ],
     },
+    { key: 'systemSettings', icon: <FaCog />, label: t('processSettings'), permission: '2.10' },
     { key: 'group', icon: <FaUsers />, label: t('group'), permission: '2.2' },
     { key: 'type', icon: <FaBookOpenReader />, label: t('projectType'), permission: '2.3' },
     { key: 'project', icon: <FaProjectDiagram />, label: t('project'), permission: '2.4' },
-    { key: 'teams', icon: <RiTeamFill />, label: t('teams'), permission: '2.4' },
-    { key: 'zone', icon: <BiSolidCctv />, label: t('zone'), permission: '2.5' },
     { key: 'camera', icon: <FaCamera />, label: t('camera'), permission: '2.6' },
     { key: 'machine', icon: <GiGears />, label: t('productionMachines'), permission: '2.7' },
+    { key: 'zone', icon: <BiSolidCctv />, label: t('zone'), permission: '2.5' },
+    { key: 'teams', icon: <RiTeamFill />, label: t('teams'), permission: '2.4' },
     { key: 'alarm', icon: <FaBell />, label: t('alarm'), permission: '2.8' },
-    { key: 'systemSettings', icon: <FaCog />, label: t('processSettings'), permission: '2.10' },
     {
       key: 'developerTools',
       icon: <FaScrewdriverWrench />,

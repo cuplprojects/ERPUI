@@ -141,24 +141,6 @@ const CatchTeamAssignment = ({ teams, data, handleClose, processId , fetchTransa
   </Col>
 </Row>
 
-      {/* <Row>
-        <Col md={6}>
-          <Form.Group className="mb-3">
-            <Form.Label>Select Team</Form.Label>
-            <Form.Select
-              value={selectedTeam}
-              onChange={handleTeamChange}
-            >
-              <option value="">Select a team...</option>
-              {teams.map((team) => (
-                <option key={team.teamId} value={team.teamId}>
-                  {team.teamName} ({team.users.map(user => user.userName).join(', ')})
-                </option>
-              ))}
-            </Form.Select>
-          </Form.Group>
-        </Col>
-      </Row> */}
 
       {selectedTeam && (
         <>

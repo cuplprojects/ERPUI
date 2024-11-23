@@ -29,6 +29,7 @@ const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots =
     });
     const [isFirstLot, setIsFirstLot] = useState(false);
     const [isLastLot, setIsLastLot] = useState(false);
+    const [key, setKey] = useState(0); // Add key for DatePicker
 
     useEffect(() => {
         const fetchProjectName = async () => {
@@ -80,6 +81,10 @@ const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots =
                     start: dayjs(startDate),
                     end: dayjs(endDate)
                 });
+
+                // Reset selected date and increment key to force re-render
+                setSelectedDate(null);
+                setKey(prevKey => prevKey + 1);
 
                 // Set flags for first/last lot
                 setIsFirstLot(isFirstLot);
@@ -210,6 +215,7 @@ const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots =
                             <label className={`${customDarkText} mb-2`}>{t('selectNewExamDate')}:</label>
                             <div className="mt-2">
                                 <DatePicker
+                                    key={key} // Add key prop to force re-render
                                     disabledDate={disabledDate}
                                     onChange={handleDateChange}
                                     value={selectedDate ? dayjs(selectedDate, 'DD-MM-YYYY') : null}
@@ -218,6 +224,8 @@ const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots =
                                     placeholder={t('selectDate')}
                                     minDate={dateRange.start}
                                     maxDate={dateRange.end}
+                                    defaultValue={dateRange.start}
+                                    defaultPickerValue={dateRange.start}
                                 />
                             </div>
                         </div>

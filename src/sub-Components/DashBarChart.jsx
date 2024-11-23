@@ -96,77 +96,78 @@ const DashBarChart = ({ selectedChart, lotsData, handleBarClick, projectId }) =>
             style={{ marginLeft: '10px' }}
           />
         </div>
-        <div style={{ width: "100%", height: "90%" }}>
-          <Bar
-            className="mt-2"
-            data={{
-              labels: processLabels,
-              datasets: [
-                {
-                  data: processValues,
-                  backgroundColor: processValues.map(value => {
-                    const actualValue = showRemaining ? 100 - value : value;
-                    return actualValue > 0 
-                      ? showRemaining 
-                        ? "rgba(255, 99, 132, 0.6)"  // Red for remaining
-                        : "rgba(75, 192, 192, 0.6)"   // Green for completed
-                      : "rgba(200, 200, 200, 0.6)";
-                  }),
-                  borderColor: processValues.map(value => {
-                    const actualValue = showRemaining ? 100 - value : value;
-                    return actualValue > 0 
-                      ? showRemaining 
-                        ? "rgb(255, 99, 132)"  // Red for remaining
-                        : "rgb(75, 192, 192)"   // Green for completed
-                      : "rgb(180, 180, 180)";
-                  }),
-                  borderWidth: 1,
-                  borderRadius: 5,
-                },
-              ],
-            }}
-            options={{
-              responsive: true,
-              maintainAspectRatio: false,
-              onClick: (event, elements) => handleBarClick(elements),
-              scales: {
-                y: {
-                  beginAtZero: true,
-                  max: 100,
-                  title: {
-                    display: true,
-                    text: showRemaining ? t('remainingPercentage') : t('completionPercentage')
-                  }
-                },
-                x: {
-                  title: {
-                    display: true,
-                    text: t('processes')
-                  },
-                  ticks: {
-                    maxRotation: 45,
-                    minRotation: 45
-                  }
-                }
-              },
-              plugins: {
-                legend: {
-                  display: false,
-                },
-                tooltip: {
-                  enabled: true,
-                  callbacks: {
-                    label: (tooltipItem) => {
-                      const processName = processNames[tooltipItem.dataIndex + 1] || `${t('process')} ${tooltipItem.dataIndex + 1}`;
-                      return `${processName}: ${tooltipItem.raw.toFixed(2)}% ${showRemaining ? t('remaining') : t('completed')}`;
-                    },
-                  },
-                },
-              },
-            }}
-            height={300}
-          />
-        </div>
+        <div style={{ width: "100%", height: "100%", overflow: "hidden" }}>
+  <Bar
+    className="mt-2"
+    data={{
+      labels: processLabels,
+      datasets: [
+        {
+          data: processValues,
+          backgroundColor: processValues.map(value => {
+            const actualValue = showRemaining ? 100 - value : value;
+            return actualValue > 0 
+              ? showRemaining 
+                ? "rgba(255, 99, 132, 0.6)" // Red for remaining
+                : "rgba(75, 192, 192, 0.6)" // Green for completed
+              : "rgba(200, 200, 200, 0.6)";
+          }),
+          borderColor: processValues.map(value => {
+            const actualValue = showRemaining ? 100 - value : value;
+            return actualValue > 0 
+              ? showRemaining 
+                ? "rgb(255, 99, 132)" // Red for remaining
+                : "rgb(75, 192, 192)" // Green for completed
+              : "rgb(180, 180, 180)";
+          }),
+          borderWidth: 1,
+          borderRadius: 5,
+        },
+      ],
+    }}
+    options={{
+      responsive: true,
+      maintainAspectRatio: false,
+      onClick: (event, elements) => handleBarClick(elements),
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 100,
+          title: {
+            display: true,
+            text: showRemaining ? t('remainingPercentage') : t('completionPercentage')
+          }
+        },
+        x: {
+          title: {
+            display: true,
+            text: t('processes')
+          },
+          ticks: {
+            maxRotation: 45,
+            minRotation: 45
+          }
+        }
+      },
+      plugins: {
+        legend: {
+          display: false,
+        },
+        tooltip: {
+          enabled: true,
+          callbacks: {
+            label: (tooltipItem) => {
+              const processName = processNames[tooltipItem.dataIndex + 1] || `${t('process')} ${tooltipItem.dataIndex + 1}`;
+              return `${processName}: ${tooltipItem.raw.toFixed(2)}% ${showRemaining ? t('remaining') : t('completed')}`;
+            },
+          },
+        },
+      },
+    }}
+    height={300}
+  />
+</div>
+
       </Card.Body>
     </Card>
   );

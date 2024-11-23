@@ -145,6 +145,39 @@ console.log(originalData.requiredProcessIds)
         setSearchText(value);
     };
 
+    const getResponsiveWidth = (key) => {
+        if (isMobile) {
+            switch(key) {
+                case 'serial': return '15%';
+                case 'types': return '25%';
+                case 'associatedProcessId': return '30%';
+                case 'requiredProcessId': return '30%';
+                case 'action': return '20%';
+                default: return 'auto';
+            }
+        } else if (isTablet) {
+            switch(key) {
+                case 'serial': return '10%';
+                case 'types': return '15%';
+                case 'associatedProcessId': return '25%';
+                case 'requiredProcessId': return '25%';
+                case 'status': return '15%';
+                case 'action': return '15%';
+                default: return 'auto';
+            }
+        } else {
+            switch(key) {
+                case 'serial': return '5%';
+                case 'types': return '15%';
+                case 'associatedProcessId': return '25%';
+                case 'requiredProcessId': return '25%';
+                case 'status': return '15%';
+                case 'action': return '15%';
+                default: return 'auto';
+            }
+        }
+    };
+
     const columns = [
         {
             title:t('srNo'),
@@ -152,13 +185,13 @@ console.log(originalData.requiredProcessIds)
             dataIndex: 'serial',
             key: 'serial',
             render: (text, record, index) => (currentPage - 1) * pageSize + index + 1,
-            width: '5%',
+            width: getResponsiveWidth('serial'),
         },
         {
             title: t('type'),
             dataIndex: 'types',
             key: 'types',
-            width: '10%',
+            width: getResponsiveWidth('types'),
             sorter: (a, b) => a.types.localeCompare(b.types),
             render: (text, record, index) => (
                 editingIndex === index ? (
@@ -176,7 +209,7 @@ console.log(originalData.requiredProcessIds)
             title: t('associatedProcess'),
             dataIndex: 'associatedProcessId',
             key: 'associatedProcessId',
-            width: '25%',
+            width: getResponsiveWidth('associatedProcessId'),
             sorter: (a, b) => {
                 const aProcesses = a.associatedProcessId?.map(id => processMap[id]).join(', ') || '';
                 const bProcesses = b.associatedProcessId?.map(id => processMap[id]).join(', ') || '';
@@ -197,7 +230,9 @@ console.log(originalData.requiredProcessIds)
                         ))}
                     </Select>
                 ) : (
-                    ids?.map(id => processMap[id]).join(', ') || ''
+                    <div style={{wordWrap: 'break-word', whiteSpace: 'normal'}}>
+                        {ids?.map(id => processMap[id]).join(', ') || ''}
+                    </div>
                 )
             ),
         },
@@ -206,7 +241,7 @@ console.log(originalData.requiredProcessIds)
             title: t('requiredProcess'),
             dataIndex: 'requiredProcessId',
             key: 'requiredProcessId',
-            width: '25%',
+            width: getResponsiveWidth('requiredProcessId'),
             sorter: (a, b) => {
                 const aProcesses = a.requiredProcessId?.map(id => processMap[id]).join(', ') || '';
                 const bProcesses = b.requiredProcessId?.map(id => processMap[id]).join(', ') || '';
@@ -227,7 +262,9 @@ console.log(originalData.requiredProcessIds)
                         ))}
                     </Select>
                 ) : (
-                    ids?.map(id => processMap[id]).join(', ') || ''
+                    <div style={{wordWrap: 'break-word', whiteSpace: 'normal'}}>
+                        {ids?.map(id => processMap[id]).join(', ') || ''}
+                    </div>
                 )
             ),
         },
@@ -236,7 +273,7 @@ console.log(originalData.requiredProcessIds)
             align: 'center',
             dataIndex: 'status',
             key: 'status',
-            width: '10%',
+            width: getResponsiveWidth('status'),
             sorter: (a, b) => (a.status === b.status ? 0 : a.status ? -1 : 1),
             render: (status, record, index) => (
                 editingIndex === index ? (
@@ -259,7 +296,7 @@ console.log(originalData.requiredProcessIds)
         {
             title: t('action'),
             key: 'action',
-            width: '15%',
+            width: getResponsiveWidth('action'),
             render: (_, record, index) => (
                 editingIndex === index ? (
                     <div style={{ display: 'flex', justifyContent: '' }}>
@@ -334,7 +371,6 @@ console.log(originalData.requiredProcessIds)
                         rowKey="typeId"
                         pagination={false}
                         bordered
-                        scroll={{ x: 'max-content' }}
                         size={isMobile ? "small" : "default"}
                         className={`${customDark === "default-dark" ? "thead-default" : ""}
                         ${customDark === "red-dark" ? "thead-red" : ""}
@@ -347,7 +383,7 @@ console.log(originalData.requiredProcessIds)
                         ${customDark === "brown-dark" ? "thead-brown" : ""} rounded-2`}
                         style={{
                             fontSize: isMobile ? '12px' : '14px',
-                            overflowX: 'auto'
+                            width: '100%'
                         }}
                     />
                     <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px', background: 'white', padding: '10px' }} className='rounded-2 rounded-top-0'>
@@ -371,7 +407,7 @@ console.log(originalData.requiredProcessIds)
                 show={isModalVisible}
                 onHide={handleClose}
                 centered
-                size={isMobile ? 'sm' : 'lg'}
+                size='md'
             >
                 <Modal.Header closeButton={false} className={`rounded-top-2 ${customDark} ${customLightText} ${customDark === "dark-dark" ? `border ` : `border-0`} w border d-flex justify-content-between `}>
                     <Modal.Title>{t('addType')}</Modal.Title>

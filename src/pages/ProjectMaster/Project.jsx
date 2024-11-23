@@ -21,6 +21,8 @@ const Project = () => {
   const [activeTabKey, setActiveTabKey] = useState("1");
   const [selectedProject, setSelectedProject] = useState();
   const [activetab3, setActiveTab3] = useState(false);
+  const [isProcessSubmitted, setIsProcessSubmitted] = useState(false);
+
 
   useEffect(() => {
     if (activeTabKey === "1") {
@@ -47,11 +49,12 @@ const Project = () => {
       disabled: !selectedProject,
       children: (
         <div className="responsive-container">
-          <AddProjectProcess selectedProject={selectedProject} />
+          <AddProjectProcess selectedProject={selectedProject} setIsProcessSubmitted={setIsProcessSubmitted} />
           <Button 
             type="primary" 
             onClick={() => {setActiveTabKey("3"); setActiveTab3(true);}} 
             style={{ marginTop: '20px' }}
+            disabled={!isProcessSubmitted} // Disable if process is not submitted
           >
             {t('next')}
           </Button>
