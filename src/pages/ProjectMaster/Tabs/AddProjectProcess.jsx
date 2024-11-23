@@ -145,6 +145,7 @@ const AddProjectProcess = ({ selectedProject,setIsProcessSubmitted }) => {
         const response = await API.get(`/ProjectProcess/GetProjectProcesses/${selectedProject}`);
         if (response.data.length > 0) {
           await fetchRequiredProcesses(typeId);
+          setIsProcessSubmitted(true);
           const sortedProcesses = response.data.sort((a, b) => a.sequence - b.sequence);
           const independentOnly = sortedProcesses.filter(process => process.processType !== "Dependent");
           setProjectProcesses(calculatedWeightage(independentOnly));
