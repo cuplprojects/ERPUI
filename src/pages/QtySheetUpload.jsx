@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Row, Col } from 'react-bootstrap';
-import { Form, Upload, Button, Select, message, Modal,Menu, Dropdown, Spin } from 'antd';
+import { Form, Upload, Button, Select, message,Menu, Dropdown, Spin } from 'antd';
+import { Row, Col, Modal } from 'react-bootstrap';
 import { UploadOutlined, DeleteOutlined } from '@ant-design/icons';
 import * as XLSX from 'xlsx';
 import themeStore from './../store/themeStore';
@@ -12,6 +12,8 @@ import API from '../CustomHooks/MasterApiHooks/api';
 import { useTranslation } from 'react-i18next';
 import { decrypt } from '../Security/Security';
 import { BsCheckCircleFill } from "react-icons/bs";
+import { success, error, warning } from '../CustomHooks/Services/AlertMessageService';
+
 
 // Helper function to convert Excel date number to JS Date
 const convertExcelDate = (excelDate) => {
@@ -124,13 +126,13 @@ const QtySheetUpload = () => {
     
             // Check if the response was successful
             if (response.status === 200) {
-                message.success(`Lot ${lotNo} released for production`);
+                success(`Lot ${lotNo} released for production`);
             } else {
-                message.error('Failed to release lot');
+                error('Failed to release lot');
             }
         } catch (error) {
             console.error('Error releasing lot:', error);
-            message.error('Error releasing lot');
+            error('Error releasing lot');
         }
     };
     
@@ -185,13 +187,13 @@ const QtySheetUpload = () => {
             });
             console.log(t('uploadSuccessful'), response.data);
             setDataSource(finalPayload);
-            message.success(isUpdateMode ? t('quantitySheetUpdatedSuccessfully') : t('quantitySheetUploadedSuccessfully'));
+            success(isUpdateMode ? t('quantitySheetUpdatedSuccessfully') : t('quantitySheetUploadedSuccessfully'));
             fetchLots();
             setHasUploadedFile(true); // Set flag when file is successfully uploaded
             resetState();
         } catch (error) {
             console.error(t('uploadFailed'), error.response?.data || error.message);
-            message.error(isUpdateMode ? t('failedToUpdateQuantitySheet') : t('failedToUploadQuantitySheet'));
+            error(isUpdateMode ? t('failedToUpdateQuantitySheet') : t('failedToUploadQuantitySheet'));
         } finally {
             setUploading(false);
         }
@@ -283,6 +285,14 @@ const QtySheetUpload = () => {
         console.log(skipLotNos)
         const remainingMappedData = mappedData.filter(item => !skipLotNos.includes(item.LotNo));
         console.log(remainingMappedData)
+
+        if (remainingMappedData.length === 0) {
+            warning(t('allLotsSkipped'));
+            setIsModalVisible(false);
+            return;
+        }
+
+        message.info(`${skipLotNos.length} lots skipped: ${skipLotNos.join(', ')}`);
         handleUpload(remainingMappedData); // Call handleUpload with the filtered data
         setIsModalVisible(false);
     };
@@ -311,7 +321,12 @@ const QtySheetUpload = () => {
     const handleFileUpload = (file) => {
         setFileList([file]);
         setSelectedFile(file);
+
         setIsProcessingFile(true); // Show loader when file processing starts
+
+        setShowTable(false); // Hide table when file is selected
+        setShowBtn(false); // Hide button when file is selected
+
         processFile(file);
         return false;
     };
@@ -420,12 +435,15 @@ const QtySheetUpload = () => {
         try {
             await API.delete(`/QuantitySheet/DeleteByProjectId/${projectId}`);
             fetchLots()
-            message.success(t('quantitySheetDeletedSuccessfully'));
+
             setHasUploadedFile(false); // Reset upload flag after successful deletion
             setShowDeleteButton(true); // Hide delete button
+
+            success(t('quantitySheetDeletedSuccessfully'));
+
         } catch (error) {
             console.error('Failed to delete quantity sheet:', error);
-            message.error(t('failedToDeleteQuantitySheet'));
+            error(t('failedToDeleteQuantitySheet'));
         }
     };
 
@@ -489,6 +507,34 @@ const QtySheetUpload = () => {
                                         <DeleteOutlined />
                                         <span>{t('deleteFile')}</span>
                                     </Button>
+
+                                </Upload>
+                            ):(
+                                <Button
+                                    className={`${customBtn}`}
+                                    type="primary"
+                                    onClick={() => {
+                                        setIsLotsFetched(false);
+                                        setIsUpdateMode(true);
+                                        setShowTable(false); // Hide table when update file is clicked
+                                        setShowBtn(false); // Hide button when update file is clicked
+                                    }}
+                                >
+                                    {t('updateFile')}
+                                </Button>
+                            )}
+                                {isLotsFetched && (
+                                <Button
+                                    type="primary"
+                                    danger
+                                    onClick={handleDelete}
+                                    className="ms-2 d-flex align-items-center"
+                                    disabled={transactionExist}
+                                >
+                                    <DeleteOutlined />
+                                    <span>{t('deleteFile')}</span>
+                                </Button>
+
                                 )}
                             </div>
                         </Form.Item>
@@ -538,22 +584,31 @@ const QtySheetUpload = () => {
                 </Dropdown>
             )}
             <Modal
-                title={t('confirmUpdate')}
-                open={isModalVisible}
-                onOk={handleSkipUpdate}
-                onCancel={handleCancelSkip}
-                okText={t('yes')}
-                cancelText={t('no')}
+                show={isModalVisible}
+                onHide={handleCancelSkip}
             >
-                <div>
-                    <p>{t('existingLotsMessage')}</p>
-                    <ul>
-                        {skipLots.map((lot, index) => (
-                            <li key={index}>{t('lotNo')}: {lot.LotNo} {t('existsMessage')}</li>
-                        ))}
-                    </ul>
-                    <p>{t('skipTheseLotsMessage')}</p>
-                </div>
+                <Modal.Header closeButton>
+                    <Modal.Title>{t('confirmUpdate')}</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <div>
+                        <p>{t('existingLotsMessage')}</p>
+                        <ul>
+                            {skipLots.map((lot, index) => (
+                                <li key={index}>{t('lotNo')}: {lot.LotNo} {t('existsMessage')}</li>
+                            ))}
+                        </ul>
+                        <p>{t('skipTheseLotsMessage')}</p>
+                    </div>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleCancelSkip}>
+                        {t('no')}
+                    </Button>
+                    <Button variant="primary" onClick={handleSkipUpdate}>
+                        {t('yes')}
+                    </Button>
+                </Modal.Footer>
             </Modal>
 
             {isProcessingFile && (
@@ -563,7 +618,7 @@ const QtySheetUpload = () => {
             )}
 
             {showDisclaimer && (
-                <div className="text-danger mb-3 fw-bold">
+                <div className="text-danger mb-3 fw-bold text-center">
                     {t('mapTheExcelHeaderWithTheirRespectedDefinedFields')}
                 </div>
             )}
@@ -571,7 +626,7 @@ const QtySheetUpload = () => {
             {showMappingFields && headers.length > 0 && (
                 <Row className='mt-2 mb-2'>
                     <Col lg={12}>
-                        <table className="table table-bordered">
+                        <table className="table table-bordered table-striped">
                             <thead>
                                 <tr>
                                     <th>{t('fields')}</th>

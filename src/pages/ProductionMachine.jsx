@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Input, Select, Switch, message, Spin, Pagination } from 'antd';
+import { Table, Input, Select, Switch, Spin, Pagination } from 'antd';
 import { Row, Col, Modal, Button } from 'react-bootstrap';
 import { v4 as uuidv4 } from 'uuid'; // Importing uuid for unique IDs
 import API from '../CustomHooks/MasterApiHooks/api';
@@ -9,6 +9,7 @@ import { FaSearch } from "react-icons/fa";
 import { AiFillCloseSquare } from "react-icons/ai";
 import { EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
+import { success, error } from '../CustomHooks/Services/AlertMessageService';
 
 const { Search } = Input;
 
@@ -38,8 +39,8 @@ const Machine = () => {
     try {
       const response = await API.get('/Machines');
       setMachines(response.data);
-    } catch (error) {
-      console.error("Failed to fetch machines", error);
+    } catch (err) {
+      error(t('Failed to fetch machines'));
     } finally {
       setLoading(false);
     }
@@ -50,8 +51,8 @@ const Machine = () => {
     try {
       const response = await API.get('/Processes');
       setProcesses(response.data);
-    } catch (error) {
-      console.error("Failed to fetch processes", error);
+    } catch (err) {
+      error(t('Failed to fetch processes'));
     } finally {
       setLoading(false);
     }
@@ -64,7 +65,7 @@ const Machine = () => {
 
   const handleAddMachine = async () => {
     if (!newMachineName || !newMachineProcessId) {
-      message.error(t('Please fill in all fields!'));
+      error(t('Please fill in all fields!'));
       return;
     }
 
@@ -82,16 +83,15 @@ const Machine = () => {
       setNewMachineStatus(true);
       setIsModalVisible(false);
       fetchMachines();
-      message.success(t('Machine added successfully!'));
-    } catch (error) {
-      console.error("Failed to add machine", error);
-      message.error(t('Failed to add machine'));
+      success(t('Machine added successfully!'));
+    } catch (err) {
+      error(t('Failed to add machine'));
     }
   };
 
   const handleEditSave = async (index) => {
     if (!editingValue || !editingProcessId) {
-      message.error(t('Please fill in all fields!'));
+      error(t('Please fill in all fields!'));
       return;
     }
 
@@ -107,14 +107,13 @@ const Machine = () => {
       const updatedMachines = [...machines];
       updatedMachines[index] = updatedMachine;
       setMachines(updatedMachines);
-      message.success(t('Machine updated successfully!'));
+      success(t('Machine updated successfully!'));
       setEditingIndex(null);
       setEditingValue('');
       setEditingProcessId(null);
       setEditingStatus(true);
-    } catch (error) {
-      console.error("Failed to update machine", error);
-      message.error(t('Failed to update machine'));
+    } catch (err) {
+      error(t('Failed to update machine'));
     }
   };
 

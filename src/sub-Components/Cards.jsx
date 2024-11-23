@@ -5,9 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { encrypt } from "../Security/Security";
 import useUserDataStore from "../store/userDataStore";
 import { useTranslation } from "react-i18next";
-
-import { Tooltip as ReactTooltip } from "react-tooltip";
-
+import { Tooltip } from 'antd';
 import API from "../CustomHooks/MasterApiHooks/api";
 
 
@@ -77,42 +75,28 @@ const Cards = ({ item, onclick, disableProject, activeCardStyle }) => {
         <div className="header">
           <h4 className="project-name">{item.name}</h4>
 
-          <div
-            className="upload-button"
-            onClick={handleUploadClick}
-            data-tooltip-id="upload-tooltip"
-            data-tooltip-content={t("Upload Quantity Sheet")}
-          >
-
- 
-            <FaUpload />
-          </div>
+          <Tooltip title={t("Upload Quantity Sheet")} placement="top">
+            <div
+              className="upload-button"
+              onClick={handleUploadClick}
+            >
+              <FaUpload />
+            </div>
+          </Tooltip>
         </div>
 
         <p>{item.completionPercentage}% {t("completed")}</p>
         <p>{item.remainingPercentage}% {t("remaining")}</p>
 
-        <div
-          className={`info-button ${!disableProject ? "disabled" : ""}`}
-          onClick={handleInfoClick}
-          data-tooltip-id="info-tooltip"
-          data-tooltip-content={t("View Project Info")}
-        >
-          <FaInfoCircle />
-        </div>
+        <Tooltip title={t("View Project Info")} placement="top">
+          <div
+            className={`info-button ${!disableProject ? "disabled" : ""}`}
+            onClick={handleInfoClick}
+          >
+            <FaInfoCircle />
+          </div>
+        </Tooltip>
       </div>
-      <ReactTooltip
-        id="upload-tooltip"
-        place="top"
-        effect="solid"
-        className="custom-tooltip"
-      />
-      <ReactTooltip
-        id="info-tooltip"
-        place="top"
-        effect="solid"
-        className="custom-tooltip"
-      />
     </StyledWrapper>
   );
 };
@@ -202,18 +186,6 @@ const StyledWrapper = styled.div`
     word-wrap: break-word;
     max-width: 90%;
     margin: 10px 0;
-  }
-
-  /* Custom Tooltip Styling */
-  .custom-tooltip {
-    background-color: #333;
-    border-radius: 8px; /* Rounded corners */
-    font-size: 12px; /* Smaller text */
-    font-weight: 400; /* Reduced text weight */
-    padding: 5px 10px;
-    color: white;
-    text-align: center;
-    transition: all 0.3s ease;
   }
 `;
 

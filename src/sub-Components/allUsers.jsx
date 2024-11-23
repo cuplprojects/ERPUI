@@ -14,6 +14,7 @@ import { AiFillCloseSquare } from 'react-icons/ai';
 import { BsFunnelFill } from "react-icons/bs";
 import { MdDeleteForever } from "react-icons/md";
 import { useTranslation } from 'react-i18next';
+import { success, error } from '../CustomHooks/Services/AlertMessageService';
 const BaseUrl = import.meta.env.VITE_API_BASE_URL;
 
 const { Option } = Select;
@@ -139,13 +140,13 @@ const AllUsers = () => {
         );
         setUsers(newData);
         setEditingUserId(null);
-        message.success(t('userUpdatedSuccessfully'));
+        success(t('userUpdatedSuccessfully'));
       } else {
-        message.error(t('failedToUpdateUser'));
+        error(t('failedToUpdateUser'));
       }
     } catch (error) {
       console.error(t("errorUpdatingUser"), error);
-      message.error(t('errorOccurredWhileUpdatingUser'));
+      error(t('errorOccurredWhileUpdatingUser'));
     }
   }, [users, currentUserData, t]);
 
@@ -312,13 +313,13 @@ const AllUsers = () => {
       const response = await API.delete(`/User/delete/${userToDelete.userId}`);
       if (response.status === 200) {
         setUsers(users.filter(user => user.userId !== userToDelete.userId));
-        message.success(t('userDeletedSuccessfully'));
+        success(t('userDeletedSuccessfully'));
       } else {
-        message.error(t('failedToDeleteUser'));
+        error(t('failedToDeleteUser'));
       }
     } catch (error) {
       console.error(t("errorDeletingUser"), error);
-      message.error(t('errorOccurredWhileDeletingUser'));
+      error(t('errorOccurredWhileDeletingUser'));
     } finally {
       setDeleteModalOpen(false);
       setUserToDelete(null);

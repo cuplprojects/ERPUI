@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Input, Form, Card, Row, Col, message, Pagination, Spin, Switch } from 'antd';
+import { Table, Button, Input, Form, Card, Row, Col, Pagination, Spin, Switch } from 'antd';
 import { Modal } from 'react-bootstrap';
 import API from '../CustomHooks/MasterApiHooks/api';
 import { useStore } from 'zustand';
@@ -8,6 +8,7 @@ import { useMediaQuery } from 'react-responsive';
 import { AiFillCloseSquare } from "react-icons/ai";
 import { SortAscendingOutlined, SortDescendingOutlined, EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
+import { success, error } from '../CustomHooks/Services/AlertMessageService';
 
 const CameraList = () => {
   const { t } = useTranslation();
@@ -44,8 +45,8 @@ const CameraList = () => {
     try {
       const response = await API.get('/Cameras');
       setCameras(response.data);
-    } catch (error) {
-      console.error('Failed to fetch cameras');
+    } catch (err) {
+      error(t('Failed to fetch cameras'));
     } finally {
       setLoading(false);
     }
@@ -63,9 +64,9 @@ const CameraList = () => {
         setCameras([...cameras, response.data]);
         form.resetFields();
         setIsModalOpen(false);
-        message.success(t('Camera added successfully!'));
-      } catch (error) {
-        message.error(t('Error adding camera'));
+        success(t('Camera added successfully!'));
+      } catch (err) {
+        error(t('Error adding camera'));
       }
     });
   };
@@ -85,9 +86,9 @@ const CameraList = () => {
       setEditingIndex(null);
       setEditingName('');
       setEditingStatus(true);
-      message.success(t('Camera updated successfully!'));
-    } catch (error) {
-      message.error(t('Failed to update camera'));
+      success(t('Camera updated successfully!'));
+    } catch (err) {
+      error(t('Failed to update camera'));
     }
   };
 
