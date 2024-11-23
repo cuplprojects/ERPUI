@@ -226,7 +226,8 @@ const ProjectDetailsTable = ({
       return;
     }
 
-    if (newStatusIndex === 2 && updatedRow.interimQuantity !== updatedRow.quantity) {
+    // Only check interim quantity if hasFeaturePermission(7) is true
+    if (hasFeaturePermission(7) && newStatusIndex === 2 && updatedRow.interimQuantity !== updatedRow.quantity) {
       showNotification('error', 'Status Update Failed', 'Interim Quantity must equal Quantity');
       return;
     }
@@ -540,20 +541,21 @@ const ProjectDetailsTable = ({
               isTeamAssigned
             : isZoneAssigned && isTeamAssigned);
 
-        const canBeCompleted = record.interimQuantity === record.quantity;
+        // Only check interim quantity if hasFeaturePermission(7) is true
+        const canBeCompleted = !hasFeaturePermission(7) || record.interimQuantity === record.quantity;
 
         // Populate the requirements array based on conditions
         if (hasAlerts) {
-          requirements.push("Status cannot be changed due to alerts.");
+          requirements.push(t("statusCannotBeChangedDueToAlerts"));
         }
         if (!isPreviousProcessCompleted) {
-          requirements.push("Previous process must be completed.");
+          requirements.push(t("previousProcessErrorDescription"));
         }
         if (!canChangeStatus) {
-          requirements.push("Ensure all required fields are filled (Zone, Team, Machine).");
+          requirements.push(t("ensureAllRequiredFieldsAreFilled"));
         }
-        if (initialStatusIndex === 1 && !canBeCompleted) {
-          requirements.push("Cannot set status to Completed - Interim Quantity must equal Quantity.");
+        if (initialStatusIndex === 1 && !canBeCompleted && hasFeaturePermission(7)) {
+          requirements.push(t("cannotSetStatusToCompletedInterimQuantityMustEqualQuantity"));
         }
 
         const isDisabled = requirements.length > 0; // Determine if the toggle is disabled based on requirements
@@ -625,8 +627,8 @@ const ProjectDetailsTable = ({
             return;
         }
 
-        // Check if trying to set status to Completed when interimQuantity != quantity for any row
-        if (newStatusIndex === 2) {
+        // Only check interim quantity if hasFeaturePermission(7) is true
+        if (hasFeaturePermission(7) && newStatusIndex === 2) {
             const hasIncompleteQuantity = selectedRowKeys.some(key => {
                 const row = tableData.find(row => row.srNo === key);
                 return row.interimQuantity !== row.quantity;

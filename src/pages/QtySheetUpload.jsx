@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Row, Col } from 'react-bootstrap';
 import { Form, Upload, Button, Select, message, Modal,Menu, Dropdown } from 'antd';
-import { UploadOutlined } from '@ant-design/icons';
+import { UploadOutlined, DeleteOutlined } from '@ant-design/icons';
 import * as XLSX from 'xlsx';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
@@ -55,7 +55,21 @@ const QtySheetUpload = () => {
     const [mappedLots, setMappedLots] = useState([]);  // To hold the mapped lots from the file
     const [isModalVisible, setIsModalVisible] = useState(false);  // Modal visibility
     const [skipLots, setSkipLots] = useState([]);  // Lots to be skipped based on matching
-    const[mappedData,setMappeddata] = useState([]);
+    const [mappedData,setMappeddata] = useState([]);
+    const [transactionExist, setTransactionExist] = useState(false);
+
+    useEffect(() => {
+        const checkTransactionExistence = async () => {
+            try {
+                const response = await API.get(`/Transactions/exists/${projectId}`);
+                setTransactionExist(response.data);
+            } catch (error) {
+                console.error('Failed to check transaction existence:', error);
+            }
+        };
+
+        checkTransactionExistence();
+    }, []);
 
     useEffect(() => {
         const fetchProjectName = async () => {
@@ -73,11 +87,11 @@ const QtySheetUpload = () => {
     useEffect(() => {
         const fetchDispatchedLots = async () => {
             try {
-                const response = await API.get(`/Dispatch/project/${projectId}`);
-                const dispatchedLotNos = response.data.map(dispatch => dispatch.lotNo);
-                setDispatchedLots(dispatchedLotNos);
+                const response = await API.get(`https://localhost:7212/api/Dispatch/project/${projectId}/lot/1`);
+                const dispatchedLotStatus = response.data.map(dispatch => dispatch.status);
+                setDispatchedLots(dispatchedLotStatus);
             } catch (error) {
-                console.error('Failed to fetch dispatched lots:', error);
+                console.error('Failed to fetch dispatched lots status:', error);
             }
         };
 
@@ -383,6 +397,16 @@ const QtySheetUpload = () => {
         </Menu>
     );
 
+    const handleDelete = async () => {
+        try {
+            await API.delete(`/QuantitySheet/DeleteByProjectId/${projectId}`);
+            message.success(t('quantitySheetDeletedSuccessfully'));
+        } catch (error) {
+            console.error('Failed to delete quantity sheet:', error);
+            message.error(t('failedToDeleteQuantitySheet'));
+        }
+    };
+
     return (
         <div className={`container ${customDarkText} rounded shadow-lg ${customLight} ${customLightBorder}`}>
             <Row className='mt-2 mb-2'>
@@ -402,23 +426,35 @@ const QtySheetUpload = () => {
                 <Col lg={12}>
                     <Form layout="vertical" form={form}>
                         <Form.Item name="file" rules={[{ required: true, message: t('pleaseSelectAFile') }]}>
-                            <Upload
-                                onRemove={(file) => {
-                                    const index = fileList.indexOf(file);
-                                    const newFileList = fileList.slice();
-                                    newFileList.splice(index, 1);
-                                    setFileList(newFileList);
-                                }}
-                                beforeUpload={handleFileUpload}
-                                fileList={fileList}
-                                className=''
-                            >
-                                <Button className='fs-4 custom-zoom-btn w-100 d-flex align-items-center p-3'>
-                                    <UploadOutlined className='' />
-                                    <span className='d-none d-sm-inline'>{t('selectFile')}</span>
-                                    <span className='d-inline d-sm-none'>{t('upload')}</span>
+                            <div className="d-flex align-items-center">
+                                <Upload
+                                    onRemove={(file) => {
+                                        const index = fileList.indexOf(file);
+                                        const newFileList = fileList.slice();
+                                        newFileList.splice(index, 1);
+                                        setFileList(newFileList);
+                                    }}
+                                    beforeUpload={handleFileUpload}
+                                    fileList={fileList}
+                                    className='flex-grow-1'
+                                >
+                                    <Button className='fs-4 custom-zoom-btn w-100 d-flex align-items-center p-3'>
+                                        <UploadOutlined className='' />
+                                        <span className='d-none d-sm-inline'>{t('selectFile')}</span>
+                                        <span className='d-inline d-sm-none'>{t('upload')}</span>
+                                    </Button>
+                                </Upload>
+                                <Button
+                                    type="primary"
+                                    danger
+                                    onClick={handleDelete}
+                                    className="ms-2 d-flex align-items-center"
+                                    disabled={transactionExist}
+                                >
+                                    <DeleteOutlined />
+                                    <span>{t('deleteFile')}</span>
                                 </Button>
-                            </Upload>
+                            </div>
                         </Form.Item>
                         <Form.Item>
                             {fileList.length > 0 && isLotsFetched ? (  // Check if file is selected and lots are fetched

@@ -18,7 +18,6 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
     const [processStatus, setProcessStatus] = useState(false);
     const [processWeightage, setProcessWeightage] = useState(0);
     const [processInstalledFeatures, setProcessInstalledFeatures] = useState([]);
-    const [processIdInput, setProcessIdInput] = useState(0);
     const [processType, setProcessType] = useState('');
     const [rangeStart, setRangeStart] = useState('');
     const [rangeEnd, setRangeEnd] = useState('');
@@ -32,10 +31,19 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
     const fetchProcesses = async () => {
         try {
             const response = await API.get('/Processes');
-            setProcesses(response.data.map(process => ({
-                key: process.id.toString(),
-                ...process,
-            })));
+            const processesWithFeatureNames = response.data.map(process => {
+                const featureNames = process.installedFeatures?.map(featureId => {
+                    const feature = features.find(f => f.id === featureId);
+                    return feature?.name;
+                }).filter(Boolean);
+                
+                return {
+                    key: process.id.toString(),
+                    ...process,
+                    featureNames
+                };
+            });
+            setProcesses(processesWithFeatureNames);
         } catch (error) {
             console.error('Error fetching processes:', error);
             notification.error({ message: t('failedToFetchProcesses') });
@@ -57,9 +65,14 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
     };
 
     useEffect(() => {
-        fetchProcesses();
         fetchFeatures();
     }, []);
+
+    useEffect(() => {
+        if (features.length > 0) {
+            fetchProcesses();
+        }
+    }, [features]);
 
     const showAddProcessModal = (process = null) => {
         if (process) {
@@ -67,7 +80,6 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
             setProcessStatus(process.status);
             setProcessWeightage(process.weightage);
             setProcessInstalledFeatures(process.installedFeatures || []);
-            setProcessIdInput(process.processIdInput);
             setProcessType(process.processType);
             setIsEditingProcess(true);
             setEditingProcessId(process.id);
@@ -78,14 +90,11 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
                 setRangeStart(process.rangeStart || '');
                 setRangeEnd(process.rangeEnd || '');
             }
-            // Set rangeStart and rangeEnd based on the process IDs (mapping to names for UI)
-
         } else {
             setProcessName('');
             setProcessStatus(true);
             setProcessWeightage(0);
             setProcessInstalledFeatures([]);
-            setProcessIdInput(0);
             setProcessType('');
             setIsEditingProcess(false);
             setEditingProcessId(null);
@@ -107,26 +116,12 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
             return;
         }
 
-        const isExistingOrder = processes.some(process => process.processIdInput === processIdInput && process.id !== editingProcessId);
-        if (isExistingOrder) {
-            notification.error({ message: t('processDuplicateOrder') });
-            return;
-        }
         const rangeStartNum = parseFloat(rangeStart);
         const rangeEndNum = parseFloat(rangeEnd);
 
-        // Validate rangeStart and rangeEnd
         if (processType === 'Independent') {
             if (isNaN(rangeStartNum) || isNaN(rangeEndNum)) {
                 notification.error({ message: t('invalidRangeNumbers') });
-                return;
-            }
-            if (rangeStartNum > processIdInput || rangeStartNum > rangeEndNum) {
-                notification.error({ message: t('invalidRangeStartOrder') });
-                return;
-            }
-            if (rangeEndNum < processIdInput || rangeEndNum <= rangeStartNum) {
-                notification.error({ message: t('invalidRangeEndOrder') });
                 return;
             }
         }
@@ -137,7 +132,6 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
             weightage: processWeightage,
             status: processStatus,
             installedFeatures: processInstalledFeatures.map(Number),
-            processIdInput,
             processType,
             rangeStart: processType === 'Dependent' ? 0 : (rangeStart || 0),
             rangeEnd: processType === 'Dependent' ? 0 : (rangeEnd || 0),
@@ -151,29 +145,28 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
                 response = await API.post('/Processes', newProcess);
             }
 
-            // Log the entire response
             console.log('API Response:', response);
 
-            let processWithKey;
             if (response.status === 204) {
-                // Handle 204 No Content response
-                notification.success({ message: isEditingProcess ? t('processUpdateSuccess') : t('processAddSuccess') });
+                notification.success({ 
+                    message: isEditingProcess ? t('processUpdateSuccess') : t('processAddSuccess'),
+                    
+                });
                 setProcessModalVisible(false);
-                fetchProcesses();
-                return; // No further processing needed
-            } else if (response && response.data) {
-                processWithKey = response.data;
-                if (typeof processWithKey !== 'object' || Array.isArray(processWithKey)) {
-                    console.warn('Unexpected response data type:', typeof processWithKey);
-                    processWithKey = { id: processWithKey, key: processWithKey.toString() }; // Handle string responses
-                }
-            } else {
-                console.error('Invalid response structure:', response);
-                throw new Error('Invalid response structure: No data found');
+                await fetchProcesses(); // Refresh the processes list
+                return;
             }
 
-            // Set the key for the process
+            let processWithKey = response.data;
+            if (typeof processWithKey !== 'object' || Array.isArray(processWithKey)) {
+                processWithKey = { id: processWithKey, key: processWithKey.toString() };
+            }
+
             processWithKey.key = processWithKey.id ? processWithKey.id.toString() : '';
+            processWithKey.featureNames = processInstalledFeatures.map(featureId => {
+                const feature = features.find(f => f.id === Number(featureId));
+                return feature?.name;
+            }).filter(Boolean);
 
             if (isEditingProcess) {
                 setProcesses(prevProcesses =>
@@ -188,6 +181,10 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
 
             setProcessModalVisible(false);
             onUpdateProcesses([...processes, processWithKey]);
+            notification.success({
+                message: isEditingProcess ? 'Process updated successfully!' : 'New process added successfully',
+              
+            });
 
         } catch (error) {
             console.error('Error saving process:', error);
@@ -227,12 +224,6 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
             key: 'featureNames',
             sorter: (a, b) => (a.featureNames?.join(',') || '').localeCompare(b.featureNames?.join(',') || ''),
             render: features => features?.join(', ') || 'None',
-        },
-        {
-            title: t('processOrder'),
-            dataIndex: 'processIdInput',
-            key: 'processIdInput',
-            sorter: (a, b) => a.processIdInput - b.processIdInput
         },
         {
             title: t('processType'),
@@ -294,7 +285,6 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
                     total: filteredProcesses.length,
                     showSizeChanger: true,
                     pageSizeOptions: [5, 10, 15],
-                    // showQuickJumper: true,
                     showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
                     className: `bg-white p-3 rounded rounded-top-0`
                 }}
@@ -319,7 +309,7 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
                 </Modal.Header>
                 <Modal.Body className={`${customLight}`}>
                     <div style={{ marginBottom: '16px' }}>
-                        <label htmlFor="processName" className={`${customDarkText}`}>{t('.processNameLabel')}:</label>
+                        <label htmlFor="processName" className={`${customDarkText}`}><span className="text-danger">*</span>{t('.processNameLabel')}:</label>
                         <Input
                             id="processName"
                             placeholder={t('processName')}
@@ -330,7 +320,7 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
                         />
                     </div>
                     <div style={{ marginBottom: '16px' }}>
-                        <label htmlFor="processWeightage" className={`${customDarkText}`}>{t('weightageLabel')}:</label>
+                        <label htmlFor="processWeightage" className={`${customDarkText}`}><span className="text-danger">*</span>{t('weightageLabel')}:</label>
                         <Input
                             id="processWeightage"
                             placeholder={t('weightage')}
@@ -342,19 +332,7 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
                         />
                     </div>
                     <div style={{ marginBottom: '16px' }}>
-                        <label htmlFor="processOrder" className={`${customDarkText}`}>{t('processOrderLabel')}:</label>
-                        <Input
-                            id="processOrder"
-                            placeholder={t('processOrder')}
-                            type="number"
-                            value={processIdInput || ''}
-                            onChange={e => setProcessIdInput(e.target.value ? parseInt(e.target.value) : 0)}
-                            style={{ width: '100%' }}
-                            className={`${customDarkText}`}
-                        />
-                    </div>
-                    <div style={{ marginBottom: '16px' }}>
-                        <label htmlFor="processType" className={`${customDarkText}`}>{t('processTypeLabel')}:</label>
+                        <label htmlFor="processType" className={`${customDarkText}`}><span className="text-danger">*</span>{t('processTypeLabel')}:</label>
                         <Select
                             id="processType"
                             placeholder={t('processType')}
@@ -377,7 +355,7 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
                         </Select>
                     </div>
                     <div style={{ marginBottom: '16px' }}>
-                        <label htmlFor="processStatus" className={`${customDarkText}`}>{t('statusLabel')}:</label>
+                        <label htmlFor="processStatus" className={`${customDarkText}`}><span className="text-danger">*</span>{t('statusLabel')}:</label>
                         <Switch
                             id="processStatus"
                             checked={processStatus}
@@ -389,7 +367,7 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
                         />
                     </div>
                     <div style={{ marginBottom: '16px' }}>
-                        <label htmlFor="processInstalledFeatures" className={`${customDarkText}`}>{t('installedFeaturesLabel')}:</label>
+                        <label htmlFor="processInstalledFeatures" className={`${customDarkText}`}><span className="text-danger">*</span>{t('installedFeaturesLabel')}:</label>
                         <Select
                             id="processInstalledFeatures"
                             mode="multiple"
@@ -409,7 +387,7 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
                     {processType === 'Independent' && (
                         <div>
                             <div style={{ marginBottom: '16px' }}>
-                                <label htmlFor="rangeStart" className={`${customDarkText}`}>{t('rangeStartLabel')}:</label>
+                                <label htmlFor="rangeStart" className={`${customDarkText}`}><span className="text-danger">*</span>{t('rangeStartLabel')}:</label>
                                 <Select
                                     id="rangeStart"
                                     placeholder={
@@ -424,13 +402,13 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
                                 >
                                     {processes.map(process => (
                                         <Select.Option key={process.id} value={process.id}>
-                                            {process.name} {/* Display the process name */}
+                                            {process.name}
                                         </Select.Option>
                                     ))}
                                 </Select>
                             </div>
                             <div style={{ marginBottom: '16px' }}>
-                                <label htmlFor="rangeEnd" className={`${customDarkText}`}>{t('rangeEndLabel')}:</label>
+                                <label htmlFor="rangeEnd" className={`${customDarkText}`}><span className="text-danger">*</span>{t('rangeEndLabel')}:</label>
                                 <Select
                                     id="rangeEnd"
                                     placeholder={
@@ -445,7 +423,7 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
                                 >
                                     {processes.map(process => (
                                         <Select.Option key={process.id} value={process.id}>
-                                            {process.name} {/* Display the process name */}
+                                            {process.name}
                                         </Select.Option>
                                     ))}
                                 </Select>

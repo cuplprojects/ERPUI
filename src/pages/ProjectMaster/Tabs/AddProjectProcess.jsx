@@ -14,8 +14,8 @@ const DragHandle = SortableHandle(({ disabled }) => (
     display: disabled ? 'none' : 'inline' 
   }} aria-hidden={disabled ? "true" : "false"}>⣿</span>
 ));
-const SortableRow = SortableElement(({ process, index, features, editingProcessId, editingFeatures, handleFeatureChange, handleSaveFeatures, handleCancelEdit, handleEdit, independentProcesses, disabled, handleThresholdChange }) => {
 
+const SortableRow = SortableElement(({ process, index, features, editingProcessId, editingFeatures, handleFeatureChange, handleSaveFeatures, handleCancelEdit, handleEdit, independentProcesses, disabled, handleThresholdChange }) => {
   return (
     <tr style={{ opacity: 1, background: 'white', margin: '10px' }}>
       <td>
@@ -91,6 +91,10 @@ const arrayMove = (array, from, to) => {
 };
 
 const AddProjectProcess = ({ selectedProject }) => {
+  if (!selectedProject) {
+    return null;
+  }
+
   const [projectProcesses, setProjectProcesses] = useState([]);
   const [features, setFeatures] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -112,7 +116,7 @@ const AddProjectProcess = ({ selectedProject }) => {
         const response = await API.get(`/PaperTypes/${typeId}/RequiredProcesses`);
         setRequiredProcessIds(response.data.map(process => process.id));
       } catch (error) {
-        message.error('Unable to fetch required processes. Please try again later.');
+        console.error('Unable to fetch required processes:', error);
       }
     };
 
@@ -133,7 +137,7 @@ const AddProjectProcess = ({ selectedProject }) => {
           await fetchProjectProcesses(typeId);
         }
       } catch (error) {
-        message.error('Unable to fetch project processes. Please try again later.');
+        console.error('Unable to fetch project processes:', error);
       } finally {
         setLoading(false);
       }
@@ -145,7 +149,7 @@ const AddProjectProcess = ({ selectedProject }) => {
         const independentOnly = response.data.filter(process => process.processType !== "Dependent");
         setProjectProcesses(calculatedWeightage(independentOnly));
       } catch (error) {
-        message.error('Unable to fetch project processes. Please try again later.');
+        console.error('Unable to fetch project processes:', error);
       }
     };
 
@@ -154,7 +158,7 @@ const AddProjectProcess = ({ selectedProject }) => {
         const response = await API.get('/Features');
         setFeatures(response.data);
       } catch (error) {
-        message.error('Unable to fetch features. Please try again later.');
+        console.error('Unable to fetch features:', error);
       }
     };
 
@@ -173,7 +177,7 @@ const AddProjectProcess = ({ selectedProject }) => {
         setIndependentProcesses(independentOnly);
 
       } catch (error) {
-        message.error('Unable to fetch processes. Please try again later.');
+        console.error('Unable to fetch processes:', error);
       }
     };
 
@@ -182,7 +186,7 @@ const AddProjectProcess = ({ selectedProject }) => {
         const response = await API.get(`/Transactions/exists/${selectedProject}`);
         setIsTransactionExists(response.data);
       } catch (error) {
-        message.error('Error checking transaction status');
+        console.error('Error checking transaction status:', error);
       }
     };
 
