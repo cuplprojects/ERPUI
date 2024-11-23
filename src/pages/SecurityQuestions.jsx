@@ -5,7 +5,7 @@ import API from '../CustomHooks/MasterApiHooks/api';
 import themeStore from '../store/themeStore';
 import { useStore } from 'zustand';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'react-toastify';
+import { success, error } from '../CustomHooks/Services/AlertMessageService';
 import { message } from 'antd';
 
 const { Search } = Input;
@@ -37,11 +37,11 @@ const SecurityQuestions = () => {
         }));
         setQuestions(formattedQuestions);
       } else {
-        toast.error(t('failedToFetchQuestions'));
+        error(t('failedToFetchQuestions'));
       }
-    } catch (error) {
-      console.error('Error fetching questions:', error);
-      toast.error(t('errorOccurredWhileFetchingQuestions'));
+    } catch (err) {
+      console.error('Error fetching questions:', err);
+      error(t('errorOccurredWhileFetchingQuestions'));
     } finally {
       setLoading(false);
     }
@@ -49,7 +49,7 @@ const SecurityQuestions = () => {
 
   const addQuestion = async () => {
     if (newQuestion.trim() === '') {
-      toast.error(t('pleaseEnterQuestion'));
+      error(t('pleaseEnterQuestion'));
       return;
     }
 
@@ -59,16 +59,16 @@ const SecurityQuestions = () => {
       const response = await API.post('/SecurityQuestions', { securityQuestions: newQuestion });
 
       if (response.status === 201) {
-        message.success(t('questionAddedSuccessfully'));
+        success(t('questionAddedSuccessfully'));
         setNewQuestion('');
         await fetchQuestions();
       } else {
         console.error('Unexpected response status:', response.status);
-        toast.error(t('failedToAddQuestion'));
+        error(t('failedToAddQuestion'));
       }
-    } catch (error) {
-      console.error('Error adding question:', error);
-      toast.error(t('errorOccurredWhileAddingQuestion'));
+    } catch (err) {
+      console.error('Error adding question:', err);
+      error(t('errorOccurredWhileAddingQuestion'));
     } finally {
       setLoading(false);
     }

@@ -16,6 +16,7 @@ import { fetchTextLabels, addTextLabel, updateTextLabel } from '../../CustomHook
 import { EditOutlined } from '@ant-design/icons';
 import { useUserData } from '../../store/userDataStore';
 import AddMessage from './AddMessage';
+import { success, error } from '../../CustomHooks/Services/AlertMessageService';
 
 const Message = () => {
   const userData = useUserData();
@@ -49,10 +50,9 @@ const Message = () => {
     try {
       const response = await fetchTextLabels();
       setLabels(response);
-    } catch (error) {
-      console.error('Error fetching labels:', error);
-      setAlertMessage({ text: 'Failed to fetch labels', type: 'danger' });
-      setShowAlert(true);
+    } catch (err) {
+      console.error('Error fetching labels:', err);
+      error(t('Failed to fetch labels'));
     }
   };
 
@@ -110,19 +110,17 @@ const Message = () => {
       if (showAddForm) {
         const { labelKey, englishLabel, hindiLabel } = formData;
         await addTextLabel({ labelKey, englishLabel, hindiLabel });
-        setAlertMessage({ text: 'labeladdedsuccess', type: 'success' });
+        success(t('labeladdedsuccess'));
         setShowAddForm(false);
       } else {
         await updateTextLabel(formData.textLabelId, formData);
-        setAlertMessage({ text: 'labelUpdatedSuccess', type: 'success' });
+        success(t('labelUpdatedSuccess'));
         setShowEditForm(false);
       }
       fetchLabels();
-      setShowAlert(true);
-    } catch (error) {
-      console.error('Error submitting form:', error);
-      setAlertMessage({ text: 'failedToSubmitLabel', type: 'danger' });
-      setShowAlert(true);
+    } catch (err) {
+      console.error('Error submitting form:', err);
+      error(t('failedToSubmitLabel'));
     }
   };
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Input, Button, Select, Table, Form, message, Pagination, Divider } from 'antd';
+import { Input, Button, Select, Table, Form, Pagination, Divider } from 'antd';
 import { Modal } from 'react-bootstrap';
 import API from '../CustomHooks/MasterApiHooks/api';
 import { useMediaQuery } from 'react-responsive';
@@ -8,6 +8,7 @@ import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import { useTranslation } from 'react-i18next';
 import { SortAscendingOutlined, SortDescendingOutlined, EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
+import { success, error } from '../CustomHooks/Services/AlertMessageService';
 
 const { Option } = Select;
 const { Search } = Input;
@@ -47,8 +48,8 @@ const Zone = () => {
     try {
       const response = await API.get('/Zones');
       setZones(response.data);
-    } catch (error) {
-      console.error(t("Failed to fetch zones"), error);
+    } catch (err) {
+      error(t("Failed to fetch zones"));
     }
   };
 
@@ -56,8 +57,8 @@ const Zone = () => {
     try {
       const response = await API.get('/Cameras');
       setCamera(response.data);
-    } catch (error) {
-      console.error(t("Failed to fetch cameras"), error);
+    } catch (err) {
+      error(t("Failed to fetch cameras"));
     }
   };
 
@@ -65,8 +66,8 @@ const Zone = () => {
     try {
       const response = await API.get('/Machines');
       setMachine(response.data);
-    } catch (error) {
-      console.error(t("Failed to fetch machines"), error);
+    } catch (err) {
+      error(t("Failed to fetch machines"));
     }
   };
 
@@ -74,7 +75,7 @@ const Zone = () => {
     const { zoneNo, zoneDescription, cameraIds, machineId } = values;
     const existingZone = zones.find(zone => zone.zoneNo === zoneNo);
     if (existingZone) {
-      message.error(t('Zone Name already exists!'));
+      error(t('Zone Name already exists!'));
       return;
     }
 
@@ -82,7 +83,7 @@ const Zone = () => {
     const alreadyAssignedCameras = cameraIds.filter(id => assignedCameras.includes(id));
     if (alreadyAssignedCameras.length > 0) {
       const cameraNames = alreadyAssignedCameras.map(id => camera.find(c => c.cameraId === id)?.name).join(', ');
-      message.error(t('The following cameras are already assigned to other zones: {{cameraNames}}', { cameraNames }));
+      error(t('The following cameras are already assigned to other zones: {{cameraNames}}', { cameraNames }));
       return;
     }
 
@@ -90,7 +91,7 @@ const Zone = () => {
     const alreadyAssignedMachines = machineId.filter(id => assignedMachines.includes(id));
     if (alreadyAssignedMachines.length > 0) {
       const machineNames = alreadyAssignedMachines.map(id => machine.find(m => m.machineId === id)?.machineName).join(', ');
-      message.error(t('The following machines are already assigned to other zones: {{machineNames}}', { machineNames }));
+      error(t('The following machines are already assigned to other zones: {{machineNames}}', { machineNames }));
       return;
     }
 
@@ -106,10 +107,9 @@ const Zone = () => {
       getZone();
       form.resetFields();
       setIsModalVisible(false);
-      message.success(t('Zone added successfully!'));
-    } catch (error) {
-      console.error(t("Failed to add zone"), error);
-      message.error(t('Failed to add zone. Please try again.'));
+      success(t('Zone added successfully!'));
+    } catch (err) {
+      error(t('Failed to add zone. Please try again.'));
     }
   };
 
@@ -123,7 +123,7 @@ const Zone = () => {
 
     const existingZone = zones.find(zone => zone.zoneNo === updatedZone.zoneNo && zone.zoneNo !== originalZone.zoneNo);
     if (existingZone) {
-      message.error(t('Zone Name already exists!'));
+      error(t('Zone Name already exists!'));
       return;
     }
 
@@ -131,7 +131,7 @@ const Zone = () => {
     const alreadyAssignedCameras = updatedZone.cameraIds.filter(id => assignedCameras.includes(id));
     if (alreadyAssignedCameras.length > 0) {
       const cameraNames = alreadyAssignedCameras.map(id => camera.find(c => c.cameraId === id)?.name).join(', ');
-      message.error(t('The following cameras are already assigned to other zones: {{cameraNames}}', { cameraNames }));
+      error(t('The following cameras are already assigned to other zones: {{cameraNames}}', { cameraNames }));
       return;
     }
 
@@ -139,7 +139,7 @@ const Zone = () => {
     const alreadyAssignedMachines = updatedZone.machineId.filter(id => assignedMachines.includes(id));
     if (alreadyAssignedMachines.length > 0) {
       const machineNames = alreadyAssignedMachines.map(id => machine.find(m => m.machineId === id)?.machineName).join(', ');
-      message.error(t('The following machines are already assigned to other zones: {{machineNames}}', { machineNames }));
+      error(t('The following machines are already assigned to other zones: {{machineNames}}', { machineNames }));
       return;
     }
 
@@ -149,10 +149,9 @@ const Zone = () => {
       updatedZones[index] = updatedZone;
       setZones(updatedZones);
       getZone();
-      message.success(t('Zone updated successfully!'));
-    } catch (error) {
-      console.error(t("Failed to update zone"), error);
-      message.error(t('Failed to update zone. Please try again.'));
+      success(t('Zone updated successfully!'));
+    } catch (err) {
+      error(t('Failed to update zone. Please try again.'));
     } finally {
       setEditingIndex(null);
       setEditingZone({});
