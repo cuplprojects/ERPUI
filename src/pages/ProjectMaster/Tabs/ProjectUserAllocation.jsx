@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Select, Table, Button, message } from 'antd';
 import API from '../../../CustomHooks/MasterApiHooks/api';
+import { useTranslation } from 'react-i18next';
+import { useStore } from 'zustand';
+import themeStore from './../../../store/themeStore';
+// import { useTranslation } from 'react-i18next';
 
 const { Option } = Select;
 
@@ -9,6 +13,10 @@ const ProjectUserAllocation = ({ selectedProject, activeKey }) => {
   const [users, setUsers] = useState([]);
   const [userSelections, setUserSelections] = useState({});
   const [projectName, setProjectName] = useState(''); // State for project name
+  const { t } = useTranslation();
+  const { getCssClasses } = useStore(themeStore);
+  const cssClasses = getCssClasses();
+  const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
 
   useEffect(() => {
     if (selectedProject) {
@@ -23,7 +31,7 @@ const ProjectUserAllocation = ({ selectedProject, activeKey }) => {
       const response = await API.get(`/Project/${projectId}`);
       setProjectName(response.data.name); // Assuming response has a 'name' field
     } catch (error) {
-      console.error("Failed to fetch project name", error);
+      console.error(t("failedToFetchProjectName"), error);
     }
   };
 
@@ -35,7 +43,7 @@ const ProjectUserAllocation = ({ selectedProject, activeKey }) => {
       const filteredUsers = response.data.filter(user => user.roleId === 5 || user.roleId === 1);
       setUsers(filteredUsers);
     } catch (error) {
-      console.error("Failed to fetch users", error);
+      console.error(t("failedToFetchUsers"), error);
     }
   };
 
@@ -77,7 +85,7 @@ const ProjectUserAllocation = ({ selectedProject, activeKey }) => {
       setUserSelections(newUserSelections);
   
     } catch (error) {
-      console.error("Failed to fetch processes", error);
+      console.error(t("failedToFetchProcesses"), error);
     }
   };
   
@@ -97,22 +105,22 @@ const ProjectUserAllocation = ({ selectedProject, activeKey }) => {
       }, {});
 
       await API.post(`/ProjectProcess/UpdateProcessUsers/${selectedProject}`, userAssignments);
-      message.success("Users assigned successfully!");
+      message.success(t("usersAssignedSuccessfully"));
       fetchProcessesWithUsers(selectedProject); // Refresh the process list
     } catch (error) {
       console.error("Failed to assign users", error);
-      message.error("Failed to assign users");
+      message.error(t("failedToAssignUsers"));
     }
   };
 
   const columns = [
     {
-      title: 'Process Name',
+      title: t('processName'),
       dataIndex: 'processName',
       key: 'processName',
     },
     {
-      title: 'Assign Supervisor',
+      title: t('assignSupervisor'),
       key: 'assignUser',
       render: (text, record) => (
         <Select
@@ -134,7 +142,7 @@ const ProjectUserAllocation = ({ selectedProject, activeKey }) => {
 
   return (
     <div>
-      <h3>Project User Allocation for : {projectName}</h3>
+      <h3>{t("projectUserAllocationFor")} {projectName}</h3>
       <Table
         dataSource={processes}
         columns={columns}
@@ -142,7 +150,7 @@ const ProjectUserAllocation = ({ selectedProject, activeKey }) => {
         pagination={false}
       />
       <Button type="primary" onClick={handleSubmit} style={{ marginTop: '20px' }}>
-        Submit User Assignments
+        {t("submitUserAssignments")}
       </Button>
     </div>
   );
