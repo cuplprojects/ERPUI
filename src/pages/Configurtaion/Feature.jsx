@@ -96,13 +96,16 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
             if (isEditingFeature) {
                 // Update existing feature
                 await API.put(`/Features/${editingFeatureId}`, featurePayload);
+
                success(t('featureUpdatedSuccessfully'));
+
             } else {
                 // Add new feature
                 const response = await API.post('/Features', featurePayload);
                 const addedFeature = response.data;
                 onAddFeature({ key: addedFeature.featureId, name: addedFeature.features });
                 success(t('featureAddedSuccessfully'));
+
             }
             
             setFeatureModalVisible(false);
@@ -110,7 +113,9 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
             
         } catch (error) {
             console.error('Error handling feature:', error);
+
             error(isEditingFeature ? t('failedToUpdateFeature') : t('failedToAddFeature'));
+
         }
     };
 
