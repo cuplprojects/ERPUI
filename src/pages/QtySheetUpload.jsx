@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Row, Col } from 'react-bootstrap';
-import { Form, Upload, Button, Select, message, Modal,Menu, Dropdown } from 'antd';
+import { Form, Upload, Button, Select, message, Modal,Menu, Dropdown, Spin } from 'antd';
 import { UploadOutlined, DeleteOutlined } from '@ant-design/icons';
 import * as XLSX from 'xlsx';
 import themeStore from './../store/themeStore';
@@ -58,19 +58,25 @@ const QtySheetUpload = () => {
     const [mappedData,setMappeddata] = useState([]);
     const [transactionExist, setTransactionExist] = useState(false);
     const [showDisclaimer, setShowDisclaimer] = useState(false);
+    const [isProcessingFile, setIsProcessingFile] = useState(false);
+    const [showDeleteButton, setShowDeleteButton] = useState(false);
+    const [hasUploadedFile, setHasUploadedFile] = useState(false);
 
     useEffect(() => {
         const checkTransactionExistence = async () => {
             try {
                 const response = await API.get(`/Transactions/exists/${projectId}`);
-                setTransactionExist(response.data);
+                const hasTransactions = response.data;
+                // Only show delete button if there are no transactions AND a file has been uploaded
+                setShowDeleteButton(!hasTransactions && (hasUploadedFile || isLotsFetched));
             } catch (error) {
                 console.error('Failed to check transaction existence:', error);
+                setShowDeleteButton(true);
             }
         };
 
         checkTransactionExistence();
-    }, []);
+    }, [hasUploadedFile, isLotsFetched]); // Run when hasUploadedFile changes
 
     useEffect(() => {
         const fetchProjectName = async () => {
@@ -88,7 +94,7 @@ const QtySheetUpload = () => {
     useEffect(() => {
         const fetchDispatchedLots = async () => {
             try {
-                const response = await API.get(`https://localhost:7212/api/Dispatch/project/${projectId}/lot/1`);
+                const response = await API.get(`/Dispatch/project/${projectId}/lot/1`);
                 const dispatchedLotStatus = response.data.map(dispatch => dispatch.status);
                 setDispatchedLots(dispatchedLotStatus);
             } catch (error) {
@@ -179,6 +185,7 @@ const QtySheetUpload = () => {
             setDataSource(finalPayload);
             message.success(t('quantitySheetUploadedSuccessfully'))
             fetchLots();
+            setHasUploadedFile(true); // Set flag when file is successfully uploaded
             resetState();
         } catch (error) {
             console.error(t('uploadFailed'), error.response?.data || error.message);
@@ -301,6 +308,7 @@ const QtySheetUpload = () => {
     const handleFileUpload = (file) => {
         setFileList([file]);
         setSelectedFile(file);
+        setIsProcessingFile(true); // Show loader when file processing starts
         processFile(file);
         return false;
     };
@@ -321,6 +329,7 @@ const QtySheetUpload = () => {
 
             if (filteredData.length === 0) {
                 console.warn(t('noValidDataFoundInFile'));
+                setIsProcessingFile(false); // Hide loader if no valid data
                 return;
             }
 
@@ -336,6 +345,7 @@ const QtySheetUpload = () => {
             });
 
             setFieldMappings(autoMappings);
+            setIsProcessingFile(false); // Hide loader when processing is complete
         };
         reader.readAsArrayBuffer(file);
     };
@@ -405,6 +415,8 @@ const QtySheetUpload = () => {
         try {
             await API.delete(`/QuantitySheet/DeleteByProjectId/${projectId}`);
             message.success(t('quantitySheetDeletedSuccessfully'));
+            setHasUploadedFile(false); // Reset upload flag after successful deletion
+            setShowDeleteButton(true); // Hide delete button
         } catch (error) {
             console.error('Failed to delete quantity sheet:', error);
             message.error(t('failedToDeleteQuantitySheet'));
@@ -448,16 +460,17 @@ const QtySheetUpload = () => {
                                         <span className='d-inline d-sm-none'>{t('upload')}</span>
                                     </Button>
                                 </Upload>
-                                <Button
-                                    type="primary"
-                                    danger
-                                    onClick={handleDelete}
-                                    className="ms-2 d-flex align-items-center"
-                                    disabled={transactionExist}
-                                >
-                                    <DeleteOutlined />
-                                    <span>{t('deleteFile')}</span>
-                                </Button>
+                                {showDeleteButton && (
+                                    <Button
+                                        type="primary"
+                                        danger
+                                        onClick={handleDelete}
+                                        className="ms-2 d-flex align-items-center"
+                                    >
+                                        <DeleteOutlined />
+                                        <span>{t('deleteFile')}</span>
+                                    </Button>
+                                )}
                             </div>
                         </Form.Item>
                         <Form.Item>
@@ -469,7 +482,7 @@ const QtySheetUpload = () => {
                                 >
                                     {t('updateLots')}
                                 </Button>
-                            ) : (fileList.length > 0 ? (
+                            ) : (fileList.length > 0 && showMappingFields ?  (
                                 <Button
                                     className={`${customBtn}`}
                                     type="primary"
@@ -532,6 +545,12 @@ const QtySheetUpload = () => {
                     <p>{t('skipTheseLotsMessage')}</p>
                 </div>
             </Modal>
+
+            {isProcessingFile && (
+                <div className="text-center my-3">
+                    <Spin size="large" tip="Processing file..." />
+                </div>
+            )}
 
             {showDisclaimer && (
                 <div className="text-danger mb-3 fw-bold">

@@ -49,6 +49,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable ,lots}) => {
     const [searchText, setSearchText] = useState('');
     const [pageSize, setPageSize] = useState(5);
     const [dispatchedLots, setDispatchedLots] = useState([]);
+    
 
     const columns = [
         {
