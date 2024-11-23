@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { Form, Upload, Button, Select, message,Menu, Dropdown, Spin } from 'antd';
 import { Row, Col, Modal } from 'react-bootstrap';
-import { Form, Upload, Button, Select, message, Menu, Dropdown } from 'antd';
 import { UploadOutlined, DeleteOutlined } from '@ant-design/icons';
 import * as XLSX from 'xlsx';
 import themeStore from './../store/themeStore';
@@ -59,6 +59,9 @@ const QtySheetUpload = () => {
     const [transactionExist, setTransactionExist] = useState(false);
 
     const [showDisclaimer, setShowDisclaimer] = useState(false);
+    const [isProcessingFile, setIsProcessingFile] = useState(false);
+    const [showDeleteButton, setShowDeleteButton] = useState(false);
+    const [hasUploadedFile, setHasUploadedFile] = useState(false);
 
     const [isUpdateMode, setIsUpdateMode] = useState(false);
 
@@ -67,14 +70,17 @@ const QtySheetUpload = () => {
         const checkTransactionExistence = async () => {
             try {
                 const response = await API.get(`/Transactions/exists/${projectId}`);
-                setTransactionExist(response.data);
+                const hasTransactions = response.data;
+                // Only show delete button if there are no transactions AND a file has been uploaded
+                setShowDeleteButton(!hasTransactions && (hasUploadedFile || isLotsFetched));
             } catch (error) {
                 console.error('Failed to check transaction existence:', error);
+                setShowDeleteButton(true);
             }
         };
 
         checkTransactionExistence();
-    }, []);
+    }, [hasUploadedFile, isLotsFetched]); // Run when hasUploadedFile changes
 
     useEffect(() => {
         const fetchProjectName = async () => {
@@ -183,6 +189,7 @@ const QtySheetUpload = () => {
             setDataSource(finalPayload);
             success(isUpdateMode ? t('quantitySheetUpdatedSuccessfully') : t('quantitySheetUploadedSuccessfully'));
             fetchLots();
+            setHasUploadedFile(true); // Set flag when file is successfully uploaded
             resetState();
         } catch (error) {
             console.error(t('uploadFailed'), error.response?.data || error.message);
@@ -314,8 +321,12 @@ const QtySheetUpload = () => {
     const handleFileUpload = (file) => {
         setFileList([file]);
         setSelectedFile(file);
+
+        setIsProcessingFile(true); // Show loader when file processing starts
+
         setShowTable(false); // Hide table when file is selected
         setShowBtn(false); // Hide button when file is selected
+
         processFile(file);
         return false;
     };
@@ -336,6 +347,7 @@ const QtySheetUpload = () => {
 
             if (filteredData.length === 0) {
                 console.warn(t('noValidDataFoundInFile'));
+                setIsProcessingFile(false); // Hide loader if no valid data
                 return;
             }
 
@@ -351,6 +363,7 @@ const QtySheetUpload = () => {
             });
 
             setFieldMappings(autoMappings);
+            setIsProcessingFile(false); // Hide loader when processing is complete
         };
         reader.readAsArrayBuffer(file);
     };
@@ -422,7 +435,12 @@ const QtySheetUpload = () => {
         try {
             await API.delete(`/QuantitySheet/DeleteByProjectId/${projectId}`);
             fetchLots()
+
+            setHasUploadedFile(false); // Reset upload flag after successful deletion
+            setShowDeleteButton(true); // Hide delete button
+
             success(t('quantitySheetDeletedSuccessfully'));
+
         } catch (error) {
             console.error('Failed to delete quantity sheet:', error);
             error(t('failedToDeleteQuantitySheet'));
@@ -449,23 +467,47 @@ const QtySheetUpload = () => {
                     <Form layout="vertical" form={form}>
                         <Form.Item name="file" rules={[{ required: true, message: t('pleaseSelectAFile') }]}>
                             <div className="d-flex align-items-center">
-                            {!isLotsFetched ? (
-                                <Upload
-                                    onRemove={(file) => {
-                                        const index = fileList.indexOf(file);
-                                        const newFileList = fileList.slice();
-                                        newFileList.splice(index, 1);
-                                        setFileList(newFileList);
-                                    }}
-                                    beforeUpload={handleFileUpload}
-                                    fileList={fileList}
-                                    className='flex-grow-1'
-                                >
-                                    <Button className='fs-4 custom-zoom-btn w-100 d-flex align-items-center p-3'>
-                                        <UploadOutlined className='' />
-                                        <span className='d-none d-sm-inline'>{t('selectFile')}</span>
-                                        <span className='d-inline d-sm-none'>{t('upload')}</span>
+                                {!isLotsFetched ? (
+                                    <Upload
+                                        onRemove={(file) => {
+                                            const index = fileList.indexOf(file);
+                                            const newFileList = fileList.slice();
+                                            newFileList.splice(index, 1);
+                                            setFileList(newFileList);
+                                        }}
+                                        beforeUpload={handleFileUpload}
+                                        fileList={fileList}
+                                        className='flex-grow-1'
+                                    >
+                                        <Button className='fs-4 custom-zoom-btn w-100 d-flex align-items-center p-3'>
+                                            <UploadOutlined className='' />
+                                            <span className='d-none d-sm-inline'>{t('selectFile')}</span>
+                                            <span className='d-inline d-sm-none'>{t('upload')}</span>
+                                        </Button>
+                                    </Upload>
+                                ) : (
+                                    <Button
+                                        className={`${customBtn}`}
+                                        type="primary"
+                                        onClick={() => {
+                                            setIsLotsFetched(false);
+                                            setIsUpdateMode(true);
+                                        }}
+                                    >
+                                        {t('updateFile')}
                                     </Button>
+                                )}
+                                {showDeleteButton && (
+                                    <Button
+                                        type="primary"
+                                        danger
+                                        onClick={handleDelete}
+                                        className="ms-2 d-flex align-items-center"
+                                    >
+                                        <DeleteOutlined />
+                                        <span>{t('deleteFile')}</span>
+                                    </Button>
+
                                 </Upload>
                             ):(
                                 <Button
@@ -492,18 +534,18 @@ const QtySheetUpload = () => {
                                     <DeleteOutlined />
                                     <span>{t('deleteFile')}</span>
                                 </Button>
+
                                 )}
                             </div>
                         </Form.Item>
                         <Form.Item>
-                            {fileList.length > 0 && (
+                            {fileList.length > 0 && showDisclaimer && (
                                 <Button
                                     className={`${customBtn}`}
                                     type="primary"
-                                    onClick={isUpdateMode ? handleUpdate : () => handleUpload()}
-                                    loading={uploading}
+                                    onClick={handleUpdate}
                                 >
-                                    {uploading ? t('uploading') : (isUpdateMode ? t('update') : t('upload'))}
+                                    {t('updateLots')}
                                 </Button>
                             )}
                         </Form.Item>
@@ -568,6 +610,12 @@ const QtySheetUpload = () => {
                     </Button>
                 </Modal.Footer>
             </Modal>
+
+            {isProcessingFile && (
+                <div className="text-center my-3">
+                    <Spin size="large" tip="Processing file..." />
+                </div>
+            )}
 
             {showDisclaimer && (
                 <div className="text-danger mb-3 fw-bold text-center">
