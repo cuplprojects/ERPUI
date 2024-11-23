@@ -12,32 +12,19 @@ import { FaSearch } from 'react-icons/fa';
 import { Modal } from 'react-bootstrap';
 import { AiFillCloseSquare } from 'react-icons/ai';
 import API from '../../CustomHooks/MasterApiHooks/api';
+import { useUserData } from '../../store/userDataStore';
 
 const { TabPane } = Tabs;
 
 const SystemSettings = () => {
+  const userData = useUserData();
+  const roleId = userData.role.roleId;
+  console.log(roleId);
   const [features, setFeatures] = useState([]);
-  const [userRoleId, setUserRoleId] = useState(null);
   const { t } = useTranslation();
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
   const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
-
-  useEffect(() => {
-    const fetchUserRole = async () => {
-      try {
-        const authToken = localStorage.getItem('authToken');
-        if (authToken) {
-          const userId = JSON.parse(atob(authToken.split('.')[1])).userId;
-          const response = await API.get(`/User/${userId}`);
-          setUserRoleId(response.data.roleId);
-        }
-      } catch (error) {
-        console.error('Error fetching user role:', error);
-      }
-    };
-    fetchUserRole();
-  }, []);
 
   const updateFeatures = (updatedFeatures) => {
     setFeatures(updatedFeatures);
@@ -56,7 +43,7 @@ const SystemSettings = () => {
           borderBottom: `2px solid ${customDark}`
         }}
       >
-        {userRoleId !== 1 && (
+        {roleId === 1 && (
           <TabPane
             tab={
               <span className={`${customDarkText} ${customDark === 'blue-dark' ? customLightText : customDarkText}`}>

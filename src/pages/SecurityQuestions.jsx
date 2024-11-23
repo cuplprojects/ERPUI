@@ -11,7 +11,7 @@ import { message } from 'antd';
 const { Search } = Input;
 
 const SecurityQuestions = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { getCssClasses } = useStore(themeStore);
   const [customDark, customMid, customLight, customBtn, customDarkText, customLightText] = getCssClasses();
 

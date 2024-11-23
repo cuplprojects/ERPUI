@@ -24,6 +24,8 @@ export const AlertMessageService = (message, type = "info", autoClose = false) =
 
   if (!autoClose) {
     let lastEventTime = Date.now();
+    let timerSet = false; // Flag to track if the timer has been set
+
     const handleEvent = () => {
       const currentTime = Date.now();
       if (currentTime - lastEventTime < 1000) {
@@ -31,16 +33,19 @@ export const AlertMessageService = (message, type = "info", autoClose = false) =
       }
       lastEventTime = currentTime; // Update last event time
 
-      window.removeEventListener("keydown", handleEvent);
-      window.removeEventListener("mousemove", handleEvent);
+      if (!timerSet) { // Check if the timer has already been set
+        timerSet = true; // Set the flag to true
+        window.removeEventListener("keydown", handleEvent);
+        window.removeEventListener("mousemove", handleEvent);
 
-      // Update toast with progress bar when closing
-      toast.update(id, {
-        hideProgressBar: false,
-        autoClose: 2000,
-        closeOnClick: true,
-        draggable: true,
-      });
+        // Update toast with progress bar when closing
+        toast.update(id, {
+          hideProgressBar: false,
+          autoClose: 2000,
+          closeOnClick: true,
+          draggable: true,
+        });
+      }
     };
 
     window.addEventListener("click", handleEvent);

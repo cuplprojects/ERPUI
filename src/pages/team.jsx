@@ -20,6 +20,7 @@ import { useStore } from "zustand";
 import { Modal } from "react-bootstrap";
 import { useUserData } from "../store/userDataStore";
 import { FaSearch } from "react-icons/fa";
+import { success, error } from "../CustomHooks/Services/AlertMessageService";
 
 const { Option } = Select;
 const { Title, Text } = Typography;
@@ -54,7 +55,7 @@ const Team = () => {
     try {
       const response = await API.get("/User/operator");
       setUsers(response.data);
-    } catch (error) {
+    } catch (err) {
       console.error(t("failedToFetchUsers"));
     }
   };
@@ -86,12 +87,9 @@ const Team = () => {
       }));
 
       setTeams(updatedTeams);
-    } catch (error) {
-      console.error(t("failedToFetchTeams"), error);
-      notification.error({
-        message: t("error"),
-        description: t("failedToFetchTeamsOrUserDetails"),
-      });
+    } catch (err) {
+      console.error(t("failedToFetchTeams"), err);
+      console.error(t("failedToFetchTeamsOrUserDetails"));
     }
   };
 
@@ -112,12 +110,9 @@ const Team = () => {
     try {
       const response = await API.get("/Processes");
       setProcesses(response.data);
-    } catch (error) {
-      console.error(t("failedToFetchProcesses"), error);
-      notification.error({
-        message: t("error"),
-        description: t("failedToFetchProcessesCheckAPI"),
-      });
+    } catch (err) {
+      console.error(t("failedToFetchProcesses"), err);
+      console.error(t("failedToFetchProcessesCheckAPI"));
     }
   };
 
@@ -142,19 +137,15 @@ const Team = () => {
           await getTeams();
           setIsModalVisible(false);
           form.resetFields();
-          notification.success({
-            message: t("teamCreated"),
-            description: t("teamCreatedSuccessfully", {
-              teamName: newTeam.teamName,
-            }),
-            placement: "topRight",
-          });
-        } catch (error) {
-          console.error(t("failedToCreateTeam"), error);
+          success(t("teamCreatedSuccessfully", {
+            teamName: newTeam.teamName,
+          }));
+        } catch (err) {
+          error(t("failedToCreateTeam"));
         }
       })
       .catch((info) => {
-        console.error(t("formValidationFailed"), info);
+        error(t("formValidationFailed"));
       });
   };
 
@@ -175,18 +166,16 @@ const Team = () => {
     const updatedTeam = {
       ...teamToUpdate,
       status: status,
+      users: teamToUpdate.users,
+      userIds: teamToUpdate.users.map(user => user.id)
     };
 
     try {
       await API.put(`/Teams/${teamId}`, updatedTeam);
       await getTeams();
-      notification.success({
-        message: t("teamStatusUpdated"),
-        description: t("teamStatusUpdatedSuccessfully"),
-        placement: "topRight",
-      });
-    } catch (error) {
-      console.error(t("failedToUpdateTeamStatus"), error);
+      success(t('teamStatusUpdatedSuccessfully'));
+    } catch (err) {
+      error(t('failedToUpdateTeamStatus'));
     }
   };
 
@@ -212,20 +201,15 @@ const Team = () => {
           await getTeams();
           setIsModalVisible(false);
           form.resetFields();
-
-          notification.success({
-            message: t("teamUpdated"),
-            description: t("teamUpdatedSuccessfully", {
-              teamName: updatedTeam.teamName,
-            }),
-            placement: "topRight",
-          });
-        } catch (error) {
-          console.error(t("failedToUpdateTeam"), error);
+          success(t("teamUpdatedSuccessfully", {
+            teamName: updatedTeam.teamName,
+          }));
+        } catch (err) {
+          error(t("failedToUpdateTeam"));
         }
       })
       .catch((info) => {
-        console.error(t("formValidationFailed"), info);
+        error(t("formValidationFailed"));
       });
   };
 
@@ -299,25 +283,13 @@ const Team = () => {
 
   return (
     <div style={{ padding: "40px" }}>
-      <Card
-        style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.1)", borderRadius: "10px" }}
-      >
-        <Divider className={`fs-3 mt-0 ${customDarkText}`}>
-          {t("existingTeams")}
-        </Divider>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            marginTop: "20px",
-          }}
-        >
-          <Button
-            onClick={() => setIsModalVisible(true)}
-            size="large"
-            className={`${customBtn} ${
-              customDark === "dark-dark" ? `border` : `border-0`
-            }`}
+      <Card style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.1)", borderRadius: "10px" }}>
+        <h1 className={`${customDarkText} mb-4 text-left`}>{t("teams")}</h1>
+        <div style={{ display: "flex", justifyContent: "space-between", marginTop: "20px" }}>
+          <Button 
+            onClick={() => setIsModalVisible(true)} 
+            size="large" 
+            className={`${customBtn} ${customDark === "dark-dark" ? `border` : `border-0`}`}
           >
             {t("addTeam")}
           </Button>
@@ -378,9 +350,7 @@ const Team = () => {
             ${customDark === "pink-dark" ? "thead-pink" : ""}
             ${customDark === "purple-dark" ? "thead-purple" : ""}
             ${customDark === "light-dark" ? "thead-light" : ""}
-            ${
-              customDark === "brown-dark" ? "thead-brown" : ""
-            } custom-pagination`}
+            ${customDark === "brown-dark" ? "thead-brown" : ""} custom-pagination`}
             rowClassName={(record, index) =>
               index % 2 === 0 ? "table-row-light" : "table-row-dark"
             }
@@ -417,9 +387,7 @@ const Team = () => {
             <Form.Item
               label={<span className={customDarkText}>{t("teamMembers")}</span>}
               name="teamMembers"
-              rules={[
-                { required: true, message: t("pleaseSelectTeamMembers") },
-              ]}
+              rules={[{ required: true, message: t("pleaseSelectTeamMembers") }]}
             >
               <Select
                 mode="multiple"

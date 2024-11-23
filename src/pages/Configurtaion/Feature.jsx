@@ -8,6 +8,7 @@ import themeStore from '../../store/themeStore';
 import { FaSearch } from 'react-icons/fa';
 import { Modal } from 'react-bootstrap';
 import { AiFillCloseSquare } from 'react-icons/ai';
+import { success } from '../../CustomHooks/Services/AlertMessageService';
 
 const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
     const { t } = useTranslation();
@@ -32,7 +33,7 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
             setFeatures(response.data.map(feature => ({ key: feature.featureId, name: feature.features })));
         } catch (error) {
             console.error('Error fetching features:', error);
-            notification.error({ message: t('failedToFetchFeaturesPleaseTryAgain') });
+            error(t('failedToFetchFeaturesPleaseTryAgain'));
         }
     };
 
@@ -44,7 +45,7 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
     const validateFeature = (name) => {
         // Check for duplicate feature names
         if (features.some(feature => feature.name.toLowerCase() === name.toLowerCase())) {
-            notification.error({ message: t('featureNameAlreadyExists') });
+            error(t('featureNameAlreadyExists'));
             return false;
         }
 
@@ -54,7 +55,7 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
         const isOnlyNumbers = /^[0-9]+$/.test(name);
 
         if (isAlphanumeric && !(isOnlyLetters || isOnlyNumbers)) {
-            notification.error({ message: t('featureNameCannotContainBothLettersAndNumbers') });
+            error(t('featureNameCannotContainBothLettersAndNumbers'));
             return false;
         }
 
@@ -78,7 +79,7 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
     // Handle adding/updating feature
     const handleAddFeature = async () => {
         if (!featureName) {
-            notification.error({ message: t('featureNameCannotBeEmpty') });
+            error(t('featureNameCannotBeEmpty'));
             return;
         }
 
@@ -95,17 +96,16 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
             if (isEditingFeature) {
                 // Update existing feature
                 await API.put(`/Features/${editingFeatureId}`, featurePayload);
-                notification.success({ 
-                    message: t('featureUpdatedSuccessfully'),
-                    duration: 0,
-                    onClose: () => {}
-                });
+
+               success(t('featureUpdatedSuccessfully'));
+
             } else {
                 // Add new feature
                 const response = await API.post('/Features', featurePayload);
                 const addedFeature = response.data;
                 onAddFeature({ key: addedFeature.featureId, name: addedFeature.features });
-                notification.success({ message: t('featureAddedSuccessfully') });
+                success(t('featureAddedSuccessfully'));
+
             }
             
             setFeatureModalVisible(false);
@@ -113,9 +113,9 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
             
         } catch (error) {
             console.error('Error handling feature:', error);
-            notification.error({ 
-                message: isEditingFeature ? t('failedToUpdateFeature') : t('failedToAddFeature')
-            });
+
+            error(isEditingFeature ? t('failedToUpdateFeature') : t('failedToAddFeature'));
+
         }
     };
 

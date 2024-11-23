@@ -106,7 +106,7 @@ const arrayMove = (array, from, to) => {
   return array;
 };
 
-const AddProjectProcess = ({ selectedProject }) => {
+const AddProjectProcess = ({ selectedProject,setIsProcessSubmitted }) => {
   if (!selectedProject) {
     return null;
   }
@@ -145,6 +145,7 @@ const AddProjectProcess = ({ selectedProject }) => {
         const response = await API.get(`/ProjectProcess/GetProjectProcesses/${selectedProject}`);
         if (response.data.length > 0) {
           await fetchRequiredProcesses(typeId);
+          setIsProcessSubmitted(true);
           const sortedProcesses = response.data.sort((a, b) => a.sequence - b.sequence);
           const independentOnly = sortedProcesses.filter(process => process.processType !== "Dependent");
           setProjectProcesses(calculatedWeightage(independentOnly));
@@ -288,7 +289,10 @@ const AddProjectProcess = ({ selectedProject }) => {
       if (removedProcessIds.length > 0) {
         await API.post('/ProjectProcess/DeleteProcessesFromProject', deleteData);
       }
-      message.success('processesUpdatedSuccessfully');
+
+      message.success('Processes updated successfully!');
+      setIsProcessSubmitted(true); // Set the submission status to true
+
     } catch (error) {
       message.error('errorUpdatingProcessesPleaseTryAgain');
     } finally {
