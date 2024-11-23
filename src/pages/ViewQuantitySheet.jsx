@@ -217,7 +217,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
         });
     };
 
-    const fetchQuantity = async (lotNo) => {
+    const fetchQuantity = async (lotNo = selectedLotNo) => {
         try {
             const response = await API.get(`/QuantitySheet/Catch?ProjectId=${projectId}&lotNo=${lotNo}`);
             console.log("lot data in qty sheet", response.data);
