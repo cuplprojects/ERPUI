@@ -57,6 +57,7 @@ const QtySheetUpload = () => {
     const [skipLots, setSkipLots] = useState([]);  // Lots to be skipped based on matching
     const [mappedData,setMappeddata] = useState([]);
     const [transactionExist, setTransactionExist] = useState(false);
+    const [showDisclaimer, setShowDisclaimer] = useState(false);
 
     useEffect(() => {
         const checkTransactionExistence = async () => {
@@ -128,6 +129,7 @@ const QtySheetUpload = () => {
 
     const handleUpload = async (data) => {
         setUploading(true);
+        setShowDisclaimer(false);
         let mappedData;
         
         if (data) {
@@ -325,6 +327,7 @@ const QtySheetUpload = () => {
             const excelHeaders = filteredData[0];
             setHeaders(excelHeaders);
             setShowMappingFields(true);
+            setShowDisclaimer(true);
 
             const autoMappings = {};
             columns.forEach((col) => {
@@ -355,6 +358,7 @@ const QtySheetUpload = () => {
         setSelectedFile(null);
         setFileList([]);
         setShowTable(false);
+        setShowDisclaimer(false);
     };
 
     const fetchLots = async () => {
@@ -529,6 +533,11 @@ const QtySheetUpload = () => {
                 </div>
             </Modal>
 
+            {showDisclaimer && (
+                <div className="text-danger mb-3 fw-bold">
+                    {t('mapTheExcelHeaderWithTheirRespectedDefinedFields')}
+                </div>
+            )}
 
             {showMappingFields && headers.length > 0 && (
                 <Row className='mt-2 mb-2'>
