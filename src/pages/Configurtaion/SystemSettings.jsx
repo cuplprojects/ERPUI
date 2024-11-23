@@ -1,19 +1,25 @@
 // SystemSettings.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tabs } from 'antd';
-import { AppstoreOutlined, SettingOutlined, ToolOutlined } from '@ant-design/icons'; // Import icons
+import { AppstoreOutlined, SettingOutlined, ToolOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import FeatureManagement from './Feature';
 import ProcessManagement from './ProcessManagement';
-import FeatureConfiguration from './FeatureConfiguration'; // Import the FeatureConfiguration component
+import FeatureConfiguration from './FeatureConfiguration';
 import { useStore } from 'zustand';
 import themeStore from '../../store/themeStore';
 import { FaSearch } from 'react-icons/fa';
 import { Modal } from 'react-bootstrap';
 import { AiFillCloseSquare } from 'react-icons/ai';
+import API from '../../CustomHooks/MasterApiHooks/api';
+import { useUserData } from '../../store/userDataStore';
+
 const { TabPane } = Tabs;
 
 const SystemSettings = () => {
+  const userData = useUserData();
+  const roleId = userData.role.roleId;
+  console.log(roleId);
   const [features, setFeatures] = useState([]);
   const { t } = useTranslation();
   const { getCssClasses } = useStore(themeStore);
@@ -32,26 +38,28 @@ const SystemSettings = () => {
     <div>
       <Tabs 
         defaultActiveKey="1"
-        className={`custom-tabs`} // Add custom class
+        className={`custom-tabs`}
         tabBarStyle={{
-          borderBottom: `2px solid ${customDark}` // Use customDark color for bottom border
+          borderBottom: `2px solid ${customDark}`
         }}
       >
+        {roleId === 1 && (
+          <TabPane
+            tab={
+              <span className={`${customDarkText} ${customDark === 'blue-dark' ? customLightText : customDarkText}`}>
+                <AppstoreOutlined />
+                {t('features')}
+              </span>
+            }
+            key="1"
+          >
+            <FeatureManagement onUpdateFeatures={updateFeatures} />
+          </TabPane>
+        )}
         <TabPane
           tab={
             <span className={`${customDarkText} ${customDark === 'blue-dark' ? customLightText : customDarkText}`}>
-              <AppstoreOutlined /> {/* Feature icon */}
-              {t('features')}
-            </span>
-          }
-          key="1"
-        >
-          <FeatureManagement onUpdateFeatures={updateFeatures} />
-        </TabPane>
-        <TabPane
-          tab={
-            <span className={`${customDarkText} ${customDark === 'blue-dark' ? customLightText : customDarkText}`}>
-              <SettingOutlined /> {/* Process icon */}
+              <SettingOutlined />
               {t('processes')}
             </span>
           }
@@ -62,13 +70,13 @@ const SystemSettings = () => {
         <TabPane
           tab={
             <span className={`${customDarkText} ${customDark === 'blue-dark' ? customLightText : customDarkText}`}>
-              <ToolOutlined /> {/* Configuration icon */}
+              <ToolOutlined />
               {t('featureConfiguration')}
             </span>
           }
           key="3"
         >
-          <FeatureConfiguration features={features} /> {/* Add the FeatureConfiguration component */}
+          <FeatureConfiguration features={features} />
         </TabPane>
       </Tabs>
     </div>

@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Modal, Button, Form } from 'react-bootstrap';
+import Select from 'react-select';
 import API from '../CustomHooks/MasterApiHooks/api';
 import { useStore } from 'zustand';
 import themeStore from '../store/themeStore';
 import { useTranslation } from 'react-i18next';
-
 
 const SelectMachineModal = ({ show, handleClose, data, processId, handleSave }) => {
   const { t } = useTranslation();
@@ -17,33 +17,39 @@ const SelectMachineModal = ({ show, handleClose, data, processId, handleSave }) 
     // This empty dependency array ensures cssClasses are always fresh
   }, [cssClasses]);
 
-const statusMapping = {
-  0: t('pending'),
-  1: t('started'), 
-  2: t('completed'),
-};
-  const [selectedMachine, setSelectedMachine] = useState('');
+  const statusMapping = {
+    0: t('pending'),
+    1: t('started'),
+    2: t('completed'),
+  };
+
+  const [selectedMachine, setSelectedMachine] = useState(null);
   const [machineOptions, setMachineOptions] = useState([]);
   const [machineId, setMachineId] = useState(null);
 
-  const handleMachineChange = (e) => {
-    const selectedOption = machineOptions.find(option => option.machineName === e.target.value);
-    setSelectedMachine(selectedOption ? selectedOption.machineName : '');
-    setMachineId(selectedOption ? selectedOption.machineId : null);
+  const handleMachineChange = (selectedOption) => {
+    setSelectedMachine(selectedOption);
+    setMachineId(selectedOption ? selectedOption.value : null);
   };
 
   const getMachine = async () => {
     try {
-      const response = await API.get('/Machines'); // Adjust endpoint as necessary
-      setMachineOptions(response.data); // Set zone options from API response
+      const response = await API.get('/Machines');
+      // Filter machines by processId
+      const filteredMachines = response.data.filter(machine => machine.processId === processId);
+      const formattedOptions = filteredMachines.map(machine => ({
+        value: machine.machineId,
+        label: machine.machineName
+      }));
+      setMachineOptions(formattedOptions);
     } catch (error) {
-      console.error("Failed to fetch zone options", error);
+      console.error("Failed to fetch machine options", error);
     }
   };
 
   useEffect(() => {
     getMachine();
-  }, []); 
+  }, []);
 
   const handleConfirm = async () => {
     try {
@@ -76,8 +82,8 @@ const statusMapping = {
 
       await Promise.all(updatePromises);
       handleSave(machineId);
-      setMachineId()
-      setSelectedMachine()
+      setMachineId(null);
+      setSelectedMachine(null);
       handleClose();
     } catch (error) {
       console.error('Error updating machine:', error);
@@ -106,19 +112,14 @@ const statusMapping = {
         )}
         <Form.Group controlId="formMachine">
           <Form.Label>{t('selectMachine')}</Form.Label>
-          <Form.Control
-            as="select"
+          <Select
             value={selectedMachine}
             onChange={handleMachineChange}
-            className={` ${customDarkText}`}
-          >
-            <option value="">{t('selectMachine')}</option>
-            {machineOptions.map(option => (
-              <option key={option.machineId} value={option.machineName}>
-                {option.machineName}
-              </option>
-            ))}
-          </Form.Control>
+            options={machineOptions}
+            placeholder={t('selectMachine')}
+            isClearable
+            className={`${customDarkText}`}
+          />
         </Form.Group>
       </Modal.Body>
       <Modal.Footer className={`${customLight} ${customDarkText}`}>

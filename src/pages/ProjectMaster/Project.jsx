@@ -79,6 +79,7 @@ const Project = () => {
       bordered={true}
       style={{ padding: '1px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)', width: '100%' }}
     >
+      {console.log(activeTabKey, activetab3)}
       <Tabs 
         activeKey={activeTabKey} 
         onChange={setActiveTabKey}
