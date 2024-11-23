@@ -106,7 +106,7 @@ const arrayMove = (array, from, to) => {
   return array;
 };
 
-const AddProjectProcess = ({ selectedProject }) => {
+const AddProjectProcess = ({ selectedProject,setIsProcessSubmitted }) => {
   if (!selectedProject) {
     return null;
   }
@@ -288,7 +288,10 @@ const AddProjectProcess = ({ selectedProject }) => {
       if (removedProcessIds.length > 0) {
         await API.post('/ProjectProcess/DeleteProcessesFromProject', deleteData);
       }
-      message.success('processesUpdatedSuccessfully');
+
+      message.success('Processes updated successfully!');
+      setIsProcessSubmitted(true); // Set the submission status to true
+
     } catch (error) {
       message.error('errorUpdatingProcessesPleaseTryAgain');
     } finally {
