@@ -11,6 +11,7 @@ import { EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
 const { Option } = Select;
 const { Search } = Input;
 import { useTranslation } from 'react-i18next';
+import { success, error } from '../CustomHooks/Services/AlertMessageService';
 
 const Type = () => {
     const { t } = useTranslation();
@@ -89,7 +90,7 @@ const Type = () => {
         try {
             const typeExists = types.some(type => type.types.toLowerCase() === values.types.toLowerCase());
             if (typeExists) {
-                message.error(t("thisTypeAlreadyExists"));
+                error(t("thisTypeAlreadyExists"));
                 return;
             }
             const postData = {
@@ -100,13 +101,13 @@ const Type = () => {
             const response = await API.post('/PaperTypes', postData);
             setTypes(prev => [...prev, response.data]);
             setFilteredTypes(prev => [...prev, response.data]);
-            message.success(t("typeCreatedSuccessfully"));
+            success(t("typeCreatedSuccessfully"));
             setIsModalVisible(false);
             form.resetFields();
             setRequiredProcessIds([])
-        } catch (error) {
-            console.error(error);
-            message.error(t("failedToCreateType"));
+        } catch (err) {
+            console.error(err);
+            error(t("failedToCreateType"));
         }
     };
 
@@ -125,11 +126,11 @@ const Type = () => {
             updatedTypes[index] = updatedType;
             setTypes(updatedTypes);
             setFilteredTypes(updatedTypes);
-            message.success(t('typeUpdatedSuccessfully'));
+            success(t('typeUpdatedSuccessfully'));
             setEditingIndex(null);
-        } catch (error) {
-            console.error(error);
-            message.error(t('failedToUpdateType'));
+        } catch (err) {
+            console.error(err);
+            error(t('failedToUpdateType'));
         }
     };
 

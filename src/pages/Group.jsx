@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Input, Button, Switch, Form, message, Pagination, Divider } from 'antd';
+import { Table, Input, Button, Switch, Form, Pagination, Divider } from 'antd';
 import { Modal } from 'react-bootstrap';
 import API from '../CustomHooks/MasterApiHooks/api';
 import { useMediaQuery } from 'react-responsive';
@@ -10,6 +10,7 @@ import { SortAscendingOutlined, SortDescendingOutlined, EditOutlined, SaveOutlin
 import { Col, Row } from 'react-bootstrap';
 import { FaSearch } from "react-icons/fa";
 import { useTranslation } from 'react-i18next';
+import { success, error } from '../CustomHooks/Services/AlertMessageService';
 
 const Group = () => {
   const { t } = useTranslation();
@@ -38,8 +39,8 @@ const Group = () => {
       const response = await API.get('/Groups');
       setGroups(response.data);
       setFilteredGroups(response.data);
-    } catch (error) {
-      console.log(t('failedToFetchGroups'));
+    } catch (err) {
+      error(t('failedToFetchGroups'));
     }
   };
 
@@ -60,7 +61,7 @@ const Group = () => {
 
     const existingGroup = groups.find(group => group.name.toLowerCase() === name.toLowerCase());
     if (existingGroup) {
-      message.error(t('groupNameAlreadyExists'));
+      error(t('groupNameAlreadyExists'));
       return;
     }
 
@@ -72,9 +73,9 @@ const Group = () => {
       fetchGroups();
       form.resetFields();
       setIsModalVisible(false);
-      message.success(t('groupAddedSuccessfully'));
-    } catch (error) {
-      message.error(t('failedToAddGroup'));
+      success(t('groupAddedSuccessfully'));
+    } catch (err) {
+      error(t('failedToAddGroup'));
     }
   };
 
@@ -87,7 +88,7 @@ const Group = () => {
     );
 
     if (existingGroup) {
-      message.error(t('groupNameAlreadyExists'));
+      error(t('groupNameAlreadyExists'));
       return;
     }
 
@@ -101,9 +102,9 @@ const Group = () => {
         group.name.toLowerCase().includes(searchText.toLowerCase())
       ));
       fetchGroups();
-      message.success(t('groupUpdatedSuccessfully'));
-    } catch (error) {
-      message.error(t('failedToUpdateGroup'));
+      success(t('groupUpdatedSuccessfully'));
+    } catch (err) {
+      error(t('failedToUpdateGroup'));
     } finally {
       setEditingIndex(null);
       setEditingValue('');
