@@ -173,20 +173,29 @@ const Team = () => {
     if (!teamToUpdate) return;
 
     const updatedTeam = {
-      ...teamToUpdate,
-      status: status,
+
+        ...teamToUpdate,
+        status: status,
+        users: teamToUpdate.users, // Preserve existing users
+        userIds: teamToUpdate.users.map(user => user.id) // Keep user IDs
     };
 
     try {
-      await API.put(`/Teams/${teamId}`, updatedTeam);
-      await getTeams();
-      notification.success({
-        message: t("teamStatusUpdated"),
-        description: t("teamStatusUpdatedSuccessfully"),
-        placement: "topRight",
-      });
+        await API.put(`/Teams/${teamId}`, updatedTeam);
+        await getTeams(); // Refresh teams data
+        notification.success({
+            message: t('teamStatusUpdated'),
+            description: t('teamStatusUpdatedSuccessfully'),
+            placement: 'topRight',
+        });
     } catch (error) {
-      console.error(t("failedToUpdateTeamStatus"), error);
+        console.error(t('failedToUpdateTeamStatus'), error);
+        notification.error({
+            message: t('error'),
+            description: t('failedToUpdateTeamStatus'),
+            placement: 'topRight',
+        });
+
     }
   };
 
@@ -300,10 +309,10 @@ const Team = () => {
   return (
     <div style={{ padding: '40px' }}>
       <Card style={{ boxShadow: '0 4px 8px rgba(0,0,0,0.1)', borderRadius: '10px' }}>
-       
-                  <Divider className={`fs-3 ${customDarkText}`}>{t('existingTeams')}</Divider>
 
-         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
+      <h1 className={`${customDarkText} mb-4 text-left`}>{t('teams')}</h1>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
+
           <Button onClick={() => setIsModalVisible(true)} size="large" className={`${customBtn} ${customDark === "dark-dark" ? `border` : `border-0`}`}>
             {t('addTeam')}
 
@@ -359,6 +368,7 @@ const Team = () => {
             </Button>
           </div>
         </div>
+
 
         <div className="table-responsive">
           <Table

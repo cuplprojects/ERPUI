@@ -224,7 +224,7 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
                 show={featureModalVisible}
                 onHide={() => setFeatureModalVisible(false)}
                 centered
-                size="lg"
+                size="small"
                 className={`rounded-2 ${customDark === "" ? `${customDark}` : ''}`}
             >
                 <Modal.Header closeButton={false} className={`rounded-top-2 ${customDark} ${customLightText} ${customDark === "dark-dark" ? `border ` : `border-0`} border d-flex justify-content-between`}>
