@@ -449,39 +449,38 @@ const QtySheetUpload = () => {
                     <Form layout="vertical" form={form}>
                         <Form.Item name="file" rules={[{ required: true, message: t('pleaseSelectAFile') }]}>
                             <div className="d-flex align-items-center">
-                            {!isLotsFetched ? (
-                                <Upload
-                                    onRemove={(file) => {
-                                        const index = fileList.indexOf(file);
-                                        const newFileList = fileList.slice();
-                                        newFileList.splice(index, 1);
-                                        setFileList(newFileList);
-                                    }}
-                                    beforeUpload={handleFileUpload}
-                                    fileList={fileList}
-                                    className='flex-grow-1'
-                                >
-                                    <Button className='fs-4 custom-zoom-btn w-100 d-flex align-items-center p-3'>
-                                        <UploadOutlined className='' />
-                                        <span className='d-none d-sm-inline'>{t('selectFile')}</span>
-                                        <span className='d-inline d-sm-none'>{t('upload')}</span>
+                                {!isLotsFetched ? (
+                                    <Upload
+                                        onRemove={(file) => {
+                                            const index = fileList.indexOf(file);
+                                            const newFileList = fileList.slice();
+                                            newFileList.splice(index, 1);
+                                            setFileList(newFileList);
+                                        }}
+                                        beforeUpload={handleFileUpload}
+                                        fileList={fileList}
+                                        className='flex-grow-1'
+                                    >
+                                        <Button className='fs-4 custom-zoom-btn w-100 d-flex align-items-center p-3'>
+                                            <UploadOutlined className='' />
+                                            <span className='d-none d-sm-inline'>{t('selectFile')}</span>
+                                            <span className='d-inline d-sm-none'>{t('upload')}</span>
+                                        </Button>
+                                    </Upload>
+                                ) : (
+                                    <Button
+                                        className={`${customBtn}`}
+                                        type="primary"
+                                        onClick={() => {
+                                            setIsLotsFetched(false);
+                                            setIsUpdateMode(true);
+                                        }}
+                                    >
+                                        {t('updateFile')}
                                     </Button>
-                                </Upload>
+                                )}
                                 {showDeleteButton && (
-                                ):(
-                                <Button
-                                    className={`${customBtn}`}
-                                    type="primary"
-                                    onClick={() => {
-                                        setIsLotsFetched(false);
-                                        setIsUpdateMode(true);
-                                    }}
-                                >
-                                    {t('updateFile')}
-                                </Button>
-                            )}
-                                {isLotsFetched && (
-                                <Button
+                                    <Button
                                         type="primary"
                                         danger
                                         onClick={handleDelete}
@@ -491,26 +490,16 @@ const QtySheetUpload = () => {
                                         <span>{t('deleteFile')}</span>
                                     </Button>
                                 )}
-                                )}
                             </div>
                         </Form.Item>
                         <Form.Item>
-                            {fileList.length > 0 && (
+                            {fileList.length > 0 && showDisclaimer && (
                                 <Button
                                     className={`${customBtn}`}
                                     type="primary"
-                                    onClick={handleUpdate}  // Update button logic
+                                    onClick={handleUpdate}
                                 >
                                     {t('updateLots')}
-                                </Button>
-                            ) : (fileList.length > 0 ? (
-                                <Button
-                                    className={`${customBtn}`}
-                                    type="primary"
-                                    onClick={() => handleUpload()}  // Upload button logic
-                                    loading={uploading}
-                                >
-                                    {uploading ? t('uploading') : (isUpdateMode ? t('update') : t('upload'))}
                                 </Button>
                             )}
                         </Form.Item>
