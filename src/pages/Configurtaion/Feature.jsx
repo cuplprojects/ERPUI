@@ -19,11 +19,11 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
     const [isEditingFeature, setIsEditingFeature] = useState(false);
     const [editingFeatureId, setEditingFeatureId] = useState(null);
     const [featureName, setFeatureName] = useState('');
+
+    const [pageSize, setPageSize] = useState(5);
+    const [currentPage, setCurrentPage] = useState(1);
+
     const [searchText, setSearchText] = useState('');
-    const [pagination, setPagination] = useState({
-        current: 1,
-        pageSize: 5,
-    });
 
     // Fetch features
     const fetchFeatures = async () => {
@@ -42,11 +42,13 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
 
     // Validation checks
     const validateFeature = (name) => {
+        // Check for duplicate feature names
         if (features.some(feature => feature.name.toLowerCase() === name.toLowerCase())) {
             notification.error({ message: t('featureNameAlreadyExists') });
             return false;
         }
 
+        // Check if name is alphanumeric (must not be a combination of letters and numbers)
         const isAlphanumeric = /^[a-zA-Z0-9]+$/.test(name);
         const isOnlyLetters = /^[a-zA-Z]+$/.test(name);
         const isOnlyNumbers = /^[0-9]+$/.test(name);
@@ -59,6 +61,7 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
         return true;
     };
 
+    // Open modal for adding/editing feature
     const showAddFeatureModal = (feature = null) => {
         if (feature) {
             setFeatureName(feature.name);
@@ -72,6 +75,7 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
         setFeatureModalVisible(true);
     };
 
+    // Handle adding/updating feature
     const handleAddFeature = async () => {
         if (!featureName) {
             notification.error({ message: t('featureNameCannotBeEmpty') });
@@ -87,62 +91,72 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
             features: featureName,
         };
 
-        if (isEditingFeature) {
-            try {
-                const response = await API.put(`/Features/${editingFeatureId}`, featurePayload);
-                setFeatures(prevFeatures =>
-                    prevFeatures.map(feature =>
-                        feature.key === editingFeatureId ? { ...feature, name: featureName } : feature
-                    )
-                );
-                notification.success({ message: 'Feature updated successfully!' });
-            } catch (error) {
-                console.error('Error updating feature:', error);
-                notification.error({ message: 'Failed to update feature!' });
-            }
-        } else {
-            try {
+        try {
+            if (isEditingFeature) {
+                // Update existing feature
+                await API.put(`/Features/${editingFeatureId}`, featurePayload);
+                notification.success({ 
+                    message: t('featureUpdatedSuccessfully'),
+                    duration: 0,
+                    onClose: () => {}
+                });
+            } else {
+                // Add new feature
                 const response = await API.post('/Features', featurePayload);
                 const addedFeature = response.data;
-                const newFeature = { key: addedFeature.featureId, name: addedFeature.features };
-                setFeatures([...features, newFeature]);
-                notification.success({ message: 'Feature added successfully!' });
-                onAddFeature(newFeature);
-            } catch (error) {
-                console.error('Error adding feature:', error);
+                onAddFeature({ key: addedFeature.featureId, name: addedFeature.features });
+                notification.success({ message: t('featureAddedSuccessfully') });
             }
+            
+            setFeatureModalVisible(false);
+            await fetchFeatures(); // Refresh data after successful operation
+            
+        } catch (error) {
+            console.error('Error handling feature:', error);
+            notification.error({ 
+                message: isEditingFeature ? t('failedToUpdateFeature') : t('failedToAddFeature')
+            });
         }
-
-        setFeatureModalVisible(false);
-        onUpdateFeatures(features);
     };
 
+    // Handle key down event in the Input
     const handleKeyDown = (e) => {
         if (e.key === 'Enter') {
             handleAddFeature();
         }
     };
 
+    // Handle search
     const handleSearch = (value) => {
         setSearchText(value);
+        setCurrentPage(1); // Reset to first page when searching
     };
 
+    // Filter features based on search text
     const filteredFeatures = features.filter(feature =>
-        feature.name.toLowerCase().includes(searchText.toLowerCase())
+        feature.name.toLowerCase().includes(searchText.toLowerCase()) ||
+        feature.key.toString().includes(searchText)
     );
 
+    // Handle pagination change
+    const handleTableChange = (pagination) => {
+        setCurrentPage(pagination.current);
+        setPageSize(pagination.pageSize);
+    };
+
+    // Columns for Feature table
     const featureColumns = [
-        {
-            title: 'SN',
-            dataIndex: 'key',
+        { 
+            title: t('sn'), 
+            dataIndex: 'key', 
             key: 'key',
             width: '8%',
             align: 'center',
             sorter: (a, b) => a.key - b.key
         },
-        {
-            title: 'Feature Name',
-            dataIndex: 'name',
+        { 
+            title: t('featureName'), 
+            dataIndex: 'name', 
             key: 'name',
             width: '65%',
             sorter: (a, b) => a.name.localeCompare(b.name)
@@ -154,8 +168,8 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
             width: '10%',
             align: 'center',
             render: (text, record) => (
-                <Button
-                    icon={<EditOutlined />}
+                <Button 
+                    icon={<EditOutlined />} 
                     onClick={() => showAddFeatureModal(record)}
                     type="primary"
                     size="large"
@@ -170,9 +184,11 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
 
     return (
         <div className="feature-management-container">
-            <div className="button-container" style={{ marginBottom: '20px' }}>
-                <Button
-                    type="primary"
+           
+            <div className="d-flex justify-content-between align-items-center" style={{ marginBottom: '20px' }}>
+                <Button 
+                    type="primary" 
+                    className={`${customBtn}`}
                     onClick={() => showAddFeatureModal()}
                 >
                     {t('addNewFeature')}
@@ -197,34 +213,43 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
                 dataSource={filteredFeatures}
                 columns={featureColumns}
                 rowKey="key"
-                pagination={{
-                    current: pagination.current,
-                    pageSize: pagination.pageSize,
-                    total: features.length,
+                pagination={{ 
+                    total: filteredFeatures.length,
+                    pageSize: pageSize,
+                    current: currentPage,
                     showSizeChanger: true,
-                    showQuickJumper: true,
+                    pageSizeOptions: ['5', '10', '15'],
                     onChange: (page, pageSize) => {
-                        setPagination({
-                            current: page,
-                            pageSize: pageSize,
-                        });
+                        setCurrentPage(page);
+                        setPageSize(pageSize);
+                    },
+                    onShowSizeChange: (current, size) => {
+                        setCurrentPage(1);
+                        setPageSize(size);
+
                     },
                 }}
+                onChange={handleTableChange}
                 bordered
                 size="small"
                 scroll={{ x: 'max-content' }}
-                style={{
-                    boxShadow: '0 4px 8px 0 rgba(0,0,0,0.2)',
-                    borderRadius: '8px',
-                    overflow: 'hidden'
-                }}
+                className={`${customDark === "default-dark" ? "thead-default" : ""}
+                ${customDark === "red-dark" ? "thead-red" : ""}
+                ${customDark === "green-dark" ? "thead-green" : ""}
+                ${customDark === "blue-dark" ? "thead-blue" : ""}
+                ${customDark === "dark-dark" ? "thead-dark" : ""}
+                ${customDark === "pink-dark" ? "thead-pink" : ""}
+                ${customDark === "purple-dark" ? "thead-purple" : ""}
+                ${customDark === "light-dark" ? "thead-light" : ""}
+                ${customDark === "brown-dark" ? "thead-brown" : ""} custom-pagination`}
             />
 
+            {/* Feature Modal */}
             <Modal
                 show={featureModalVisible}
                 onHide={() => setFeatureModalVisible(false)}
                 centered
-                size="lg"
+                size="small"
                 className={`rounded-2 ${customDark === "" ? `${customDark}` : ''}`}
             >
                 <Modal.Header closeButton={false} className={`rounded-top-2 ${customDark} ${customLightText} ${customDark === "dark-dark" ? `border ` : `border-0`} border d-flex justify-content-between`}>
