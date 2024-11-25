@@ -149,10 +149,17 @@ const CuDashboard = () => {
   }, []);
 
   const { getCssClasses } = useStore(themeStore);
-  const cssClasses = getCssClasses();
-  const customDark = cssClasses[0];
-  const customMid = cssClasses[1];
-  const customBtn = cssClasses[3];
+  const [
+    customDark,
+    customMid, 
+    customLight,
+    customBtn,
+    customDarkText,
+    customLightText,
+    customLightBorder,
+    customDarkBorder,
+    customThead
+  ] = getCssClasses();
 
   const handleProjectClick = (project) => {
     setSelectedLots(project.lots || []);
@@ -401,14 +408,15 @@ const CuDashboard = () => {
         {visibleCards.agGrid && (
           <Col lg={6} md={12}>
             <Card
-              className="dcard shadow-lg d-flex flex-column mb-3"
+              className={`dcard shadow-lg d-flex flex-column mb-3 ${customLight} ${customLightBorder}`}
               style={{ height: "500px", background: "rgba(255,255,255,0.6)" }}
             >
-              <h4 className="text-dark d-flex justify-content-between p-3">
+              {/* <h4 className={`d-flex justify-content-between  ${customDarkText} `}>
                 {clickData.name || t("selectProject")}
-              </h4>
-              <div style={{ flex: 1, overflow: "hidden", padding: "0 15px" }}>
-                <CuDetailedAgGrid projectId={clickData.projectId} />
+              </h4> */}
+              {/* passed to next component */}
+              <div style={{ flex: 1, overflow: "hidden" }} >
+                <CuDetailedAgGrid projectId={clickData.projectId} clickedProject={clickData.name}/>
               </div>
             </Card>
           </Col>
@@ -417,14 +425,14 @@ const CuDashboard = () => {
         {visibleCards.barChart && (
           <Col lg={visibleCards.agGrid ? 6 : 12}>
             <Card
-              className="dcard shadow-lg mb-3"
+              className={`dcard shadow-lg mb-3 ${customLight} ${customLightBorder}`}
               style={{
                 height: "500px",
                 background: "rgba(255,255,255,0.6)",
                 overflow: "hidden",
               }}
             >
-              <h4 className="text-dark d-flex justify-content-between p-3">
+              <h4 className={`text-dark d-flex justify-content-between p-3 py-0 ${customDarkText}`}>
                 Project | {clickData.name || t("selectProject")} | Lot
                 Completion
               </h4>
@@ -433,6 +441,7 @@ const CuDashboard = () => {
                   height: "calc(100% - 50px)", // Adjust for header height
                   width: "100%",
                 }}
+                className={` ${customDark === "dark-dark" ? 'bg-white' : ''} p-2 rounded-3`}
               >
                 <BarChart projectId={clickData.projectId} />
               </div>

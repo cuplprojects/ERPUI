@@ -408,6 +408,7 @@ const ProcessTable = () => {
                   alarmId: previousProcessData.transactions[0]?.alarmId || "",
                   teamUserNames:
                     previousProcessData.transactions[0]?.teamUserNames || [],
+                  machinename: previousProcessData.transactions[0]?.machinename|| [],
                   alarmMessage:
                     previousProcessData.transactions[0]?.alarmMessage || null,
                   thresholdQty:null
