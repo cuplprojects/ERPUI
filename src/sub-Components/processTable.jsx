@@ -419,7 +419,7 @@ const ProcessTable = () => {
             //machineId: item.transactions[0]?.machineId || 0,
             machinename : item.transactions[0]?.machinename || "No Machine Assigned",
             zoneNo: item.transactions?.[0]?.zoneNo || "No Zone Assigned",
-
+            zoneId: item.transactions?.[0]?.zoneId || 0,
             teamId: item.transactions[0]?.teamId || [],
             teamUserNames: item.transactions[0]?.teamUserNames || ["No Team Assigned"],
             alarmMessage: item.transactions[0]?.alarmMessage || null,

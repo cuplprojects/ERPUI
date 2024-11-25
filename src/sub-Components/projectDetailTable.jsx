@@ -227,9 +227,11 @@ const ProjectDetailsTable = ({
     }
 
     // Only check interim quantity if hasFeaturePermission(7) is true
-    if (hasFeaturePermission(7) && newStatusIndex === 2 && updatedRow.interimQuantity !== updatedRow.quantity) {
-      showNotification('error', 'Status Update Failed', 'Interim Quantity must equal Quantity');
-      return;
+    if (hasFeaturePermission(7) && newStatusIndex === 2) {
+      if (updatedRow.interimQuantity !== updatedRow.quantity) {
+        showNotification('error', 'Status Update Failed', 'Interim Quantity must equal Quantity');
+        return;
+      }
     }
 
     try {
@@ -523,12 +525,26 @@ const ProjectDetailsTable = ({
           (record.previousProcessData.thresholdQty != null &&
             record.previousProcessData.thresholdQty > record.previousProcessData.interimQuantity);
 
+        console.log("record", record);
         // Check if 'Assign Team' and 'Select Zone' data is populated
         const isZoneAssigned = Boolean(record.zoneId);
         const isTeamAssigned = Boolean(record.teamId?.length);
 
         // Check if 'Select Machine' is required
         const hasSelectMachinePermission = hasFeaturePermission(10);
+
+        // Debug logging
+        console.log('Status check debug:', {
+          record,
+          isPreviousProcessCompleted,
+          hasSelectMachinePermission,
+          machineId: record.machineId,
+          isZoneAssigned,
+          isTeamAssigned,
+          interimQuantity: record.interimQuantity,
+          quantity: record.quantity,
+          hasFeaturePermission7: hasFeaturePermission(7)
+        });
 
         const requirements = []; // Array to hold the reasons
 
@@ -544,12 +560,19 @@ const ProjectDetailsTable = ({
         // Only check interim quantity if hasFeaturePermission(7) is true
         const canBeCompleted = !hasFeaturePermission(7) || record.interimQuantity === record.quantity;
 
+        console.log('Status conditions:', {
+          canChangeStatus,
+          canBeCompleted,
+          hasAlerts,
+          initialStatusIndex
+        });
+
         // Populate the requirements array based on conditions
         if (hasAlerts) {
           requirements.push(t("statusCannotBeChangedDueToAlerts"));
         }
         if (!isPreviousProcessCompleted) {
-          requirements.push(t("previousProcessErrorDescription"));
+          requirements.push(t("previousProcessErrorDescription")); 
         }
         if (!canChangeStatus) {
           requirements.push(t("ensureAllRequiredFieldsAreFilled"));
@@ -557,6 +580,8 @@ const ProjectDetailsTable = ({
         if (initialStatusIndex === 1 && !canBeCompleted && hasFeaturePermission(7)) {
           requirements.push(t("cannotSetStatusToCompletedInterimQuantityMustEqualQuantity"));
         }
+
+        console.log('Requirements:', requirements);
 
         const isDisabled = requirements.length > 0; // Determine if the toggle is disabled based on requirements
 
@@ -1091,10 +1116,14 @@ const ProjectDetailsTable = ({
                     : isZoneAssigned && isTeamAssigned; // Otherwise, Zone and Team must be assigned
                   const canBeCompleted =
                     row.interimQuantity === row.quantity;
+                  // Add check for processSequence
+                  const isProcessSequenceOne = row.processSequence === 1;
+
                   return (
                     row.alerts ||
                     !canChangeStatus ||
-                    (getSelectedStatus() === 2 && !canBeCompleted)
+                    (getSelectedStatus() === 2 && !canBeCompleted) ||
+                    isProcessSequenceOne // Disable if processSequence is 1
                   ); // Disable if there are alerts or the status cannot be changed
                 })}
               />
