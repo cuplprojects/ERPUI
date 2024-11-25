@@ -97,7 +97,7 @@ const Cards = ({ item, onclick, disableProject, activeCardStyle }) => {
     <StyledWrapper>
       <Tooltip title={!disableProject ? t("uploadQuantitySheetfirst") : ""} placement="below">
         <div
-          className={`card ${
+          className={` card ${
             !activeCardStyle
               ? `${customLight} ${customDarkText}`
               : `${
@@ -118,9 +118,9 @@ const Cards = ({ item, onclick, disableProject, activeCardStyle }) => {
             </Tooltip>
           </div>
 
-          <p>{item.completionPercentage}% {t("completed")}</p>
-          <p>{item.remainingPercentage}% {t("remaining")}</p>
-          <p>Status: {transactionStatus}</p>
+          <p className="p-0 m-0">{item.completionPercentage}% {t("completed")}</p>
+          <p className="p-0 m-0">{item.remainingPercentage}% {t("remaining")}</p>
+          <p className="p-0 m-0">Status: {transactionStatus}</p>
 
           <Tooltip title={t("View Project Info")} placement="top">
             <div
