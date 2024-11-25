@@ -7,7 +7,8 @@ import useUserDataStore from "../store/userDataStore";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from 'antd';
 import API from "../CustomHooks/MasterApiHooks/api";
-
+import themeStore from '../store/themeStore';
+import { useStore } from 'zustand';
 
 const Cards = ({ item, onclick, disableProject, activeCardStyle }) => {
   const navigate = useNavigate();
@@ -15,7 +16,18 @@ const Cards = ({ item, onclick, disableProject, activeCardStyle }) => {
   const role = userData?.role;
   const supervisor = role.roleId === 5;
   const { t } = useTranslation();
-
+  const { getCssClasses } = useStore(themeStore);
+  const [
+    customDark,
+    customMid, 
+    customLight,
+    customBtn,
+    customDarkText,
+    customLightText,
+    customLightBorder,
+    customDarkBorder,
+    customThead
+  ] = getCssClasses();
   const [hasProcesses, setHasProcesses] = useState(false);
   // console.log(supervisor);
 
@@ -68,8 +80,7 @@ const Cards = ({ item, onclick, disableProject, activeCardStyle }) => {
   return (
     <StyledWrapper>
       <div
-        className="card"
-        style={{ backgroundColor: activeCardStyle ? '#8ca2ae' : 'initial' }}
+        className={`card ${!activeCardStyle ? `${customLight} ${customDarkText}` : `${customDark === "dark-dark" ? `bg-white text-dark border border-dark ` : `${customDark} ${customDark === 'blue-dark' ? "border-white" : customLightBorder} ${customLightText}`}  `}`}
         onClick={handleCardClick}
       >
         <div className="header">
@@ -108,7 +119,6 @@ const StyledWrapper = styled.div`
     height: 170px;
     background: rgba(217, 217, 217, 0.3);
     border: 1px solid white;
-    box-shadow: 12px 17px 51px rgba(0, 0, 0, 0.22);
     backdrop-filter: blur(6px);
     border-radius: 17px;
     text-align: center;
@@ -119,7 +129,6 @@ const StyledWrapper = styled.div`
     align-items: center;
     justify-content: center;
     user-select: none;
-    font-weight: bolder;
     color: black;
     margin: 6px;
     position: relative;
