@@ -79,35 +79,40 @@ const Cards = ({ item, onclick, disableProject, activeCardStyle }) => {
 
   return (
     <StyledWrapper>
-      <div
-        className={`card ${!activeCardStyle ? `${customLight} ${customDarkText}` : `${customDark === "dark-dark" ? `bg-white text-dark border border-dark ` : `${customDark} ${customDark === 'blue-dark' ? "border-white" : customLightBorder} ${customLightText}`}  `}`}
-        onClick={handleCardClick}
+      <Tooltip 
+        title={!disableProject ? t("uploadQuantitySheetfirst") : ""}
+        placement="below"
       >
-        <div className="header">
-          <h4 className="project-name">{item.name}</h4>
+        <div
+          className={`card ${!activeCardStyle ? `${customLight} ${customDarkText}` : `${customDark === "dark-dark" ? `bg-white text-dark border border-dark ` : `${customDark} ${customDark === 'blue-dark' ? "border-white" : customLightBorder} ${customLightText}`}  `}`}
+          onClick={handleCardClick}
+        >
+          <div className="header">
+            <h4 className="project-name">{item.name}</h4>
 
-          <Tooltip title={t("Upload Quantity Sheet")} placement="top">
+            <Tooltip title={t("Upload Quantity Sheet")} placement="top">
+              <div
+                className="upload-button"
+                onClick={handleUploadClick}
+              >
+                <FaUpload />
+              </div>
+            </Tooltip>
+          </div>
+
+          <p>{item.completionPercentage}% {t("completed")}</p>
+          <p>{item.remainingPercentage}% {t("remaining")}</p>
+
+          <Tooltip title={t("View Project Info")} placement="top">
             <div
-              className="upload-button"
-              onClick={handleUploadClick}
+              className={`info-button ${!disableProject ? "disabled" : ""}`}
+              onClick={handleInfoClick}
             >
-              <FaUpload />
+              <FaInfoCircle />
             </div>
           </Tooltip>
         </div>
-
-        <p>{item.completionPercentage}% {t("completed")}</p>
-        <p>{item.remainingPercentage}% {t("remaining")}</p>
-
-        <Tooltip title={t("View Project Info")} placement="top">
-          <div
-            className={`info-button ${!disableProject ? "disabled" : ""}`}
-            onClick={handleInfoClick}
-          >
-            <FaInfoCircle />
-          </div>
-        </Tooltip>
-      </div>
+      </Tooltip>
     </StyledWrapper>
   );
 };
