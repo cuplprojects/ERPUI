@@ -65,6 +65,7 @@ const QtySheetUpload = () => {
 
     const [isUpdateMode, setIsUpdateMode] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
 
     useEffect(() => {
@@ -436,21 +437,23 @@ const QtySheetUpload = () => {
     );
 
     const handleDelete = async () => {
+        setShowDeleteConfirm(true);
+    };
+
+    const confirmDelete = async () => {
         setIsLoading(true);
         try {
             await API.delete(`/QuantitySheet/DeleteByProjectId/${projectId}`);
-            fetchLots()
-
-            setHasUploadedFile(false); // Reset upload flag after successful deletion
-            setShowDeleteButton(true); // Hide delete button
-
+            fetchLots();
+            setHasUploadedFile(false);
+            setShowDeleteButton(true);
             success(t('quantitySheetDeletedSuccessfully'));
-
         } catch (error) {
             console.error('Failed to delete quantity sheet:', error);
             error(t('failedToDeleteQuantitySheet'));
         } finally {
             setIsLoading(false);
+            setShowDeleteConfirm(false);
         }
     };
 
@@ -593,6 +596,27 @@ const QtySheetUpload = () => {
                 </Modal.Footer>
             </Modal>
 
+            {/* Delete Confirmation Modal */}
+            <Modal
+                show={showDeleteConfirm}
+                onHide={() => setShowDeleteConfirm(false)}
+            >
+                <Modal.Header closeButton>
+                    <Modal.Title>{t('confirmDelete')}</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {t('areYouSureDeleteQuantitySheet')}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowDeleteConfirm(false)}>
+                        {t('cancel')}
+                    </Button>
+                    <Button variant="danger" onClick={confirmDelete}>
+                        {t('delete')}
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
             {isProcessingFile && (
                 <div className="text-center my-3">
                     <Spin size="large" tip="Processing file..." />
@@ -611,8 +635,8 @@ const QtySheetUpload = () => {
                         <table className="table table-bordered table-striped">
                             <thead>
                                 <tr>
-                                    <th>{t('fields')}</th>
-                                    <th>{t('excelHeader')}</th>
+                                    <th style={{width: '50%'}}>{t('fields')}</th>
+                                    <th style={{width: '50%'}}>{t('excelHeader')}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -625,6 +649,7 @@ const QtySheetUpload = () => {
                                                 onChange={(value) => handleMappingChange(property, value)}
                                                 options={getAvailableOptions(property)}
                                                 style={{ width: '100%' }}
+                                                dropdownMatchSelectWidth={false}
                                             />
                                         </td>
                                     </tr>
