@@ -237,10 +237,29 @@ const AddProjectProcess = ({ selectedProject,setIsProcessSubmitted }) => {
       const processesToAdd = updatedProcesses.filter(p => !existingIds.has(p.id));
       const processesToRemove = projectProcesses.filter(p => !newSelection.includes(p.id));
 
-      setProjectProcesses((prev) => calculatedWeightage([
-        ...prev.filter(p => !processesToRemove.includes(p)),
-        ...processesToAdd,
-      ]));
+      // Find position of the process in allProcesses
+      const processIndex = allProcesses.findIndex(p => p.id === processId);
+
+      setProjectProcesses((prev) => {
+        const filteredProcesses = prev.filter(p => !processesToRemove.includes(p));
+        const newProcesses = [...filteredProcesses];
+        
+        // Insert new process at correct position if adding
+        if (!prev.includes(processId) && processIndex !== -1) {
+          const newProcess = processesToAdd.find(p => p.id === processId);
+          if (newProcess) {
+            // Find appropriate position in current processes
+            let insertIndex = 0;
+            while (insertIndex < newProcesses.length && 
+                   allProcesses.findIndex(p => p.id === newProcesses[insertIndex].id) < processIndex) {
+              insertIndex++;
+            }
+            newProcesses.splice(insertIndex, 0, newProcess);
+          }
+        }
+        
+        return calculatedWeightage(newProcesses);
+      });
 
       return newSelection;
     });
