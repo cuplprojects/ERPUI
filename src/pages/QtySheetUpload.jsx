@@ -53,7 +53,7 @@ const QtySheetUpload = () => {
     const [isLotsFetched, setIsLotsFetched] = useState(false);
     const [existingLots, setExistingLots] = useState([]);  // To hold the existing lots in the system
     const [mappedLots, setMappedLots] = useState([]);  // To hold the mapped lots from the file
-    const [isModalVisible, setIsModalVisible] = useState(true);  // Modal visibility
+    const [isModalVisible, setIsModalVisible] = useState(false);  // Modal visibility
     const [skipLots, setSkipLots] = useState([]);  // Lots to be skipped based on matching
     const [mappedData,setMappeddata] = useState([]);
     const [transactionExist, setTransactionExist] = useState(false);
