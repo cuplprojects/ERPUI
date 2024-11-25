@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Form, Upload, Button, Select, message,Menu, Dropdown, Spin } from 'antd';
+import { Form, Upload, Button, Select, message, Menu, Dropdown, Spin } from 'antd';
 import { Row, Col, Modal } from 'react-bootstrap';
 import { UploadOutlined, DeleteOutlined } from '@ant-design/icons';
 import * as XLSX from 'xlsx';
@@ -492,6 +492,8 @@ const QtySheetUpload = () => {
                                         onClick={() => {
                                             setIsLotsFetched(false);
                                             setIsUpdateMode(true);
+                                            setShowTable(false); // Hide table when update file is clicked
+                                            setShowBtn(false); // Hide button when update file is clicked
                                         }}
                                     >
                                         {t('updateFile')}
@@ -503,38 +505,11 @@ const QtySheetUpload = () => {
                                         danger
                                         onClick={handleDelete}
                                         className="ms-2 d-flex align-items-center"
+                                        disabled={transactionExist}
                                     >
                                         <DeleteOutlined />
                                         <span>{t('deleteFile')}</span>
                                     </Button>
-
-                                </Upload>
-                            ):(
-                                <Button
-                                    className={`${customBtn}`}
-                                    type="primary"
-                                    onClick={() => {
-                                        setIsLotsFetched(false);
-                                        setIsUpdateMode(true);
-                                        setShowTable(false); // Hide table when update file is clicked
-                                        setShowBtn(false); // Hide button when update file is clicked
-                                    }}
-                                >
-                                    {t('updateFile')}
-                                </Button>
-                            )}
-                                {isLotsFetched && (
-                                <Button
-                                    type="primary"
-                                    danger
-                                    onClick={handleDelete}
-                                    className="ms-2 d-flex align-items-center"
-                                    disabled={transactionExist}
-                                >
-                                    <DeleteOutlined />
-                                    <span>{t('deleteFile')}</span>
-                                </Button>
-
                                 )}
                             </div>
                         </Form.Item>
