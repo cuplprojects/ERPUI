@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Select, Table, Input, Checkbox, Tag } from 'antd';
+import { Button, Select, Table, Input, Checkbox, Tag, Form, Row, Col } from 'antd';
 import { useStore } from 'zustand';
 import { Modal as BootstrapModal } from 'react-bootstrap';
 import themeStore from './../store/themeStore';
@@ -36,6 +36,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
         projectId: projectId,
         quantitySheetId: quantitySheetId,
     });
+    const [formErrors, setFormErrors] = useState({});
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [showTransferModal, setShowTransferModal] = useState(false);
     const [itemToDelete, setItemToDelete] = useState(null);
@@ -388,6 +389,24 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
             ...prevData,
             [name]: value,
         }));
+        // Clear error when user starts typing
+        setFormErrors(prev => ({
+            ...prev,
+            [name]: ''
+        }));
+    };
+
+    const validateForm = () => {
+        const errors = {};
+        if (!newRowData.course) errors.course = t('courseRequired');
+        if (!newRowData.catchNo) errors.catchNo = t('catchNoRequired');
+        if (!newRowData.paper) errors.paper = t('paperRequired');
+        if (!newRowData.examDate) errors.examDate = t('examDateRequired');
+        if (!newRowData.examTime) errors.examTime = t('examTimeRequired');
+        if (!newRowData.quantity || newRowData.quantity <= 0) errors.quantity = t('validQuantityRequired');
+        
+        setFormErrors(errors);
+        return Object.keys(errors).length === 0;
     };
 
     const handleAddRow = async () => {
@@ -395,6 +414,11 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
             console.error(t('selectedLotNoUndefined'));
             return;
         }
+
+        if (!validateForm()) {
+            return;
+        }
+
         const payload = [
             {
                 catchNo: newRowData.catchNo,
@@ -434,6 +458,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
                 projectId: projectId,
                 status: 0
             });
+            setFormErrors({});
             fetchQuantity(selectedLotNo);
         } catch (error) {
             console.error(t('failedToAddNewRow'), error);
@@ -477,7 +502,6 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
                             <Button 
                                 onClick={() => setShowNewRow(prev => !prev)} 
                                 type="primary" 
-
                                 className={`${customBtn} ${customDark === "dark-dark" ? `border` : `border-0`}`}
                                 disabled={dispatchedLots.includes(selectedLotNo)}
                             >
@@ -486,36 +510,160 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
                         </div>
                     </div>
                     {showNewRow && (
-                        <div className="mb-3">
-                            <table className='table table-bordered'>
-                                <tbody>
-                                    <tr>
-                                        <td><Input size="small" placeholder={t('catchNo')} name="catchNo" value={newRowData.catchNo} onChange={handleNewRowChange} /></td>
-                                        <td><Input size="small" placeholder={t('paper')} name="paper" value={newRowData.paper} onChange={handleNewRowChange} /></td>
-                                        <td><Input size="small" placeholder={t('course')} name="course" value={newRowData.course} onChange={handleNewRowChange} /></td>
-                                        <td><Input size="small" placeholder={t('subject')} name="subject" value={newRowData.subject} onChange={handleNewRowChange} /></td>
-                                        {console.log(maxDate)}
-                                        {console.log(minDate)}
-                                        <td><Input
+                        <Form layout="vertical" className="mb-3">
+                            <Row gutter={16}>
+                                <Col span={6}>
+                                    <Form.Item label={<>
+                                            {t('catchNo')} <span style={{ color: 'red' }}>*</span>
+                                        </>}
+                                        validateStatus={formErrors.catchNo ? "error" : ""}
+                                        help={formErrors.catchNo}
+                                    >
+                                        <Input 
+                                            size="small" 
+                                            name="catchNo" 
+                                            value={newRowData.catchNo} 
+                                            onChange={handleNewRowChange}
+                                            placeholder={t('enterCatchNo')}
+                                        />
+                                    </Form.Item>
+                                </Col>
+                                <Col span={6}>
+                                    <Form.Item 
+                                        label={<>
+                                            {t('paper')} <span style={{ color: 'red' }}>*</span>
+                                        </>}
+                                        validateStatus={formErrors.paper ? "error" : ""}
+                                        help={formErrors.paper}
+                                    >
+                                        <Input 
+                                            size="small" 
+                                            name="paper" 
+                                            value={newRowData.paper} 
+                                            onChange={handleNewRowChange}
+                                            placeholder={t('enterPaperCode')}
+                                        />
+                                    </Form.Item>
+                                </Col>
+                                <Col span={6}>
+                                    <Form.Item 
+                                        label={<>
+                                            {t('course')} <span style={{ color: 'red' }}>*</span>
+                                        </>}
+                                        validateStatus={formErrors.course ? "error" : ""}
+                                        help={formErrors.course}
+                                    >
+                                        <Input 
+                                            size="small" 
+                                            name="course" 
+                                            value={newRowData.course} 
+                                            onChange={handleNewRowChange}
+                                            placeholder={t('enterCourse')}
+                                        />
+                                    </Form.Item>
+                                </Col>
+                                <Col span={6}>
+                                    <Form.Item label={t('subject')}>
+                                        <Input 
+                                            size="small" 
+                                            name="subject" 
+                                            value={newRowData.subject} 
+                                            onChange={handleNewRowChange}
+                                            placeholder={t('enterSubject')}
+                                        />
+                                    </Form.Item>
+                                </Col>
+                            </Row>
+                            <Row gutter={16}>
+                                <Col span={6}>
+                                    <Form.Item 
+                                        label={<>
+                                            {t('examDate')} <span style={{ color: 'red' }}>*</span>
+                                        </>}
+                                        validateStatus={formErrors.examDate ? "error" : ""}
+                                        help={formErrors.examDate}
+                                    >
+                                        <Input
                                             size="small"
                                             type="date"
-                                            placeholder={t('subject')}
                                             name="examDate"
                                             value={newRowData.examDate}
                                             onChange={handleNewRowChange}
-                                            min={minDate}  // Disable dates before the minDate
-                                            max={maxDate}  // Disable dates after the maxDate
-                                            disabled={dates.length === 0}  // Disable input if no dates are available
-                                        /></td>
-                                        <td><Input size="small" placeholder={t('subject')} name="examTime" value={newRowData.examTime} onChange={handleNewRowChange} /></td>
-                                        <td><Input size="small" placeholder={t('innerEnvelope')} name="innerEnvelope" value={newRowData.innerEnvelope} onChange={handleNewRowChange} /></td>
-                                        <td><Input size="small" placeholder={t('outerEnvelope')} name="outerEnvelope" value={newRowData.outerEnvelope} onChange={handleNewRowChange} /></td>
-                                        <td><Input size="small" placeholder={t('quantity')} type="number" name="quantity" value={newRowData.quantity} onChange={handleNewRowChange} /></td>
-                                        <td><Button size="small" onClick={handleAddRow} className={`${customDark === "dark-dark" ? `border` : ``}`}>{t('add')}</Button></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+                                            min={minDate}
+                                            max={maxDate}
+                                            disabled={dates.length === 0}
+                                            placeholder={t('selectExamDate')}
+                                        />
+                                    </Form.Item>
+                                </Col>
+                                <Col span={6}>
+                                    <Form.Item 
+                                        label={<>
+                                            {t('examTime')} <span style={{ color: 'red' }}>*</span>
+                                        </>}
+                                        validateStatus={formErrors.examTime ? "error" : ""}
+                                        help={formErrors.examTime}
+                                    >
+                                        <Input 
+                                            size="small" 
+                                            name="examTime" 
+                                            value={newRowData.examTime} 
+                                            onChange={handleNewRowChange}
+                                            placeholder={t('enterExamTime')}
+                                        />
+                                    </Form.Item>
+                                </Col>
+                                <Col span={6}>
+                                    <Form.Item label={t('innerEnvelope')}>
+                                        <Input 
+                                            size="small" 
+                                            name="innerEnvelope" 
+                                            value={newRowData.innerEnvelope} 
+                                            onChange={handleNewRowChange}
+                                            placeholder={t('enterInnerEnvelope')}
+                                        />
+                                    </Form.Item>
+                                </Col>
+                                <Col span={6}>
+                                    <Form.Item label={t('outerEnvelope')}>
+                                        <Input 
+                                            size="small" 
+                                            name="outerEnvelope" 
+                                            value={newRowData.outerEnvelope} 
+                                            onChange={handleNewRowChange}
+                                            placeholder={t('enterOuterEnvelope')}
+                                        />
+                                    </Form.Item>
+                                </Col>
+                            </Row>
+                            <Row gutter={16}>
+                                <Col span={6}>
+                                    <Form.Item 
+                                        label={<>
+                                            {t('quantity')} <span style={{ color: 'red' }}>*</span>
+                                        </>}
+                                        validateStatus={formErrors.quantity ? "error" : ""}
+                                        help={formErrors.quantity}
+                                    >
+                                        <Input 
+                                            size="small" 
+                                            type="number" 
+                                            name="quantity" 
+                                            value={newRowData.quantity} 
+                                            onChange={handleNewRowChange}
+                                            placeholder={t('enterQuantity')}
+                                        />
+                                    </Form.Item>
+                                </Col>
+                                <Col span={6}>
+                                    <Form.Item label=" ">
+                                        <Button size="small" onClick={handleAddRow} className={`${customDark === "dark-dark" ? `border` : ``}`}>
+                                            {t('add')}
+                                        </Button>
+                                    </Form.Item>
+                                </Col>
+                            </Row>
+                        </Form>
                     )}
                 </>
             )}

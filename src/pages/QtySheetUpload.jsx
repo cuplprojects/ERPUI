@@ -64,6 +64,7 @@ const QtySheetUpload = () => {
     const [hasUploadedFile, setHasUploadedFile] = useState(false);
 
     const [isUpdateMode, setIsUpdateMode] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
 
     useEffect(() => {
@@ -138,7 +139,7 @@ const QtySheetUpload = () => {
     
 
     const handleUpload = async (data) => {
-        setUploading(true);
+        setIsLoading(true);
         setShowDisclaimer(false);
         let mappedData;
         
@@ -189,13 +190,13 @@ const QtySheetUpload = () => {
             setDataSource(finalPayload);
             success(isUpdateMode ? t('quantitySheetUpdatedSuccessfully') : t('quantitySheetUploadedSuccessfully'));
             fetchLots();
-            setHasUploadedFile(true); // Set flag when file is successfully uploaded
+            setHasUploadedFile(true);
             resetState();
-        } catch (error) {
-            console.error(t('uploadFailed'), error.response?.data || error.message);
-            error(isUpdateMode ? t('failedToUpdateQuantitySheet') : t('failedToUploadQuantitySheet'));
+        } catch (err) {
+            console.error(t('uploadFailed'), err.response?.data || err.message);
+            error(t('failedToUploadQuantitySheet'));
         } finally {
-            setUploading(false);
+            setIsLoading(false);
         }
     };
 
@@ -244,6 +245,7 @@ const QtySheetUpload = () => {
 
 
     const handleUpdate = async () => {
+        setIsLoading(true);
         setIsUpdateMode(true);
         try {
             // Fetch the mapped data from the file
@@ -274,6 +276,8 @@ const QtySheetUpload = () => {
             }
         } catch (error) {
             console.error('Failed to process data:', error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -432,6 +436,7 @@ const QtySheetUpload = () => {
     );
 
     const handleDelete = async () => {
+        setIsLoading(true);
         try {
             await API.delete(`/QuantitySheet/DeleteByProjectId/${projectId}`);
             fetchLots()
@@ -444,6 +449,8 @@ const QtySheetUpload = () => {
         } catch (error) {
             console.error('Failed to delete quantity sheet:', error);
             error(t('failedToDeleteQuantitySheet'));
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -451,18 +458,14 @@ const QtySheetUpload = () => {
         <div className={`container ${customDarkText} rounded shadow-lg ${customLight} ${customLightBorder}`}>
             <Row className='mt-2 mb-2'>
                 <Col lg={12} className='d-flex justify-content-center'>
-                    <div className="d-flex flex-column align-items-center">
-                        <div className="text-center p-2 mt-3 rounded">
-                            <h1 className={`${customDarkText}`}>{t('uploadQuantitySheet')}</h1>
-                        </div>
-                        <div className="text-center">
-                            <h2 className={`${customDarkText} custom-zoom-btn `}>{projectName}</h2>
-                        </div>
+                    <div className="text-center p-2">
+                        <h1 className={`${customDarkText}`}>{t('uploadQuantitySheet')}</h1>
+                        <h2 className={`${customDarkText} custom-zoom-btn`}>{projectName}</h2>
                     </div>
                 </Col>
             </Row>
 
-            <Row className='mt-2 mb-2'>
+            <Row className='mb-2'>
                 <Col lg={12}>
                     <Form layout="vertical" form={form}>
                         <Form.Item name="file" rules={[{ required: true, message: t('pleaseSelectAFile') }]}>
@@ -479,8 +482,8 @@ const QtySheetUpload = () => {
                                         fileList={fileList}
                                         className='flex-grow-1'
                                     >
-                                        <Button className='fs-4 custom-zoom-btn w-100 d-flex align-items-center p-3'>
-                                            <UploadOutlined className='' />
+                                        <Button className='fs-4 custom-zoom-btn w-100 d-flex align-items-center p-2'>
+                                            <UploadOutlined />
                                             <span className='d-none d-sm-inline'>{t('selectFile')}</span>
                                             <span className='d-inline d-sm-none'>{t('upload')}</span>
                                         </Button>
@@ -492,8 +495,8 @@ const QtySheetUpload = () => {
                                         onClick={() => {
                                             setIsLotsFetched(false);
                                             setIsUpdateMode(true);
-                                            setShowTable(false); // Hide table when update file is clicked
-                                            setShowBtn(false); // Hide button when update file is clicked
+                                            setShowTable(false);
+                                            setShowBtn(false);
                                         }}
                                     >
                                         {t('updateFile')}
@@ -504,12 +507,13 @@ const QtySheetUpload = () => {
                                         type="primary"
                                         danger
                                         onClick={handleDelete}
-                                        className="ms-2 d-flex align-items-center"
+                                        className="ms-2"
                                         disabled={transactionExist}
                                     >
                                         <DeleteOutlined />
                                         <span>{t('deleteFile')}</span>
                                     </Button>
+
                                 )}
                             </div>
                         </Form.Item>
@@ -519,8 +523,9 @@ const QtySheetUpload = () => {
                                     className={`${customBtn}`}
                                     type="primary"
                                     onClick={handleUpdate}
+                                    loading={isLoading}
                                 >
-                                    {t('updateLots')}
+                                    {isUpdateMode ? t('updateLots') : (isLotsFetched ? t('updateLots') : t('uploadLots'))}
                                 </Button>
                             )}
                         </Form.Item>
@@ -531,7 +536,7 @@ const QtySheetUpload = () => {
                                     return (
                                         <Button
                                             key={index}
-                                            className={`${selectedLotNo === lotNo ? 'bg-white text-dark border-dark' : customBtn} ${customDark === "dark-dark" ? 'border' : 'custom-light-border'} d-flex align-items-center justify-content-center p-3 `}
+                                            className={`${selectedLotNo === lotNo ? 'bg-white text-dark border-dark' : customBtn} d-flex align-items-center justify-content-center p-2`}
                                             type="primary"
                                             onClick={() => handleLotClick(lotNo)}
                                             onContextMenu={(e) => handleRightClick(e, lotNo)} 
@@ -546,15 +551,17 @@ const QtySheetUpload = () => {
                                     );
                                 })}
                             </div>
-                            <div className="">
-                                <ViewQuantitySheet project={projectId} selectedLotNo={selectedLotNo} showBtn={showBtn} showTable={showTable} lots={lots} />
-                            </div>
+                            <ViewQuantitySheet project={projectId} selectedLotNo={selectedLotNo} showBtn={showBtn} showTable={showTable} lots={lots} />
                         </Form.Item>
                     </Form>
                 </Col>
             </Row>
             {isDropdownVisible && (
-                <Dropdown overlay={menu} visible={isDropdownVisible} onVisibleChange={setIsDropdownVisible}>
+                <Dropdown 
+                    menu={menu} 
+                    open={isDropdownVisible} 
+                    onOpenChange={setIsDropdownVisible}
+                >
                     <div />
                 </Dropdown>
             )}
@@ -562,10 +569,10 @@ const QtySheetUpload = () => {
                 show={isModalVisible}
                 onHide={handleCancelSkip}
             >
-                <Modal.Header closeButton>
-                    <Modal.Title>{t('confirmUpdate')}</Modal.Title>
+                <Modal.Header className={`${customDark}`}>
+                    <Modal.Title  className={`${customLightText}`}>{t('confirmUpdate')}</Modal.Title>
                 </Modal.Header>
-                <Modal.Body>
+                <Modal.Body  className={`${customLight} ${customDarkText}`}>
                     <div>
                         <p>{t('existingLotsMessage')}</p>
                         <ul>
@@ -576,11 +583,11 @@ const QtySheetUpload = () => {
                         <p>{t('skipTheseLotsMessage')}</p>
                     </div>
                 </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={handleCancelSkip}>
+                <Modal.Footer  className={`${customDark}`}>
+                    <Button variant="secondary" className={`${customBtn}`} onClick={handleCancelSkip}>
                         {t('no')}
                     </Button>
-                    <Button variant="primary" onClick={handleSkipUpdate}>
+                    <Button variant="primary" className={`${customDark === "dark-dark" ? customBtn : ""}`} onClick={handleSkipUpdate}>
                         {t('yes')}
                     </Button>
                 </Modal.Footer>
@@ -627,6 +634,7 @@ const QtySheetUpload = () => {
                     </Col>
                 </Row>
             )}
+            {isLoading && <Spin size="large" tip="Loading..." />}
         </div>
     );
 };

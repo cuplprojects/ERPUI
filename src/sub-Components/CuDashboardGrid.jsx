@@ -8,11 +8,25 @@ import { ClientSideRowModelModule } from '@ag-grid-community/client-side-row-mod
 import { ModuleRegistry } from '@ag-grid-community/core';
 import Data from './../store/CuAgGrid.json';
 import { useNavigate } from 'react-router-dom';
-
+import themeStore from '../store/themeStore';
+import { useStore } from 'zustand';
 // Register AG Grid Modules
 ModuleRegistry.registerModules([ClientSideRowModelModule]);
 
 const CuDashboardGrid = ({ setClickData }) => {
+  const { getCssClasses } = useStore(themeStore);
+  const [
+    customDark,
+    customMid, 
+    customLight,
+    customBtn,
+    customDarkText,
+    customLightText,
+    customLightBorder,
+    customDarkBorder,
+    customThead
+  ] = getCssClasses();
+  const [hasProcesses, setHasProcesses] = useState(false);
   console.log(setClickData);
   const containerStyle = useMemo(() => ({ width: '100%', height: '100%' }), []);
   const gridStyle = useMemo(() => ({ height: '100%', width: '100%' }), []);

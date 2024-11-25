@@ -68,11 +68,11 @@ const CuDashboard = () => {
     return savedState
       ? JSON.parse(savedState)
       : {
-          // lineChart: true,
-          // pieChart: true,
-          agGrid: true,
-          barChart: true,
-        };
+        // lineChart: true,
+        // pieChart: true,
+        agGrid: true,
+        barChart: true,
+      };
   });
   const [visiblecardsIcon] = useState({
     lineChart: LineChartIcon,
@@ -149,10 +149,17 @@ const CuDashboard = () => {
   }, []);
 
   const { getCssClasses } = useStore(themeStore);
-  const cssClasses = getCssClasses();
-  const customDark = cssClasses[0];
-  const customMid = cssClasses[1];
-  const customBtn = cssClasses[3];
+  const [
+    customDark,
+    customMid,
+    customLight,
+    customBtn,
+    customDarkText,
+    customLightText,
+    customLightBorder,
+    customDarkBorder,
+    customThead
+  ] = getCssClasses();
 
   const handleProjectClick = (project) => {
     setSelectedLots(project.lots || []);
@@ -263,21 +270,20 @@ const CuDashboard = () => {
           >
             <IoMdArrowDropleftCircle
               size={40}
-              className={`${customBtn} rounded-circle custom-zoom-btn`}
+              className={`${customBtn} rounded-circle custom-zoom-btn ${customLightBorder}`}
             />
           </div>
           <div
-            className={`position-absolute top-50 end-0 translate-middle-y rounded-circle ${customDark} ${
-              customDark === "dark-dark"
+            className={`position-absolute top-50 end-0 translate-middle-y rounded-circle ${customDark} ${customDark === "dark-dark"
                 ? `${customMid} border-light border-1`
                 : "border-0"
-            }`}
+              }`}
             style={{ zIndex: 9, right: "10px", cursor: "pointer" }}
             onClick={() => handleCarouselControl("next")}
           >
             <IoMdArrowDroprightCircle
               size={40}
-              className={`${customBtn} rounded-circle custom-zoom-btn`}
+              className={`${customBtn} rounded-circle custom-zoom-btn ${customLightBorder}`}
             />
           </div>
         </div>
@@ -310,7 +316,7 @@ const CuDashboard = () => {
           >
             <Dropdown.Toggle as={CustomToggle}>
               <PiDotsNineBold
-                className="mt-3"
+                className={`mt-3 ${customDark} ${customLightText} rounded-2 border`}
                 size={30}
                 style={{ cursor: "pointer" }}
               />
@@ -401,14 +407,15 @@ const CuDashboard = () => {
         {visibleCards.agGrid && (
           <Col lg={6} md={12}>
             <Card
-              className="dcard shadow-lg d-flex flex-column mb-3"
-              style={{ height: "500px", background: "rgba(255,255,255,0.6)" }}
+              className={`dcard shadow-lg d-flex flex-column mb-3 ${customLight} ${customLightBorder}`}
+              style={{ height: "550px", background: "rgba(255,255,255,0.6)" }}
             >
-              <h4 className="text-dark d-flex justify-content-between p-3">
+              {/* <h4 className={`d-flex justify-content-between  ${customDarkText} `}>
                 {clickData.name || t("selectProject")}
-              </h4>
-              <div style={{ flex: 1, overflow: "hidden", padding: "0 15px" }}>
-                <CuDetailedAgGrid projectId={clickData.projectId} />
+              </h4> */}
+              {/* passed to next component */}
+              <div >
+                <CuDetailedAgGrid projectId={clickData.projectId} clickedProject={clickData.name} />
               </div>
             </Card>
           </Col>
@@ -417,22 +424,22 @@ const CuDashboard = () => {
         {visibleCards.barChart && (
           <Col lg={visibleCards.agGrid ? 6 : 12}>
             <Card
-              className="dcard shadow-lg mb-3"
+              className={`dcard shadow-lg mb-3 ${customLight} ${customLightBorder}`}
               style={{
-                height: "500px",
+                height: "550px",
                 background: "rgba(255,255,255,0.6)",
                 overflow: "hidden",
               }}
             >
-              <h4 className="text-dark d-flex justify-content-between p-3">
-                Project | {clickData.name || t("selectProject")} | Lot
-                Completion
+              <h4 className={`text-dark d-flex justify-content-between p-3 py-0 ${customDarkText}`}>
+                {t("project")} | {clickData.name || t("selectProject")} | {t("lotCompletion")}
               </h4>
               <div
                 style={{
                   height: "calc(100% - 50px)", // Adjust for header height
                   width: "100%",
                 }}
+                className={` ${customDark === "dark-dark" ? 'bg-white' : ''} p-2 rounded-3`}
               >
                 <BarChart projectId={clickData.projectId} />
               </div>
