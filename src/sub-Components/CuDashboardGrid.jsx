@@ -8,7 +8,8 @@ import { ClientSideRowModelModule } from '@ag-grid-community/client-side-row-mod
 import { ModuleRegistry } from '@ag-grid-community/core';
 import Data from './../store/CuAgGrid.json';
 import { useNavigate } from 'react-router-dom';
-
+import themeStore from '../store/themeStore';
+import { useStore } from 'zustand';
 // Register AG Grid Modules
 ModuleRegistry.registerModules([ClientSideRowModelModule]);
 
