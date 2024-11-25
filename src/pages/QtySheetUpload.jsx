@@ -569,10 +569,10 @@ const QtySheetUpload = () => {
                 show={isModalVisible}
                 onHide={handleCancelSkip}
             >
-                <Modal.Header closeButton>
-                    <Modal.Title>{t('confirmUpdate')}</Modal.Title>
+                <Modal.Header className={`${customDark}`}>
+                    <Modal.Title  className={`${customLightText}`}>{t('confirmUpdate')}</Modal.Title>
                 </Modal.Header>
-                <Modal.Body>
+                <Modal.Body  className={`${customLight} ${customDarkText}`}>
                     <div>
                         <p>{t('existingLotsMessage')}</p>
                         <ul>
@@ -583,11 +583,11 @@ const QtySheetUpload = () => {
                         <p>{t('skipTheseLotsMessage')}</p>
                     </div>
                 </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={handleCancelSkip}>
+                <Modal.Footer  className={`${customDark}`}>
+                    <Button variant="secondary" className={`${customBtn}`} onClick={handleCancelSkip}>
                         {t('no')}
                     </Button>
-                    <Button variant="primary" onClick={handleSkipUpdate}>
+                    <Button variant="primary" className={`${customDark === "dark-dark" ? customBtn : ""}`} onClick={handleSkipUpdate}>
                         {t('yes')}
                     </Button>
                 </Modal.Footer>
