@@ -70,6 +70,8 @@ const ProjectDetailsTable = ({
     Paper: window.innerWidth >= 992, // Enable by default on large screens
     Course: window.innerWidth >= 992,
     Subject: window.innerWidth >= 992,
+    Zone: false, // Add Zone visibility
+    Machine: false // Add Machine visibility
   });
   const [hideCompleted, setHideCompleted] = useState(false);
   const [columnModalShow, setColumnModalShow] = useState(false);
@@ -121,7 +123,6 @@ const ProjectDetailsTable = ({
       setColumnVisibility((prev) => ({
         ...prev,
         Paper: window.innerWidth >= 992,
-
         Course: window.innerWidth >= 992,
         Subject: window.innerWidth >= 992,
       }));
@@ -456,6 +457,28 @@ const ProjectDetailsTable = ({
             const bNames = b.teamUserNames?.join(", ") || "";
             return aNames.localeCompare(bNames);
           },
+        },
+      ]
+      : []),
+    ...(columnVisibility["Zone"] && hasFeaturePermission(4)
+      ? [
+        {
+          title: t("zone"),
+          dataIndex: "zoneNo",
+          align: "center", 
+          key: "zoneNo",
+          sorter: (a, b) => (a.zoneNo || '').localeCompare(b.zoneNo || ''),
+        },
+      ]
+      : []),
+    ...(columnVisibility["Machine"] && hasFeaturePermission(10)
+      ? [
+        {
+          title: t("machine"),
+          dataIndex: "machinename",
+          align: "center",
+          key: "machinename",
+          sorter: (a, b) => (a.machinename || '').localeCompare(b.machinename || ''),
         },
       ]
       : []),

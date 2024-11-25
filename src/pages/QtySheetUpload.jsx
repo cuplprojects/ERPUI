@@ -508,8 +508,8 @@ const QtySheetUpload = () => {
                                         <span>{t('deleteFile')}</span>
                                     </Button>
 
-                                </Upload>
-                            ):(
+                                
+                            )}:(
                                 <Button
                                     className={`${customBtn}`}
                                     type="primary"
@@ -522,7 +522,7 @@ const QtySheetUpload = () => {
                                 >
                                     {t('updateFile')}
                                 </Button>
-                            )}
+                            )
                                 {isLotsFetched && (
                                 <Button
                                     type="primary"
