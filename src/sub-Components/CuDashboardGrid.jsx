@@ -13,6 +13,19 @@ import { useNavigate } from 'react-router-dom';
 ModuleRegistry.registerModules([ClientSideRowModelModule]);
 
 const CuDashboardGrid = ({ setClickData }) => {
+  const { getCssClasses } = useStore(themeStore);
+  const [
+    customDark,
+    customMid, 
+    customLight,
+    customBtn,
+    customDarkText,
+    customLightText,
+    customLightBorder,
+    customDarkBorder,
+    customThead
+  ] = getCssClasses();
+  const [hasProcesses, setHasProcesses] = useState(false);
   console.log(setClickData);
   const containerStyle = useMemo(() => ({ width: '100%', height: '100%' }), []);
   const gridStyle = useMemo(() => ({ height: '100%', width: '100%' }), []);
