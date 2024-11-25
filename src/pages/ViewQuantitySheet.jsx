@@ -409,7 +409,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
         const errors = {};
         if (!newRowData.course) errors.course = t('courseRequired');
         if (!newRowData.catchNo) errors.catchNo = t('catchNoRequired');
-        if (!newRowData.paper) errors.paper = t('paperRequired');
+        if (!newRowData.paper) errors.paper = t('paperCodeRequired');
         if (!newRowData.examDate) errors.examDate = t('examDateRequired');
         if (!newRowData.examTime) errors.examTime = t('examTimeRequired');
         if (!newRowData.quantity || newRowData.quantity <= 0) errors.quantity = t('validQuantityRequired');
@@ -540,7 +540,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
                                 <Col span={6}>
                                     <Form.Item 
                                         label={<>
-                                            {t('paper')} <span style={{ color: 'red' }}>*</span>
+                                            {t('paperCode')} <span style={{ color: 'red' }}>*</span>
                                         </>}
                                         validateStatus={formErrors.paper ? "error" : ""}
                                         help={formErrors.paper}
