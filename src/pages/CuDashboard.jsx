@@ -68,11 +68,11 @@ const CuDashboard = () => {
     return savedState
       ? JSON.parse(savedState)
       : {
-          // lineChart: true,
-          // pieChart: true,
-          agGrid: true,
-          barChart: true,
-        };
+        // lineChart: true,
+        // pieChart: true,
+        agGrid: true,
+        barChart: true,
+      };
   });
   const [visiblecardsIcon] = useState({
     lineChart: LineChartIcon,
@@ -151,7 +151,7 @@ const CuDashboard = () => {
   const { getCssClasses } = useStore(themeStore);
   const [
     customDark,
-    customMid, 
+    customMid,
     customLight,
     customBtn,
     customDarkText,
@@ -270,21 +270,20 @@ const CuDashboard = () => {
           >
             <IoMdArrowDropleftCircle
               size={40}
-              className={`${customBtn} rounded-circle custom-zoom-btn`}
+              className={`${customBtn} rounded-circle custom-zoom-btn ${customLightBorder}`}
             />
           </div>
           <div
-            className={`position-absolute top-50 end-0 translate-middle-y rounded-circle ${customDark} ${
-              customDark === "dark-dark"
+            className={`position-absolute top-50 end-0 translate-middle-y rounded-circle ${customDark} ${customDark === "dark-dark"
                 ? `${customMid} border-light border-1`
                 : "border-0"
-            }`}
+              }`}
             style={{ zIndex: 9, right: "10px", cursor: "pointer" }}
             onClick={() => handleCarouselControl("next")}
           >
             <IoMdArrowDroprightCircle
               size={40}
-              className={`${customBtn} rounded-circle custom-zoom-btn`}
+              className={`${customBtn} rounded-circle custom-zoom-btn ${customLightBorder}`}
             />
           </div>
         </div>
@@ -317,7 +316,7 @@ const CuDashboard = () => {
           >
             <Dropdown.Toggle as={CustomToggle}>
               <PiDotsNineBold
-                className="mt-3"
+                className={`mt-3 ${customDark} ${customLightText} rounded-2 border`}
                 size={30}
                 style={{ cursor: "pointer" }}
               />
@@ -409,14 +408,14 @@ const CuDashboard = () => {
           <Col lg={6} md={12}>
             <Card
               className={`dcard shadow-lg d-flex flex-column mb-3 ${customLight} ${customLightBorder}`}
-              style={{ height: "500px", background: "rgba(255,255,255,0.6)" }}
+              style={{ height: "550px", background: "rgba(255,255,255,0.6)" }}
             >
               {/* <h4 className={`d-flex justify-content-between  ${customDarkText} `}>
                 {clickData.name || t("selectProject")}
               </h4> */}
               {/* passed to next component */}
-              <div style={{ flex: 1, overflow: "hidden" }} >
-                <CuDetailedAgGrid projectId={clickData.projectId} clickedProject={clickData.name}/>
+              <div >
+                <CuDetailedAgGrid projectId={clickData.projectId} clickedProject={clickData.name} />
               </div>
             </Card>
           </Col>
@@ -427,7 +426,7 @@ const CuDashboard = () => {
             <Card
               className={`dcard shadow-lg mb-3 ${customLight} ${customLightBorder}`}
               style={{
-                height: "500px",
+                height: "550px",
                 background: "rgba(255,255,255,0.6)",
                 overflow: "hidden",
               }}

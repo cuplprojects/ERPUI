@@ -86,7 +86,7 @@ const CuDetailedAgGrid = ({ projectId , clickedProject }) => {
       title: t('sn'),
       dataIndex: 'sn',
       key: 'sn',
-      width: 70,
+      width: '10%',
       align: 'center',
       className: 'border-right',
       sorter: (a, b) => a.sn - b.sn
@@ -95,7 +95,7 @@ const CuDetailedAgGrid = ({ projectId , clickedProject }) => {
       title: t('processes'),
       dataIndex: 'processName',
       key: 'processName',
-      width: 150,
+      width: '20%',
       className: 'border-right',
       sorter: (a, b) => a.processName.localeCompare(b.processName)
     },
@@ -103,7 +103,7 @@ const CuDetailedAgGrid = ({ projectId , clickedProject }) => {
       title: t('totalCatches'),
       dataIndex: 'totalCatch',
       key: 'totalCatch',
-      width: 100,
+      width: '15%',
       align: 'center',
       className: 'border-right',
       sorter: (a, b) => a.totalCatch - b.totalCatch
@@ -112,7 +112,7 @@ const CuDetailedAgGrid = ({ projectId , clickedProject }) => {
       title: t('remainingCatches'),
       dataIndex: 'remainingCatch',
       key: 'remainingCatch',
-      width: 100,
+      width: '15%',
       align: 'center',
       className: 'border-right',
       sorter: (a, b) => a.remainingCatch - b.remainingCatch
@@ -121,7 +121,7 @@ const CuDetailedAgGrid = ({ projectId , clickedProject }) => {
       title: t('totalQuantity'),
       dataIndex: 'totalQuantity',
       key: 'totalQuantity',
-      width: 95,
+      width: '10%',
       align: 'center',
       className: 'border-right',
       sorter: (a, b) => a.totalQuantity - b.totalQuantity
@@ -130,7 +130,7 @@ const CuDetailedAgGrid = ({ projectId , clickedProject }) => {
 
   return (
     <div style={containerStyle}>
-      <div id="grid-wrapper" style={{ width: '850px', height: '100%' }}>
+      <div id="grid-wrapper" style={{ width: '100%', height: '100%', maxWidth: '850px', margin: 'auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
           <h4 className={`${customDarkText}`}>
             {clickedProject || t("selectProject")}
@@ -139,7 +139,8 @@ const CuDetailedAgGrid = ({ projectId , clickedProject }) => {
             placeholder={t('search')}
             allowClear
             onChange={e => setSearchText(e.target.value)}
-            style={{ width: 200 }}
+            style={{ width: '200px', maxWidth: '100%' }}
+            // className={`${customDarkBorder} rounded-3`}
           />
         </div>
         <Table
@@ -149,9 +150,10 @@ const CuDetailedAgGrid = ({ projectId , clickedProject }) => {
             position: ['bottomCenter'],
             pageSize: 8,
             showSizeChanger: true,
-            showQuickJumper: true,
+            // showQuickJumper: true,
             pageSizeOptions: ['8', '10', '20', '50'],
-            showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`
+            showTotal: (total) => `${t("total")} ${total} ${t("items")}`,
+            className: `${customDark === "dark-dark"? "bg-white" : `${customMid}`} p-3 rounded-bottom border`
           }}
           size="small"
           bordered
@@ -168,7 +170,9 @@ const CuDetailedAgGrid = ({ projectId , clickedProject }) => {
             ${customDark === "brown-dark" ? "thead-brown" : ""} `}
           style={{
             height: 'calc(100% - 50px)',
-            width: '100%'
+            width: '100%',
+            maxWidth: '850px',
+            margin: 'auto'
           }}
         />
       </div>
