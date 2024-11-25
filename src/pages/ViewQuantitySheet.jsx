@@ -114,7 +114,16 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
             dataIndex: 'examDate',
             key: 'examDate',
             width: 100,
-            sorter: (a, b) => new Date(a.examDate) - new Date(b.examDate),
+            sorter: (a, b) => {
+                // Convert DD-MM-YYYY to Date objects for proper comparison
+                const [dayA, monthA, yearA] = a.examDate.split('-');
+                const [dayB, monthB, yearB] = b.examDate.split('-');
+                
+                const dateA = new Date(yearA, monthA - 1, dayA);
+                const dateB = new Date(yearB, monthB - 1, dayB);
+                
+                return dateA - dateB;
+            },
             render: (text, record) => (
                 <span>
                     {text}
@@ -400,7 +409,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
         const errors = {};
         if (!newRowData.course) errors.course = t('courseRequired');
         if (!newRowData.catchNo) errors.catchNo = t('catchNoRequired');
-        if (!newRowData.paper) errors.paper = t('paperRequired');
+        if (!newRowData.paper) errors.paper = t('paperCodeRequired');
         if (!newRowData.examDate) errors.examDate = t('examDateRequired');
         if (!newRowData.examTime) errors.examTime = t('examTimeRequired');
         if (!newRowData.quantity || newRowData.quantity <= 0) errors.quantity = t('validQuantityRequired');
@@ -531,7 +540,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
                                 <Col span={6}>
                                     <Form.Item 
                                         label={<>
-                                            {t('paper')} <span style={{ color: 'red' }}>*</span>
+                                            {t('paperCode')} <span style={{ color: 'red' }}>*</span>
                                         </>}
                                         validateStatus={formErrors.paper ? "error" : ""}
                                         help={formErrors.paper}
