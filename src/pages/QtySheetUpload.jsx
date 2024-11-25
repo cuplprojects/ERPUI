@@ -66,6 +66,9 @@ const QtySheetUpload = () => {
     const [isUpdateMode, setIsUpdateMode] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
+    // Track mouse position for context menu
+    const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
+
 
     useEffect(() => {
         const checkTransactionExistence = async () => {
@@ -111,10 +114,21 @@ const QtySheetUpload = () => {
     }, [projectId]);
 
     const handleRightClick = (e, lotNo) => {
-        e.preventDefault();  // Prevent the default context menu
-        setSelectedLotNo(lotNo);  // Set the selected lot number
+        e.preventDefault();  // Prevent default context menu
+        setSelectedLotNo(lotNo);
+        setContextMenuPosition({ x: e.clientX, y: e.clientY });
         setIsDropdownVisible(true);
     };
+
+    // Handle clicking outside context menu
+    useEffect(() => {
+        const handleClickOutside = () => {
+            setIsDropdownVisible(false);
+        };
+
+        document.addEventListener('click', handleClickOutside);
+        return () => document.removeEventListener('click', handleClickOutside);
+    }, []);
 
     const releaseForProduction = async () => {
         try {
@@ -428,7 +442,14 @@ const QtySheetUpload = () => {
     };
 
     const menu = (
-        <Menu>
+        <Menu
+            style={{
+                position: 'fixed',
+                top: contextMenuPosition.y,
+                left: contextMenuPosition.x,
+                zIndex: 1000
+            }}
+        >
             <Menu.Item key="1" onClick={releaseForProduction}>
                 {t('releaseForProduction')}
             </Menu.Item>
@@ -513,7 +534,6 @@ const QtySheetUpload = () => {
                                         <DeleteOutlined />
                                         <span>{t('deleteFile')}</span>
                                     </Button>
-
                                 )}
                             </div>
                         </Form.Item>
@@ -556,15 +576,7 @@ const QtySheetUpload = () => {
                     </Form>
                 </Col>
             </Row>
-            {isDropdownVisible && (
-                <Dropdown 
-                    menu={menu} 
-                    open={isDropdownVisible} 
-                    onOpenChange={setIsDropdownVisible}
-                >
-                    <div />
-                </Dropdown>
-            )}
+            {isDropdownVisible && menu}
             <Modal
                 show={isModalVisible}
                 onHide={handleCancelSkip}

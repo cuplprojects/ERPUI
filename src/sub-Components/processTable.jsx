@@ -128,7 +128,11 @@ const ProcessTable = () => {
                   selectedProject?.value || id
                 }&processId=${previousProcessData.processId}`
               );
-              setPreviousProcessTransactions(prevTransactions.data);
+              const mappedPrevTransactions = prevTransactions.data.map(transaction => ({
+                ...transaction,
+                thresholdQty: previousProcessData.thresholdQty
+              }));
+              setPreviousProcessTransactions(mappedPrevTransactions);
               break;
             }
             previousSequence--;
@@ -257,15 +261,14 @@ const ProcessTable = () => {
 
   const hasFeaturePermission = useCallback(
     (featureId) => {
-      if (userData?.role?.roleId === 1) {
-        return true;
-      }
-      if (featureData?.featuresList) {
-        return featureData.featuresList.includes(featureId);
-      }
-      return false;
+        // Check if the featureId is in the current process's featuresList
+        if (featureData?.featuresList) {
+          console.log("featureData.featuresList", featureData.featuresList);
+            return featureData.featuresList.includes(featureId);
+        }
+        return false;
     },
-    [userData, featureData]
+    [featureData]
   );
 
   const formatQuantitySheetData = (item) => ({
@@ -411,13 +414,13 @@ const ProcessTable = () => {
                   machinename: previousProcessData.transactions[0]?.machinename|| [],
                   alarmMessage:
                     previousProcessData.transactions[0]?.alarmMessage || null,
-                  thresholdQty:null
+                  thresholdQty:previousProcess.thresholdQty // map with previous process
                 }
               : null,
             voiceRecording: item.transactions[0]?.voiceRecording || "",
             transactionId: item.transactions[0]?.transactionId || null,
             //zoneId: item.transactions[0]?.zoneId || 0,
-            //machineId: item.transactions[0]?.machineId || 0,
+            machineId: item.transactions[0]?.machineId || 0,
             machinename : item.transactions[0]?.machinename || "No Machine Assigned",
             zoneNo: item.transactions?.[0]?.zoneNo || "No Zone Assigned",
             zoneId: item.transactions?.[0]?.zoneId || 0,
@@ -504,6 +507,7 @@ const ProcessTable = () => {
   };
 
   const handleCatchClick = (record) => {
+    console.log(record);
     setCatchDetailModalShow(true);
     setCatchDetailModalData(record);
   };
@@ -594,7 +598,7 @@ const ProcessTable = () => {
       <Row>
         <Col lg={12} md={12}>
           <div className="marquee-container mt-2 mb-2">
-            <MarqueeAlert data={tableData} />
+            <MarqueeAlert data={tableData} onClick={handleCatchClick}/>
           </div>
         </Col>
       </Row>
