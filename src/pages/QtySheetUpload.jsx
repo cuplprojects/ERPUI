@@ -66,6 +66,9 @@ const QtySheetUpload = () => {
     const [isUpdateMode, setIsUpdateMode] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
+    // Track mouse position for context menu
+    const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
+
 
     useEffect(() => {
         const checkTransactionExistence = async () => {
@@ -111,10 +114,21 @@ const QtySheetUpload = () => {
     }, [projectId]);
 
     const handleRightClick = (e, lotNo) => {
-        e.preventDefault();  // Prevent the default context menu
-        setSelectedLotNo(lotNo);  // Set the selected lot number
+        e.preventDefault();  // Prevent default context menu
+        setSelectedLotNo(lotNo);
+        setContextMenuPosition({ x: e.clientX, y: e.clientY });
         setIsDropdownVisible(true);
     };
+
+    // Handle clicking outside context menu
+    useEffect(() => {
+        const handleClickOutside = () => {
+            setIsDropdownVisible(false);
+        };
+
+        document.addEventListener('click', handleClickOutside);
+        return () => document.removeEventListener('click', handleClickOutside);
+    }, []);
 
     const releaseForProduction = async () => {
         try {
@@ -127,13 +141,13 @@ const QtySheetUpload = () => {
     
             // Check if the response was successful
             if (response.status === 200) {
-                success(`Lot ${lotNo} released for production`);
+                success(`${t("lot")} ${lotNo} ${t('releasedForProduction')}`);
             } else {
-                error('Failed to release lot');
+                error(t('failedToReleaseLot'));
             }
         } catch (error) {
             console.error('Error releasing lot:', error);
-            error('Error releasing lot');
+            error(t('errorReleasinglot'));
         }
     };
     
@@ -428,8 +442,17 @@ const QtySheetUpload = () => {
     };
 
     const menu = (
-        <Menu>
-            <Menu.Item key="1" onClick={releaseForProduction}>
+        <Menu
+            style={{
+                position: 'fixed',
+                top: contextMenuPosition.y,
+                left: contextMenuPosition.x,
+                zIndex: 1000,
+                outline:'2px solid white'
+            }}
+            className={`${customLight} rounded-3 border-3 ${customDarkBorder} ${customDarkText} `}
+        >
+            <Menu.Item key="1" onClick={releaseForProduction} className={`w-100 rounded-3 `}>
                 {t('releaseForProduction')}
             </Menu.Item>
         </Menu>
@@ -513,7 +536,6 @@ const QtySheetUpload = () => {
                                         <DeleteOutlined />
                                         <span>{t('deleteFile')}</span>
                                     </Button>
-
                                 )}
                             </div>
                         </Form.Item>
@@ -556,23 +578,15 @@ const QtySheetUpload = () => {
                     </Form>
                 </Col>
             </Row>
-            {isDropdownVisible && (
-                <Dropdown 
-                    menu={menu} 
-                    open={isDropdownVisible} 
-                    onOpenChange={setIsDropdownVisible}
-                >
-                    <div />
-                </Dropdown>
-            )}
+            {isDropdownVisible && menu}
             <Modal
                 show={isModalVisible}
                 onHide={handleCancelSkip}
             >
-                <Modal.Header className={`${customDark}`}>
-                    <Modal.Title  className={`${customLightText}`}>{t('confirmUpdate')}</Modal.Title>
+                <Modal.Header closeButton>
+                    <Modal.Title>{t('confirmUpdate')}</Modal.Title>
                 </Modal.Header>
-                <Modal.Body  className={`${customLight} ${customDarkText}`}>
+                <Modal.Body>
                     <div>
                         <p>{t('existingLotsMessage')}</p>
                         <ul>
@@ -583,11 +597,11 @@ const QtySheetUpload = () => {
                         <p>{t('skipTheseLotsMessage')}</p>
                     </div>
                 </Modal.Body>
-                <Modal.Footer  className={`${customDark}`}>
-                    <Button variant="secondary" className={`${customBtn}`} onClick={handleCancelSkip}>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleCancelSkip}>
                         {t('no')}
                     </Button>
-                    <Button variant="primary" className={`${customDark === "dark-dark" ? customBtn : ""}`} onClick={handleSkipUpdate}>
+                    <Button variant="primary" onClick={handleSkipUpdate}>
                         {t('yes')}
                     </Button>
                 </Modal.Footer>
