@@ -1200,38 +1200,14 @@ const ProjectDetailsTable = ({
           <Table
             rowClassName={rowClassName}
             className={`${customDark === "default-dark" ? "thead-default" : ""}
-                                    ${customDark === "red-dark"
-                ? "thead-red"
-                : ""
-              }
-                                    ${customDark === "green-dark"
-                ? "thead-green"
-                : ""
-              }
-                                    ${customDark === "blue-dark"
-                ? "thead-blue"
-                : ""
-              }
-                                    ${customDark === "dark-dark"
-                ? "thead-dark"
-                : ""
-              }
-                                    ${customDark === "pink-dark"
-                ? "thead-pink"
-                : ""
-              }
-                                    ${customDark === "purple-dark"
-                ? "thead-purple"
-                : ""
-              }
-                                    ${customDark === "light-dark"
-                ? "thead-light"
-                : ""
-              }
-                                    ${customDark === "brown-dark"
-                ? "thead-brown"
-                : ""
-              } `}
+            ${customDark === "red-dark" ? "thead-red" : ""}
+            ${customDark === "green-dark" ? "thead-green" : ""}
+            ${customDark === "blue-dark" ? "thead-blue" : ""}
+            ${customDark === "dark-dark" ? "thead-dark" : ""}
+            ${customDark === "pink-dark" ? "thead-pink" : ""}
+            ${customDark === "purple-dark" ? "thead-purple" : ""}
+            ${customDark === "light-dark" ? "thead-light" : ""}
+            ${customDark === "brown-dark" ? "thead-brown" : ""} `}
             rowKey="srNo"
             columns={columns}
             dataSource={filteredData}

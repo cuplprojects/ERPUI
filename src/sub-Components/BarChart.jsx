@@ -3,14 +3,26 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Chart, registerables } from 'chart.js';
 import API from '../CustomHooks/MasterApiHooks/api';
 import { useTranslation } from 'react-i18next';
-
+import themeStore from '../store/themeStore';
+import { useStore } from 'zustand';
 Chart.register(...registerables);
 
 const BarChart = ({ projectId }) => {
   const { t } = useTranslation();
   const chartRef = useRef(null);
   const [lotData, setLotData] = useState(null);
-
+  const { getCssClasses } = useStore(themeStore);
+  const [
+    customDark,
+    customMid, 
+    customLight,
+    customBtn,
+    customDarkText,
+    customLightText,
+    customLightBorder,
+    customDarkBorder,
+    customThead
+  ] = getCssClasses();
   useEffect(() => {
     const fetchLotPercentages = async () => {
       try {
