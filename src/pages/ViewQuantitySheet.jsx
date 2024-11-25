@@ -113,7 +113,16 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
             dataIndex: 'examDate',
             key: 'examDate',
             width: 100,
-            sorter: (a, b) => new Date(a.examDate) - new Date(b.examDate),
+            sorter: (a, b) => {
+                // Convert DD-MM-YYYY to Date objects for proper comparison
+                const [dayA, monthA, yearA] = a.examDate.split('-');
+                const [dayB, monthB, yearB] = b.examDate.split('-');
+                
+                const dateA = new Date(yearA, monthA - 1, dayA);
+                const dateB = new Date(yearB, monthB - 1, dayB);
+                
+                return dateA - dateB;
+            },
             render: (text, record) => (
                 <span>
                     {text}
