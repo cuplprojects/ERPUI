@@ -615,17 +615,17 @@ const QtySheetUpload = () => {
                 show={showDeleteConfirm}
                 onHide={() => setShowDeleteConfirm(false)}
             >
-                <Modal.Header closeButton>
-                    <Modal.Title>{t('confirmDelete')}</Modal.Title>
+                <Modal.Header className={`${customDark} ${customLightText}`}>
+                    <Modal.Title>{t('confirmDelete')} {`->`} {projectName}</Modal.Title>
                 </Modal.Header>
-                <Modal.Body>
-                    {t('areYouSureDeleteQuantitySheet')}
+                <Modal.Body className={`${customLight}`}>
+                    {t('areYouSureDeleteQuantitySheet')} 
                 </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowDeleteConfirm(false)}>
+                <Modal.Footer className={`${customDark}`}>
+                    <Button variant="secondary" className={`${customBtn}`} onClick={() => setShowDeleteConfirm(false)}>
                         {t('cancel')}
                     </Button>
-                    <Button variant="danger" onClick={confirmDelete}>
+                    <Button variant="danger"  onClick={confirmDelete}>
                         {t('delete')}
                     </Button>
                 </Modal.Footer>
