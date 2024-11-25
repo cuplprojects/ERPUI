@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Row, Col, Button } from 'react-bootstrap';
 import API from '../../../../CustomHooks/MasterApiHooks/api';
-
+import { notification } from 'antd';
 
 const CatchTeamAssignment = ({ teams, data, handleClose, processId , fetchTransactions}) => {
   const [selectedTeam, setSelectedTeam] = useState('');
@@ -40,13 +40,18 @@ const CatchTeamAssignment = ({ teams, data, handleClose, processId , fetchTransa
  // Notify parent component about the selected team
   };
 
-
-
-
+  const handleRemoveUser = (userId) => {
+    setUsersInTeam(usersInTeam.filter(user => user.userId !== userId));
+  };
 
   const handleAddUser = async () => {
     if (!selectedUserToAdd) {
-      alert('Please select a user to add.');
+      notification.warning({
+        message: 'Warning',
+        description: 'Please select a user to add.',
+        placement: 'topRight',
+        duration: 3
+      });
       return;
     }
 
@@ -64,6 +69,27 @@ const CatchTeamAssignment = ({ teams, data, handleClose, processId , fetchTransa
   );
 
   const handleConfirm = async () => {
+    // Validate team selection and users
+    if (!selectedTeam) {
+      notification.warning({
+        message: 'Warning',
+        description: 'Please select a team before confirming.',
+        placement: 'topRight',
+        duration: 3
+      });
+      return;
+    }
+
+    if (usersInTeam.length === 0) {
+      notification.warning({
+        message: 'Warning',
+        description: 'Please add at least one user to the team before confirming.',
+        placement: 'topRight',
+        duration: 3
+      });
+      return;
+    }
+
     try {
       for (let item of data) {
         let existingTransactionData;
@@ -99,10 +125,22 @@ const CatchTeamAssignment = ({ teams, data, handleClose, processId , fetchTransa
         await API.post('/Transactions', postData);
       }
       
-      fetchTransactions()
+      fetchTransactions();
+      notification.success({
+        message: 'Success',
+        description: 'Team assigned successfully!',
+        placement: 'topRight',
+        duration: 3
+      });
       handleClose();
     } catch (error) {
       console.error('Error updating team:', error);
+      notification.error({
+        message: 'Error',
+        description: 'Failed to assign team. Please try again.',
+        placement: 'topRight',
+        duration: 3
+      });
     }
   };
 
@@ -192,7 +230,11 @@ const CatchTeamAssignment = ({ teams, data, handleClose, processId , fetchTransa
 
       <Row>
         <Col md={12}>
-          <Button variant="success" onClick={handleConfirm}>
+          <Button 
+            variant="success" 
+            onClick={handleConfirm}
+            disabled={!selectedTeam || usersInTeam.length === 0}
+          >
             Confirm Assignment
           </Button>
         </Col>
