@@ -433,8 +433,7 @@ const CuDashboard = () => {
               }}
             >
               <h4 className={`text-dark d-flex justify-content-between p-3 py-0 ${customDarkText}`}>
-                Project | {clickData.name || t("selectProject")} | Lot
-                Completion
+                {t("project")} | {clickData.name || t("selectProject")} | {t("lotCompletion")}
               </h4>
               <div
                 style={{
