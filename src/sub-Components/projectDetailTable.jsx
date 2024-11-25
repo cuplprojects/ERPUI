@@ -8,6 +8,7 @@ import {
   Input,
   Select,
   Modal,
+  Tooltip,
 } from "antd";
 import { notification } from 'antd';
 import ColumnToggleModal from "./../menus/ColumnToggleModal";
@@ -588,32 +589,34 @@ const ProjectDetailsTable = ({
         return (
           <div className="d-flex justify-content-center">
             {hasAlerts ? (
-              <span className="text-danger" title={requirements.join(', ')}>
-                <StatusToggle
-                  initialStatusIndex={initialStatusIndex}
-                  statusSteps={statusSteps.map((status, index) => ({
-                    status,
-                    color: index === 0 ? "red" : index === 1 ? "blue" : "green",
-                  }))}
-                  disabled // Disable the toggle due to alerts
-                />
-              </span>
+              <Tooltip title={requirements.join(', ')} placement="top">
+                <span className="text-danger">
+                  <StatusToggle
+                    initialStatusIndex={initialStatusIndex}
+                    statusSteps={statusSteps.map((status, index) => ({
+                      status,
+                      color: index === 0 ? "red" : index === 1 ? "blue" : "green",
+                    }))}
+                    disabled // Disable the toggle due to alerts
+                  />
+                </span>
+              </Tooltip>
             ) : (
-              <span
-                title={isDisabled ? requirements.join('\n') : ""} // Join requirements with newline for display
-              >
-                <StatusToggle
-                  initialStatusIndex={initialStatusIndex}
-                  onStatusChange={(newIndex) =>
-                    handleRowStatusChange(record.srNo, newIndex)
-                  }
-                  statusSteps={statusSteps.map((status, index) => ({
-                    status,
-                    color: index === 0 ? "red" : index === 1 ? "blue" : "green",
-                  }))}
-                  disabled={isDisabled} // Disable the toggle if status can't be changed
-                />
-              </span>
+              <Tooltip title={isDisabled ? requirements.join('\n') : ""} placement="top">
+                <span>
+                  <StatusToggle
+                    initialStatusIndex={initialStatusIndex}
+                    onStatusChange={(newIndex) =>
+                      handleRowStatusChange(record.srNo, newIndex)
+                    }
+                    statusSteps={statusSteps.map((status, index) => ({
+                      status,
+                      color: index === 0 ? "red" : index === 1 ? "blue" : "green",
+                    }))}
+                    disabled={isDisabled} // Disable the toggle if status can't be changed
+                  />
+                </span>
+              </Tooltip>
             )}
           </div>
         );
