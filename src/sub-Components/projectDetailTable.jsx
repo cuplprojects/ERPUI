@@ -8,6 +8,7 @@ import {
   Input,
   Select,
   Modal,
+  Tooltip,
 } from "antd";
 import { notification } from 'antd';
 import ColumnToggleModal from "./../menus/ColumnToggleModal";
@@ -228,9 +229,11 @@ const ProjectDetailsTable = ({
     }
 
     // Only check interim quantity if hasFeaturePermission(7) is true
-    if (hasFeaturePermission(7) && newStatusIndex === 2 && updatedRow.interimQuantity !== updatedRow.quantity) {
-      showNotification('error', 'Status Update Failed', 'Interim Quantity must equal Quantity');
-      return;
+    if (hasFeaturePermission(7) && newStatusIndex === 2) {
+      if (updatedRow.interimQuantity !== updatedRow.quantity) {
+        showNotification('error', 'Status Update Failed', 'Interim Quantity must equal Quantity');
+        return;
+      }
     }
 
     try {
@@ -546,12 +549,26 @@ const ProjectDetailsTable = ({
           (record.previousProcessData.thresholdQty != null &&
             record.previousProcessData.thresholdQty > record.previousProcessData.interimQuantity);
 
+        console.log("record", record);
         // Check if 'Assign Team' and 'Select Zone' data is populated
         const isZoneAssigned = Boolean(record.zoneId);
         const isTeamAssigned = Boolean(record.teamId?.length);
 
         // Check if 'Select Machine' is required
         const hasSelectMachinePermission = hasFeaturePermission(10);
+
+        // Debug logging
+        console.log('Status check debug:', {
+          record,
+          isPreviousProcessCompleted,
+          hasSelectMachinePermission,
+          machineId: record.machineId,
+          isZoneAssigned,
+          isTeamAssigned,
+          interimQuantity: record.interimQuantity,
+          quantity: record.quantity,
+          hasFeaturePermission7: hasFeaturePermission(7)
+        });
 
         const requirements = []; // Array to hold the reasons
 
@@ -567,12 +584,19 @@ const ProjectDetailsTable = ({
         // Only check interim quantity if hasFeaturePermission(7) is true
         const canBeCompleted = !hasFeaturePermission(7) || record.interimQuantity === record.quantity;
 
+        console.log('Status conditions:', {
+          canChangeStatus,
+          canBeCompleted,
+          hasAlerts,
+          initialStatusIndex
+        });
+
         // Populate the requirements array based on conditions
         if (hasAlerts) {
           requirements.push(t("statusCannotBeChangedDueToAlerts"));
         }
         if (!isPreviousProcessCompleted) {
-          requirements.push(t("previousProcessErrorDescription"));
+          requirements.push(t("previousProcessErrorDescription")); 
         }
         if (!canChangeStatus) {
           requirements.push(t("ensureAllRequiredFieldsAreFilled"));
@@ -581,37 +605,41 @@ const ProjectDetailsTable = ({
           requirements.push(t("cannotSetStatusToCompletedInterimQuantityMustEqualQuantity"));
         }
 
+        console.log('Requirements:', requirements);
+
         const isDisabled = requirements.length > 0; // Determine if the toggle is disabled based on requirements
 
         return (
           <div className="d-flex justify-content-center">
             {hasAlerts ? (
-              <span className="text-danger" title={requirements.join(', ')}>
-                <StatusToggle
-                  initialStatusIndex={initialStatusIndex}
-                  statusSteps={statusSteps.map((status, index) => ({
-                    status,
-                    color: index === 0 ? "red" : index === 1 ? "blue" : "green",
-                  }))}
-                  disabled // Disable the toggle due to alerts
-                />
-              </span>
+              <Tooltip title={requirements.join(', ')} placement="top">
+                <span className="text-danger">
+                  <StatusToggle
+                    initialStatusIndex={initialStatusIndex}
+                    statusSteps={statusSteps.map((status, index) => ({
+                      status,
+                      color: index === 0 ? "red" : index === 1 ? "blue" : "green",
+                    }))}
+                    disabled // Disable the toggle due to alerts
+                  />
+                </span>
+              </Tooltip>
             ) : (
-              <span
-                title={isDisabled ? requirements.join('\n') : ""} // Join requirements with newline for display
-              >
-                <StatusToggle
-                  initialStatusIndex={initialStatusIndex}
-                  onStatusChange={(newIndex) =>
-                    handleRowStatusChange(record.srNo, newIndex)
-                  }
-                  statusSteps={statusSteps.map((status, index) => ({
-                    status,
-                    color: index === 0 ? "red" : index === 1 ? "blue" : "green",
-                  }))}
-                  disabled={isDisabled} // Disable the toggle if status can't be changed
-                />
-              </span>
+              <Tooltip title={isDisabled ? requirements.join('\n') : ""} placement="top">
+                <span>
+                  <StatusToggle
+                    initialStatusIndex={initialStatusIndex}
+                    onStatusChange={(newIndex) =>
+                      handleRowStatusChange(record.srNo, newIndex)
+                    }
+                    statusSteps={statusSteps.map((status, index) => ({
+                      status,
+                      color: index === 0 ? "red" : index === 1 ? "blue" : "green",
+                    }))}
+                    disabled={isDisabled} // Disable the toggle if status can't be changed
+                  />
+                </span>
+              </Tooltip>
             )}
           </div>
         );
@@ -1114,10 +1142,14 @@ const ProjectDetailsTable = ({
                     : isZoneAssigned && isTeamAssigned; // Otherwise, Zone and Team must be assigned
                   const canBeCompleted =
                     row.interimQuantity === row.quantity;
+                  // Add check for processSequence
+                  const isProcessSequenceOne = row.processSequence === 1;
+
                   return (
                     row.alerts ||
                     !canChangeStatus ||
-                    (getSelectedStatus() === 2 && !canBeCompleted)
+                    (getSelectedStatus() === 2 && !canBeCompleted) ||
+                    isProcessSequenceOne // Disable if processSequence is 1
                   ); // Disable if there are alerts or the status cannot be changed
                 })}
               />
