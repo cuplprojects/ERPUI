@@ -2,10 +2,10 @@ import React from 'react';
 import { Row, Col } from 'react-bootstrap';
 import AlertBadge from '../../../sub-Components/AlertBadge';
 
-const MarqueeAlert = ({ data, onCatchClick }) => {
-  const handleCatchClick = (record) => {
-    if (onCatchClick) {
-      onCatchClick(record);
+const MarqueeAlert = ({ data, onClick }) => {
+  const handleClick = (record) => {
+    if (onClick) {
+      onClick(record);
     }
   };
 
@@ -18,8 +18,8 @@ const MarqueeAlert = ({ data, onCatchClick }) => {
             behavior="scroll" 
             direction="left" 
             scrollamount="5"
-            onMouseOver={(e) => e.target.stop()}
-            onMouseOut={(e) => e.target.start()}
+            onMouseOver={(e) => e.currentTarget.stop()}
+            onMouseOut={(e) => e.currentTarget.start()}
           >
             <div className="d-flex gap-4">
               {data.map((record, index) => (
@@ -31,7 +31,7 @@ const MarqueeAlert = ({ data, onCatchClick }) => {
                     key={index}
                     catchNo={record.catchNumber} 
                     alerts={record.alarmMessage}
-                    onClick={() => handleCatchClick(record)}
+                    onClick={() => handleClick(record)}
                     status="level1"
                   />
                 )

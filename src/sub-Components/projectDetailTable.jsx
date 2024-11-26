@@ -340,31 +340,38 @@ const ProjectDetailsTable = ({
           <Row>
             <Col lg={3} md={3} sm={3} xs={3}>
               <div className="d-inline">
-                {record.previousProcessData &&
+                {record.previousProcessData ? (
                   record.previousProcessData.status === 2 ? (
-                  record.previousProcessData.thresholdQty != null &&
+                    record.previousProcessData.thresholdQty != null &&
                     record.previousProcessData.thresholdQty > record.previousProcessData.interimQuantity ? (
-                    <IoCheckmarkDoneCircleSharp
-                      size={20}
-                      color="yellow"
-                      className=""
-                    />
+                      <IoCheckmarkDoneCircleSharp
+                        size={20}
+                        color="info"
+                        className=""
+                      />
+                    ) : (
+                      <IoCheckmarkDoneCircleSharp
+                        size={20}
+                        color="green"
+                        className=""
+                      />
+                    )
                   ) : (
-                    <IoCheckmarkDoneCircleSharp
-                      size={20}
-                      color="green"
-                      className=""
-                    />
+                    <MdPending size={20} color="orange" className="" />
                   )
                 ) : (
-                  <MdPending size={20} color="orange" className="" />
+                  <IoCheckmarkDoneCircleSharp
+                    size={20}
+                    color="green"
+                    className=""
+                  />
                 )}
               </div>
             </Col>
             <Col lg={5} md={5} sm={5} xs={5}>
               <div>
                 <button
-                  className="rounded border fs-6 custom-zoom-btn bg-white position-relative "
+                  className="rounded border fs-6 custom-zoom-btn bg-white position-relative"
                   onClick={() => handleCatchClick(record)}
                 >
                   {text}
@@ -383,7 +390,7 @@ const ProjectDetailsTable = ({
                   {record.remarks && (
                     <FaEdit
                       className=""
-                      size={20} // Adjust the size to make it smaller as a superscript
+                      size={20}
                       style={{
                         position: "absolute",
                         color: "blue",
@@ -396,14 +403,14 @@ const ProjectDetailsTable = ({
             <Col lg={1} md={1} sm={1} xs={1}>
               <div className="d-inline">
                 <span
-                  className="fs-6  position-relative "
+                  className="fs-6 position-relative"
                   onClick={() => handleCatchClick(record)}
                 >
-                  {record.alerts && (
+                  {!(record.alerts === "0" || !record.alerts?.trim()) && (
                     <BiSolidFlag
                       title={record.alerts}
                       className=""
-                      size={20} // Adjust the size to make it smaller as a superscript
+                      size={20}
                       style={{
                         position: "absolute",
                         color: "red",
@@ -424,7 +431,7 @@ const ProjectDetailsTable = ({
       align: "center",
       sorter: (a, b) => a.quantity - b.quantity,
     },
-    ...(columnVisibility["Interim Quantity"] && hasFeaturePermission(7)
+    ...(columnVisibility["Interim Quantity"]
       ? [
         {
 
@@ -447,7 +454,7 @@ const ProjectDetailsTable = ({
         },
       ]
       : []),
-    ...(columnVisibility["Team Assigned"] && hasFeaturePermission(5)
+    ...(columnVisibility["Team Assigned"]
       ? [
         {
           title: t("teamAssigned"),
@@ -463,7 +470,7 @@ const ProjectDetailsTable = ({
         },
       ]
       : []),
-    ...(columnVisibility["Zone"] && hasFeaturePermission(4)
+    ...(columnVisibility["Zone"] 
       ? [
         {
           title: t("zone"),
@@ -474,7 +481,7 @@ const ProjectDetailsTable = ({
         },
       ]
       : []),
-    ...(columnVisibility["Machine"] && hasFeaturePermission(10)
+    ...(columnVisibility["Machine"] 
       ? [
         {
           title: t("machine"),
@@ -485,7 +492,7 @@ const ProjectDetailsTable = ({
         },
       ]
       : []),
-    ...(columnVisibility["Course"] && hasFeaturePermission(13)
+    ...(columnVisibility["Course"]
       ? [
         {
           title: t("course"),
@@ -499,7 +506,7 @@ const ProjectDetailsTable = ({
         },
       ]
       : []),
-    ...(columnVisibility["Subject"] && hasFeaturePermission(14)
+    ...(columnVisibility["Subject"] 
       ? [
         {
           title: t("subject"),
@@ -512,7 +519,7 @@ const ProjectDetailsTable = ({
         },
       ]
       : []),
-    ...(columnVisibility["Paper"] && hasFeaturePermission(15)
+    ...(columnVisibility["Paper"] 
       ? [
         {
           title: t("questionPaper"),
@@ -540,8 +547,7 @@ const ProjectDetailsTable = ({
         const statusSteps = [t("pending"), t("started"), t("completed")];
         const initialStatusIndex = text !== undefined ? text : 0;
 
-        const hasAlerts = Boolean(record.alerts?.length);
-
+        const hasAlerts = !(record.alerts === "0" || !record.alerts?.trim()); // Check if alerts exist (not "0" and not empty/null)
         // Check if previous process exists and is completed
         const isPreviousProcessCompleted =
           !record.previousProcessData ||
@@ -576,9 +582,9 @@ const ProjectDetailsTable = ({
           isPreviousProcessCompleted &&
           (hasSelectMachinePermission
             ? record.machineId !== 0 &&
-            record.machineId !== null &&
-            isZoneAssigned &&
-            isTeamAssigned
+              record.machineId !== null &&
+              isZoneAssigned &&
+              isTeamAssigned
             : isZoneAssigned && isTeamAssigned);
 
         // Only check interim quantity if hasFeaturePermission(7) is true
@@ -592,16 +598,24 @@ const ProjectDetailsTable = ({
         });
 
         // Populate the requirements array based on conditions
-        if (hasAlerts) {
+        if (hasAlerts && !requirements.includes(t("statusCannotBeChangedDueToAlerts"))) {
           requirements.push(t("statusCannotBeChangedDueToAlerts"));
         }
-        if (!isPreviousProcessCompleted) {
+        if (!isPreviousProcessCompleted && !requirements.includes(t("previousProcessErrorDescription"))) {
           requirements.push(t("previousProcessErrorDescription")); 
         }
         if (!canChangeStatus) {
-          requirements.push(t("ensureAllRequiredFieldsAreFilled"));
+          if (hasFeaturePermission(4) && !isZoneAssigned && !requirements.includes(t("zoneNotAssigned"))) {
+            requirements.push(t("zoneNotAssigned"));
+          }
+          if (hasFeaturePermission(5) && !isTeamAssigned && !requirements.includes(t("teamNotAssigned"))) {
+            requirements.push(t("teamNotAssigned")); 
+          }
+          if (hasFeaturePermission(10) && (record.machineId === 0 || record.machineId === null) && !requirements.includes(t("machineNotAssigned"))) {
+            requirements.push(t("machineNotAssigned"));
+          }
         }
-        if (initialStatusIndex === 1 && !canBeCompleted && hasFeaturePermission(7)) {
+        if (initialStatusIndex === 1 && !canBeCompleted && hasFeaturePermission(7) && !requirements.includes(t("cannotSetStatusToCompletedInterimQuantityMustEqualQuantity"))) {
           requirements.push(t("cannotSetStatusToCompletedInterimQuantityMustEqualQuantity"));
         }
 
@@ -611,8 +625,14 @@ const ProjectDetailsTable = ({
 
         return (
           <div className="d-flex justify-content-center">
-            {hasAlerts ? (
-              <Tooltip title={requirements.join(', ')} placement="top">
+           { console.log("hasAlerts from record", record)}
+            {!(record.alerts === "0" || !record.alerts?.trim()) ? (
+              <Tooltip 
+                title={requirements.map((req, index) => (
+                  <div key={index}>{req}</div>
+                ))} 
+                placement="top"
+              >
                 <span className="text-danger">
                   <StatusToggle
                     initialStatusIndex={initialStatusIndex}
@@ -625,7 +645,12 @@ const ProjectDetailsTable = ({
                 </span>
               </Tooltip>
             ) : (
-              <Tooltip title={isDisabled ? requirements.join('\n') : ""} placement="top">
+              <Tooltip 
+                title={isDisabled ? requirements.map((req, index) => (
+                  <div key={index}>{req}</div>
+                )) : ""} 
+                placement="top"
+              >
                 <span>
                   <StatusToggle
                     initialStatusIndex={initialStatusIndex}

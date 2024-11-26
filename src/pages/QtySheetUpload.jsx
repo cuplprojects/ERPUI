@@ -71,6 +71,7 @@ const QtySheetUpload = () => {
     const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
 
 
+
     useEffect(() => {
         const checkTransactionExistence = async () => {
             try {
@@ -454,6 +455,7 @@ const QtySheetUpload = () => {
             className={`${customLight} rounded-3 border-3 ${customDarkBorder} ${customDarkText} `}
         >
             <Menu.Item key="1" onClick={releaseForProduction} className={`w-100 rounded-3 `}>
+
                 {t('releaseForProduction')}
             </Menu.Item>
         </Menu>
