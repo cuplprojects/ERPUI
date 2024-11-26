@@ -371,7 +371,7 @@ const ProjectDetailsTable = ({
             <Col lg={5} md={5} sm={5} xs={5}>
               <div>
                 <button
-                  className="rounded border fs-6 custom-zoom-btn bg-white position-relative "
+                  className="rounded border fs-6 custom-zoom-btn bg-white position-relative"
                   onClick={() => handleCatchClick(record)}
                 >
                   {text}
@@ -403,10 +403,10 @@ const ProjectDetailsTable = ({
             <Col lg={1} md={1} sm={1} xs={1}>
               <div className="d-inline">
                 <span
-                  className="fs-6  position-relative "
+                  className="fs-6 position-relative"
                   onClick={() => handleCatchClick(record)}
                 >
-                  {record.alerts && (
+                  {!(record.alerts === "0" || !record.alerts?.trim()) && (
                     <BiSolidFlag
                       title={record.alerts}
                       className=""
@@ -547,8 +547,7 @@ const ProjectDetailsTable = ({
         const statusSteps = [t("pending"), t("started"), t("completed")];
         const initialStatusIndex = text !== undefined ? text : 0;
 
-        const hasAlerts = Boolean(record.alerts?.length);
-
+        const hasAlerts = !(record.alerts === "0" || !record.alerts?.trim()); // Check if alerts exist (not "0" and not empty/null)
         // Check if previous process exists and is completed
         const isPreviousProcessCompleted =
           !record.previousProcessData ||
@@ -626,7 +625,8 @@ const ProjectDetailsTable = ({
 
         return (
           <div className="d-flex justify-content-center">
-            {hasAlerts ? (
+           { console.log("hasAlerts from record", record)}
+            {!(record.alerts === "0" || !record.alerts?.trim()) ? (
               <Tooltip 
                 title={requirements.map((req, index) => (
                   <div key={index}>{req}</div>

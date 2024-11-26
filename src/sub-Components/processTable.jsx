@@ -721,6 +721,7 @@ const ProcessTable = () => {
         show={catchDetailModalShow}
         handleClose={() => setCatchDetailModalShow(false)}
         data={catchDetailModalData}
+        fetchTransactions={fetchTransactions}
       />
     </div>
   );
