@@ -5,10 +5,10 @@ import { useNavigate } from "react-router-dom";
 import { encrypt } from "../Security/Security";
 import useUserDataStore from "../store/userDataStore";
 import { useTranslation } from "react-i18next";
-import { Tooltip } from 'antd';
+import { Tooltip } from "antd";
 import API from "../CustomHooks/MasterApiHooks/api";
-import themeStore from '../store/themeStore';
-import { useStore } from 'zustand';
+import themeStore from "../store/themeStore";
+import { useStore } from "zustand";
 
 const Cards = ({ item, onclick, disableProject, activeCardStyle }) => {
   const navigate = useNavigate();
@@ -19,22 +19,22 @@ const Cards = ({ item, onclick, disableProject, activeCardStyle }) => {
   const { getCssClasses } = useStore(themeStore);
   const [
     customDark,
-    customMid, 
+    customMid,
     customLight,
     customBtn,
     customDarkText,
     customLightText,
     customLightBorder,
     customDarkBorder,
-    customThead
+    customThead,
   ] = getCssClasses();
   const [hasProcesses, setHasProcesses] = useState(false);
-  // console.log(supervisor);
-
+  const [transactionStatus, setTransactionStatus] = useState("Pending");
 
   useEffect(() => {
     if (item?.projectId) {
       fetchProjectProcess();
+      checkTransactionStatus();
     }
   }, [item?.projectId]);
 
@@ -46,7 +46,7 @@ const Cards = ({ item, onclick, disableProject, activeCardStyle }) => {
     }
   };
 
-  const fetchProjectProcess = async() => {
+  const fetchProjectProcess = async () => {
     try {
       const response = await API.get(`/ProjectProcess/GetProjectProcesses/${item.projectId}`);
       setHasProcesses(response.data.length > 1);
@@ -54,7 +54,23 @@ const Cards = ({ item, onclick, disableProject, activeCardStyle }) => {
       console.error("Error fetching project processes:", error);
       setHasProcesses(false);
     }
-  }
+  };
+
+  // Check transaction status
+  const checkTransactionStatus = async () => {
+    try {
+      const response = await API.get(`https://localhost:7212/api/Transactions/exists/${item.projectId}`);
+      setTransactionStatus(response.data ? "Running" : "Pending");
+    } catch (error) {
+      if (error.response?.status === 404) {
+        console.warn("Transaction not found, setting status to 'Pending'.");
+        setTransactionStatus("Pending");
+      } else {
+        console.error("Error checking transaction status:", error);
+        setTransactionStatus("Pending");
+      }
+    }
+  };
 
   // Navigate to the dashboard and send projectId as a route parameter
   const handleCardClick = () => {
@@ -79,29 +95,32 @@ const Cards = ({ item, onclick, disableProject, activeCardStyle }) => {
 
   return (
     <StyledWrapper>
-      <Tooltip 
-        title={!disableProject ? t("uploadQuantitySheetfirst") : ""}
-        placement="below"
-      >
+      <Tooltip title={!disableProject ? t("uploadQuantitySheetfirst") : ""} placement="below">
         <div
-          className={`card ${!activeCardStyle ? `${customLight} ${customDarkText}` : `${customDark === "dark-dark" ? `bg-white text-dark border border-dark ` : `${customDark} ${customDark === 'blue-dark' ? "border-white" : customLightBorder} ${customLightText}`}  `}`}
+          className={` card ${
+            !activeCardStyle
+              ? `${customLight} ${customDarkText}`
+              : `${
+                  customDark === "dark-dark"
+                    ? `bg-white text-dark border border-dark `
+                    : `${customDark} ${customDark === "blue-dark" ? "border-white" : customLightBorder} ${customLightText}`
+                }  `
+          }`}
           onClick={handleCardClick}
         >
           <div className="header">
             <h4 className="project-name">{item.name}</h4>
 
             <Tooltip title={t("Upload Quantity Sheet")} placement="top">
-              <div
-                className="upload-button"
-                onClick={handleUploadClick}
-              >
+              <div className="upload-button" onClick={handleUploadClick}>
                 <FaUpload />
               </div>
             </Tooltip>
           </div>
 
-          <p>{item.completionPercentage}% {t("completed")}</p>
-          <p>{item.remainingPercentage}% {t("remaining")}</p>
+          <p className="p-0 m-0">{item.completionPercentage}% {t("completed")}</p>
+          <p className="p-0 m-0">{item.remainingPercentage}% {t("remaining")}</p>
+          <p className="p-0 m-0">Status: {transactionStatus}</p>
 
           <Tooltip title={t("View Project Info")} placement="top">
             <div
@@ -186,12 +205,14 @@ const StyledWrapper = styled.div`
     background-color: rgba(0, 0, 0, 0.1);
   }
 
-  .info-button.disabled, .upload-button.disabled {
+  .info-button.disabled,
+  .upload-button.disabled {
     opacity: 0.5;
     cursor: not-allowed;
   }
 
-  .info-button.disabled:hover, .upload-button.disabled:hover {
+  .info-button.disabled:hover,
+  .upload-button.disabled:hover {
     background-color: transparent;
   }
 

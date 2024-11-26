@@ -162,7 +162,7 @@ const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots =
         <BootstrapModal show={visible} onHide={resetModal} className={`${customDark === "dark-dark" ? "" : ""}`}>
             <BootstrapModal.Header closeButton={false} className={customDark}>
                 <BootstrapModal.Title className={customLightText}>
-                    {t('transferCatches')} : {projectName} {t('fromLot')}-{selectedLotNo}
+                    {t('transferCatches')} : {projectName} {t('fromLot')} - {selectedLotNo} {t('from')}
                 </BootstrapModal.Title>
             </BootstrapModal.Header>
             <BootstrapModal.Body className={customLight}>

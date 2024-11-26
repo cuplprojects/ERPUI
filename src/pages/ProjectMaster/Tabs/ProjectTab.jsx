@@ -340,6 +340,13 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
         types={types}
         showSeriesFields={showSeriesFields}
         customDarkText={customDarkText}
+        customDark={customDark}
+        customMid={customMid}
+        customLight={customLight}
+        customBtn={customBtn}
+        customLightText={customLightText}
+        customLightBorder={customLightBorder}
+        customDarkBorder={customDarkBorder}
         t={t}
       />
     </>
