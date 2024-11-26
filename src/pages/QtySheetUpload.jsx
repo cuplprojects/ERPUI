@@ -65,6 +65,10 @@ const QtySheetUpload = () => {
 
     const [isUpdateMode, setIsUpdateMode] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+    // Track mouse position for context menu
+    const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
 
     // Track mouse position for context menu
     const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
@@ -141,13 +145,13 @@ const QtySheetUpload = () => {
     
             // Check if the response was successful
             if (response.status === 200) {
-                success(`Lot ${lotNo} released for production`);
+                success(`${t("lot")} ${lotNo} ${t('releasedForProduction')}`);
             } else {
-                error('Failed to release lot');
+                error(t('failedToReleaseLot'));
             }
         } catch (error) {
             console.error('Error releasing lot:', error);
-            error('Error releasing lot');
+            error(t('errorReleasinglot'));
         }
     };
     
@@ -447,31 +451,36 @@ const QtySheetUpload = () => {
                 position: 'fixed',
                 top: contextMenuPosition.y,
                 left: contextMenuPosition.x,
-                zIndex: 1000
+                zIndex: 1000,
+                outline:'2px solid white'
             }}
+            className={`${customLight} rounded-3 border-3 ${customDarkBorder} ${customDarkText} `}
         >
-            <Menu.Item key="1" onClick={releaseForProduction}>
+            <Menu.Item key="1" onClick={releaseForProduction} className={`w-100 rounded-3 `}>
+
                 {t('releaseForProduction')}
             </Menu.Item>
         </Menu>
     );
 
     const handleDelete = async () => {
+        setShowDeleteConfirm(true);
+    };
+
+    const confirmDelete = async () => {
         setIsLoading(true);
         try {
             await API.delete(`/QuantitySheet/DeleteByProjectId/${projectId}`);
-            fetchLots()
-
-            setHasUploadedFile(false); // Reset upload flag after successful deletion
-            setShowDeleteButton(true); // Hide delete button
-
+            fetchLots();
+            setHasUploadedFile(false);
+            setShowDeleteButton(true);
             success(t('quantitySheetDeletedSuccessfully'));
-
         } catch (error) {
             console.error('Failed to delete quantity sheet:', error);
             error(t('failedToDeleteQuantitySheet'));
         } finally {
             setIsLoading(false);
+            setShowDeleteConfirm(false);
         }
     };
 
@@ -605,6 +614,27 @@ const QtySheetUpload = () => {
                 </Modal.Footer>
             </Modal>
 
+            {/* Delete Confirmation Modal */}
+            <Modal
+                show={showDeleteConfirm}
+                onHide={() => setShowDeleteConfirm(false)}
+            >
+                <Modal.Header className={`${customDark} ${customLightText}`}>
+                    <Modal.Title>{t('confirmDelete')} {`->`} {projectName}</Modal.Title>
+                </Modal.Header>
+                <Modal.Body className={`${customLight}`}>
+                    {t('areYouSureDeleteQuantitySheet')} 
+                </Modal.Body>
+                <Modal.Footer className={`${customDark}`}>
+                    <Button variant="secondary" className={`${customBtn}`} onClick={() => setShowDeleteConfirm(false)}>
+                        {t('cancel')}
+                    </Button>
+                    <Button variant="danger"  onClick={confirmDelete}>
+                        {t('delete')}
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
             {isProcessingFile && (
                 <div className="text-center my-3">
                     <Spin size="large" tip="Processing file..." />
@@ -623,8 +653,8 @@ const QtySheetUpload = () => {
                         <table className="table table-bordered table-striped">
                             <thead>
                                 <tr>
-                                    <th>{t('fields')}</th>
-                                    <th>{t('excelHeader')}</th>
+                                    <th style={{width: '50%'}}>{t('fields')}</th>
+                                    <th style={{width: '50%'}}>{t('excelHeader')}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -637,6 +667,7 @@ const QtySheetUpload = () => {
                                                 onChange={(value) => handleMappingChange(property, value)}
                                                 options={getAvailableOptions(property)}
                                                 style={{ width: '100%' }}
+                                                dropdownMatchSelectWidth={false}
                                             />
                                         </td>
                                     </tr>

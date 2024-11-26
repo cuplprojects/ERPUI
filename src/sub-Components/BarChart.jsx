@@ -94,7 +94,7 @@ const BarChart = ({ projectId }) => {
     };
   }, [lotData, t]);
 
-  return <canvas ref={chartRef} style={{ width: '100%', height: '100%' }} />;
+  return <canvas ref={chartRef} style={{ width: '100%', height: '100%' }}/>;
 };
 
 export default BarChart;
