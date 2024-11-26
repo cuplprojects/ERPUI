@@ -70,8 +70,6 @@ const QtySheetUpload = () => {
     // Track mouse position for context menu
     const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
 
-    // Track mouse position for context menu
-    const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
 
 
     useEffect(() => {
@@ -446,8 +444,18 @@ const QtySheetUpload = () => {
     };
 
     const menu = (
-        <Menu>
-            <Menu.Item key="1" onClick={releaseForProduction}>
+        <Menu
+            style={{
+                position: 'fixed',
+                top: contextMenuPosition.y,
+                left: contextMenuPosition.x,
+                zIndex: 1000,
+                outline:'2px solid white'
+            }}
+            className={`${customLight} rounded-3 border-3 ${customDarkBorder} ${customDarkText} `}
+        >
+            <Menu.Item key="1" onClick={releaseForProduction} className={`w-100 rounded-3 `}>
+
                 {t('releaseForProduction')}
             </Menu.Item>
         </Menu>
