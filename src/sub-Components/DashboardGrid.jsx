@@ -22,7 +22,16 @@ const DashboardGrid = ({ projectId, lotNo }) => {
   const [transactionData, setTransactionData] = useState([]); // Added to hold transaction data
 
   const getColumnDefs = useCallback(() => [
-    { field: "quantitySheetId", headerName: t('srNo'), cellStyle: { textAlign: "center" }, headerClass: "center-header" },
+    { 
+      field: "quantitySheetId", 
+      headerName: t('srNo'), 
+      cellStyle: { textAlign: "center" }, 
+      headerClass: "center-header",
+      valueGetter: (params) => {
+        // Get the index of the current row and add 1 to start from 1 instead of 0
+        return params.node.rowIndex + 1;
+      }
+    },
     { field: "catchNo", headerName: t('catchNo'), cellStyle: { textAlign: "center" }, headerClass: "center-header" },
     { field: "paper", headerName: t('paper'), cellStyle: { textAlign: "center" }, headerClass: "center-header" },
     { field: "course", headerName: t('course'), cellStyle: { textAlign: "center" }, headerClass: "center-header" },
