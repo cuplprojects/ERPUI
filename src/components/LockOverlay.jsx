@@ -35,14 +35,53 @@ const LockOverlay = () => {
         localStorage.setItem('isLocked', JSON.stringify(isLocked));
     }, [isLocked]);
 
-    const resetTimer = useCallback(() => {
-        if (timerRef.current) clearTimeout(timerRef.current);
-        // Set timer for 2 minutes (120000 ms)
-        timerRef.current = setTimeout(() => {
-            setIsLocked(true);
-            setShowModal(false);
-        }, 300000);
-    }, []);
+    useEffect(() => {
+        let inactivityTimer = null;
+
+        const resetInactivityTimer = () => {
+            if (inactivityTimer) clearTimeout(inactivityTimer);
+            
+            // Only start timer if screen is not already locked
+            if (!isLocked) {
+                inactivityTimer = setTimeout(() => {
+                    setIsLocked(true);
+                    setShowModal(false);
+                }, 300000); // 5 minutes = 300000ms
+            }
+        };
+
+        // Initialize timer
+        resetInactivityTimer();
+
+        // Track all these user activity events
+        const events = [
+            'mousemove',
+            'mousedown',
+            'keypress',
+            'keydown',
+            'scroll',
+            'touchstart',
+            'click'
+        ];
+
+        // Event handler for any user activity
+        const handleUserActivity = () => {
+            resetInactivityTimer();
+        };
+
+        // Add event listeners
+        events.forEach(event => {
+            window.addEventListener(event, handleUserActivity);
+        });
+
+        // Cleanup
+        return () => {
+            if (inactivityTimer) clearTimeout(inactivityTimer);
+            events.forEach(event => {
+                window.removeEventListener(event, handleUserActivity);
+            });
+        };
+    }, [isLocked]); // Only re-run if isLocked changes
 
     const handleLock = useCallback(() => {
         setIsLocked(true);
@@ -60,40 +99,23 @@ const LockOverlay = () => {
         }, 100);
     }, []);
 
-    const handleSubmit = useCallback(async () => {
-        if (password.length > 2) {
+    const handlePasswordChange = useCallback(async (e) => {
+        const newPassword = e.target.value;
+        setPassword(newPassword);
+        
+        if (newPassword.length > 2) {
             try {
-                const response = await AuthService.unlockScreen(password);
+                const response = await AuthService.unlockScreen(newPassword);
                 if (response.status === 200) {
                     setIsLocked(false);
                     setShowModal(false);
                     setPassword('');
-                    resetTimer();
                 }
             } catch (error) {
                 console.log('Pin is incorrect');
             }
         }
-    }, [password, resetTimer]);
-
-    useEffect(() => {
-        resetTimer();
-        const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
-        const handleActivity = () => {
-            if (!isLocked) {
-                resetTimer();
-            }
-        };
-        events.forEach(event => window.addEventListener(event, handleActivity));
-        return () => {
-            events.forEach(event => window.removeEventListener(event, handleActivity));
-            if (timerRef.current) clearTimeout(timerRef.current);
-        };
-    }, [resetTimer, isLocked]);
-
-    useEffect(() => {
-        if (password.length > 2) handleSubmit();
-    }, [password, handleSubmit]);
+    }, []);
 
     return (
         <>
@@ -101,7 +123,7 @@ const LockOverlay = () => {
             {isLocked && (
                 <div className="lock-overlay" style={{ zIndex: "9999999999999" }}>
                     {showModal ? (
-                        <Form onSubmit={handleSubmit} className={`rounded-circle border p-2 pt-4 ${customDark}`}
+                        <Form className={`rounded-circle border p-2 pt-4 ${customDark}`}
                             style={{ height: "250px", width: "250px" }}>
                             <Form.Group controlId="formBasicPassword" className='d-flex flex-column justify-content-center align-items-center'>
                                 <FaLock size={100} color="white" className={customLightText} />
@@ -113,7 +135,7 @@ const LockOverlay = () => {
                                     pattern="[0-9]*"
                                     placeholder={t('enterUnlockKey')}
                                     value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
+                                    onChange={handlePasswordChange}
                                     className='rounded-bottom-5'
                                     style={{ width: "200px", textAlign: "center" }}
                                     autoComplete="off"
