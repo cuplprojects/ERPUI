@@ -19,7 +19,7 @@ import Labels from '../pages/Message/Message';
 import Reports from '../pages/Reports';
 import CuDashboard from '../pages/CuDashboard';
 import AddProjectProcess from '../pages/ProjectMaster/Tabs/AddProjectProcess';
-import ProtectedRoute from '../Security/ProtectedRoute';
+import { hasPermission } from '../CustomHooks/Services/permissionUtils';
 
 const Userlayout = () => {
   const { getCssClasses } = useStore(themeStore);
@@ -27,6 +27,10 @@ const Userlayout = () => {
   const customDark = cssClasses[0];
   const customMid = cssClasses[1];
   const customLight = cssClasses[2];
+
+  const renderProtectedRoute = (permission, Component) => {
+    return hasPermission(permission) ? <Component /> : <Navigate to="/login" replace />;
+  };
 
   return (
     <div className={`container-fluid p-0 vh-100  ${customLight}`}>
@@ -40,28 +44,24 @@ const Userlayout = () => {
           </div>
           <div className={`flex-grow-1 d-fle m-2 p-3 `} style={{ zIndex: "3" }}>
             <Routes>
-
               <Route path="/" element={<Navigate to="/cudashboard" replace />} />
-              <Route path="/cudashboard" element={<ProtectedRoute component={CuDashboard} permission="5"/>} />
-              <Route path="/dashboard/:encryptedProjectId" element={<ProtectedRoute component={MainDashboard} permission="1"/>} />
-              <Route path="/master" element={<ProtectedRoute component={Masters} permission="2"/>} />
-              <Route path="/AddProjectProcess/:projectId" element={<ProtectedRoute component={AddProjectProcess} permission="2.4"/>} />
-
+              <Route path="/cudashboard" element={renderProtectedRoute("5", CuDashboard)} />
+              <Route path="/dashboard/:encryptedProjectId" element={renderProtectedRoute("1", MainDashboard)} />
+              <Route path="/master" element={renderProtectedRoute("2", Masters)} />
+              <Route path="/AddProjectProcess/:projectId" element={renderProtectedRoute("2.4", AddProjectProcess)} />
 
               {/* --------------- User Menu Routes -------------- */}
-              <Route path="/profile" element={<ProtectedRoute component={Profile} permission="3"/>} />
-              <Route path="/settings" element={<ProtectedRoute component={UserSettings} permission="3"/>} />
-              <Route path="/change-password" element={<ProtectedRoute component={ChangePassword} permission="3"/>} />
+              <Route path="/profile" element={renderProtectedRoute("3", Profile)} />
+              <Route path="/settings" element={renderProtectedRoute("3", UserSettings)} />
+              <Route path="/change-password" element={renderProtectedRoute("3", ChangePassword)} />
 
-              {/* <Route path="/test" element={<ProtectedRoute component={AssignTeams} permission="3"/>} /> */}
-
-              <Route path="/quantity-sheet-uploads/:encryptedProjectId" element={<ProtectedRoute component={QtySheetUpload} permission="2.4"/>} />
-              <Route path="/project-details/:encryptedProjectId/:encryptedLotNo" element={<ProtectedRoute component={ProcessTable} permission="2.4"/>} />
-              <Route path="/labels" element={<ProtectedRoute component={Labels} permission="3"/>} />
-              <Route path="/reports" element={<ProtectedRoute component={Reports} permission="3"/>} />
+              <Route path="/quantity-sheet-uploads/:encryptedProjectId" element={renderProtectedRoute("2.4", QtySheetUpload)} />
+              <Route path="/project-details/:encryptedProjectId/:encryptedLotNo" element={<ProcessTable />} />
+              <Route path="/labels" element={renderProtectedRoute("3", Labels)} />
+              <Route path="/reports" element={renderProtectedRoute("3", Reports)} />
 
               <Route path="/*" element={<Navigate to="/404" replace />} />
-              <Route path="/404" element={<ProtectedRoute component={PageNotFound} permission="*" />} />
+              <Route path="/404" element={<PageNotFound />} />
             </Routes>
           </div>
           <div className={`${customDark === 'dark-dark' ? "d-none" : ""} fixed-bottom w-100 border ${customMid}`} style={{ zIndex: "1", height: "150px", borderRadius: "20%  ", borderStyle: "wavy" }}></div>
