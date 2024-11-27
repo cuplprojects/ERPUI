@@ -433,10 +433,18 @@ console.log(originalData.requiredProcessIds)
                             name="types"
                             label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-5 `}>{t('type')}</span>}
                             rules={[
-                                { required: true, message: t('pleaseInputType') }
+                                { 
+                                    required: true,
+                                    validator: async (_, value) => {
+                                        if (!value) {
+                                            throw new Error(t('pleaseInputType'));
+                                        }
+                                        if (types.some(type => type.types.toLowerCase() === value.toLowerCase())) {
+                                            throw new Error(t('thisTypeAlreadyExists'));
+                                        }
+                                    }
+                                }
                             ]}
-                            help={types.some(type => type.types.toLowerCase() === form.getFieldValue('types')?.toLowerCase()) && t("thisTypeAlreadyExists")}
-                            validateStatus={types.some(type => type.types.toLowerCase() === form.getFieldValue('types')?.toLowerCase()) ? "error" : ""}
                         >
                             <Input placeholder={t('type')} />
                         </Form.Item>
