@@ -90,7 +90,7 @@ const Type = () => {
         try {
             const typeExists = types.some(type => type.types.toLowerCase() === values.types.toLowerCase());
             if (typeExists) {
-                error(t("thisTypeAlreadyExists"));
+                // error(t("thisTypeAlreadyExists"));
                 return;
             }
             const postData = {
@@ -221,7 +221,10 @@ console.log(originalData.requiredProcessIds)
                     <Select
                         mode="multiple"
                         value={editingProcessIds}
-                        onChange={setEditingProcessIds}
+                        onChange={(selected) => {
+                            setEditingProcessIds(selected);
+                            setRequiredEditingProcessIds(prev => prev.filter(id => selected.includes(id)));
+                        }}
                         style={{ width: '100%' }}
                     >
                         {processes.map(proc => (
@@ -430,20 +433,10 @@ console.log(originalData.requiredProcessIds)
                             name="types"
                             label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-5 `}>{t('type')}</span>}
                             rules={[
-                                { required: true, message: t('pleaseInputType') },
-                                {
-                                    validator: (_, value) => {
-                                        const isNumeric = /^\d+$/;
-                                        if (value && isNumeric.test(value)) {
-                                            return Promise.reject(new Error(t('typeCannotContainOnlyNumbers')));
-                                        }
-                                        if (types.some(type => type.types.toLowerCase() === value.toLowerCase())) {
-                                            return Promise.reject(new Error(t('thisTypeAlreadyExists')));
-                                        }
-                                        return Promise.resolve();
-                                    }
-                                }
+                                { required: true, message: t('pleaseInputType') }
                             ]}
+                            help={types.some(type => type.types.toLowerCase() === form.getFieldValue('types')?.toLowerCase()) && t("thisTypeAlreadyExists")}
+                            validateStatus={types.some(type => type.types.toLowerCase() === form.getFieldValue('types')?.toLowerCase()) ? "error" : ""}
                         >
                             <Input placeholder={t('type')} />
                         </Form.Item>
