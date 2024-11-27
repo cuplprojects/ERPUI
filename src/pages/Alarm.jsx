@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
-
 import { Table, Input, Button, Spin } from 'antd';
 import { Modal } from 'react-bootstrap';
-
 import { v4 as uuidv4 } from 'uuid'; 
 import API from '../CustomHooks/MasterApiHooks/api';
 import { useTranslation } from 'react-i18next';
@@ -11,7 +9,6 @@ import themeStore from '../store/themeStore';
 import { EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
 import { FaSearch } from 'react-icons/fa';
 import { success, error } from '../CustomHooks/Services/AlertMessageService';
-import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const AlarmMaster = () => {
@@ -120,6 +117,7 @@ const AlarmMaster = () => {
 
   const columns = [
     {
+      align:"center",
       title: t('srNo'),
       dataIndex: 'serial',
       key: 'serial',

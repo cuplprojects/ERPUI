@@ -10,7 +10,7 @@ import { Modal } from 'react-bootstrap';
 import { AiFillCloseSquare } from 'react-icons/ai';
 import { success } from '../../CustomHooks/Services/AlertMessageService';
 
-const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
+const FeatureManagement = ({ onUpdateFeatures, onAddFeature = () => {} }) => {
     const { t } = useTranslation();
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = getCssClasses();
@@ -20,6 +20,7 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
     const [isEditingFeature, setIsEditingFeature] = useState(false);
     const [editingFeatureId, setEditingFeatureId] = useState(null);
     const [featureName, setFeatureName] = useState('');
+    const [isFeatureNameChanged, setIsFeatureNameChanged] = useState(false);
 
     const [pageSize, setPageSize] = useState(5);
     const [currentPage, setCurrentPage] = useState(1);
@@ -68,12 +69,19 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
             setFeatureName(feature.name);
             setIsEditingFeature(true);
             setEditingFeatureId(feature.key);
+            setIsFeatureNameChanged(false);
         } else {
             setFeatureName('');
             setIsEditingFeature(false);
             setEditingFeatureId(null);
         }
         setFeatureModalVisible(true);
+    };
+
+    // Update the feature name and track changes
+    const handleFeatureNameChange = (e) => {
+        setFeatureName(e.target.value);
+        setIsFeatureNameChanged(e.target.value !== (isEditingFeature ? features.find(f => f.key === editingFeatureId)?.name : ''));
     };
 
     // Handle adding/updating feature
@@ -93,19 +101,18 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
         };
 
         try {
+            console.log('Feature Payload:', featurePayload);
+
             if (isEditingFeature) {
                 // Update existing feature
                 await API.put(`/Features/${editingFeatureId}`, featurePayload);
-
-               success(t('featureUpdatedSuccessfully'));
-
+                success(t('featureUpdatedSuccessfully'));
             } else {
                 // Add new feature
                 const response = await API.post('/Features', featurePayload);
                 const addedFeature = response.data;
                 onAddFeature({ key: addedFeature.featureId, name: addedFeature.features });
                 success(t('featureAddedSuccessfully'));
-
             }
             
             setFeatureModalVisible(false);
@@ -214,6 +221,7 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
                 columns={featureColumns}
                 rowKey="key"
                 pagination={{ 
+                    className:`${customDark === 'dark-dark' || customDark === 'blue-dark' ? "bg-white" : ""} p-3 rounded-bottom`,
                     total: filteredFeatures.length,
                     pageSize: pageSize,
                     current: currentPage,
@@ -265,12 +273,12 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
                     <Input
                         placeholder={t('enterFeatureName')}
                         value={featureName}
-                        onChange={e => setFeatureName(e.target.value)}
+                        onChange={handleFeatureNameChange}
                         onKeyDown={handleKeyDown}
                     />
                 </Modal.Body>
                 <Modal.Footer className={`rounded-bottom-2 ${customDark} ${customLightText} ${customDark === "dark-dark" ? `border ` : `border-0`} border`}>
-                    <Button className={`${customBtn}`} onClick={handleAddFeature}>
+                    <Button className={`${customBtn}`} onClick={handleAddFeature} disabled={!isFeatureNameChanged}>
                         {isEditingFeature ? t('update') : t('add')}
                     </Button>
                 </Modal.Footer>

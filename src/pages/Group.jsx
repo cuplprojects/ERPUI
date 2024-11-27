@@ -146,21 +146,14 @@ const Group = () => {
       key: 'serial',
       render: (text, record, index) => (currentPage - 1) * pageSize + index + 1,
       width: '10%',
+      // sorter: (a, b) => a.serial - b.serial,//sorter for serial number
     },
     {
-      title: (
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          {t('groupName')}
-          <Button
-            type="text"
-            onClick={() => handleSort('name')}
-            icon={sortField === 'name' && sortOrder === 'ascend' ? <SortAscendingOutlined style={{ color: 'white', border: '1px solid white' }} className='rounded-2 p-1' /> : <SortDescendingOutlined style={{ color: 'white', border: '1px solid white' }} className='rounded-2 p-1' />}
-          />
-        </div>
-      ),
+      title: t('groupName'),
       dataIndex: 'name',
       key: 'name',
       width: '40%',
+      sorter: (a, b) => a.name.localeCompare(b.name),
       render: (text, record, index) => (
         editingIndex === index ? (
           <Input
@@ -176,19 +169,11 @@ const Group = () => {
     },
     {
       align: 'center',
-      title: (
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          {t('status')}
-          <Button
-            type="text"
-            onClick={() => handleSort('status')}
-            icon={sortField === 'status' && sortOrder === 'ascend' ? <SortAscendingOutlined style={{ color: 'white', border: '1px solid white' }} className='rounded-2 p-1' /> : <SortDescendingOutlined style={{ color: 'white', border: '1px solid white' }} className='rounded-2 p-1' />}
-          />
-        </div>
-      ),
+      title: t('status'),
       dataIndex: 'status',
       key: 'status',
       width: '25%',
+      sorter: (a, b) => a.status - b.status,
       render: (status, record, index) => (
         editingIndex === index ? (
           <Switch

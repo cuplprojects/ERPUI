@@ -230,7 +230,7 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
             setProcessModalVisible(false);
             onUpdateProcesses([...processes, processWithKey]);
             notification.success({
-                message: isEditingProcess ? 'Process updated successfully!' : 'New process added successfully',
+                message: isEditingProcess ? t('processUpdatedSuccessfully') : t('newProcessAddedSuccessfully'),
               
             });
 
