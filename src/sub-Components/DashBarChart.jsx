@@ -38,6 +38,7 @@ const DashBarChart = ({ selectedChart, lotsData, handleBarClick, projectId }) =>
           acc[process.id] = process.name;
           return acc;
         }, {});
+        console.log(nameMapping);
         setProcessNames(nameMapping);
       } catch (error) {
         console.error("Error fetching process names:", error);
@@ -53,15 +54,13 @@ const DashBarChart = ({ selectedChart, lotsData, handleBarClick, projectId }) =>
   // Get the selected lot's process data
   const selectedLotProcesses = processData[selectedChart.lotNumber] || {};
   
-  // Create labels for all processes using their actual names
-  const processLabels = Array.from({ length: 10 }, (_, i) => {
-    const processId = i + 1;
-    return processNames[processId] || `${t('process')} ${processId}`;
-  });
+  // Create labels only for existing processes
+  const processLabels = Object.keys(processNames).map(processId => 
+    processNames[processId] || `${t('process')} ${processId}`
+  );
   
-  // Get completion values for each process
-  const processValues = Array.from({ length: 10 }, (_, i) => {
-    const processId = (i + 1).toString();
+  // Get completion values only for existing processes
+  const processValues = Object.keys(processNames).map(processId => {
     const value = selectedLotProcesses[processId] || 0;
     return showRemaining ? 100 - value : value;
   });
@@ -157,7 +156,8 @@ const DashBarChart = ({ selectedChart, lotsData, handleBarClick, projectId }) =>
           enabled: true,
           callbacks: {
             label: (tooltipItem) => {
-              const processName = processNames[tooltipItem.dataIndex + 1] || `${t('process')} ${tooltipItem.dataIndex + 1}`;
+              const processId = Object.keys(processNames)[tooltipItem.dataIndex];
+              const processName = processNames[processId] || `${t('process')} ${processId}`;
               return `${processName}: ${tooltipItem.raw.toFixed(2)}% ${showRemaining ? t('remaining') : t('completed')}`;
             },
           },
