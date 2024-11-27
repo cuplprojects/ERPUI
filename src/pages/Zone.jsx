@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Input, Button, Select, Table, Form, Pagination, Divider } from 'antd';
+import { Input, Button, Select, Table, Form, Pagination, Divider, Checkbox } from 'antd';
 import { Modal } from 'react-bootstrap';
 import API from '../CustomHooks/MasterApiHooks/api';
 import { useMediaQuery } from 'react-responsive';
@@ -31,6 +31,8 @@ const Zone = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [editModalVisible, setEditModalVisible] = useState(false);
+  const [showDescription, setShowDescription] = useState(false);
+  const [tempEditingZone, setTempEditingZone] = useState({});
 
   const isMobile = useMediaQuery({ maxWidth: 767 });
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1023 });
@@ -114,11 +116,16 @@ const Zone = () => {
   };
 
   const handleEditZone = async (index) => {
+    if (!tempEditingZone.zoneNo || !tempEditingZone.zoneDescription || !tempEditingZone.cameraIds || !tempEditingZone.machineId || tempEditingZone.machineId.length === 0) {
+      error(t('Please fill in all required fields'));
+      return;
+    }
+
     const updatedZone = {
       ...originalZone,
-      ...editingZone,
-      cameraIds: editingZone.cameraIds || originalZone.cameraIds,
-      machineId: editingZone.machineId || originalZone.machineId,
+      ...tempEditingZone,
+      cameraIds: tempEditingZone.cameraIds || originalZone.cameraIds,
+      machineId: tempEditingZone.machineId || [],
     };
 
     const existingZone = zones.find(zone => zone.zoneNo === updatedZone.zoneNo && zone.zoneNo !== originalZone.zoneNo);
@@ -155,6 +162,7 @@ const Zone = () => {
     } finally {
       setEditingIndex(null);
       setEditingZone({});
+      setTempEditingZone({});
       setOriginalZone({});
       setEditModalVisible(false);
     }
@@ -163,8 +171,13 @@ const Zone = () => {
   const handleCancelEdit = () => {
     setEditingIndex(null);
     setEditingZone({});
+    setTempEditingZone({});
     setOriginalZone({});
     setEditModalVisible(false);
+  };
+
+  const hasChanges = () => {
+    return JSON.stringify(tempEditingZone) !== JSON.stringify(editingZone);
   };
 
   const columns = [
@@ -180,7 +193,7 @@ const Zone = () => {
       key: 'zoneNo',
       sorter: (a, b) => a.zoneNo.localeCompare(b.zoneNo),
     },
-    {
+    showDescription && {
       title: t('Zone Description'),
       dataIndex: 'zoneDescription',
       key: 'zoneDescription',
@@ -206,13 +219,15 @@ const Zone = () => {
           type="link" 
           icon={<EditOutlined />} 
           onClick={() => {
-            setEditingIndex(index);
-            setEditingZone({ 
+            const initialZone = { 
               zoneNo: record.zoneNo, 
               zoneDescription: record.zoneDescription,
               cameraIds: record.cameraIds,
               machineId: record.machineId
-            });
+            };
+            setEditingIndex(index);
+            setEditingZone(initialZone);
+            setTempEditingZone(initialZone);
             setOriginalZone(record);
             setEditModalVisible(true);
           }} 
@@ -222,7 +237,7 @@ const Zone = () => {
         </Button>
       ),
     },
-  ];
+  ].filter(Boolean);
 
   const showModal = () => {
     setIsModalVisible(true);
@@ -252,12 +267,22 @@ const Zone = () => {
           {t('Add Zone')}
         </Button>
 
-        <Search
-          placeholder={t("Search zones")}
-          onChange={(e) => setSearchText(e.target.value)}
-          style={{ width: 200 }}
-          allowClear
-        />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <Checkbox 
+            checked={showDescription}
+            onChange={(e) => setShowDescription(e.target.checked)}
+            className={customDarkText}
+          >
+            {t('Show Description')}
+          </Checkbox>
+          
+          <Search
+            placeholder={t("Search zones")}
+            onChange={(e) => setSearchText(e.target.value)}
+            style={{ width: 200 }}
+            allowClear
+          />
+        </div>
       </div>
 
       <Table
@@ -394,8 +419,8 @@ const Zone = () => {
               label={<span className={customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`}>{t('Zone Name')} <span className="text-danger">*</span></span>}
             >
               <Input
-                value={editingZone.zoneNo}
-                onChange={(e) => setEditingZone({ ...editingZone, zoneNo: e.target.value })}
+                value={tempEditingZone.zoneNo}
+                onChange={(e) => setTempEditingZone({ ...tempEditingZone, zoneNo: e.target.value })}
                 required
               />
             </Form.Item>
@@ -403,8 +428,8 @@ const Zone = () => {
               label={<span className={customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`}>{t('Zone Description')} <span className="text-danger">*</span></span>}
             >
               <Input.TextArea
-                value={editingZone.zoneDescription}
-                onChange={(e) => setEditingZone({ ...editingZone, zoneDescription: e.target.value })}
+                value={tempEditingZone.zoneDescription}
+                onChange={(e) => setTempEditingZone({ ...tempEditingZone, zoneDescription: e.target.value })}
                 required
               />
             </Form.Item>
@@ -413,8 +438,8 @@ const Zone = () => {
             >
               <Select
                 mode="multiple"
-                value={editingZone.cameraIds}
-                onChange={(value) => setEditingZone({ ...editingZone, cameraIds: value })}
+                value={tempEditingZone.cameraIds}
+                onChange={(value) => setTempEditingZone({ ...tempEditingZone, cameraIds: value })}
                 required
               >
                 {camera.map(c => (
@@ -429,12 +454,13 @@ const Zone = () => {
               </Select>
             </Form.Item>
             <Form.Item 
-              label={<span className={customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`}>{t('Assign Machine')}</span>}
+              label={<span className={customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`}>{t('Assign Machine')} <span className="text-danger">*</span></span>}
             >
               <Select
                 mode="multiple"
-                value={editingZone.machineId}
-                onChange={(value) => setEditingZone({ ...editingZone, machineId: value })}
+                value={tempEditingZone.machineId}
+                onChange={(value) => setTempEditingZone({ ...tempEditingZone, machineId: value })}
+                required
               >
                 {machine.map(m => (
                   <Option 
@@ -452,7 +478,11 @@ const Zone = () => {
               <Button onClick={handleCancelEdit} className={customDark === "dark-dark" ? `${customLightBorder} text-white` : ''}>
                 {t('Cancel')}
               </Button>
-              <Button onClick={() => handleEditZone(editingIndex)} className={`${customBtn}`}>
+              <Button 
+                onClick={() => handleEditZone(editingIndex)} 
+                className={`${customBtn}`}
+                disabled={!hasChanges()}
+              >
                 {t('Save')}
               </Button>
             </div>

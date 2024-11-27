@@ -50,6 +50,8 @@ const Team = () => {
   const [searchText, setSearchText] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
+  const [formChanged, setFormChanged] = useState(false);
+  const [originalValues, setOriginalValues] = useState(null);
 
   const getUsers = async () => {
     try {
@@ -84,6 +86,7 @@ const Team = () => {
         userNames: team.users
           .map((user) => userMap[user.id] || t("unknown"))
           .join(", "),
+        processName: processes.find(p => p.id === team.processId)?.name || t("unknown")
       }));
 
       setTeams(updatedTeams);
@@ -102,7 +105,8 @@ const Team = () => {
     const searchValue = searchText.toLowerCase();
     return (
       team.teamName.toLowerCase().includes(searchValue) ||
-      team.userNames.toLowerCase().includes(searchValue)
+      team.userNames.toLowerCase().includes(searchValue) ||
+      team.processName?.toLowerCase().includes(searchValue)
     );
   });
 
@@ -151,11 +155,14 @@ const Team = () => {
 
   const handleEdit = (team) => {
     setEditingTeam(team);
-    form.setFieldsValue({
+    const initialValues = {
       teamName: team.teamName,
       teamMembers: team.users.map((user) => user.id),
       processId: team.processId,
-    });
+    };
+    setOriginalValues(initialValues);
+    form.setFieldsValue(initialValues);
+    setFormChanged(false);
     setIsModalVisible(true);
   };
 
@@ -180,6 +187,11 @@ const Team = () => {
   };
 
   const handleUpdate = async () => {
+    if (!formChanged) {
+      setIsModalVisible(false);
+      return;
+    }
+
     form
       .validateFields()
       .then(async (values) => {
@@ -245,6 +257,12 @@ const Team = () => {
       ),
     },
     {
+      title: t("process"),
+      dataIndex: "processName",
+      key: "processName",
+      sorter: (a, b) => (a.processName || '').localeCompare(b.processName || ''),
+    },
+    {
       title: t("status"),
       dataIndex: "status",
       key: "status",
@@ -280,6 +298,14 @@ const Team = () => {
     getTeams();
     getProcesses();
   }, []);
+
+  const handleFormChange = () => {
+    if (editingTeam) {
+      const currentValues = form.getFieldsValue();
+      const hasChanges = JSON.stringify(currentValues) !== JSON.stringify(originalValues);
+      setFormChanged(hasChanges);
+    }
+  };
 
   return (
     <div style={{ padding: "40px" }}>
@@ -364,6 +390,7 @@ const Team = () => {
           setIsModalVisible(false);
           setEditingTeam(null);
           form.resetFields();
+          setFormChanged(false);
         }}
         centered
         className={`{}`}
@@ -375,7 +402,12 @@ const Team = () => {
           </Modal.Title>
         </Modal.Header>
         <Modal.Body className={customMid}>
-          <Form form={form} layout="vertical" name="addTeamForm">
+          <Form 
+            form={form} 
+            layout="vertical" 
+            name="addTeamForm"
+            onValuesChange={handleFormChange}
+          >
             <Form.Item
               label={<span className={customDarkText}>{t("teamName")}</span>}
               name="teamName"
@@ -423,6 +455,7 @@ const Team = () => {
               setIsModalVisible(false);
               setEditingTeam(null);
               form.resetFields();
+              setFormChanged(false);
             }}
           >
             {t("cancel")}
@@ -430,6 +463,7 @@ const Team = () => {
           <Button
             className={`${customBtn}`}
             onClick={editingTeam ? handleUpdate : handleOk}
+            disabled={editingTeam && !formChanged}
           >
             {editingTeam ? t("updateTeam") : t("addTeam")}
           </Button>
