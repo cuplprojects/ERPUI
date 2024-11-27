@@ -132,7 +132,7 @@ const AddProjectProcess = ({ selectedProject,setIsProcessSubmitted }) => {
         const response = await API.get(`/PaperTypes/${typeId}/RequiredProcesses`);
         setRequiredProcessIds(response.data.map(process => process.id));
       } catch (error) {
-        console.error('unableToFetchRequiredProcessesPleaseTryAgainLater', error);
+        console.error(t('unableToFetchRequiredProcessesPleaseTryAgainLater'), error);
       }
     };
 
@@ -154,7 +154,7 @@ const AddProjectProcess = ({ selectedProject,setIsProcessSubmitted }) => {
           await fetchProjectProcesses(typeId);
         }
       } catch (error) {
-        console.error('unableToFetchProjectProcessesPleaseTryAgainLater', error);
+        console.error(t('unableToFetchProjectProcessesPleaseTryAgainLater'), error);
       } finally {
         setLoading(false);
       }
@@ -166,7 +166,7 @@ const AddProjectProcess = ({ selectedProject,setIsProcessSubmitted }) => {
         const independentOnly = response.data.filter(process => process.processType !== "Dependent");
         setProjectProcesses(calculatedWeightage(independentOnly));
       } catch (error) {
-        console.error('unableToFetchProjectProcessesPleaseTryAgainLater', error);
+        console.error(t('unableToFetchProjectProcessesPleaseTryAgainLater'), error);
       }
     };
 
@@ -175,7 +175,7 @@ const AddProjectProcess = ({ selectedProject,setIsProcessSubmitted }) => {
         const response = await API.get('/Features');
         setFeatures(response.data);
       } catch (error) {
-        console.error('unableToFetchProjectProcessesPleaseTryAgainLater', error);
+        console.error(t('unableToFetchProjectProcessesPleaseTryAgainLater'), error);
       }
     };
 
@@ -194,7 +194,7 @@ const AddProjectProcess = ({ selectedProject,setIsProcessSubmitted }) => {
         setIndependentProcesses(independentOnly);
 
       } catch (error) {
-        console.error('unableToFetchProjectProcessesPleaseTryAgainLater', error);
+        console.error(t('unableToFetchProjectProcessesPleaseTryAgainLater'), error);
       }
     };
 
@@ -203,7 +203,7 @@ const AddProjectProcess = ({ selectedProject,setIsProcessSubmitted }) => {
         const response = await API.get(`/Transactions/exists/${selectedProject}`);
         setIsTransactionExists(response.data);
       } catch (error) {
-        console.error('errorCheckingTransactionStatus', error);
+        console.error(t('errorCheckingTransactionStatus'), error);
       }
     };
 
@@ -309,11 +309,11 @@ const AddProjectProcess = ({ selectedProject,setIsProcessSubmitted }) => {
         await API.post('/ProjectProcess/DeleteProcessesFromProject', deleteData);
       }
 
-      message.success('Processes updated successfully!');
+      message.success(t('processesUpdatedSuccessfully'));
       setIsProcessSubmitted(true); // Set the submission status to true
 
     } catch (error) {
-      message.error('errorUpdatingProcessesPleaseTryAgain');
+      message.error(t('errorUpdatingProcessesPleaseTryAgain'));
     } finally {
       setRemovedProcessIds([]);
     }
@@ -374,7 +374,7 @@ const AddProjectProcess = ({ selectedProject,setIsProcessSubmitted }) => {
       const rangeEndIndex = projectProcesses.findIndex(p => p.id === processWithRange.rangeEnd);
       
       if (newIndex <= rangeStartIndex || newIndex >= rangeEndIndex) {
-        message.error(`This process must be positioned between ${projectProcesses[rangeStartIndex]?.name} and ${projectProcesses[rangeEndIndex]?.name}`);
+        message.error(`${t('thisProcessMustBePositionedBetween')} ${projectProcesses[rangeStartIndex]?.name} ${t('and')} ${projectProcesses[rangeEndIndex]?.name}`);
         return;
       }
     }
@@ -397,7 +397,7 @@ const AddProjectProcess = ({ selectedProject,setIsProcessSubmitted }) => {
   };
 
   if (loading || projectProcesses.length === 0) {
-    return <Spin tip="Loading..." />;
+    return <Spin tip={t("loading")} />;
   }
 
   return (
