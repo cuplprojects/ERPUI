@@ -4,6 +4,9 @@ import { AppstoreAddOutlined, BuildOutlined, EditOutlined } from '@ant-design/ic
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import API from '../CustomHooks/MasterApiHooks/api';
+import { useTranslation } from 'react-i18next';
+
+
 
 const ItemType = 'FEATURE';
 
@@ -61,7 +64,7 @@ const SystemSettings = () => {
   const [processStatus, setProcessStatus] = useState(true);
   const [processWeightage, setProcessWeightage] = useState('');
   const [processInstalledFeatures, setProcessInstalledFeatures] = useState([]);
-
+  const { t } = useTranslation();
   useEffect(() => {
     const fetchFeatures = async () => {
       try {
@@ -89,7 +92,7 @@ const SystemSettings = () => {
         })));
       } catch (error) {
         console.error('Error fetching processes:', error);
-        notification.error({ message: 'Failed to fetch processes' });
+        notification.error({ message: t('failedToFetchProcesses') });
       }
     };
 
@@ -172,13 +175,13 @@ const SystemSettings = () => {
               feature.key === editingFeatureId ? { ...feature, name: featureName } : feature
             )
           );
-          notification.success({ message: 'Feature updated successfully!' });
+          notification.success({ message: t('featureUpdatedSuccessfully') });
         } else {
-          notification.error({ message: 'Failed to update feature!' });
+          notification.error({ message: t('failedToUpdateFeature') });
         }
       } catch (error) {
         console.error('Error updating feature:', error);
-        notification.error({ message: 'An error occurred while updating the feature.' });
+        notification.error({ message: t('anErrorOccurredWhileUpdatingTheFeature') });
       }
     } else {
       try {
@@ -192,13 +195,13 @@ const SystemSettings = () => {
         if (response.status === 200) {
           const addedFeature = response.data;
           setFeatures([...features, { key: addedFeature.featureId, name: addedFeature.features }]);
-          notification.success({ message: 'Feature added successfully!' });
+          notification.success({ message: t('featureAddedSuccessfully') });
         } else {
-          notification.error({ message: 'Failed to add feature!' });
+          notification.error({ message: t('failedToAddFeature') });
         }
       } catch (error) {
         console.error('Error adding feature:', error);
-        notification.error({ message: 'An error occurred while adding the feature.' });
+        notification.error({ message:  t('anErrorOccurredWhileAddingTheFeature') });
       }
     }
 
@@ -252,13 +255,13 @@ const SystemSettings = () => {
               process.id === editingProcessId ? { ...process, ...newProcess } : process
             )
           );
-          notification.success({ message: 'Process updated successfully!' });
+          notification.success({ message: t('processUpdatedSuccessfully') });
         } else {
-          notification.error({ message: 'Failed to update process!' });
+          notification.error({ message: t('failedToUpdateProcess') });
         }
       } catch (error) {
         console.error('Error updating process:', error);
-        notification.error({ message: 'An error occurred while updating the process.' });
+        notification.error({ message: t('anErrorOccurredWhileUpdatingTheProcess') });
       }
     } else {
       try {
@@ -272,13 +275,13 @@ const SystemSettings = () => {
         if (response.status === 200) {
           const addedProcess = response.data;
           setProcesses([...processes, { key: addedProcess.id.toString(), ...newProcess }]);
-          notification.success({ message: 'Process added successfully!' });
+          notification.success({ message: t('processAddedSuccessfully') });
         } else {
-          notification.error({ message: 'Failed to add process!' });
+          notification.error({ message: t('failedToAddProcess') });
         }
       } catch (error) {
         console.error('Error adding process:', error);
-        notification.error({ message: 'An error occurred while adding the process.' });
+        notification.error({ message: t('anErrorOccurredWhileAddingTheProcess') });
       }
     }
 

@@ -118,21 +118,18 @@ const CameraList = () => {
       dataIndex: 'serial',
       key: 'serial',
       render: (text, record, index) => (currentPage - 1) * pageSize + index + 1,
-      width: '10%',
+      width: '5%',
+      align:"center"
     },
     {
       title: (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           {t('Camera Name')}
-          <Button
-            type="text"
-            onClick={() => handleSort('name')}
-            icon={sortField === 'name' && sortOrder === 'ascend' ? <SortAscendingOutlined style={{ color: 'white', border: '1px solid white' }} className='rounded-2 p-1' /> : <SortDescendingOutlined style={{ color: 'white', border: '1px solid white' }} className='rounded-2 p-1' />}
-          />
         </div>
       ),
       dataIndex: 'name',
       key: 'name',
+      sorter: (a, b) => a.name.localeCompare(b.name),
       render: (text, record, index) => (
         editingIndex === index ? (
           <Input
@@ -144,19 +141,28 @@ const CameraList = () => {
           <span>{text}</span>
         )
       ),
-      width: '70%',
+      width: '40%',
     },
     {
+      width: '20%',
       title: t('Status'),
       key: 'status',
+      sorter: (a, b) => a.isCamera - b.isCamera,
       render: (_, record, index) => (
         editingIndex === index ? (
           <Switch
             checked={editingStatus}
             onChange={(checked) => setEditingStatus(checked)}
+            checkedChildren={t('Active')}
+            unCheckedChildren={t('Inactive')}
           />
         ) : (
-          <span>{record.isCamera ? t('Active') : t('Inactive')}</span>
+          <Switch
+            checked={record.isCamera}
+            disabled
+            checkedChildren={t('Active')}
+            unCheckedChildren={t('Inactive')}
+          />
         )
       ),
     },
@@ -165,7 +171,6 @@ const CameraList = () => {
       key: 'action',
       render: (_, record, index) => (
         editingIndex === index ? (
-
           <div className='d-flex align-items-center gap-1' style={{ display: 'flex', justifyContent: '' }}>
             <Button type="link" onClick={() => handleEditSave(index)} className={`${customDark === "dark-dark" ? `${customMid} border` : `${customLight} ${customDarkBorder}`} text-white d-flex align-items-center gap-1 `}>
               <SaveOutlined className={`${customDark === "dark-dark" ? `` : `${customDarkText}` } `}/> 
@@ -182,7 +187,6 @@ const CameraList = () => {
             setEditingName(record.name);
             setEditingStatus(record.isCamera);
           }} className={`${customBtn} text-white me-1 d-flex align-items-center gap-1`}>{t('edit')}</Button>
-
         )
       ),
     },
@@ -252,7 +256,7 @@ const CameraList = () => {
                 setPageSize(pageSize);
               }}
               showSizeChanger
-              showQuickJumper
+              showQuickJumper={false}
               showTotal={(total, range) => t('{{start}}-{{end}} of {{total}} items', { start: range[0], end: range[1], total })}
             />
           </div>

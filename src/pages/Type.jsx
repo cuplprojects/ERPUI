@@ -351,7 +351,7 @@ console.log(originalData.requiredProcessIds)
                 gap: isMobile ? '10px' : '0',
                 marginBottom: isMobile ? '10px' : '20px'
             }}>
-                <Button className={`${customBtn} border-0 custom-zoom-btn`} onClick={() => setIsModalVisible(true)}>
+                <Button className={`${customBtn}  custom-zoom-btn ${customDark === "dark-dark" ? customLightBorder : ""}`} onClick={() => setIsModalVisible(true)}>
                     {t("addType")}
                 </Button>
                 <Search
@@ -471,11 +471,13 @@ console.log(originalData.requiredProcessIds)
                         <Form.Item label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-5 `}>{t('requiredProcess')}</span>}>
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                                 {requiredProcessIds?.map(id => (
-                                    <span key={id} style={{ border: '1px solid #ccc', borderRadius: '4px', padding: '4px 8px', display: 'flex', alignItems: 'center' }}>
+                                    <span key={id} style={{ border: '1px solid #ccc', borderRadius: '4px', padding: '4px 8px', display: 'flex', alignItems: 'center' }} className={`${customLight} ${customDarkText}`}>
                                         {processMap[id]}
                                         <AiFillCloseSquare
                                             style={{ marginLeft: '8px', cursor: 'pointer' }}
                                             onClick={() => setRequiredProcessIds(requiredProcessIds.filter(processId => processId !== id))}
+                                            className='rounded-circle'
+                                            size={20}
                                         />
                                     </span>
                                 ))}
