@@ -10,7 +10,7 @@ import { Modal } from 'react-bootstrap';
 import { AiFillCloseSquare } from 'react-icons/ai';
 import { success } from '../../CustomHooks/Services/AlertMessageService';
 
-const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
+const FeatureManagement = ({ onUpdateFeatures, onAddFeature = () => {} }) => {
     const { t } = useTranslation();
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = getCssClasses();
@@ -93,19 +93,18 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature }) => {
         };
 
         try {
+            console.log('Feature Payload:', featurePayload);
+
             if (isEditingFeature) {
                 // Update existing feature
                 await API.put(`/Features/${editingFeatureId}`, featurePayload);
-
-               success(t('featureUpdatedSuccessfully'));
-
+                success(t('featureUpdatedSuccessfully'));
             } else {
                 // Add new feature
                 const response = await API.post('/Features', featurePayload);
                 const addedFeature = response.data;
                 onAddFeature({ key: addedFeature.featureId, name: addedFeature.features });
                 success(t('featureAddedSuccessfully'));
-
             }
             
             setFeatureModalVisible(false);
