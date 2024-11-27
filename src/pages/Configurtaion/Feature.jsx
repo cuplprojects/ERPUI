@@ -20,6 +20,7 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature = () => {} }) => {
     const [isEditingFeature, setIsEditingFeature] = useState(false);
     const [editingFeatureId, setEditingFeatureId] = useState(null);
     const [featureName, setFeatureName] = useState('');
+    const [isFeatureNameChanged, setIsFeatureNameChanged] = useState(false);
 
     const [pageSize, setPageSize] = useState(5);
     const [currentPage, setCurrentPage] = useState(1);
@@ -68,12 +69,19 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature = () => {} }) => {
             setFeatureName(feature.name);
             setIsEditingFeature(true);
             setEditingFeatureId(feature.key);
+            setIsFeatureNameChanged(false);
         } else {
             setFeatureName('');
             setIsEditingFeature(false);
             setEditingFeatureId(null);
         }
         setFeatureModalVisible(true);
+    };
+
+    // Update the feature name and track changes
+    const handleFeatureNameChange = (e) => {
+        setFeatureName(e.target.value);
+        setIsFeatureNameChanged(e.target.value !== (isEditingFeature ? features.find(f => f.key === editingFeatureId)?.name : ''));
     };
 
     // Handle adding/updating feature
@@ -264,12 +272,12 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature = () => {} }) => {
                     <Input
                         placeholder={t('enterFeatureName')}
                         value={featureName}
-                        onChange={e => setFeatureName(e.target.value)}
+                        onChange={handleFeatureNameChange}
                         onKeyDown={handleKeyDown}
                     />
                 </Modal.Body>
                 <Modal.Footer className={`rounded-bottom-2 ${customDark} ${customLightText} ${customDark === "dark-dark" ? `border ` : `border-0`} border`}>
-                    <Button className={`${customBtn}`} onClick={handleAddFeature}>
+                    <Button className={`${customBtn}`} onClick={handleAddFeature} disabled={!isFeatureNameChanged}>
                         {isEditingFeature ? t('update') : t('add')}
                     </Button>
                 </Modal.Footer>
