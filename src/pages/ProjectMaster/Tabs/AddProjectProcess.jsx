@@ -3,17 +3,18 @@ import { Table, Spin, message, Button, Collapse, Checkbox, Select, InputNumber }
 import API from '../../../CustomHooks/MasterApiHooks/api';
 import { SortableContainer, SortableElement, SortableHandle } from 'react-sortable-hoc';
 import { useTranslation } from 'react-i18next';
-
+import { useStore } from 'zustand';
+import themeStore from '../../../store/themeStore';
 const { Panel } = Collapse;
 const { Option } = Select;
 
 const DragHandle = SortableHandle(({ disabled }) => {
   return (
-    <span style={{ 
-      cursor: disabled ? 'not-allowed' : 'grab', 
-      marginRight: '8px', 
+    <span style={{
+      cursor: disabled ? 'not-allowed' : 'grab',
+      marginRight: '8px',
       opacity: disabled ? 0.5 : 1,
-      display: disabled ? 'none' : 'inline' 
+      display: disabled ? 'none' : 'inline'
     }} aria-hidden={disabled ? "true" : "false"}>⣿</span>
   );
 });
@@ -21,16 +22,16 @@ const DragHandle = SortableHandle(({ disabled }) => {
 const SortableRow = SortableElement(({ process, index, features, editingProcessId, editingFeatures, handleFeatureChange, handleSaveFeatures, handleCancelEdit, handleEdit, independentProcesses, disabled, handleThresholdChange }) => {
   const { t } = useTranslation();
 
-// const DragHandle = SortableHandle(({ disabled }) => (
-//   <span style={{ 
-//     cursor: disabled ? 'not-allowed' : 'grab', 
-//     marginRight: '8px', 
-//     opacity: disabled ? 0.5 : 1,
-//     display: disabled ? 'none' : 'inline' 
-//   }} aria-hidden={disabled ? "true" : "false"}>⣿</span>
-// ));
+  // const DragHandle = SortableHandle(({ disabled }) => (
+  //   <span style={{ 
+  //     cursor: disabled ? 'not-allowed' : 'grab', 
+  //     marginRight: '8px', 
+  //     opacity: disabled ? 0.5 : 1,
+  //     display: disabled ? 'none' : 'inline' 
+  //   }} aria-hidden={disabled ? "true" : "false"}>⣿</span>
+  // ));
 
-// const SortableRow = SortableElement(({ process, index, features, editingProcessId, editingFeatures, handleFeatureChange, handleSaveFeatures, handleCancelEdit, handleEdit, independentProcesses, disabled, handleThresholdChange }) => {
+  // const SortableRow = SortableElement(({ process, index, features, editingProcessId, editingFeatures, handleFeatureChange, handleSaveFeatures, handleCancelEdit, handleEdit, independentProcesses, disabled, handleThresholdChange }) => {
 
   return (
     <tr style={{ opacity: 1, background: 'white', margin: '10px' }}>
@@ -69,7 +70,7 @@ const SortableRow = SortableElement(({ process, index, features, editingProcessI
       <td>{process.relativeWeightage.toFixed(4)}%</td>
       <td>
         {editingProcessId === process.id ? (
-          <InputNumber 
+          <InputNumber
             min={0}
             value={process.thresholdQty}
             onChange={(value) => handleThresholdChange(process.id, value)}
@@ -106,7 +107,7 @@ const arrayMove = (array, from, to) => {
   return array;
 };
 
-const AddProjectProcess = ({ selectedProject,setIsProcessSubmitted }) => {
+const AddProjectProcess = ({ selectedProject, setIsProcessSubmitted }) => {
   if (!selectedProject) {
     return null;
   }
@@ -126,13 +127,16 @@ const AddProjectProcess = ({ selectedProject,setIsProcessSubmitted }) => {
   const [isTransactionExists, setIsTransactionExists] = useState(false);
   const tableRef = useRef(null);
   const { t } = useTranslation();
+  const { getCssClasses } = useStore(themeStore);
+  const cssClasses = getCssClasses();
+  const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
   useEffect(() => {
     const fetchRequiredProcesses = async (typeId) => {
       try {
         const response = await API.get(`/PaperTypes/${typeId}/RequiredProcesses`);
         setRequiredProcessIds(response.data.map(process => process.id));
       } catch (error) {
-        console.error('unableToFetchRequiredProcessesPleaseTryAgainLater', error);
+        console.error(t('unableToFetchRequiredProcessesPleaseTryAgainLater'), error);
       }
     };
 
@@ -154,7 +158,7 @@ const AddProjectProcess = ({ selectedProject,setIsProcessSubmitted }) => {
           await fetchProjectProcesses(typeId);
         }
       } catch (error) {
-        console.error('unableToFetchProjectProcessesPleaseTryAgainLater', error);
+        console.error(t('unableToFetchProjectProcessesPleaseTryAgainLater'), error);
       } finally {
         setLoading(false);
       }
@@ -166,7 +170,7 @@ const AddProjectProcess = ({ selectedProject,setIsProcessSubmitted }) => {
         const independentOnly = response.data.filter(process => process.processType !== "Dependent");
         setProjectProcesses(calculatedWeightage(independentOnly));
       } catch (error) {
-        console.error('unableToFetchProjectProcessesPleaseTryAgainLater', error);
+        console.error(t('unableToFetchProjectProcessesPleaseTryAgainLater'), error);
       }
     };
 
@@ -175,7 +179,7 @@ const AddProjectProcess = ({ selectedProject,setIsProcessSubmitted }) => {
         const response = await API.get('/Features');
         setFeatures(response.data);
       } catch (error) {
-        console.error('unableToFetchProjectProcessesPleaseTryAgainLater', error);
+        console.error(t('unableToFetchProjectProcessesPleaseTryAgainLater'), error);
       }
     };
 
@@ -189,12 +193,12 @@ const AddProjectProcess = ({ selectedProject,setIsProcessSubmitted }) => {
             rangeStart: process.rangeStart || 0,
             rangeEnd: process.rangeEnd || 0
           }));
-        
+
         setAllProcesses(response.data);
         setIndependentProcesses(independentOnly);
 
       } catch (error) {
-        console.error('unableToFetchProjectProcessesPleaseTryAgainLater', error);
+        console.error(t('unableToFetchProjectProcessesPleaseTryAgainLater'), error);
       }
     };
 
@@ -203,7 +207,7 @@ const AddProjectProcess = ({ selectedProject,setIsProcessSubmitted }) => {
         const response = await API.get(`/Transactions/exists/${selectedProject}`);
         setIsTransactionExists(response.data);
       } catch (error) {
-        console.error('errorCheckingTransactionStatus', error);
+        console.error(t('errorCheckingTransactionStatus'), error);
       }
     };
 
@@ -243,21 +247,21 @@ const AddProjectProcess = ({ selectedProject,setIsProcessSubmitted }) => {
       setProjectProcesses((prev) => {
         const filteredProcesses = prev.filter(p => !processesToRemove.includes(p));
         const newProcesses = [...filteredProcesses];
-        
+
         // Insert new process at correct position if adding
         if (!prev.includes(processId) && processIndex !== -1) {
           const newProcess = processesToAdd.find(p => p.id === processId);
           if (newProcess) {
             // Find appropriate position in current processes
             let insertIndex = 0;
-            while (insertIndex < newProcesses.length && 
-                   allProcesses.findIndex(p => p.id === newProcesses[insertIndex].id) < processIndex) {
+            while (insertIndex < newProcesses.length &&
+              allProcesses.findIndex(p => p.id === newProcesses[insertIndex].id) < processIndex) {
               insertIndex++;
             }
             newProcesses.splice(insertIndex, 0, newProcess);
           }
         }
-        
+
         return calculatedWeightage(newProcesses);
       });
 
@@ -267,8 +271,8 @@ const AddProjectProcess = ({ selectedProject,setIsProcessSubmitted }) => {
 
   const handleThresholdChange = (processId, value) => {
     setProjectProcesses(prevProcesses => {
-      const updatedProcesses = prevProcesses.map(process => 
-        process.id === processId 
+      const updatedProcesses = prevProcesses.map(process =>
+        process.id === processId
           ? { ...process, thresholdQty: value }
           : process
       );
@@ -293,7 +297,7 @@ const AddProjectProcess = ({ selectedProject,setIsProcessSubmitted }) => {
         projectId: selectedProject,
         processId: matchingProcess ? matchingProcess.id : process.id,
         weightage: process.relativeWeightage,
-        sequence: index+1,
+        sequence: index + 1,
         featuresList: process.installedFeatures,
         userId: process.userId || [],
         thresholdQty: process.thresholdQty || 0
@@ -309,11 +313,11 @@ const AddProjectProcess = ({ selectedProject,setIsProcessSubmitted }) => {
         await API.post('/ProjectProcess/DeleteProcessesFromProject', deleteData);
       }
 
-      message.success('Processes updated successfully!');
+      message.success(t('processesUpdatedSuccessfully'));
       setIsProcessSubmitted(true); // Set the submission status to true
 
     } catch (error) {
-      message.error('errorUpdatingProcessesPleaseTryAgain');
+      message.error(t('errorUpdatingProcessesPleaseTryAgain'));
     } finally {
       setRemovedProcessIds([]);
     }
@@ -365,20 +369,20 @@ const AddProjectProcess = ({ selectedProject,setIsProcessSubmitted }) => {
 
   const onSortEnd = useCallback(({ oldIndex, newIndex }) => {
     if (isTransactionExists) return;
-    
+
     const process = projectProcesses[oldIndex];
     const processWithRange = independentProcesses.find(p => p.id === process.id);
-    
+
     if (processWithRange?.rangeStart && processWithRange?.rangeEnd) {
       const rangeStartIndex = projectProcesses.findIndex(p => p.id === processWithRange.rangeStart);
       const rangeEndIndex = projectProcesses.findIndex(p => p.id === processWithRange.rangeEnd);
-      
+
       if (newIndex <= rangeStartIndex || newIndex >= rangeEndIndex) {
-        message.error(`This process must be positioned between ${projectProcesses[rangeStartIndex]?.name} and ${projectProcesses[rangeEndIndex]?.name}`);
+        message.error(`${t('thisProcessMustBePositionedBetween')} ${projectProcesses[rangeStartIndex]?.name} ${t('and')} ${projectProcesses[rangeEndIndex]?.name}`);
         return;
       }
     }
-    
+
     setProjectProcesses(prevProcesses => {
       const newProcesses = arrayMove(prevProcesses, oldIndex, newIndex);
       return calculatedWeightage(newProcesses);
@@ -397,7 +401,7 @@ const AddProjectProcess = ({ selectedProject,setIsProcessSubmitted }) => {
   };
 
   if (loading || projectProcesses.length === 0) {
-    return <Spin tip="Loading..." />;
+    return <Spin tip={t("loading")} />;
   }
 
   return (
@@ -463,9 +467,10 @@ const AddProjectProcess = ({ selectedProject,setIsProcessSubmitted }) => {
         </table>
       </div>
 
-      <Button 
-        type="primary" 
-        onClick={handleSubmit} 
+      <Button
+        type="primary"
+        className={`${customBtn}`}
+        onClick={handleSubmit}
         style={{ marginTop: '16px' }}
         disabled={isTransactionExists}
       >

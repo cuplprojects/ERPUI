@@ -172,28 +172,31 @@ const Zone = () => {
       title: t('SN.'),
       key: 'serial',
       render: (text, record, index) => index + 1,
+      sorter: (a, b) => a.key - b.key,
     },
     {
       title: t('Zone Name'),
       dataIndex: 'zoneNo',
       key: 'zoneNo',
+      sorter: (a, b) => a.zoneNo.localeCompare(b.zoneNo),
     },
     {
       title: t('Zone Description'),
       dataIndex: 'zoneDescription',
       key: 'zoneDescription',
+      sorter: (a, b) => a.zoneDescription.localeCompare(b.zoneDescription),
     },
     {
       title: t('Assign Camera Names'),
       dataIndex: 'cameraNames',
       key: 'cameraNames',
-      render: (cameraNames) => cameraNames.join(', ')
+      render: (cameraNames) => cameraNames.join(', '),
     },
     {
       title: t('Assign Machine Names'),
       dataIndex: 'machineNames',
       key: 'machineNames',
-      render: (machineNames) => machineNames.join(', ')
+      render: (machineNames) => machineNames.join(', '),
     },
     {
       title: t('actions'),

@@ -4,27 +4,33 @@ import { AudioOutlined, AudioMutedOutlined } from '@ant-design/icons';
 import API from '../CustomHooks/MasterApiHooks/api';
 import { hasPermission } from '../CustomHooks/Services/permissionUtils';
 import { useTranslation } from 'react-i18next';
+import { success, error } from '../CustomHooks/Services/AlertMessageService';
 
 const { TextArea } = Input;
 const { Text } = Typography;
 
-const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) => {
+const CatchDetailModal = ({ show, handleClose, data, processId, fetchTransaction}) => {
     const { t } = useTranslation();
 
     const [isPlaying, setIsPlaying] = useState(false);
     const [audioElement, setAudioElement] = useState(null);
     const [processes, setProcesses] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [requestError, setRequestError] = useState(null);
 
     useEffect(() => {
         const fetchProcesses = async () => {
             try {
+                console.log('Fetching processes...');
+                setRequestError(null);
                 const response = await API.get('/Processes');
+                console.log('Processes fetched:', response.data);
                 setProcesses(response.data);
-                setLoading(false);
             } catch (error) {
                 console.error('Error fetching processes:', error);
+                setRequestError('Failed to fetch processes');
                 message.error('Failed to fetch processes');
+            } finally {
                 setLoading(false);
             }
         };
@@ -33,11 +39,16 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
             fetchProcesses();
         }
 
-        return () => setProcesses([]);
+        return () => {
+            console.log('Cleaning up processes state');
+            setProcesses([]);
+            setRequestError(null);
+        };
     }, [show]);
 
     useEffect(() => {
         if (!show && audioElement) {
+            console.log('Cleaning up audio element');
             audioElement.pause();
             setIsPlaying(false);
             setAudioElement(null);
@@ -52,6 +63,7 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
     };
 
     const getProcessName = (processId) => {
+        console.log('Getting process name for ID:', processId);
         const process = processes.find(p => p.id === processId);
         return process ? process.name : 'Unknown Process';
     };
@@ -70,6 +82,7 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
         .filter(key => !['serialNumber', 'voiceRecording', 'teamUserNames', 'teamId', 'transactionId', 'srNo', 'projectId', 'processIds', 'previousProcessData'].includes(key))
         .map((key, index) => {
             let value = data[key];
+            console.log('Processing table data for key:', key, 'value:', value);
             
             if (typeof value === 'object' && value !== null) {
                 if (Array.isArray(value)) {
@@ -90,10 +103,9 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
             }
 
             if (key === 'percentageCatch' && value !== null && value !== undefined) {
-                value = Number(value).toFixed(2) + '%'; //add percentage symbol
+                value = Number(value).toFixed(2) + '%';
             }
 
-            // Convert status numbers to text
             if (key === 'status') {
                 switch (value) {
                     case 0:
@@ -117,6 +129,7 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
         });
 
     if (data?.teamUserNames?.length) {
+        console.log('Adding team members to table data');
         tableData.push({
             key: 'team',
             label: 'Team Members',
@@ -125,18 +138,22 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
     }
 
     const handleAudioPlay = async (audioData) => {
+        console.log('Handling audio play');
         if (!audioData) {
+            console.log('No audio data available');
             message.info('No audio recording available');
             return;
         }
 
         try {
             if (isPlaying && audioElement) {
+                console.log('Pausing current audio');
                 audioElement.pause();
                 setIsPlaying(false);
                 return;
             }
 
+            console.log('Creating audio blob');
             const byteCharacters = atob(audioData);
             const byteNumbers = new Array(byteCharacters.length);
             for (let i = 0; i < byteCharacters.length; i++) {
@@ -148,9 +165,16 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
             const audioUrl = URL.createObjectURL(blob);
             const audio = new Audio(audioUrl);
 
-            audio.onplay = () => setIsPlaying(true);
-            audio.onpause = () => setIsPlaying(false);
+            audio.onplay = () => {
+                console.log('Audio started playing');
+                setIsPlaying(true);
+            };
+            audio.onpause = () => {
+                console.log('Audio paused');
+                setIsPlaying(false);
+            };
             audio.onended = () => {
+                console.log('Audio playback ended');
                 setIsPlaying(false);
                 URL.revokeObjectURL(audioUrl);
             };
@@ -165,6 +189,7 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
     };
 
     const renderAudioControl = (voiceRecording) => {
+        console.log('Rendering audio control for recording:', !!voiceRecording);
         if (!voiceRecording) {
             return (
                 <AudioMutedOutlined
@@ -210,34 +235,43 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
     };
 
     const handleResolve = async () => {
+        console.log('Handling resolve action');
         try {
+            setLoading(true);
             let existingTransactionData;
+            
             if (data.transactionId) {
+                console.log('Fetching existing transaction data');
                 const response = await API.get(`/Transactions/${data.transactionId}`);
                 existingTransactionData = response.data;
             }
+
             const postData = {
+                ...existingTransactionData,
                 transactionId: data.transactionId || 0,
-                interimQuantity: existingTransactionData ? existingTransactionData.interimQuantity : 0,
-                remarks: existingTransactionData ? existingTransactionData.remarks : "",
                 projectId: data.projectId,
                 quantitysheetId: data.srNo || 0,
                 processId: processId,
-                zoneId: existingTransactionData ? existingTransactionData.zoneId : 0,
-                machineId: existingTransactionData ? existingTransactionData.machineId : 0,
-                status: existingTransactionData ? existingTransactionData.status : 0,
-                alarmId: "0",
                 lotNo: data.lotNo,
-                teamId: existingTransactionData ? existingTransactionData.teamId : [],
-                voiceRecording: existingTransactionData ? existingTransactionData.voiceRecording : ""
+                alarmId: "0",
+                interimQuantity: existingTransactionData?.interimQuantity ?? 0,
+                remarks: existingTransactionData?.remarks ?? "",
+                zoneId: existingTransactionData?.zoneId ?? 0,
+                machineId: existingTransactionData?.machineId ?? 0,
+                status: existingTransactionData?.status ?? 0,
+                teamId: existingTransactionData?.teamId ?? [],
+                voiceRecording: existingTransactionData?.voiceRecording ?? ""
             };
 
+            console.log('Posting transaction data:', postData);
             await API.post('/Transactions', postData);
-
-            handleSave("0");
+            success('Transaction saved successfully');
             handleClose();
-        } catch (error) {
-            console.error('Error saving alarm:', error);
+        } catch (err) {
+            console.error('Error saving alarm:', err);
+            error('Failed to save transaction');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -254,6 +288,7 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
             dataIndex: 'value',
             key: 'value',
             render: (value, record) => {
+                console.log('Rendering table cell for:', record);
                 if (record.label === 'Remarks' || record.label === 'Alerts') {
                     return (
                         <>
@@ -267,8 +302,8 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave }) =>
                                 />
                                 {record.label === 'Remarks' && renderAudioControl(data?.voiceRecording)}
                             </div>
-                            {record?.label === 'Alerts' && value !== "0" && value !== 'NA' && (
-                                <Button
+                            {record?.label === 'Alerts' && value !== "0" && value !== 'NA' && value !== null && value !== 'No alerts' && (
+                                    <Button
                                     style={{ fontSize: '18px', cursor: 'pointer' }}
                                     onClick={handleResolve}
                                     className='d-flex align-items-center border p-2 custom-theme-dark-btn'
