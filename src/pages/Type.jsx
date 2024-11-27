@@ -90,7 +90,7 @@ const Type = () => {
         try {
             const typeExists = types.some(type => type.types.toLowerCase() === values.types.toLowerCase());
             if (typeExists) {
-                error(t("thisTypeAlreadyExists"));
+                // error(t("thisTypeAlreadyExists"));
                 return;
             }
             const postData = {
@@ -221,7 +221,10 @@ console.log(originalData.requiredProcessIds)
                     <Select
                         mode="multiple"
                         value={editingProcessIds}
-                        onChange={setEditingProcessIds}
+                        onChange={(selected) => {
+                            setEditingProcessIds(selected);
+                            setRequiredEditingProcessIds(prev => prev.filter(id => selected.includes(id)));
+                        }}
                         style={{ width: '100%' }}
                     >
                         {processes.map(proc => (
@@ -351,7 +354,7 @@ console.log(originalData.requiredProcessIds)
                 gap: isMobile ? '10px' : '0',
                 marginBottom: isMobile ? '10px' : '20px'
             }}>
-                <Button className={`${customBtn} border-0 custom-zoom-btn`} onClick={() => setIsModalVisible(true)}>
+                <Button className={`${customBtn}  custom-zoom-btn ${customDark === "dark-dark" ? customLightBorder : ""}`} onClick={() => setIsModalVisible(true)}>
                     {t("addType")}
                 </Button>
                 <Search
@@ -430,17 +433,15 @@ console.log(originalData.requiredProcessIds)
                             name="types"
                             label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-5 `}>{t('type')}</span>}
                             rules={[
-                                { required: true, message: t('pleaseInputType') },
-                                {
-                                    validator: (_, value) => {
-                                        const isNumeric = /^\d+$/;
-                                        if (value && isNumeric.test(value)) {
-                                            return Promise.reject(new Error(t('typeCannotContainOnlyNumbers')));
+                                { 
+                                    required: true,
+                                    validator: async (_, value) => {
+                                        if (!value) {
+                                            throw new Error(t('pleaseInputType'));
                                         }
                                         if (types.some(type => type.types.toLowerCase() === value.toLowerCase())) {
-                                            return Promise.reject(new Error(t('thisTypeAlreadyExists')));
+                                            throw new Error(t('thisTypeAlreadyExists'));
                                         }
-                                        return Promise.resolve();
                                     }
                                 }
                             ]}
@@ -471,11 +472,13 @@ console.log(originalData.requiredProcessIds)
                         <Form.Item label={<span className={`${customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`} fs-5 `}>{t('requiredProcess')}</span>}>
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                                 {requiredProcessIds?.map(id => (
-                                    <span key={id} style={{ border: '1px solid #ccc', borderRadius: '4px', padding: '4px 8px', display: 'flex', alignItems: 'center' }}>
+                                    <span key={id} style={{ border: '1px solid #ccc', borderRadius: '4px', padding: '4px 8px', display: 'flex', alignItems: 'center' }} className={`${customLight} ${customDarkText}`}>
                                         {processMap[id]}
                                         <AiFillCloseSquare
                                             style={{ marginLeft: '8px', cursor: 'pointer' }}
                                             onClick={() => setRequiredProcessIds(requiredProcessIds.filter(processId => processId !== id))}
+                                            className='rounded-circle'
+                                            size={20}
                                         />
                                     </span>
                                 ))}

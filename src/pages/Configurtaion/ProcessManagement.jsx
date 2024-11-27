@@ -28,6 +28,10 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
     const cssClasses = getCssClasses();
     const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
 
+    // Add state to track original values for comparison
+    const [originalValues, setOriginalValues] = useState({});
+    const [hasChanges, setHasChanges] = useState(false);
+
     const fetchProcesses = async () => {
         try {
             const response = await API.get('/Processes');
@@ -74,8 +78,43 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
         }
     }, [features]);
 
+    // Effect to check for changes
+    useEffect(() => {
+        if (isEditingProcess) {
+            const currentValues = {
+                name: processName,
+                status: processStatus,
+                weightage: processWeightage,
+                installedFeatures: processInstalledFeatures,
+                processType: processType,
+                rangeStart: rangeStart,
+                rangeEnd: rangeEnd
+            };
+
+            const hasAnyChange = Object.keys(originalValues).some(key => {
+                if (Array.isArray(originalValues[key])) {
+                    return JSON.stringify(originalValues[key]) !== JSON.stringify(currentValues[key]);
+                }
+                return originalValues[key] !== currentValues[key];
+            });
+
+            setHasChanges(hasAnyChange);
+        }
+    }, [processName, processStatus, processWeightage, processInstalledFeatures, processType, rangeStart, rangeEnd]);
+
     const showAddProcessModal = (process = null) => {
         if (process) {
+            const originalVals = {
+                name: process.name,
+                status: process.status,
+                weightage: process.weightage,
+                installedFeatures: process.installedFeatures || [],
+                processType: process.processType,
+                rangeStart: process.processType === 'Dependent' ? 0 : (process.rangeStart || ''),
+                rangeEnd: process.processType === 'Dependent' ? 0 : (process.rangeEnd || '')
+            };
+            setOriginalValues(originalVals);
+            
             setProcessName(process.name);
             setProcessStatus(process.status);
             setProcessWeightage(process.weightage);
@@ -91,6 +130,7 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
                 setRangeEnd(process.rangeEnd || '');
             }
         } else {
+            setOriginalValues({});
             setProcessName('');
             setProcessStatus(true);
             setProcessWeightage(0);
@@ -100,6 +140,7 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
             setEditingProcessId(null);
             setRangeStart('');
             setRangeEnd('');
+            setHasChanges(true); // Enable save for new processes
         }
         setProcessModalVisible(true);
     };
@@ -153,21 +194,20 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
                     
                 });
                 setProcessModalVisible(false);
-await fetchProcesses();
-await fetchFeatures(); // Refresh the features list
-return; // No further processing needed
+                await fetchProcesses();
+                await fetchFeatures();
+                return;
 
-if (response && response.data) {
-    let processWithKey = response.data;
-    if (typeof processWithKey !== 'object' || Array.isArray(processWithKey)) {
-        console.warn('Unexpected response data type:', typeof processWithKey);
-        processWithKey = { id: processWithKey, key: processWithKey.toString() }; // Handle string responses
-    }
-} else {
-    console.error('Invalid response structure:', response);
-    throw new Error('Invalid response structure: No data found');
-}
-
+                if (response && response.data) {
+                    let processWithKey = response.data;
+                    if (typeof processWithKey !== 'object' || Array.isArray(processWithKey)) {
+                        console.warn('Unexpected response data type:', typeof processWithKey);
+                        processWithKey = { id: processWithKey, key: processWithKey.toString() };
+                    }
+                } else {
+                    console.error('Invalid response structure:', response);
+                    throw new Error('Invalid response structure: No data found');
+                }
             }
 
             processWithKey.key = processWithKey.id ? processWithKey.id.toString() : '';
@@ -190,7 +230,7 @@ if (response && response.data) {
             setProcessModalVisible(false);
             onUpdateProcesses([...processes, processWithKey]);
             notification.success({
-                message: isEditingProcess ? 'Process updated successfully!' : 'New process added successfully',
+                message: isEditingProcess ? t('processUpdatedSuccessfully') : t('newProcessAddedSuccessfully'),
               
             });
 
@@ -202,7 +242,7 @@ if (response && response.data) {
 
     const processColumns = [
         {
-            title: t('id'),
+            title: t('sn'),
             dataIndex: 'key',
             key: 'key',
             sorter: (a, b) => a.key - b.key
@@ -246,7 +286,7 @@ if (response && response.data) {
                 <Button
                     icon={<EditOutlined />}
                     onClick={() => showAddProcessModal(record)}
-                    className={`${customBtn}`}
+                    className={`${customBtn} d-flex align-items-center gap-1`}
                 >
                     {t('edit')}
                 </Button>
@@ -272,15 +312,15 @@ if (response && response.data) {
     return (
         <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', alignItems: 'center' }}>
-                <Input.Search
+                                <Button type="primary" onClick={() => showAddProcessModal()} className={`${customDark} text-white `}>
+                    {t('addNewProcess')}
+                </Button><Input.Search
                     placeholder={t('searchProcesses')}
                     allowClear
                     onChange={e => setSearchText(e.target.value)}
                     style={{ width: 300 }}
                 />
-                <Button type="primary" onClick={() => showAddProcessModal()} className={`${customDark} text-white `}>
-                    {t('addNewProcess')}
-                </Button>
+
             </div>
 
             <Table
@@ -456,7 +496,12 @@ if (response && response.data) {
                     <Button variant="secondary" onClick={() => setProcessModalVisible(false)} className={`${customBtn}`}>
                         {t('cancel')}
                     </Button>
-                    <Button variant="primary" onClick={handleAddProcess} className={`${customBtn}`}>
+                    <Button 
+                        variant="primary" 
+                        onClick={handleAddProcess} 
+                        disabled={isEditingProcess && !hasChanges}
+                        className={`${customBtn}`}
+                    >
                         {t('save')}
                     </Button>
                 </Modal.Footer>

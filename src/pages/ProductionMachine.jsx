@@ -76,13 +76,12 @@ const Machine = () => {
     };
 
     try {
-      await API.post('/Machines', newMachine);
-      setMachines([...machines, newMachine]);
+      const response = await API.post('/Machines', newMachine);
+      await fetchMachines(); // Fetch updated machines list
       setNewMachineName('');
       setNewMachineProcessId(null);
       setNewMachineStatus(true);
       setIsModalVisible(false);
-      fetchMachines();
       success(t('Machine added successfully!'));
     } catch (err) {
       error(t('Failed to add machine'));
@@ -104,9 +103,7 @@ const Machine = () => {
 
     try {
       await API.put(`/Machines/${updatedMachine.machineId}`, updatedMachine);
-      const updatedMachines = [...machines];
-      updatedMachines[index] = updatedMachine;
-      setMachines(updatedMachines);
+      await fetchMachines(); // Fetch updated machines list
       success(t('Machine updated successfully!'));
       setEditingIndex(null);
       setEditingValue('');

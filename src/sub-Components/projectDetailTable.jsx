@@ -187,7 +187,7 @@ const ProjectDetailsTable = ({
       ? item.remarks && item.remarks.trim() !== ""
       : true;
     const alertsCondition = showOnlyAlerts
-      ? item.alerts && item.alerts.trim() !== ""
+      ? item.alerts && item.alerts.trim() !== "" && item.alerts !== "0"
       : true;
     const previousProcessCondition = showOnlyCompletedPreviousProcess ? (!item.previousProcessData || item.previousProcessData.status === 2 || (item.previousProcessData.thresholdQty != null && item.previousProcessData.thresholdQty > item.previousProcessData.interimQuantity)) : true;
 
@@ -406,7 +406,7 @@ const ProjectDetailsTable = ({
                   className="fs-6 position-relative"
                   onClick={() => handleCatchClick(record)}
                 >
-                  {!(record.alerts === "0" || !record.alerts?.trim()) && (
+                {record.alerts && record.alerts !== "0" && (
                     <BiSolidFlag
                       title={record.alerts}
                       className=""
@@ -547,7 +547,7 @@ const ProjectDetailsTable = ({
         const statusSteps = [t("pending"), t("started"), t("completed")];
         const initialStatusIndex = text !== undefined ? text : 0;
 
-        const hasAlerts = !(record.alerts === "0" || !record.alerts?.trim()); // Check if alerts exist (not "0" and not empty/null)
+        const hasAlerts = Boolean(record.alerts && record.alerts !== "0"); // Check if alerts exist (not "0" and not empty/null)
         // Check if previous process exists and is completed
         const isPreviousProcessCompleted =
           !record.previousProcessData ||
