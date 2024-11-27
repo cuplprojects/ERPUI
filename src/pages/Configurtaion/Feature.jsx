@@ -221,6 +221,7 @@ const FeatureManagement = ({ onUpdateFeatures, onAddFeature = () => {} }) => {
                 columns={featureColumns}
                 rowKey="key"
                 pagination={{ 
+                    className:`${customDark === 'dark-dark' || customDark === 'blue-dark' ? "bg-white" : ""} p-3 rounded-bottom`,
                     total: filteredFeatures.length,
                     pageSize: pageSize,
                     current: currentPage,
