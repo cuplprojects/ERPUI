@@ -351,7 +351,7 @@ console.log(originalData.requiredProcessIds)
                 gap: isMobile ? '10px' : '0',
                 marginBottom: isMobile ? '10px' : '20px'
             }}>
-                <Button className={`${customBtn} border-0 custom-zoom-btn`} onClick={() => setIsModalVisible(true)}>
+                <Button className={`${customBtn}  custom-zoom-btn ${customDark === "dark-dark" ? customLightBorder : ""}`} onClick={() => setIsModalVisible(true)}>
                     {t("addType")}
                 </Button>
                 <Search
