@@ -1,5 +1,8 @@
 import { Modal, Button, Form, Row, Col } from 'react-bootstrap';
+import { BsInfoCircleFill } from "react-icons/bs";
 import { useState } from 'react';
+import { Tooltip } from 'antd';
+
 const AddProjectModal = ({
   visible,
   onCancel,
@@ -164,7 +167,12 @@ const AddProjectModal = ({
           <Row className="mb-3 d-flex align-items-center">
             <Col xs={9}>
               <Form.Group controlId="quantityThreshold">
-                <Form.Label className={customDarkText}>{t('quantityThreshold')}</Form.Label>
+                <Form.Label className={customDarkText}>
+                  {t('quantityThreshold')}
+                  <Tooltip title={t('quantityThresholdTooltip')}>
+                    <BsInfoCircleFill className='ms-2'/>
+                  </Tooltip>
+                </Form.Label>
                 <Form.Control
                   type="number"
                   min={0}
