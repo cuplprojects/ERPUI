@@ -8,27 +8,37 @@ import { ToastContainer } from 'react-toastify';
 class ErrorBoundary extends React.Component {
     constructor(props) {
         super(props);
-        this.state = { hasError: false };
+        this.state = { hasError: false, error: null };
     }
 
     static getDerivedStateFromError(error) {
-        return { hasError: true };
+        return { hasError: true, error };
     }
 
     componentDidCatch(error, errorInfo) {
         console.error('Error caught by boundary:', error, errorInfo);
+        // Check if error is related to undefined property access
+        if (error instanceof TypeError && error.message.includes('Cannot read properties of undefined')) {
+            // Redirect to login for auth-related errors
+            return <Navigate to="/login" replace />;
+        }
     }
 
     render() {
         if (this.state.hasError) {
-            return <Navigate to="/404" replace />;
+            // Handle TypeError specifically
+            if (this.state.error instanceof TypeError && 
+                this.state.error.message.includes('Cannot read properties of undefined')) {
+                return <Navigate to="/login" replace />;
+            }
+            return <Navigate to="/cudashboard" replace />;
         }
 
         return this.props.children;
     }
 }
 
-const ProtectedRoute = ({ component: Component, permission }) => {
+const ProtectedRoute = ({ component: Component }) => {
     const token = useUserToken();
     const { logout } = AuthService;
 
@@ -45,28 +55,21 @@ const ProtectedRoute = ({ component: Component, permission }) => {
     };
 
     useEffect(() => {
-        console.log('Token:', token);
-        console.log('Permission required:', permission);
-        
-        if (!token || !isTokenValid(token)) {
-            console.log('Invalid or expired token - logging out');
-            logout();
-        }
-    }, [token, logout, permission]);
+        const handleInvalidToken = async () => {
+            if (!token || !isTokenValid(token)) {
+                console.log('Invalid or expired token - redirecting to login');
+                await logout();
+            }
+        };
+        handleInvalidToken();
+    }, [token, logout]);
 
-    if (!token) {
-        console.log('No token found - redirecting to login');
-        return <Navigate to="/login" replace />;
-    }
-
-    if (!isTokenValid(token)) {
-        console.log('Token expired - redirecting to login');
+    if (!token || !isTokenValid(token)) {
         return <Navigate to="/login" replace />;
     }
 
     return (
         <ErrorBoundary>
-            <ToastContainer />
             <Component />
         </ErrorBoundary>
     );
