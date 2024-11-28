@@ -1,7 +1,7 @@
 import { Modal, Button, Form, Row, Col } from 'react-bootstrap';
 import { BsInfoCircleFill } from "react-icons/bs";
 import { useState } from 'react';
-import { Tooltip } from 'antd';
+import { Tooltip, Spin } from 'antd';
 
 const AddProjectModal = ({
   visible,
@@ -31,8 +31,9 @@ const AddProjectModal = ({
   selectedType
 }) => {
   const [status, setStatus] = useState(true);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     form.setFieldsValue({
       name: projectName,
@@ -40,7 +41,16 @@ const AddProjectModal = ({
       type: selectedType?.typeId,
       status: status
     });
-    form.validateFields().then(onFinish).catch((err) => console.log(err));
+    
+    setLoading(true);
+    try {
+      await form.validateFields();
+      await onFinish(form.getFieldsValue());
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   
@@ -209,11 +219,22 @@ const AddProjectModal = ({
         </Form>
       </Modal.Body>
       <Modal.Footer className={`${customDark}`}>
-        <Button variant="secondary" onClick={onCancel} className='custom-zoom-btn text-white'>
+        <Button 
+          variant="secondary" 
+          onClick={onCancel} 
+          className='custom-zoom-btn text-white'
+          disabled={loading}
+        >
           {t('cancel')}
         </Button>
-        <Button variant="primary" type="submit" form="addProjectForm" className={`${customLight} border-white ${customDarkText} custom-zoom-btn`}>
-          {t('save')}
+        <Button 
+          variant="primary" 
+          type="submit" 
+          form="addProjectForm" 
+          className={`${customLight} border-white ${customDarkText} custom-zoom-btn`}
+          disabled={loading}
+        >
+          {loading ? <Spin size="small" /> : t('save')}
         </Button>
       </Modal.Footer>
     </Modal>
