@@ -59,6 +59,7 @@ const QtySheetUpload = () => {
     const [transactionExist, setTransactionExist] = useState(false);
 
     const [showDisclaimer, setShowDisclaimer] = useState(false);
+    const [showConfigDisclaimer, setShowConfigDisclaimer] = useState(false);
     const [isProcessingFile, setIsProcessingFile] = useState(false);
     const [showDeleteButton, setShowDeleteButton] = useState(false);
     const [hasUploadedFile, setHasUploadedFile] = useState(false);
@@ -70,7 +71,14 @@ const QtySheetUpload = () => {
     // Track mouse position for context menu
     const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
 
-
+    useEffect(() => {
+        // Show config disclaimer only when no lots are found
+        if (!isLotsFetched && !showDisclaimer) {
+            setShowConfigDisclaimer(true);
+        } else {
+            setShowConfigDisclaimer(false);
+        }
+    }, [isLotsFetched, showDisclaimer]);
 
     useEffect(() => {
         const checkTransactionExistence = async () => {
@@ -492,6 +500,12 @@ const QtySheetUpload = () => {
                     </div>
                 </Col>
             </Row>
+
+            {showConfigDisclaimer && (
+                <div className="alert alert-warning text-center mb-3">
+                    {t('Warning: Once you upload the quantity sheet, project configuration cannot be changed.')}
+                </div>
+            )}
 
             <Row className='mb-2'>
                 <Col lg={12}>
