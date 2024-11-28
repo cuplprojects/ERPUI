@@ -322,6 +322,7 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
           setSelectedGroup(null);
           setSelectedType(null);
         }}
+        
         form={form}
         onFinish={handleAddProject}
         groups={groups}

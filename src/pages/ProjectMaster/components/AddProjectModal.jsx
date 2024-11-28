@@ -8,7 +8,7 @@ const AddProjectModal = ({
   groups,
   types,
   showSeriesFields,
-  validateSeriesInput,
+  // validateSeriesInput,
   customDarkText,
   customDark,
   customMid,
@@ -37,6 +37,32 @@ const AddProjectModal = ({
     form.validateFields().then(onFinish).catch((err) => console.log(err));
   };
   // const [projectName, setProjectName] = useState('');
+  const validateSeriesInput = (_, value) => {
+    // Check if the type is "booklet"
+    if (selectedType && selectedType.types.toLowerCase() === 'booklet') {
+      if (!value) {
+        return Promise.reject(new Error('Series name is required'));
+      }
+
+      if (value.length !== numberOfSeries) {
+        return Promise.reject(new Error(`Series name must be ${numberOfSeries} characters long`));
+      }
+
+      // Convert to uppercase for validation
+      value = value.toUpperCase();
+
+      // Check if characters are sequential but can start from any letter
+      const startCharCode = value.charCodeAt(0);
+      for (let i = 1; i < value.length; i++) {
+        if (value.charCodeAt(i) !== startCharCode + i) {
+          return Promise.reject(new Error('Characters must be sequential'));
+        }
+      }
+    }
+
+    return Promise.resolve();
+  };
+  
   return (
     <Modal show={visible} onHide={onCancel} size="lg" centered className='rounded'>
       <Modal.Header closeButton={false} className={`${customDark} ${customLightText}`}>
@@ -48,7 +74,7 @@ const AddProjectModal = ({
             <Col xs={12}>
               <Form.Group controlId="group">
                 <Form.Label className={customDarkText}>{t('group')}
-                <span className='text-danger ms-2 fs-6'>*</span>
+                  <span className='text-danger ms-2 fs-6'>*</span>
                 </Form.Label>
                 <Form.Select onChange={handleGroupChange} required>
                   <option value="">{t('selectGroup')}</option>
@@ -68,7 +94,7 @@ const AddProjectModal = ({
             <Col xs={12}>
               <Form.Group controlId="type">
                 <Form.Label className={customDarkText}>{t('type')}
-                <span className='text-danger ms-2 fs-6'>*</span>
+                  <span className='text-danger ms-2 fs-6'>*</span>
                 </Form.Label>
                 <Form.Select onChange={handleTypeChange} disabled={!selectedGroup} required>
                   <option value="">{t('selectType')}</option>
@@ -89,7 +115,7 @@ const AddProjectModal = ({
               <Col xs={6}>
                 <Form.Group controlId="numberOfSeries">
                   <Form.Label className={customDarkText}>{t('numberOfSeries')}
-                  <span className='text-danger ms-2 fs-6'>*</span>
+                    <span className='text-danger ms-2 fs-6'>*</span>
                   </Form.Label>
                   <Form.Select onChange={(e) => setNumberOfSeries(e.target.value)} required>
                     <option value="">{t('selectNumberOfSeries')}</option>
@@ -107,7 +133,7 @@ const AddProjectModal = ({
               <Col xs={6}>
                 <Form.Group controlId="seriesName">
                   <Form.Label className={customDarkText}>{t('seriesName')}
-                  <span className='text-danger ms-2 fs-6'>*</span>
+                    <span className='text-danger ms-2 fs-6'>*</span>
                   </Form.Label>
                   <Form.Control
                     type="text"
@@ -133,7 +159,7 @@ const AddProjectModal = ({
             <Col xs={12}>
               <Form.Group controlId="name">
                 <Form.Label className={customDarkText}>{t('projectName')}
-                <span className='text-danger ms-2 fs-6'>*</span>
+                  <span className='text-danger ms-2 fs-6'>*</span>
                 </Form.Label>
                 <Form.Control
                   type="text"
@@ -173,7 +199,7 @@ const AddProjectModal = ({
             </Col>
             <Col xs={3} className="mt-3 d-flex align-items-center">
               <Form.Group controlId="status" className={customDarkText}>
-                <Form.Check type="switch" label={t('status')} className='fs-4'/>
+                <Form.Check type="switch" label={t('status')} className='fs-4' />
               </Form.Group>
             </Col>
           </Row>
