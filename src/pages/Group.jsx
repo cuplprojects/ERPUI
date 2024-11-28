@@ -80,6 +80,11 @@ const Group = () => {
   };
 
   const handleEditSave = async (record) => {
+    if (!editingValue.trim()) {
+      error(t('groupNameCannotBeEmpty'));
+      return;
+    }
+
     const groupToEdit = record;
     const updatedGroup = { ...groupToEdit, name: editingValue, status: editingStatus };
 
@@ -102,13 +107,14 @@ const Group = () => {
         group.name.toLowerCase().includes(searchText.toLowerCase())
       ));
       fetchGroups();
-      success(t('groupUpdatedSuccessfully'));
-    } catch (err) {
-      error(t('failedToUpdateGroup'));
-    } finally {
       setEditingIndex(null);
       setEditingValue('');
       setEditingStatus(true);
+      success(t('groupUpdatedSuccessfully'));
+    } catch (err) {
+      error(t('failedToUpdateGroup'));
+      setEditingValue(originalData.name);
+      setEditingStatus(originalData.status);
     }
   };
 
