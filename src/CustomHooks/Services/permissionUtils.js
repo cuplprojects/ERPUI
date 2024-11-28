@@ -11,6 +11,10 @@ const isDevelopmentMode = import.meta.env.VITE_APP_MODE === 'development';
  * @returns {boolean} - True if the user has the permission or in development mode, false otherwise
  */
 export const hasPermission = (permission) => {
+  if (!permission) {
+    return true;
+  }
+
   if (isDevelopmentMode) {
     return true;
   }
