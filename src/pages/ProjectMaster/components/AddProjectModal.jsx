@@ -47,8 +47,10 @@ const AddProjectModal = ({
           <Row className="mb-3">
             <Col xs={12}>
               <Form.Group controlId="group">
-                <Form.Label className={customDarkText}>{t('group')}</Form.Label>
-                <Form.Select onChange={handleGroupChange}>
+                <Form.Label className={customDarkText}>{t('group')}
+                <span className='text-danger ms-2 fs-6'>*</span>
+                </Form.Label>
+                <Form.Select onChange={handleGroupChange} required>
                   <option value="">{t('selectGroup')}</option>
                   {groups.map((group) => (
                     <option key={group.id} value={group.id}>
@@ -56,14 +58,19 @@ const AddProjectModal = ({
                     </option>
                   ))}
                 </Form.Select>
+                <Form.Text className="text-danger">
+                  {form.getFieldError('group')?.[0]}
+                </Form.Text>
               </Form.Group>
             </Col>
           </Row>
           <Row className="mb-3">
             <Col xs={12}>
               <Form.Group controlId="type">
-                <Form.Label className={customDarkText}>{t('type')}</Form.Label>
-                <Form.Select onChange={handleTypeChange}>
+                <Form.Label className={customDarkText}>{t('type')}
+                <span className='text-danger ms-2 fs-6'>*</span>
+                </Form.Label>
+                <Form.Select onChange={handleTypeChange} disabled={!selectedGroup} required>
                   <option value="">{t('selectType')}</option>
                   {types.map((type) => (
                     <option key={type.typeId} value={type.typeId}>
@@ -71,6 +78,9 @@ const AddProjectModal = ({
                     </option>
                   ))}
                 </Form.Select>
+                <Form.Text className="text-danger">
+                  {form.getFieldError('type')?.[0]}
+                </Form.Text>
               </Form.Group>
             </Col>
           </Row>
@@ -78,8 +88,10 @@ const AddProjectModal = ({
             <Row className="mb-3">
               <Col xs={6}>
                 <Form.Group controlId="numberOfSeries">
-                  <Form.Label className={customDarkText}>{t('numberOfSeries')}</Form.Label>
-                  <Form.Select onChange={(e) => setNumberOfSeries(e.target.value)}>
+                  <Form.Label className={customDarkText}>{t('numberOfSeries')}
+                  <span className='text-danger ms-2 fs-6'>*</span>
+                  </Form.Label>
+                  <Form.Select onChange={(e) => setNumberOfSeries(e.target.value)} required>
                     <option value="">{t('selectNumberOfSeries')}</option>
                     {[1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
                       <option key={num} value={num}>
@@ -87,17 +99,32 @@ const AddProjectModal = ({
                       </option>
                     ))}
                   </Form.Select>
+                  <Form.Text className="text-danger">
+                    {form.getFieldError('numberOfSeries')?.[0]}
+                  </Form.Text>
                 </Form.Group>
               </Col>
               <Col xs={6}>
                 <Form.Group controlId="seriesName">
-                  <Form.Label className={customDarkText}>{t('seriesName')}</Form.Label>
+                  <Form.Label className={customDarkText}>{t('seriesName')}
+                  <span className='text-danger ms-2 fs-6'>*</span>
+                  </Form.Label>
                   <Form.Control
                     type="text"
-                    placeholder={t('enterSeriesName')}
+                    placeholder={t('ENTERSERIESNAME')}
                     maxLength={numberOfSeries}
                     style={{ textTransform: 'uppercase' }}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value.length > numberOfSeries) {
+                        // Optionally handle the case where the input exceeds the limit
+                      }
+                    }}
+                    required
                   />
+                  <Form.Text className="text-danger">
+                    {form.getFieldError('seriesName')?.[0]}
+                  </Form.Text>
                 </Form.Group>
               </Col>
             </Row>
@@ -105,14 +132,20 @@ const AddProjectModal = ({
           <Row className="mb-3">
             <Col xs={12}>
               <Form.Group controlId="name">
-                <Form.Label className={customDarkText}>{t('projectName')}</Form.Label>
+                <Form.Label className={customDarkText}>{t('projectName')}
+                <span className='text-danger ms-2 fs-6'>*</span>
+                </Form.Label>
                 <Form.Control
                   type="text"
                   placeholder={t('enterProjectName')}
                   value={projectName}
                   onChange={(e) => setProjectName(e.target.value)}
                   disabled={!selectedGroup || !selectedType}
+                  required
                 />
+                <Form.Text className="text-danger">
+                  {form.getFieldError('name')?.[0]}
+                </Form.Text>
               </Form.Group>
             </Col>
           </Row>
@@ -133,6 +166,9 @@ const AddProjectModal = ({
                   min={0}
                   placeholder={t('enterQuantityThreshold')}
                 />
+                <Form.Text className="text-danger">
+                  {form.getFieldError('quantityThreshold')?.[0]}
+                </Form.Text>
               </Form.Group>
             </Col>
           </Row>

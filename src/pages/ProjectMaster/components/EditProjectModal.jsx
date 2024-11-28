@@ -55,7 +55,7 @@ const EditProjectModal = ({
                 label={<span className={customDarkText}>{t('type')}</span>}
                 rules={[{ required: true, message: t('pleaseSelectType') }]}
               >
-                <Select placeholder={t('selectType')}>
+                <Select placeholder={t('selectType')} disabled={!form.getFieldValue('group')}>
                   {types.map((type) => (
                     <Option key={type.typeId} value={type.typeId}>{type.types}</Option>
                   ))}

@@ -32,6 +32,8 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
   const [sortedInfo, setSortedInfo] = useState({});
   const [total, setTotal] = useState(0);
 
+  const BOOKLET_TYPE_ID = 1
+
   useEffect(() => {
     getProjects();
     getGroups();
@@ -115,6 +117,14 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
       noOfSeries: values.numberOfSeries,
       seriesName: values.seriesName
     };
+
+  // Check if the selected type is "booklet"
+  if (selectedType.types.toLowerCase === 'booklet') {
+    if (values.numberOfSeries !== values.seriesName.length) {
+      message.error(t('seriesNameLengthMismatch'));
+      return;
+    }
+  }
 
     try {
       await API.put(`/Project/${editingProject.projectId}`, updatedProject);
@@ -221,7 +231,7 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
     const selectedGroupId = parseInt(event.target.value, 10);
     const selectedGroupObj = groups.find((group) => group.id === selectedGroupId);
     setSelectedGroup(selectedGroupObj);
-    
+
     if (selectedGroupObj && selectedType) {
       setProjectName(`${selectedGroupObj.name}-${selectedType.types}`);
     } else {
@@ -234,10 +244,19 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
     const selectedTypeObj = types.find((type) => type.typeId === selectedTypeId);
     setSelectedType(selectedTypeObj);
     
+    // Check if the selected type is "booklet" (case insensitive)
     if (selectedGroup && selectedTypeObj) {
-      setProjectName(`${selectedGroup.name}-${selectedTypeObj.types}`);
+      const typeName = selectedTypeObj.types.toLowerCase(); // Convert to lowercase for comparison
+      if (typeName === 'booklet') {
+        setProjectName(`${selectedGroup.name}-${selectedTypeObj.types}`);
+        setShowSeriesFields(true); // Show series fields
+      } else {
+        setProjectName(''); // Reset project name for other types
+        setShowSeriesFields(false); // Hide series fields
+      }
     } else {
       setProjectName('');
+      setShowSeriesFields(false); // Hide series fields if no group/type is selected
     }
   };
 
@@ -347,6 +366,8 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
         customLightText={customLightText}
         customLightBorder={customLightBorder}
         customDarkBorder={customDarkBorder}
+        numberOfSeries={numberOfSeries}
+        setNumberOfSeries={setNumberOfSeries}
         t={t}
       />
     </>
