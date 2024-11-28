@@ -611,7 +611,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
                                             {t('examTime')} <span style={{ color: 'red' }}>*</span>
                                         </>}
                                         validateStatus={formErrors.examTime ? "error" : ""}
-                                        help={formErrors.examTime}
+                                        help={formErrors.examTime || "Please enter the time in this format: 03:00 PM to 05:00 PM"}
                                     >
                                         <Input 
                                             size="small" 
