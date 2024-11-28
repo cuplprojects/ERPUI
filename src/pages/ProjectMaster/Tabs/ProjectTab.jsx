@@ -107,27 +107,30 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
   };
 
   const handleEditSave = async (values) => {
-    const updatedProject = {
-      ...editingProject,
-      name: values.name,
-      description: values.description,
-      status: values.status,
-      quantityThreshold: values.quantityThreshold,
-      groupId: values.group,
-      typeId: values.type,
-      noOfSeries: values.numberOfSeries,
-      seriesName: values.seriesName
-    };
-
-    // Check if the selected type is "booklet"
-    if (selectedType.types.toLowerCase === 'booklet') {
-      if (values.numberOfSeries !== values.seriesName.length) {
-        message.error(t('seriesNameLengthMismatch'));
-        return;
-      }
-    }
-
     try {
+      // Find the selected type from the types array
+      const selectedTypeObj = types.find(type => type.typeId === values.type);
+      
+      const updatedProject = {
+        ...editingProject,
+        name: values.name,
+        description: values.description,
+        status: values.status,
+        quantityThreshold: values.quantityThreshold,
+        groupId: values.group,
+        typeId: values.type,
+        noOfSeries: values.numberOfSeries || 0,
+        seriesName: values.seriesName || ''
+      };
+
+      // Check if the selected type is "booklet"
+      if (selectedTypeObj?.types.toLowerCase() === 'booklet') {
+        if (values.numberOfSeries !== values.seriesName?.length) {
+          message.error(t('seriesNameLengthMismatch'));
+          return;
+        }
+      }
+
       await API.put(`/Project/${editingProject.projectId}`, updatedProject);
       const updatedProjects = projects.map(p =>
         p.projectId === editingProject.projectId ? updatedProject : p
