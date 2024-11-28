@@ -118,13 +118,13 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
       seriesName: values.seriesName
     };
 
-  // Check if the selected type is "booklet"
-  if (selectedType.types.toLowerCase === 'booklet') {
-    if (values.numberOfSeries !== values.seriesName.length) {
-      message.error(t('seriesNameLengthMismatch'));
-      return;
+    // Check if the selected type is "booklet"
+    if (selectedType.types.toLowerCase === 'booklet') {
+      if (values.numberOfSeries !== values.seriesName.length) {
+        message.error(t('seriesNameLengthMismatch'));
+        return;
+      }
     }
-  }
 
     try {
       await API.put(`/Project/${editingProject.projectId}`, updatedProject);
@@ -243,7 +243,7 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
     const selectedTypeId = parseInt(event.target.value, 10);
     const selectedTypeObj = types.find((type) => type.typeId === selectedTypeId);
     setSelectedType(selectedTypeObj);
-    
+
     // Check if the selected type is "booklet" (case insensitive)
     if (selectedGroup && selectedTypeObj) {
       const typeName = selectedTypeObj.types.toLowerCase(); // Convert to lowercase for comparison
@@ -253,10 +253,12 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
       } else {
         setProjectName(''); // Reset project name for other types
         setShowSeriesFields(false); // Hide series fields
+        setProjectName(`${selectedGroup.name}-${selectedTypeObj.types}`);
       }
     } else {
       setProjectName('');
       setShowSeriesFields(false); // Hide series fields if no group/type is selected
+      setProjectName(`${selectedGroup.name}-${selectedTypeObj.types}`);
     }
   };
 
@@ -343,9 +345,6 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
         selectedGroup={selectedGroup}
         selectedType={selectedType}
       />
-
-
-
 
       <EditProjectModal
         visible={isEditModalVisible}

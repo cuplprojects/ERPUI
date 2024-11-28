@@ -157,8 +157,8 @@ const AddProjectModal = ({
               </Form.Group>
             </Col>
           </Row>
-          <Row className="mb-3">
-            <Col xs={12}>
+          <Row className="mb-3 d-flex align-items-center">
+            <Col xs={9}>
               <Form.Group controlId="quantityThreshold">
                 <Form.Label className={customDarkText}>{t('quantityThreshold')}</Form.Label>
                 <Form.Control
@@ -171,11 +171,9 @@ const AddProjectModal = ({
                 </Form.Text>
               </Form.Group>
             </Col>
-          </Row>
-          <Row className="mb-3">
-            <Col xs={12}>
+            <Col xs={3} className="mt-3 d-flex align-items-center">
               <Form.Group controlId="status" className={customDarkText}>
-                <Form.Check type="switch" label={t('status')} />
+                <Form.Check type="switch" label={t('status')} className='fs-4'/>
               </Form.Group>
             </Col>
           </Row>
