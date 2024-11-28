@@ -30,7 +30,11 @@ const UserLayout = () => {
   const customLight = cssClasses[2];
 
   const checkPermissionAndRender = (permission, Component) => {
-    return hasPermission(permission) ? <Component /> : <Navigate to="/cudashboard" replace />;
+    if (permission) {
+      return hasPermission(permission) ? <Component /> : <Navigate to="/cudashboard" replace />;
+    } else {
+      return <Component />;
+    }
   };
 
   return (

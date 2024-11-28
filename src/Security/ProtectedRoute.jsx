@@ -8,20 +8,30 @@ import { ToastContainer } from 'react-toastify';
 class ErrorBoundary extends React.Component {
     constructor(props) {
         super(props);
-        this.state = { hasError: false };
+        this.state = { hasError: false, error: null };
     }
 
     static getDerivedStateFromError(error) {
-        return { hasError: true };
+        return { hasError: true, error };
     }
 
     componentDidCatch(error, errorInfo) {
         console.error('Error caught by boundary:', error, errorInfo);
+        // Check if error is related to undefined property access
+        if (error instanceof TypeError && error.message.includes('Cannot read properties of undefined')) {
+            // Redirect to login for auth-related errors
+            return <Navigate to="/login" replace />;
+        }
     }
 
     render() {
         if (this.state.hasError) {
-            return <Navigate to="/404" replace />;
+            // Handle TypeError specifically
+            if (this.state.error instanceof TypeError && 
+                this.state.error.message.includes('Cannot read properties of undefined')) {
+                return <Navigate to="/login" replace />;
+            }
+            return <Navigate to="/cudashboard" replace />;
         }
 
         return this.props.children;
