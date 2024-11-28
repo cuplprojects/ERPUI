@@ -32,6 +32,8 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
   const [sortedInfo, setSortedInfo] = useState({});
   const [total, setTotal] = useState(0);
 
+  // const BOOKLET_TYPE_ID = 1
+
   useEffect(() => {
     getProjects();
     getGroups();
@@ -77,7 +79,7 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
 
     const newProject = {
       name: projectName,
-      status: values.status || false,
+      status: values.status || true,
       description: values.description || '',
       groupId: selectedGroup.id,
       typeId: selectedType.typeId,
@@ -88,6 +90,7 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
 
     try {
       const response = await API.post('/Project', newProject);
+      getProjects();
       setProjects([...projects, response.data]);
       form.resetFields();
       setIsModalVisible(false);
@@ -104,19 +107,30 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
   };
 
   const handleEditSave = async (values) => {
-    const updatedProject = {
-      ...editingProject,
-      name: values.name,
-      description: values.description,
-      status: values.status,
-      quantityThreshold: values.quantityThreshold,
-      groupId: values.group,
-      typeId: values.type,
-      noOfSeries: values.numberOfSeries,
-      seriesName: values.seriesName
-    };
-
     try {
+      // Find the selected type from the types array
+      const selectedTypeObj = types.find(type => type.typeId === values.type);
+      
+      const updatedProject = {
+        ...editingProject,
+        name: values.name,
+        description: values.description,
+        status: values.status,
+        quantityThreshold: values.quantityThreshold,
+        groupId: values.group,
+        typeId: values.type,
+        noOfSeries: values.numberOfSeries || 0,
+        seriesName: values.seriesName || ''
+      };
+
+      // Check if the selected type is "booklet"
+      if (selectedTypeObj?.types.toLowerCase() === 'booklet') {
+        if (values.numberOfSeries !== values.seriesName?.length) {
+          message.error(t('seriesNameLengthMismatch'));
+          return;
+        }
+      }
+
       await API.put(`/Project/${editingProject.projectId}`, updatedProject);
       const updatedProjects = projects.map(p =>
         p.projectId === editingProject.projectId ? updatedProject : p
@@ -221,7 +235,7 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
     const selectedGroupId = parseInt(event.target.value, 10);
     const selectedGroupObj = groups.find((group) => group.id === selectedGroupId);
     setSelectedGroup(selectedGroupObj);
-    
+
     if (selectedGroupObj && selectedType) {
       setProjectName(`${selectedGroupObj.name}-${selectedType.types}`);
     } else {
@@ -233,11 +247,22 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
     const selectedTypeId = parseInt(event.target.value, 10);
     const selectedTypeObj = types.find((type) => type.typeId === selectedTypeId);
     setSelectedType(selectedTypeObj);
-    
+
+    // Check if the selected type is "booklet" (case insensitive)
     if (selectedGroup && selectedTypeObj) {
-      setProjectName(`${selectedGroup.name}-${selectedTypeObj.types}`);
+      const typeName = selectedTypeObj.types.toLowerCase(); // Convert to lowercase for comparison
+      if (typeName === 'booklet') {
+        setProjectName(`${selectedGroup.name}-${selectedTypeObj.types}`);
+        setShowSeriesFields(true); // Show series fields
+      } else {
+        setProjectName(''); // Reset project name for other types
+        setShowSeriesFields(false); // Hide series fields
+        setProjectName(`${selectedGroup.name}-${selectedTypeObj.types}`);
+      }
     } else {
       setProjectName('');
+      setShowSeriesFields(false); // Hide series fields if no group/type is selected
+      setProjectName(`${selectedGroup.name}-${selectedTypeObj.types}`);
     }
   };
 
@@ -301,6 +326,7 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
           setSelectedGroup(null);
           setSelectedType(null);
         }}
+
         form={form}
         onFinish={handleAddProject}
         groups={groups}
@@ -325,9 +351,6 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
         selectedType={selectedType}
       />
 
-
-
-
       <EditProjectModal
         visible={isEditModalVisible}
         onCancel={() => {
@@ -347,6 +370,8 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
         customLightText={customLightText}
         customLightBorder={customLightBorder}
         customDarkBorder={customDarkBorder}
+        numberOfSeries={numberOfSeries}
+        setNumberOfSeries={setNumberOfSeries}
         t={t}
       />
     </>

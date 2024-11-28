@@ -22,17 +22,6 @@ const DragHandle = SortableHandle(({ disabled }) => {
 const SortableRow = SortableElement(({ process, index, features, editingProcessId, editingFeatures, handleFeatureChange, handleSaveFeatures, handleCancelEdit, handleEdit, independentProcesses, disabled, handleThresholdChange }) => {
   const { t } = useTranslation();
 
-  // const DragHandle = SortableHandle(({ disabled }) => (
-  //   <span style={{ 
-  //     cursor: disabled ? 'not-allowed' : 'grab', 
-  //     marginRight: '8px', 
-  //     opacity: disabled ? 0.5 : 1,
-  //     display: disabled ? 'none' : 'inline' 
-  //   }} aria-hidden={disabled ? "true" : "false"}>⣿</span>
-  // ));
-
-  // const SortableRow = SortableElement(({ process, index, features, editingProcessId, editingFeatures, handleFeatureChange, handleSaveFeatures, handleCancelEdit, handleEdit, independentProcesses, disabled, handleThresholdChange }) => {
-
   return (
     <tr style={{ opacity: 1, background: 'white', margin: '10px' }}>
       <td>
