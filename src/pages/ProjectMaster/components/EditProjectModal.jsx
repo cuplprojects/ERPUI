@@ -30,6 +30,8 @@ const EditProjectModal = ({
       onHide={onCancel}
       size="lg"
       centered
+      backdrop="static"
+      keyboard={false}
     >
       <Modal.Header className={`${customDark} `}>
         <Modal.Title className={`${customLightText} `}>{t('editProject')}</Modal.Title>

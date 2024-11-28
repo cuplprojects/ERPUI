@@ -45,7 +45,15 @@ const AddProjectModal = ({
 
   
   return (
-    <Modal show={visible} onHide={onCancel} size="lg" centered className='rounded'>
+    <Modal 
+      show={visible} 
+      onHide={onCancel} 
+      size="lg" 
+      centered 
+      className='rounded'
+      backdrop="static"
+      keyboard={false}
+    >
       <Modal.Header closeButton={false} className={`${customDark} ${customLightText}`}>
         <Modal.Title>{t('addNewProject')}</Modal.Title>
       </Modal.Header>
