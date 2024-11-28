@@ -21,15 +21,16 @@ import CuDashboard from '../pages/CuDashboard';
 import AddProjectProcess from '../pages/ProjectMaster/Tabs/AddProjectProcess';
 import { hasPermission } from '../CustomHooks/Services/permissionUtils';
 
-const Userlayout = () => {
+
+const UserLayout = () => {
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
   const customDark = cssClasses[0];
   const customMid = cssClasses[1];
   const customLight = cssClasses[2];
 
-  const renderProtectedRoute = (permission, Component) => {
-    return hasPermission(permission) ? <Component /> : <Navigate to="/login" replace />;
+  const checkPermissionAndRender = (permission, Component) => {
+    return hasPermission(permission) ? <Component /> : <Navigate to="/cudashboard" replace />;
   };
 
   return (
@@ -45,20 +46,20 @@ const Userlayout = () => {
           <div className={`flex-grow-1 d-fle m-2 p-3 `} style={{ zIndex: "3" }}>
             <Routes>
               <Route path="/" element={<Navigate to="/cudashboard" replace />} />
-              <Route path="/cudashboard" element={renderProtectedRoute("5", CuDashboard)} />
-              <Route path="/dashboard/:encryptedProjectId" element={renderProtectedRoute("1", MainDashboard)} />
-              <Route path="/master" element={renderProtectedRoute("2", Masters)} />
-              <Route path="/AddProjectProcess/:projectId" element={renderProtectedRoute("2.4", AddProjectProcess)} />
+              <Route path="/cudashboard" element={checkPermissionAndRender("5", CuDashboard)} />
+              <Route path="/dashboard/:encryptedProjectId" element={checkPermissionAndRender("1", MainDashboard)} />
+              <Route path="/master" element={checkPermissionAndRender("2", Masters)} />
+              <Route path="/AddProjectProcess/:projectId" element={checkPermissionAndRender("2.4", AddProjectProcess)} />
 
               {/* --------------- User Menu Routes -------------- */}
-              <Route path="/profile" element={renderProtectedRoute("3", Profile)} />
-              <Route path="/settings" element={renderProtectedRoute("3", UserSettings)} />
-              <Route path="/change-password" element={renderProtectedRoute("3", ChangePassword)} />
+              <Route path="/profile" element={checkPermissionAndRender("3", Profile)} />
+              <Route path="/settings" element={checkPermissionAndRender("3", UserSettings)} />
+              <Route path="/change-password" element={checkPermissionAndRender("3", ChangePassword)} />
 
-              <Route path="/quantity-sheet-uploads/:encryptedProjectId" element={renderProtectedRoute("2.4", QtySheetUpload)} />
+              <Route path="/quantity-sheet-uploads/:encryptedProjectId" element={checkPermissionAndRender("2.4", QtySheetUpload)} />
               <Route path="/project-details/:encryptedProjectId/:encryptedLotNo" element={<ProcessTable />} />
-              <Route path="/labels" element={renderProtectedRoute("3", Labels)} />
-              <Route path="/reports" element={renderProtectedRoute("3", Reports)} />
+              <Route path="/labels" element={checkPermissionAndRender("3", Labels)} />
+              <Route path="/reports" element={checkPermissionAndRender("3", Reports)} />
 
               <Route path="/*" element={<Navigate to="/404" replace />} />
               <Route path="/404" element={<PageNotFound />} />
@@ -72,4 +73,4 @@ const Userlayout = () => {
   );
 };
 
-export default Userlayout;
+export default UserLayout;
