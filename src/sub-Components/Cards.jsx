@@ -128,7 +128,7 @@ const Cards = ({ item, onclick, disableProject, activeCardStyle }) => {
               <div className="upload-button" onClick={handleUploadClick} style={{ opacity: isUploadDisabled ? 0.5 : 1, cursor: isUploadDisabled ? 'not-allowed' : 'pointer' }}>
                 <FaUpload />
               </div>
-            </Tooltip>}
+            </Tooltip>
           </div>
 
           <p className="p-0 m-0">{item.completionPercentage}% {t("completed")}</p>
