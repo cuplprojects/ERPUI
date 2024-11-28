@@ -81,12 +81,19 @@ const Team = () => {
         userMap[user.userId] = `${user.firstName} ${user.lastName}`;
       });
 
+      const processResponse = await API.get("/Processes");
+      const processesData = processResponse.data;
+      const processMap = {};
+      processesData.forEach((process) => {
+        processMap[process.id] = process.name;
+      });
+
       const updatedTeams = teamsData.map((team) => ({
         ...team,
         userNames: team.users
           .map((user) => userMap[user.id] || t("unknown"))
           .join(", "),
-        processName: processes.find(p => p.id === team.processId)?.name || t("unknown")
+        processName: processMap[team.processId] || t("unknown")
       }));
 
       setTeams(updatedTeams);
