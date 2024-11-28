@@ -20,6 +20,7 @@ import Reports from '../pages/Reports';
 import CuDashboard from '../pages/CuDashboard';
 import AddProjectProcess from '../pages/ProjectMaster/Tabs/AddProjectProcess';
 import { hasPermission } from '../CustomHooks/Services/permissionUtils';
+import { ToastContainer } from 'react-toastify';
 
 
 const UserLayout = () => {
@@ -31,9 +32,9 @@ const UserLayout = () => {
 
   const checkPermissionAndRender = (permission, Component) => {
     if (permission) {
-      return hasPermission(permission) ? <Component /> : <Navigate to="/cudashboard" replace />;
+      return hasPermission(permission) ? <><ToastContainer /><Component /></> : <Navigate to="/cudashboard" replace />;
     } else {
-      return <Component />;
+      return <><ToastContainer /><Component /></>;
     }
   };
 

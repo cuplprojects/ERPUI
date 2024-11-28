@@ -70,7 +70,6 @@ const ProtectedRoute = ({ component: Component }) => {
 
     return (
         <ErrorBoundary>
-            <ToastContainer />
             <Component />
         </ErrorBoundary>
     );
