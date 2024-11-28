@@ -32,7 +32,7 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
   const [sortedInfo, setSortedInfo] = useState({});
   const [total, setTotal] = useState(0);
 
-  const BOOKLET_TYPE_ID = 1
+  // const BOOKLET_TYPE_ID = 1
 
   useEffect(() => {
     getProjects();
@@ -79,7 +79,7 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
 
     const newProject = {
       name: projectName,
-      status: values.status || false,
+      status: values.status || true,
       description: values.description || '',
       groupId: selectedGroup.id,
       typeId: selectedType.typeId,
@@ -90,6 +90,7 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
 
     try {
       const response = await API.post('/Project', newProject);
+      getProjects();
       setProjects([...projects, response.data]);
       form.resetFields();
       setIsModalVisible(false);
@@ -322,7 +323,7 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
           setSelectedGroup(null);
           setSelectedType(null);
         }}
-        
+
         form={form}
         onFinish={handleAddProject}
         groups={groups}

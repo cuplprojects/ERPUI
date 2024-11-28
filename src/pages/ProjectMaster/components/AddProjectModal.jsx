@@ -27,41 +27,19 @@ const AddProjectModal = ({
   selectedGroup,
   selectedType
 }) => {
+  const [status, setStatus] = useState(true);
+
   const handleSubmit = (event) => {
     event.preventDefault();
     form.setFieldsValue({
       name: projectName,
       group: selectedGroup?.id,
-      type: selectedType?.typeId
+      type: selectedType?.typeId,
+      status: status
     });
     form.validateFields().then(onFinish).catch((err) => console.log(err));
   };
-  // const [projectName, setProjectName] = useState('');
-  const validateSeriesInput = (_, value) => {
-    // Check if the type is "booklet"
-    if (selectedType && selectedType.types.toLowerCase() === 'booklet') {
-      if (!value) {
-        return Promise.reject(new Error('Series name is required'));
-      }
 
-      if (value.length !== numberOfSeries) {
-        return Promise.reject(new Error(`Series name must be ${numberOfSeries} characters long`));
-      }
-
-      // Convert to uppercase for validation
-      value = value.toUpperCase();
-
-      // Check if characters are sequential but can start from any letter
-      const startCharCode = value.charCodeAt(0);
-      for (let i = 1; i < value.length; i++) {
-        if (value.charCodeAt(i) !== startCharCode + i) {
-          return Promise.reject(new Error('Characters must be sequential'));
-        }
-      }
-    }
-
-    return Promise.resolve();
-  };
   
   return (
     <Modal show={visible} onHide={onCancel} size="lg" centered className='rounded'>
@@ -199,7 +177,16 @@ const AddProjectModal = ({
             </Col>
             <Col xs={3} className="mt-3 d-flex align-items-center">
               <Form.Group controlId="status" className={customDarkText}>
-                <Form.Check type="switch" label={t('status')} className='fs-4' />
+                <Form.Check 
+                  type="switch" 
+                  label={t('status')} 
+                  checked={status}
+                  className='fs-4'
+                  onChange={(e) => {
+                    setStatus(e.target.checked);
+                    form.setFieldsValue({ status: e.target.checked });
+                  }}
+                />
               </Form.Group>
             </Col>
           </Row>
