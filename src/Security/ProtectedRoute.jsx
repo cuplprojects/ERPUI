@@ -28,7 +28,7 @@ class ErrorBoundary extends React.Component {
     }
 }
 
-const ProtectedRoute = ({ component: Component, permission }) => {
+const ProtectedRoute = ({ component: Component }) => {
     const token = useUserToken();
     const { logout } = AuthService;
 
@@ -45,22 +45,16 @@ const ProtectedRoute = ({ component: Component, permission }) => {
     };
 
     useEffect(() => {
-        console.log('Token:', token);
-        console.log('Permission required:', permission);
-        
-        if (!token || !isTokenValid(token)) {
-            console.log('Invalid or expired token - logging out');
-            logout();
-        }
-    }, [token, logout, permission]);
+        const handleInvalidToken = async () => {
+            if (!token || !isTokenValid(token)) {
+                console.log('Invalid or expired token - redirecting to login');
+                await logout();
+            }
+        };
+        handleInvalidToken();
+    }, [token, logout]);
 
-    if (!token) {
-        console.log('No token found - redirecting to login');
-        return <Navigate to="/login" replace />;
-    }
-
-    if (!isTokenValid(token)) {
-        console.log('Token expired - redirecting to login');
+    if (!token || !isTokenValid(token)) {
         return <Navigate to="/login" replace />;
     }
 
