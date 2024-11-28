@@ -30,6 +30,8 @@ const Cards = ({ item, onclick, disableProject, activeCardStyle }) => {
   ] = getCssClasses();
   const [hasProcesses, setHasProcesses] = useState(false);
   const [transactionStatus, setTransactionStatus] = useState("Pending");
+  const [tooltipVisible, setTooltipVisible] = useState(false);
+  const [isUploadDisabled, setIsUploadDisabled] = useState(true);
 
   useEffect(() => {
     if (item?.projectId) {
@@ -49,10 +51,16 @@ const Cards = ({ item, onclick, disableProject, activeCardStyle }) => {
   const fetchProjectProcess = async () => {
     try {
       const response = await API.get(`/ProjectProcess/GetProjectProcesses/${item.projectId}`);
-      setHasProcesses(response.data.length > 1);
+      if (response.data.length === 0) {
+        setIsUploadDisabled(true);
+      } else {
+        setHasProcesses(true);
+        setIsUploadDisabled(false);
+      }
     } catch (error) {
       console.error("Error fetching project processes:", error);
       setHasProcesses(false);
+      setIsUploadDisabled(true);
     }
   };
 
@@ -75,6 +83,10 @@ const Cards = ({ item, onclick, disableProject, activeCardStyle }) => {
   // Navigate to the dashboard and send projectId as a route parameter
   const handleCardClick = () => {
     if (!disableProject) {
+      setTooltipVisible(true);
+      setTimeout(() => {
+        setTooltipVisible(false);
+      }, 2000);
       return;
     }
     if (supervisor) {
@@ -95,7 +107,7 @@ const Cards = ({ item, onclick, disableProject, activeCardStyle }) => {
 
   return (
     <StyledWrapper>
-      <Tooltip title={!disableProject ? t("uploadQuantitySheetfirst") : ""} placement="below">
+      <Tooltip title={isUploadDisabled ? t("firstAddProjectConfiguration") : (!disableProject ? t("uploadQuantitySheetfirst") : "")} placement="below" visible={tooltipVisible}>
         <div
           className={` card ${
             !activeCardStyle
@@ -111,8 +123,8 @@ const Cards = ({ item, onclick, disableProject, activeCardStyle }) => {
           <div className="header">
             <h4 className="project-name">{item.name}</h4>
 
-            <Tooltip title={t("Upload Quantity Sheet")} placement="top">
-              <div className="upload-button" onClick={handleUploadClick}>
+            <Tooltip title={isUploadDisabled ? t("firstAddProjectConfiguration") : t("uploadQuantitySheet")} placement="top">
+              <div className="upload-button" onClick={handleUploadClick} style={{ opacity: isUploadDisabled ? 0.5 : 1, cursor: isUploadDisabled ? 'not-allowed' : 'pointer' }}>
                 <FaUpload />
               </div>
             </Tooltip>
@@ -122,7 +134,7 @@ const Cards = ({ item, onclick, disableProject, activeCardStyle }) => {
           <p className="p-0 m-0">{item.remainingPercentage}% {t("remaining")}</p>
           <p className="p-0 m-0">Status: {transactionStatus}</p>
 
-          <Tooltip title={t("View Project Info")} placement="top">
+          <Tooltip title={t("viewProjectInfo")} placement="top">
             <div
               className={`info-button ${!disableProject ? "disabled" : ""}`}
               onClick={handleInfoClick}
