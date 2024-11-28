@@ -549,12 +549,22 @@ const ProjectDetailsTable = ({
 
         const hasAlerts = Boolean(record.alerts && record.alerts !== "0"); // Check if alerts exist (not "0" and not empty/null)
         // Check if previous process exists and is completed
-        const isPreviousProcessCompleted =
-          !record.previousProcessData ||
-          record.previousProcessData.status === 2 ||
-          (record.previousProcessData.thresholdQty != null &&
-            record.previousProcessData.thresholdQty > record.previousProcessData.interimQuantity);
-
+        const isPreviousProcessCompleted = 
+        // 1. If there is no previous process data, return true
+        !record.previousProcessData || 
+        
+        // 2. If current process status is 0 or null/empty, check if thresholdQty is greater than interimQuantity or if previous status was 2
+        ((record.status === 0 || record.status === null || record.status === '') && (
+            (record.previousProcessData.thresholdQty != null && 
+                record.previousProcessData.thresholdQty > record.previousProcessData.interimQuantity) ||
+            record.previousProcessData.status === 2
+        )) || 
+        
+        // 3. If current process status is 1 and previous process status is 2, return true
+        (record.status === 1 && record.previousProcessData?.status === 2)||
+        // 4. If current process status is 2, return true
+        record.status === 2;
+    
         console.log("record", record);
         // Check if 'Assign Team' and 'Select Zone' data is populated
         const isZoneAssigned = Boolean(record.zoneId);
@@ -562,19 +572,6 @@ const ProjectDetailsTable = ({
 
         // Check if 'Select Machine' is required
         const hasSelectMachinePermission = hasFeaturePermission(10);
-
-        // Debug logging
-        console.log('Status check debug:', {
-          record,
-          isPreviousProcessCompleted,
-          hasSelectMachinePermission,
-          machineId: record.machineId,
-          isZoneAssigned,
-          isTeamAssigned,
-          interimQuantity: record.interimQuantity,
-          quantity: record.quantity,
-          hasFeaturePermission7: hasFeaturePermission(7)
-        });
 
         const requirements = []; // Array to hold the reasons
 
