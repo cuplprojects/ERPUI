@@ -9,6 +9,7 @@ import { Tooltip } from "antd";
 import API from "../CustomHooks/MasterApiHooks/api";
 import themeStore from "../store/themeStore";
 import { useStore } from "zustand";
+import { hasPermission } from "../CustomHooks/Services/permissionUtils";
 
 const Cards = ({ item, onclick, disableProject, activeCardStyle }) => {
   const navigate = useNavigate();
@@ -67,7 +68,7 @@ const Cards = ({ item, onclick, disableProject, activeCardStyle }) => {
   // Check transaction status
   const checkTransactionStatus = async () => {
     try {
-      const response = await API.get(`https://localhost:7212/api/Transactions/exists/${item.projectId}`);
+      const response = await API.get(`/Transactions/exists/${item.projectId}`);
       setTransactionStatus(response.data ? "Running" : "Pending");
     } catch (error) {
       if (error.response?.status === 404) {
@@ -127,7 +128,7 @@ const Cards = ({ item, onclick, disableProject, activeCardStyle }) => {
               <div className="upload-button" onClick={handleUploadClick} style={{ opacity: isUploadDisabled ? 0.5 : 1, cursor: isUploadDisabled ? 'not-allowed' : 'pointer' }}>
                 <FaUpload />
               </div>
-            </Tooltip>
+            </Tooltip>}
           </div>
 
           <p className="p-0 m-0">{item.completionPercentage}% {t("completed")}</p>

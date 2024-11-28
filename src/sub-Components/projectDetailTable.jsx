@@ -1141,43 +1141,95 @@ const ProjectDetailsTable = ({
               >
                 Update Status:
               </span>
-              <StatusToggle
-                initialStatusIndex={getSelectedStatus()} // Use the index returned by getSelectedStatus
-                onStatusChange={(newIndex) =>
-                  handleStatusChange(
-                    ["Pending", "Started", "Completed"][newIndex]
-                  )
+              {(() => {
+                const requirements = [];
+                const selectedRows = selectedRowKeys.map(srNo => 
+                  tableData.find(item => item.srNo === srNo)
+                ).filter(Boolean);
+
+                // Check if any selected row has alerts
+                const hasAlertsRow = selectedRows.find(row => row.alerts && row.alerts !== "0");
+                if (hasAlertsRow) {
+                  requirements.push(t("statusCannotBeChangedDueToAlerts"));
                 }
-                statusSteps={[
-                  { status: "Pending", color: "red" },
-                  { status: "Started", color: "blue" },
-                  { status: "Completed", color: "green" },
-                ]}
-                disabled={selectedRowKeys.some((srNo) => {
-                  const row = tableData.find((item) => item.srNo === srNo);
 
-                  // Validation logic for whether the status can be changed
-                  const isZoneAssigned =
-                    row.zoneId !== 0 && row.zoneId !== null;
-                  const isTeamAssigned = row.teamId && row.teamId.length > 0;
-                  const hasSelectMachinePermission = hasFeaturePermission(10); // Check if Select Machine permission exists
+                // Check previous process completion
+                const hasIncompletePrevious = selectedRows.find(row => {
+                  return row.previousProcessData && 
+                         row.previousProcessData.status !== 2 && 
+                         !(row.previousProcessData.thresholdQty != null && 
+                           row.previousProcessData.thresholdQty > row.previousProcessData.interimQuantity);
+                });
+                if (hasIncompletePrevious) {
+                  requirements.push(t("previousProcessErrorDescription"));
+                }
 
-                  const canChangeStatus = hasSelectMachinePermission
-                    ? row.machineId !== 0 && row.machineId !== null && isZoneAssigned && isTeamAssigned // Machine must be assigned if permission exists
-                    : isZoneAssigned && isTeamAssigned; // Otherwise, Zone and Team must be assigned
-                  const canBeCompleted =
-                    row.interimQuantity === row.quantity;
-                  // Add check for processSequence
-                  const isProcessSequenceOne = row.processSequence === 1;
+                // Check zone assignment if permission exists
+                if (hasFeaturePermission(4)) {
+                  const missingZone = selectedRows.find(row => !row.zoneId);
+                  if (missingZone) {
+                    requirements.push(t("zoneNotAssigned"));
+                  }
+                }
 
-                  return (
-                    row.alerts ||
-                    !canChangeStatus ||
-                    (getSelectedStatus() === 2 && !canBeCompleted) ||
-                    isProcessSequenceOne // Disable if processSequence is 1
-                  ); // Disable if there are alerts or the status cannot be changed
-                })}
-              />
+                // Check team assignment if permission exists
+                if (hasFeaturePermission(5)) {
+                  const missingTeam = selectedRows.find(row => !row.teamId?.length);
+                  if (missingTeam) {
+                    requirements.push(t("teamNotAssigned"));
+                  }
+                }
+
+                // Check machine assignment if permission exists
+                const hasSelectMachinePermission = hasFeaturePermission(10);
+                if (hasSelectMachinePermission) {
+                  const missingMachine = selectedRows.find(row => 
+                    row.machineId === 0 || row.machineId === null
+                  );
+                  if (missingMachine) {
+                    requirements.push(t("machineNotAssigned"));
+                  }
+                }
+
+                // Check completion requirements if trying to complete
+                if (getSelectedStatus() === 1 && hasFeaturePermission(7)) {
+                  const incompleteQuantity = selectedRows.find(row => 
+                    row.interimQuantity !== row.quantity
+                  );
+                  if (incompleteQuantity) {
+                    requirements.push(t("cannotSetStatusToCompletedInterimQuantityMustEqualQuantity"));
+                  }
+                }
+                
+
+                const StatusToggleComponent = (
+                  <StatusToggle
+                    initialStatusIndex={getSelectedStatus()}
+                    onStatusChange={(newIndex) =>
+                      handleStatusChange(
+                        ["Pending", "Started", "Completed"][newIndex]
+                      )
+                    }
+                    statusSteps={[
+                      { status: "Pending", color: "red" },
+                      { status: "Started", color: "blue" },
+                      { status: "Completed", color: "green" },
+                    ]}
+                    disabled={requirements.length > 0}
+                  />
+                );
+
+                return requirements.length > 0 ? (
+                  <Tooltip 
+                    title={requirements.map((req, index) => (
+                      <div key={index}>{req}</div>
+                    ))}
+                    placement="top"
+                  >
+                    <span>{StatusToggleComponent}</span>
+                  </Tooltip>
+                ) : StatusToggleComponent;
+              })()}
             </div>
           )}
         </Col>

@@ -402,6 +402,8 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
 
   // const BOOKLET_TYPE_ID = 1
 
+  // const BOOKLET_TYPE_ID = 1
+
   useEffect(() => {
     getProjects();
     getGroups();

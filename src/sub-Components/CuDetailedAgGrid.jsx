@@ -157,7 +157,7 @@ const CuDetailedAgGrid = ({ projectId , clickedProject }) => {
           }}
           size="small"
           bordered
-          scroll={{ y: 350 }}
+          scroll={{ x: 'max-content', y: 350 }}
           rowClassName={(record, index) => index % 2 === 0 ? 'striped-row' : ''}
           className={`${customDark === "default-dark" ? "thead-default" : ""}
             ${customDark === "red-dark" ? "thead-red" : ""}

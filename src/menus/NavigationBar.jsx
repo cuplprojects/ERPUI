@@ -44,7 +44,7 @@ const NavigationBar = ({ onLinkClick, onClose }) => {
    * Each item represents a link in the navigation bar
    */
   const navItems = useMemo(() => [
-    { id: "1", to: "/cudashboard", icon: BiSolidDashboard, text: t('cumulativeDashboard'), permission: "1" },
+    { id: "1", to: "/cudashboard", icon: BiSolidDashboard, text: t('cumulativeDashboard')},
     { id: "2", to: "/master", icon: IoIosSwitch, text: t('masterManagement'), permission: "2" },
     { id: "3", to: "/labels", icon: TbMessage2Cog , text: t('messageManagement'), permission: "3" },
     { id: "4", to: "/reports", icon: TbReportSearch, text: t('viewReports'), permission: "4" },
@@ -66,21 +66,24 @@ const NavigationBar = ({ onLinkClick, onClose }) => {
   return (
     <Container fluid className={`${customDark} py-4`} ref={navRef}>
       <Row className="justify-content-evenly g-4">
-        {navItems.map(item => (
-          // Render the navigation item only if the user has the required permission
-          hasPermission(item.permission) && (
-            <Col xs={6} sm={4} lg={2} key={item.id} className="text-center">
-              <Link 
-                to={item.to} 
-                className="text-white text-decoration-none d-flex flex-column align-items-center custom-zoom-btn" 
-                onClick={onLinkClick}
-              >
-                <item.icon style={{ width: "40px", height: "40px" }} />
-                <div className="mt-2">{item.text}</div>
-              </Link>
-            </Col>
-          )
-        ))}
+        {navItems.map(item => {
+          // If no permission defined or has permission, show the item
+          if (!item.permission || hasPermission(item.permission)) {
+            return (
+              <Col xs={6} sm={4} lg={2} key={item.id} className="text-center">
+                <Link 
+                  to={item.to} 
+                  className="text-white text-decoration-none d-flex flex-column align-items-center custom-zoom-btn" 
+                  onClick={onLinkClick}
+                >
+                  <item.icon style={{ width: "40px", height: "40px" }} />
+                  <div className="mt-2">{item.text}</div>
+                </Link>
+              </Col>
+            );
+          }
+          return null; // Hide item if permission check fails
+        })}
       </Row>
     </Container>
   );
