@@ -191,30 +191,22 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
             if (response.status === 204) {
                 notification.success({ 
                     message: isEditingProcess ? t('processUpdateSuccess') : t('processAddSuccess'),
-                    
                 });
                 setProcessModalVisible(false);
                 await fetchProcesses();
                 await fetchFeatures();
                 return;
-
-                if (response && response.data) {
-                    let processWithKey = response.data;
-                    if (typeof processWithKey !== 'object' || Array.isArray(processWithKey)) {
-                        console.warn('Unexpected response data type:', typeof processWithKey);
-                        processWithKey = { id: processWithKey, key: processWithKey.toString() };
-                    }
-                } else {
-                    console.error('Invalid response structure:', response);
-                    throw new Error('Invalid response structure: No data found');
-                }
             }
 
-            processWithKey.key = processWithKey.id ? processWithKey.id.toString() : '';
-            processWithKey.featureNames = processInstalledFeatures.map(featureId => {
-                const feature = features.find(f => f.id === Number(featureId));
-                return feature?.name;
-            }).filter(Boolean);
+            // Create processWithKey object
+            const processWithKey = {
+                ...newProcess,
+                key: newProcess.id.toString(),
+                featureNames: processInstalledFeatures.map(featureId => {
+                    const feature = features.find(f => f.id === Number(featureId));
+                    return feature?.name;
+                }).filter(Boolean)
+            };
 
             if (isEditingProcess) {
                 setProcesses(prevProcesses =>
@@ -231,7 +223,6 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
             onUpdateProcesses([...processes, processWithKey]);
             notification.success({
                 message: isEditingProcess ? t('processUpdatedSuccessfully') : t('newProcessAddedSuccessfully'),
-              
             });
 
         } catch (error) {
