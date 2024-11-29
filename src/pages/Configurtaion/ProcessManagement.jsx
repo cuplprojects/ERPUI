@@ -182,8 +182,10 @@ const ProcessManagement = ({ onUpdateProcesses, onAddProcess = () => { } }) => {
             let response;
             if (isEditingProcess) {
                 response = await API.put(`/Processes/${editingProcessId}`, newProcess);
+                fetchProcesses();
             } else {
                 response = await API.post('/Processes', newProcess);
+                fetchProcesses();
             }
 
             console.log('API Response:', response);
