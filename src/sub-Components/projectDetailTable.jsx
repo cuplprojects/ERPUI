@@ -229,7 +229,7 @@ const ProjectDetailsTable = ({
     }
 
     // Only check interim quantity if hasFeaturePermission(7) is true
-    if (hasFeaturePermission(7) && newStatusIndex === 2) {
+    if (hasFeaturePermission(4) && newStatusIndex === 2) {
       if (updatedRow.interimQuantity !== updatedRow.quantity) {
         showNotification('error', 'Status Update Failed', 'Interim Quantity must equal Quantity');
         return;
@@ -571,7 +571,7 @@ const ProjectDetailsTable = ({
         const isTeamAssigned = Boolean(record.teamId?.length);
 
         // Check if 'Select Machine' is required
-        const hasSelectMachinePermission = hasFeaturePermission(10);
+        const hasSelectMachinePermission = hasFeaturePermission(3);
 
         const requirements = []; // Array to hold the reasons
 
@@ -585,7 +585,7 @@ const ProjectDetailsTable = ({
             : isZoneAssigned && isTeamAssigned);
 
         // Only check interim quantity if hasFeaturePermission(7) is true
-        const canBeCompleted = !hasFeaturePermission(7) || record.interimQuantity === record.quantity;
+        const canBeCompleted = !hasFeaturePermission(4) || record.interimQuantity === record.quantity;
 
         console.log('Status conditions:', {
           canChangeStatus,
@@ -602,17 +602,17 @@ const ProjectDetailsTable = ({
           requirements.push(t("previousProcessErrorDescription")); 
         }
         if (!canChangeStatus) {
-          if (hasFeaturePermission(4) && !isZoneAssigned && !requirements.includes(t("zoneNotAssigned"))) {
+          if (hasFeaturePermission(1) && !isZoneAssigned && !requirements.includes(t("zoneNotAssigned"))) {
             requirements.push(t("zoneNotAssigned"));
           }
-          if (hasFeaturePermission(5) && !isTeamAssigned && !requirements.includes(t("teamNotAssigned"))) {
+          if (hasFeaturePermission(2) && !isTeamAssigned && !requirements.includes(t("teamNotAssigned"))) {
             requirements.push(t("teamNotAssigned")); 
           }
-          if (hasFeaturePermission(10) && (record.machineId === 0 || record.machineId === null) && !requirements.includes(t("machineNotAssigned"))) {
+          if (hasFeaturePermission(3) && (record.machineId === 0 || record.machineId === null) && !requirements.includes(t("machineNotAssigned"))) {
             requirements.push(t("machineNotAssigned"));
           }
         }
-        if (initialStatusIndex === 1 && !canBeCompleted && hasFeaturePermission(7) && !requirements.includes(t("cannotSetStatusToCompletedInterimQuantityMustEqualQuantity"))) {
+        if (initialStatusIndex === 1 && !canBeCompleted && hasFeaturePermission(4) && !requirements.includes(t("cannotSetStatusToCompletedInterimQuantityMustEqualQuantity"))) {
           requirements.push(t("cannotSetStatusToCompletedInterimQuantityMustEqualQuantity"));
         }
 
@@ -701,7 +701,7 @@ const ProjectDetailsTable = ({
     }
 
     // Only check interim quantity if hasFeaturePermission(7) is true
-    if (hasFeaturePermission(7) && newStatusIndex === 2) {
+    if (hasFeaturePermission(4) && newStatusIndex === 2) {
       const hasIncompleteQuantity = selectedRowKeys.some(key => {
         const row = tableData.find(row => row.srNo === key);
         return row.interimQuantity !== row.quantity;
@@ -793,23 +793,23 @@ const ProjectDetailsTable = ({
         selectedRowKeys.includes(row.srNo)
       );
 
-      if (action === "Alarm" && hasFeaturePermission(3)) {
+      if (action === "Alarm" && hasFeaturePermission(5)) {
         setAlarmModalShow(true);
         setAlarmModalData(selectedRows[0]); // Pass first selected row for single-row modals
-      } else if (action === "Interim Quantity" && hasFeaturePermission(7)) {
+      } else if (action === "Interim Quantity" && hasFeaturePermission(4)) {
         setInterimQuantityModalShow(true);
         setInterimQuantityModalData(selectedRows[0]); // Pass first selected row for single-row modals
       } else if (action === "Remarks") {
         setRemarksModalShow(true);
         setRemarksModalData(selectedRows[0]); // Pass first selected row for single-row modals
-      } else if (action === "Select Zone" && hasFeaturePermission(4)) {
+      } else if (action === "Select Zone" && hasFeaturePermission(1)) {
         setSelectZoneModalShow(true);
 
         setSelectZoneModalData(selectedRows); // Pass array of all selected rows
-      } else if (action === "Select Machine" && hasFeaturePermission(10)) {
+      } else if (action === "Select Machine" && hasFeaturePermission(3)) {
         setSelectMachineModalShow(true);
         setSelectMachineModalData(selectedRows); // Pass array of all selected rows
-      } else if (action === "Assign Team" && hasFeaturePermission(5)) {
+      } else if (action === "Assign Team" && hasFeaturePermission(2)) {
         setAssignTeamModalShow(true);
         setAssignTeamModalData(selectedRows); // Pass array of all selected rows
       }
@@ -949,12 +949,12 @@ const ProjectDetailsTable = ({
 
   const menu = (
     <Menu>
-      {hasFeaturePermission(3) && !isCompleted && selectedRowKeys.length === 1 && (
+      {hasFeaturePermission(5) && !isCompleted && selectedRowKeys.length === 1 && (
         <Menu.Item onClick={() => handleDropdownSelect('Alarm')}>
           {t("alarm")}
         </Menu.Item>
       )}
-      {hasFeaturePermission(7) && !isCompleted && isStarted && selectedRowKeys.length === 1 && (
+      {hasFeaturePermission(4) && !isCompleted && isStarted && selectedRowKeys.length === 1 && (
         <Menu.Item onClick={() => handleDropdownSelect('Interim Quantity')}>
           {t("interimQuantity")}
         </Menu.Item>
@@ -965,15 +965,15 @@ const ProjectDetailsTable = ({
         </Menu.Item>
       )}
       <Menu.Item onClick={() => setColumnModalShow(true)}>{t("columns")}</Menu.Item>
-      {hasFeaturePermission(4) && (
+      {hasFeaturePermission(1) && (
         <Menu.Item onClick={() => handleDropdownSelect('Select Zone')}
           disabled={selectedRowKeys.length === 0}>{t("selectZone")}</Menu.Item>
       )}
-      {hasFeaturePermission(10) && (
+      {hasFeaturePermission(3) && (
         <Menu.Item onClick={() => handleDropdownSelect('Select Machine')}
           disabled={selectedRowKeys.length === 0}>{t("selectMachine")}</Menu.Item>
       )}
-      {hasFeaturePermission(5) && (
+      {hasFeaturePermission(2) && (
         <Menu.Item onClick={() => handleDropdownSelect('Assign Team')}
           disabled={selectedRowKeys.length === 0}>{t('assignTeam')}</Menu.Item>
       )}
@@ -1162,7 +1162,7 @@ const ProjectDetailsTable = ({
                 }
 
                 // Check zone assignment if permission exists
-                if (hasFeaturePermission(4)) {
+                if (hasFeaturePermission(1)) {
                   const missingZone = selectedRows.find(row => !row.zoneId);
                   if (missingZone) {
                     requirements.push(t("zoneNotAssigned"));
@@ -1170,7 +1170,7 @@ const ProjectDetailsTable = ({
                 }
 
                 // Check team assignment if permission exists
-                if (hasFeaturePermission(5)) {
+                if (hasFeaturePermission(2)) {
                   const missingTeam = selectedRows.find(row => !row.teamId?.length);
                   if (missingTeam) {
                     requirements.push(t("teamNotAssigned"));
@@ -1178,7 +1178,7 @@ const ProjectDetailsTable = ({
                 }
 
                 // Check machine assignment if permission exists
-                const hasSelectMachinePermission = hasFeaturePermission(10);
+                const hasSelectMachinePermission = hasFeaturePermission(3);
                 if (hasSelectMachinePermission) {
                   const missingMachine = selectedRows.find(row => 
                     row.machineId === 0 || row.machineId === null
@@ -1189,7 +1189,7 @@ const ProjectDetailsTable = ({
                 }
 
                 // Check completion requirements if trying to complete
-                if (getSelectedStatus() === 1 && hasFeaturePermission(7)) {
+                if (getSelectedStatus() === 1 && hasFeaturePermission(4)) {
                   const incompleteQuantity = selectedRows.find(row => 
                     row.interimQuantity !== row.quantity
                   );
