@@ -408,7 +408,10 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
     const validateForm = () => {
         const errors = {};
         if (!newRowData.catchNo) errors.catchNo = t('catchNoRequired');
+        if (!newRowData.examDate) errors.examDate = t('examDateRequired');
+        if (!newRowData.examTime) errors.examTime = t('examTimeRequired');
         if (!newRowData.quantity || newRowData.quantity <= 0) errors.quantity = t('validQuantityRequired');
+        
         setFormErrors(errors);
         return Object.keys(errors).length === 0;
     };
@@ -582,6 +585,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
                                         label={<>
                                             {t('examDate')} 
                                         </>}
+                                        validateStatus={formErrors.examDate ? "error" : ""}
                                         help={formErrors.examDate}
                                     >
                                         <Input
@@ -602,6 +606,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
                                         label={<>
                                             {t('examTime')}
                                         </>}
+                                        validateStatus={formErrors.examTime ? "error" : ""}
                                         help={formErrors.examTime || "Please enter the time in this format: 03:00 PM to 05:00 PM"}
                                     >
                                         <Input 
@@ -700,22 +705,22 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
 
             {editingRow !== null && (
                 <BootstrapModal show={true} onHide={handleModalClose}>
-                    <BootstrapModal.Header className={`${customDark} ${customLightText}`}>
+                    <BootstrapModal.Header closeButton>
                         <BootstrapModal.Title>{t('editProcess')} - {t('catchNo')}: {dataSource.find(item => item.key === editingRow)?.catchNo}</BootstrapModal.Title>
                     </BootstrapModal.Header>
-                    <BootstrapModal.Body className={`${customLight} ${customDarkText}`}>
+                    <BootstrapModal.Body>
                         {t(modalMessage)}
                         <div className="mt-3">
-                            <Checkbox checked={isConfirmed} onChange={(e) => setIsConfirmed(e.target.checked)} className={`${customDarkText}`}>
+                            <Checkbox checked={isConfirmed} onChange={(e) => setIsConfirmed(e.target.checked)}>
                                 {modalMessage === "switchToDigitalPrintingQuestion" ? t('switchFromOffsetToDigital') :
                                     modalMessage === "switchToOffsetPrintingQuestion" ? t('switchFromDigitalToOffset') :
                                         t('confirmThisChange')}
                             </Checkbox>
                         </div>
                     </BootstrapModal.Body>
-                    <BootstrapModal.Footer className={`${customLight}`}>
+                    <BootstrapModal.Footer>
                         <Button variant="secondary" onClick={handleModalClose}>{t('close')}</Button>
-                        <Button variant="primary" onClick={handleSaveEdit} disabled={!isConfirmed} className={`${customDarkText}`}>{t('saveChanges')}</Button>
+                        <Button variant="primary" onClick={handleSaveEdit} disabled={!isConfirmed}>{t('saveChanges')}</Button>
                     </BootstrapModal.Footer>
                 </BootstrapModal>
             )}
