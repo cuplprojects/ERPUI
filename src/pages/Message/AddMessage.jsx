@@ -27,14 +27,15 @@ const AddMessage = ({
       size="lg"
       backdrop="static"
       keyboard={false}
+      
     >
-      <Modal.Header className={`${customDark} ${customLightText}`}>
+      <Modal.Header className={`${customDark} ${customLightText} border border-bottom-0`}>
         <Modal.Title>
           {showAddForm ? t('addMessage') : t('updateMessage')}
         </Modal.Title>
       </Modal.Header>
 
-      <Modal.Body className={`${customMid} ${customLightText}`}>
+      <Modal.Body className={`${customMid} ${customLightText} border border-top-0 border-bottom-0`}>
         <Form onSubmit={handleSubmit}>
           <Row>
             {showEditForm && (
@@ -91,7 +92,7 @@ const AddMessage = ({
         </Form>
       </Modal.Body>
 
-      <Modal.Footer className={`${customDark} ${customLightText}`}>
+      <Modal.Footer className={`${customDark} ${customLightText} border border-top-0`}>
         <button className="btn btn-secondary" onClick={onCancel}>
           {t('cancel')}
         </button>
