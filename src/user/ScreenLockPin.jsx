@@ -19,7 +19,7 @@ const ScreenLockPin = ({ show, onHide }) => {
 
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
-  const [customDark, , , customBtn, customDarkText] = cssClasses;
+  const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -87,16 +87,16 @@ const ScreenLockPin = ({ show, onHide }) => {
 
   return (
     <Modal show={show} onHide={onHide} centered>
-      <Modal.Header closeButton className={customDark}>
-        <Modal.Title className={customDark}>{t('changeScreenLockPin')}</Modal.Title>
+      <Modal.Header className={customDark}>
+        <Modal.Title className={customLightText}>{t('changeScreenLockPin')}</Modal.Title>
       </Modal.Header>
-      <Modal.Body>
+      <Modal.Body className={customLight}>
         {error && <Alert variant="danger">{error}</Alert>}
         {success && <Alert variant="success">{success}</Alert>}
         
         <Form onSubmit={handleSubmit}>
           <Form.Group className="mb-3">
-            <Form.Label className="d-flex align-items-center">
+            <Form.Label className={`d-flex align-items-center ${customDarkText}`}>
               {t('currentPin')}
               <OverlayTrigger
                 placement="right"
@@ -129,7 +129,7 @@ const ScreenLockPin = ({ show, onHide }) => {
           </Form.Group>
 
           <Form.Group className="mb-3">
-            <Form.Label>{t('newPin')}</Form.Label>
+            <Form.Label className={customDarkText}>{t('newPin')}</Form.Label>
             <div className="input-group">
               <Form.Control
                 type={showNewPin ? "text" : "password"}
@@ -149,7 +149,7 @@ const ScreenLockPin = ({ show, onHide }) => {
           </Form.Group>
 
           <Form.Group className="mb-3">
-            <Form.Label>{t('confirmPin')}</Form.Label>
+            <Form.Label className={customDarkText}>{t('confirmPin')}</Form.Label>
             <div className="input-group">
               <Form.Control
                 type={showConfirmPin ? "text" : "password"}
@@ -167,17 +167,18 @@ const ScreenLockPin = ({ show, onHide }) => {
               </Button>
             </div>
           </Form.Group>
-
-          <div className="d-flex justify-content-end gap-2">
-            <Button variant="secondary" onClick={onHide}>
-              {t('cancel')}
-            </Button>
-            <Button type="submit" className={customBtn}>
-              {t('save')}
-            </Button>
-          </div>
         </Form>
       </Modal.Body>
+      <Modal.Footer className={customDark}>
+        <div className="d-flex justify-content-end gap-2">
+          <Button variant="secondary" onClick={onHide}>
+            {t('cancel')}
+          </Button>
+          <Button type="submit" className={customBtn} onClick={handleSubmit}>
+            {t('save')}
+          </Button>
+        </div>
+      </Modal.Footer>
     </Modal>
   );
 };

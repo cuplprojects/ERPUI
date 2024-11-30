@@ -23,7 +23,7 @@ import {
 } from "../CustomHooks/ApiServices/projectProcessAndFeatureService";
 import useCurrentProcessStore from "../store/currentProcessStore";
 import { decrypt } from "../Security/Security";
-import { getCombinedPercentages } from "../CustomHooks/ApiServices/transacationService";
+import { getCombinedPercentages, getProjectTransactionsData } from "../CustomHooks/ApiServices/transacationService";
 import ToggleProject from "../pages/processPage/Components/ToggleProject";
 import ToggleProcess from "../pages/processPage/Components/ToggleProcess";
 import PreviousProcess from "../pages/processPage/Components/PreviousProcess";
@@ -84,6 +84,7 @@ const ProcessTable = () => {
     fetchCombinedPercentages();
   }, [selectedLot, previousProcess]);
 
+
   const handleProcessChange = async (value) => {
     const selectedProcess = processes.find((p) => p.processId === value);
     if (selectedProcess) {
@@ -97,23 +98,59 @@ const ProcessTable = () => {
         );
         const processData = data.find((p) => p.processId === value);
         setFeatureData(processData);
-
+  
         if (processData.sequence > 1) {
           let previousSequence = processData.sequence - 1;
           let previousProcessData;
-
+  
+          // Loop to find the previous valid process based on logic
           do {
             previousProcessData = await getProjectProcessByProjectAndSequence(
               selectedProject?.value || id,
               previousSequence
             );
             if (!previousProcessData) break;
-
+  
+            // Add logic to skip based on your conditions
+            // If current process ID is 7 and previous process ID is 6, skip 6 and check further
+            if (processData.processId === 2 && previousProcessData.processId === 3) {
+              previousSequence--; // Skip this and go to earlier sequence
+              continue;
+            }
+  
+            // If current process ID is 6, skip previous process ID 5 and check further
+            if (processData.processId === 3 && previousProcessData.processId === 1) {
+              previousSequence--; // Skip this and go to earlier sequence
+              continue;
+            }
+  
+            // Check if the previous process matches conditions for Dependent or Independent
             if (previousProcessData.processType === "Dependent" || 
                 (previousProcessData.processType === "Independent" && 
                  previousProcessData.rangeStart <= processData.sequence &&
                  previousProcessData.rangeEnd >= processData.sequence)) {
-              
+  
+              // If current process is Independent and previous process is Independent
+              if (previousProcessData.processType === "Independent") {
+                // Check if rangeEnd of previous process equals current processId
+                if (previousProcessData.rangeEnd === processData.processId) {
+                  console.log(previousProcessData);
+                  // If it matches, consider this previous process
+                  setPreviousProcess(previousProcessData);
+                  const prevTransactions = await getProjectTransactionsData(selectedProject?.value || id, previousProcessData.processId)
+                  const mappedPrevTransactions = prevTransactions.data.map(transaction => ({
+                    ...transaction,
+                    thresholdQty: previousProcessData.thresholdQty
+                  }));
+                  setPreviousProcessTransactions(mappedPrevTransactions);
+                  break;
+                } else {
+                  // If it doesn't match, go to the process before this one
+                  previousSequence--;
+                  continue; // Skip this process and check previous
+                }
+              }
+  
               // If current process is Independent, set previous process to min range
               if (processData.processType === "Independent" && processData.rangeStart) {
                 previousProcessData = await getProjectProcessByProjectAndSequence(
@@ -121,13 +158,9 @@ const ProcessTable = () => {
                   processData.rangeStart
                 );
               }
-
+  
               setPreviousProcess(previousProcessData);
-              const prevTransactions = await API.get(
-                `/Transactions/GetProjectTransactionsData?projectId=${
-                  selectedProject?.value || id
-                }&processId=${previousProcessData.processId}`
-              );
+              const prevTransactions = await getProjectTransactionsData(selectedProject?.value || id, previousProcessData.processId)
               const mappedPrevTransactions = prevTransactions.data.map(transaction => ({
                 ...transaction,
                 thresholdQty: previousProcessData.thresholdQty
@@ -137,7 +170,7 @@ const ProcessTable = () => {
             }
             previousSequence--;
           } while (previousSequence > 0);
-
+  
           if (previousSequence <= 0) {
             setPreviousProcess(null);
             setPreviousProcessTransactions([]);
@@ -146,7 +179,7 @@ const ProcessTable = () => {
           setPreviousProcess(null);
           setPreviousProcessTransactions([]);
         }
-
+  
         await fetchTransactions();
       } catch (error) {
         console.error("Error updating process data:", error);
@@ -154,8 +187,8 @@ const ProcessTable = () => {
         setIsLoading(false);
       }
     }
-  };
-
+  }
+  
   const handleProjectChange = async (selectedProject) => {
     if (!selectedProject || selectedProject.value === id) return;
 
@@ -200,8 +233,9 @@ const ProcessTable = () => {
         setFeatureData(firstProcess);
 
         // Fetch lots for new project using first process
-        const response = await API.get(
-          `/Transactions/GetProjectTransactionsData?projectId=${selectedProject.value}&processId=${firstProcess.processId}`
+        const response = await getProjectTransactionsData(
+          selectedProject.value,
+          firstProcess.processId
         );
         const transactionsData = response.data;
 
@@ -225,9 +259,7 @@ const ProcessTable = () => {
           );
           if (prevProcessData && prevProcessData.processType === "Dependent") {
             setPreviousProcess(prevProcessData);
-            const prevTransactions = await API.get(
-              `/Transactions/GetProjectTransactionsData?projectId=${selectedProject.value}&processId=${prevProcessData.processId}`
-            );
+            const prevTransactions = await getProjectTransactionsData(selectedProject.value, prevProcessData.processId);
             setPreviousProcessTransactions(prevTransactions.data);
           }
         }
@@ -325,11 +357,7 @@ const ProcessTable = () => {
             console.log(previousProcessData);
             if (previousProcessData.processType === "Dependent") {
               setPreviousProcess(previousProcessData);
-              const prevTransactions = await API.get(
-                `/Transactions/GetProjectTransactionsData?projectId=${
-                  selectedProject?.value || id
-                }&processId=${previousProcessData.processId}`
-              );
+              const prevTransactions = await getProjectTransactionsData(selectedProject?.value || id, previousProcessData.processId);
               setPreviousProcessTransactions(prevTransactions.data);
               break;
             }
@@ -365,18 +393,15 @@ const ProcessTable = () => {
 
   const fetchTransactions = useCallback(async () => {
     try {
-      const response = await API.get(
-        `/Transactions/GetProjectTransactionsData?projectId=${
-          selectedProject?.value || id
-        }&processId=${processId}`
-      );
+      const response = await getProjectTransactionsData(selectedProject?.value || id, processId);
       const transactionsData = response.data;
-
+console.log(transactionsData);
       if (Array.isArray(transactionsData)) {
         // Filter transactions that contain current processId in processIds array
         const validTransactions = transactionsData.filter(item => 
           item.processIds?.includes(Number(processId))
         );
+        console.log(validTransactions);
 
         const formDataGet = validTransactions.map((item) => {
           const previousProcessData = previousProcessTransactions.find(
@@ -402,7 +427,7 @@ const ProcessTable = () => {
             alerts: item.transactions[0]?.alarmId || "",
             interimQuantity: item.transactions[0]?.interimQuantity || 0,
             remarks: item.transactions[0]?.remarks || "",
-            previousProcessData: previousProcessData
+            previousProcessData: previousProcessData && previousProcess
               ? {
                   status: previousProcessData.transactions[0]?.status || 0,
                   interimQuantity:
@@ -414,12 +439,11 @@ const ProcessTable = () => {
                   machinename: previousProcessData.transactions[0]?.machinename|| [],
                   alarmMessage:
                     previousProcessData.transactions[0]?.alarmMessage || null,
-                  thresholdQty:previousProcess.thresholdQty // map with previous process
+                  thresholdQty: previousProcess?.thresholdQty || 0
                 }
               : null,
             voiceRecording: item.transactions[0]?.voiceRecording || "",
             transactionId: item.transactions[0]?.transactionId || null,
-            //zoneId: item.transactions[0]?.zoneId || 0,
             machineId: item.transactions[0]?.machineId || 0,
             machinename : item.transactions[0]?.machinename || "No Machine Assigned",
             zoneNo: item.transactions?.[0]?.zoneNo || "No Zone Assigned",
@@ -455,6 +479,7 @@ const ProcessTable = () => {
     selectedLot,
     previousProcessTransactions,
     selectedProject,
+    previousProcess
   ]);
 
   useEffect(() => {
@@ -487,11 +512,7 @@ const ProcessTable = () => {
       setSelectedLot(lot);
       setIsLoading(true);
       try {
-        const response = await API.get(
-          `/Transactions/GetProjectTransactionsData?projectId=${
-            selectedProject?.value || id
-          }&processId=${processId}`
-        );
+        const response = await getProjectTransactionsData(selectedProject?.value || id, processId);
         const transactionsData = response.data;
         const formDataGet = transactionsData.map(formatQuantitySheetData);
         const filteredData = formDataGet.filter(

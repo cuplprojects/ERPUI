@@ -1,6 +1,7 @@
 import { Form, Input, Select, Switch, Row, Col, Button } from 'antd';
 import { Modal } from 'react-bootstrap';
-
+import { BsInfoCircleFill } from "react-icons/bs";
+import { Tooltip } from 'antd';
 const { Option } = Select;
 
 const EditProjectModal = ({
@@ -29,6 +30,8 @@ const EditProjectModal = ({
       onHide={onCancel}
       size="lg"
       centered
+      backdrop="static"
+      keyboard={false}
     >
       <Modal.Header className={`${customDark} `}>
         <Modal.Title className={`${customLightText} `}>{t('editProject')}</Modal.Title>
@@ -116,8 +119,12 @@ const EditProjectModal = ({
             <Col xs={24}>
               <Form.Item
                 name="quantityThreshold"
-                label={<span className={customDarkText}>{t('quantityThreshold')}</span>}
-                tooltip={t('quantityThresholdTooltip')}
+                label={<span className={customDarkText}>
+                  {t('quantityThreshold')}
+                  <Tooltip title={t('quantityThresholdTooltip')}>
+                    <BsInfoCircleFill className='ms-2'/>
+                  </Tooltip></span>}
+                // tooltip={t('quantityThresholdTooltip')}
               >
                 <Input type="number" min={0} placeholder={t('enterQuantityThreshold')} />
               </Form.Item>

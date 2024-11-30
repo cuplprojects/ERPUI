@@ -700,22 +700,22 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
 
             {editingRow !== null && (
                 <BootstrapModal show={true} onHide={handleModalClose}>
-                    <BootstrapModal.Header closeButton>
+                    <BootstrapModal.Header className={`${customDark} ${customLightText}`}>
                         <BootstrapModal.Title>{t('editProcess')} - {t('catchNo')}: {dataSource.find(item => item.key === editingRow)?.catchNo}</BootstrapModal.Title>
                     </BootstrapModal.Header>
-                    <BootstrapModal.Body>
+                    <BootstrapModal.Body className={`${customLight} ${customDarkText}`}>
                         {t(modalMessage)}
                         <div className="mt-3">
-                            <Checkbox checked={isConfirmed} onChange={(e) => setIsConfirmed(e.target.checked)}>
+                            <Checkbox checked={isConfirmed} onChange={(e) => setIsConfirmed(e.target.checked)} className={`${customDarkText}`}>
                                 {modalMessage === "switchToDigitalPrintingQuestion" ? t('switchFromOffsetToDigital') :
                                     modalMessage === "switchToOffsetPrintingQuestion" ? t('switchFromDigitalToOffset') :
                                         t('confirmThisChange')}
                             </Checkbox>
                         </div>
                     </BootstrapModal.Body>
-                    <BootstrapModal.Footer>
+                    <BootstrapModal.Footer className={`${customLight}`}>
                         <Button variant="secondary" onClick={handleModalClose}>{t('close')}</Button>
-                        <Button variant="primary" onClick={handleSaveEdit} disabled={!isConfirmed}>{t('saveChanges')}</Button>
+                        <Button variant="primary" onClick={handleSaveEdit} disabled={!isConfirmed} className={`${customDarkText}`}>{t('saveChanges')}</Button>
                     </BootstrapModal.Footer>
                 </BootstrapModal>
             )}
