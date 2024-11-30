@@ -407,13 +407,8 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
 
     const validateForm = () => {
         const errors = {};
-        if (!newRowData.course) errors.course = t('courseRequired');
         if (!newRowData.catchNo) errors.catchNo = t('catchNoRequired');
-        if (!newRowData.paper) errors.paper = t('paperCodeRequired');
-        if (!newRowData.examDate) errors.examDate = t('examDateRequired');
-        if (!newRowData.examTime) errors.examTime = t('examTimeRequired');
         if (!newRowData.quantity || newRowData.quantity <= 0) errors.quantity = t('validQuantityRequired');
-        
         setFormErrors(errors);
         return Object.keys(errors).length === 0;
     };
@@ -540,9 +535,8 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
                                 <Col span={6}>
                                     <Form.Item 
                                         label={<>
-                                            {t('paperCode')} <span style={{ color: 'red' }}>*</span>
+                                            {t('paperCode')}
                                         </>}
-                                        validateStatus={formErrors.paper ? "error" : ""}
                                         help={formErrors.paper}
                                     >
                                         <Input 
@@ -557,9 +551,8 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
                                 <Col span={6}>
                                     <Form.Item 
                                         label={<>
-                                            {t('course')} <span style={{ color: 'red' }}>*</span>
+                                            {t('course')} 
                                         </>}
-                                        validateStatus={formErrors.course ? "error" : ""}
                                         help={formErrors.course}
                                     >
                                         <Input 
@@ -587,9 +580,8 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
                                 <Col span={6}>
                                     <Form.Item 
                                         label={<>
-                                            {t('examDate')} <span style={{ color: 'red' }}>*</span>
+                                            {t('examDate')} 
                                         </>}
-                                        validateStatus={formErrors.examDate ? "error" : ""}
                                         help={formErrors.examDate}
                                     >
                                         <Input
@@ -608,9 +600,8 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
                                 <Col span={6}>
                                     <Form.Item 
                                         label={<>
-                                            {t('examTime')} <span style={{ color: 'red' }}>*</span>
+                                            {t('examTime')}
                                         </>}
-                                        validateStatus={formErrors.examTime ? "error" : ""}
                                         help={formErrors.examTime || "Please enter the time in this format: 03:00 PM to 05:00 PM"}
                                     >
                                         <Input 
