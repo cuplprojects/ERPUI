@@ -152,6 +152,11 @@ const QtySheetUpload = () => {
             // Check if the response was successful
             if (response.status === 200) {
                 success(`${t("lot")} ${lotNo} ${t('releasedForProduction')}`);
+                notification.success({
+                    message: t('readyForProduction'),
+                    description: `${t('lot')} ${lotNo} ${t('isReadyForProduction')}`,
+                    placement: 'topRight'
+                });
             } else {
                 error(t('failedToReleaseLot'));
             }
