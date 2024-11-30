@@ -583,7 +583,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
                                 <Col span={6}>
                                     <Form.Item 
                                         label={<>
-                                            {t('examDate')} 
+                                            {t('examDate')} <span style={{ color: 'red' }}>*</span>
                                         </>}
                                         validateStatus={formErrors.examDate ? "error" : ""}
                                         help={formErrors.examDate}
@@ -604,7 +604,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
                                 <Col span={6}>
                                     <Form.Item 
                                         label={<>
-                                            {t('examTime')}
+                                            {t('examTime')}  <span style={{ color: 'red' }}>*</span>
                                         </>}
                                         validateStatus={formErrors.examTime ? "error" : ""}
                                         help={formErrors.examTime || "Please enter the time in this format: 03:00 PM to 05:00 PM"}
