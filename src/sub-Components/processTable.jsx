@@ -113,13 +113,13 @@ const ProcessTable = () => {
   
             // Add logic to skip based on your conditions
             // If current process ID is 7 and previous process ID is 6, skip 6 and check further
-            if (processData.processId === 7 && previousProcessData.processId === 6) {
+            if (processData.processId === 2 && previousProcessData.processId === 3) {
               previousSequence--; // Skip this and go to earlier sequence
               continue;
             }
   
             // If current process ID is 6, skip previous process ID 5 and check further
-            if (processData.processId === 6 && previousProcessData.processId === 5) {
+            if (processData.processId === 3 && previousProcessData.processId === 1) {
               previousSequence--; // Skip this and go to earlier sequence
               continue;
             }
@@ -395,12 +395,13 @@ const ProcessTable = () => {
     try {
       const response = await getProjectTransactionsData(selectedProject?.value || id, processId);
       const transactionsData = response.data;
-
+console.log(transactionsData);
       if (Array.isArray(transactionsData)) {
         // Filter transactions that contain current processId in processIds array
         const validTransactions = transactionsData.filter(item => 
           item.processIds?.includes(Number(processId))
         );
+        console.log(validTransactions);
 
         const formDataGet = validTransactions.map((item) => {
           const previousProcessData = previousProcessTransactions.find(
