@@ -57,9 +57,9 @@ const UserLayout = () => {
               <Route path="/AddProjectProcess/:projectId" element={checkPermissionAndRender("2.4", AddProjectProcess)} />
 
               {/* --------------- User Menu Routes -------------- */}
-              <Route path="/profile" element={checkPermissionAndRender("3", Profile)} />
-              <Route path="/settings" element={checkPermissionAndRender("3", UserSettings)} />
-              <Route path="/change-password" element={checkPermissionAndRender("3", ChangePassword)} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/settings" element={<UserSettings />} />
+              <Route path="/change-password" element={<ChangePassword />} />
 
               <Route path="/quantity-sheet-uploads/:encryptedProjectId" element={checkPermissionAndRender("2.4", QtySheetUpload)} />
               <Route path="/project-details/:encryptedProjectId/:encryptedLotNo" element={<ProcessTable />} />

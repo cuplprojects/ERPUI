@@ -16,6 +16,7 @@ const AuthService = {
       const response = await API.post('/Login/login', { userName: username, password });
       if (response.status === 200 && response.data.token) {
         const { setToken } = useUserTokenStore.getState();
+        console.log('AuthService: Setting token:', response.data.token);
         setToken(response.data.token);
         
         // Fetch user data after setting the token
