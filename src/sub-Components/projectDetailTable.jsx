@@ -224,14 +224,14 @@ const ProjectDetailsTable = ({
       !(updatedRow.previousProcessData.thresholdQty != null &&
         updatedRow.previousProcessData.thresholdQty > updatedRow.previousProcessData.interimQuantity)
     ) {
-      showNotification('error', 'Status Update Failed', 'Previous process must be completed first');
+      showNotification('error', t('statusUpdateFailed'), t('previousProcessErrorDescription'));
       return;
     }
 
     // Only check interim quantity if hasFeaturePermission(7) is true
     if (hasFeaturePermission(4) && newStatusIndex === 2) {
       if (updatedRow.interimQuantity !== updatedRow.quantity) {
-        showNotification('error', 'Status Update Failed', 'Interim Quantity must equal Quantity');
+        showNotification('error', t('statusUpdateFailed'), t('quantityMismatchErrorDescription'));
         return;
       }
     }
@@ -1136,7 +1136,7 @@ const ProjectDetailsTable = ({
                   : "custom-theme-dark-text"
                   } fs-6 fw-bold`}
               >
-                Update Status:
+                {t('updateStatus')}
               </span>
               {(() => {
                 const requirements = [];
@@ -1208,9 +1208,9 @@ const ProjectDetailsTable = ({
                       )
                     }
                     statusSteps={[
-                      { status: "Pending", color: "red" },
-                      { status: "Started", color: "blue" },
-                      { status: "Completed", color: "green" },
+                      { status: t("pending"), color: "red" },
+                      { status: t("started"), color: "blue" },
+                      { status: t("completed"), color: "green" },
                     ]}
                     disabled={requirements.length > 0}
                   />

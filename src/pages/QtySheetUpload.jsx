@@ -503,7 +503,7 @@ const QtySheetUpload = () => {
 
             {showConfigDisclaimer && (
                 <div className="alert alert-warning text-center mb-3">
-                    {t('Warning: Once you upload the quantity sheet, project configuration cannot be changed.')}
+                    {t('warningQtySheet')}
                 </div>
             )}
 
