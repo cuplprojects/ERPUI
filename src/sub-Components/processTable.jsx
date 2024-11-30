@@ -79,6 +79,7 @@ const ProcessTable = () => {
 
   const [showPieChart, setShowPieChart] = useState(false);
   const [showProgressBar, setShowProgressBar] = useState(false);
+  const [digitalandOffsetData, setDigitalandOffsetData] = useState([])
 
   useEffect(() => {
     fetchCombinedPercentages();
@@ -118,8 +119,8 @@ const ProcessTable = () => {
               continue;
             }
   
-            // If current process ID is 6, skip previous process ID 5 and check further
-            if (processData.processId === 3 && previousProcessData.processId === 1) {
+            // If current process ID is 6, skip previous process ID 5 and 7 and check further
+            if (processData.processId === 3 && (previousProcessData.processId === 1 || previousProcessData.processId === 2)) {
               previousSequence--; // Skip this and go to earlier sequence
               continue;
             }
@@ -134,7 +135,6 @@ const ProcessTable = () => {
               if (previousProcessData.processType === "Independent") {
                 // Check if rangeEnd of previous process equals current processId
                 if (previousProcessData.rangeEnd === processData.processId) {
-                  console.log(previousProcessData);
                   // If it matches, consider this previous process
                   setPreviousProcess(previousProcessData);
                   const prevTransactions = await getProjectTransactionsData(selectedProject?.value || id, previousProcessData.processId)
@@ -188,6 +188,32 @@ const ProcessTable = () => {
       }
     }
   }
+
+  //get digital or offset data 
+  useEffect(() => {
+    const fetchDigitalOrOffsetData = async () => {
+      try {
+        
+console.log(previousProcess)
+        if (selectedProject && previousProcess?.processId === 7) {
+          const digitalData = await getProjectTransactionsData(selectedProject?.value || id, 6);
+          setDigitalandOffsetData(digitalData.data);
+        }
+        if (selectedProject && previousProcess?.processId === 6) {
+          const offsetData = await getProjectTransactionsData(selectedProject?.value || id, 7);
+          setDigitalandOffsetData(offsetData.data);
+        }
+      } catch (error) {
+        console.error("Error fetching digital/offset data:", error);
+        console.error("Error details:", {
+          message: error.message,
+          stack: error.stack
+        });
+      }
+    };
+
+    fetchDigitalOrOffsetData();
+  }, [selectedProject, processId, id]);
   
   const handleProjectChange = async (selectedProject) => {
     if (!selectedProject || selectedProject.value === id) return;
@@ -278,11 +304,7 @@ const ProcessTable = () => {
     try {
       const data = await getCombinedPercentages(selectedProject?.value || id);
       if (data && previousProcess) {
-        console.log(
-          "Combined percentages:",
-          data?.lotProcessWeightageSum[selectedLot][previousProcess.processId]
-        );
-        setPreviousProcessCompletionPercentage(
+                setPreviousProcessCompletionPercentage(
           data?.lotProcessWeightageSum[selectedLot][previousProcess.processId]
         );
       }
@@ -295,7 +317,6 @@ const ProcessTable = () => {
     (featureId) => {
         // Check if the featureId is in the current process's featuresList
         if (featureData?.featuresList) {
-          console.log("featureData.featuresList", featureData.featuresList);
             return featureData.featuresList.includes(featureId);
         }
         return false;
@@ -338,7 +359,6 @@ const ProcessTable = () => {
         selectedProject?.value || id
       );
       if (Array.isArray(data) && data.length > 0) {
-        console.log(data);
         const selectedProcess =
           data.find((p) => p.processId === processId) || data[0];
         setProcess(selectedProcess.processId, selectedProcess.processName);
@@ -354,7 +374,6 @@ const ProcessTable = () => {
               previousSequence
             );
             if (!previousProcessData) break;
-            console.log(previousProcessData);
             if (previousProcessData.processType === "Dependent") {
               setPreviousProcess(previousProcessData);
               const prevTransactions = await getProjectTransactionsData(selectedProject?.value || id, previousProcessData.processId);
@@ -395,18 +414,40 @@ const ProcessTable = () => {
     try {
       const response = await getProjectTransactionsData(selectedProject?.value || id, processId);
       const transactionsData = response.data;
-console.log(transactionsData);
+
       if (Array.isArray(transactionsData)) {
         // Filter transactions that contain current processId in processIds array
         const validTransactions = transactionsData.filter(item => 
           item.processIds?.includes(Number(processId))
         );
-        console.log(validTransactions);
 
         const formDataGet = validTransactions.map((item) => {
-          const previousProcessData = previousProcessTransactions.find(
+          console.log('Finding previousProcessData:', {
+            itemQuantitySheetId: item.quantitySheetId,
+            previousProcessTransactions: previousProcessTransactions.map(t => ({
+              quantitySheetId: t.quantitySheetId,
+              matches: t.quantitySheetId === item.quantitySheetId
+            }))
+          });
+          let previousProcessData = previousProcessTransactions.find(
             (prevTrans) => prevTrans.quantitySheetId === item.quantitySheetId
           );
+          console.log('Found previousProcessData:', previousProcessData);
+
+          // If no previous process data found, check digitalandOffsetData
+          if (!previousProcessData?.transactions?.length && digitalandOffsetData) {
+            console.log("No previous process data found");
+            // Check if digitalandOffsetData is an array before using find
+            if (Array.isArray(digitalandOffsetData)) {
+              previousProcessData = digitalandOffsetData.find(
+                (digitalOffset) => digitalOffset.quantitySheetId === item.quantitySheetId
+              );
+            } else {
+              console.warn('digitalandOffsetData is not an array:', digitalandOffsetData);
+            }
+          }
+
+                    
 
           return {
             catchNumber: item.catchNo,
@@ -430,15 +471,12 @@ console.log(transactionsData);
             previousProcessData: previousProcessData && previousProcess
               ? {
                   status: previousProcessData.transactions[0]?.status || 0,
-                  interimQuantity:
-                    previousProcessData.transactions[0]?.interimQuantity || 0,
+                  interimQuantity: previousProcessData.transactions[0]?.interimQuantity || 0,
                   remarks: previousProcessData.transactions[0]?.remarks || "",
                   alarmId: previousProcessData.transactions[0]?.alarmId || "",
-                  teamUserNames:
-                    previousProcessData.transactions[0]?.teamUserNames || [],
-                  machinename: previousProcessData.transactions[0]?.machinename|| [],
-                  alarmMessage:
-                    previousProcessData.transactions[0]?.alarmMessage || null,
+                  teamUserNames: previousProcessData.transactions[0]?.teamUserNames || [],
+                  machinename: previousProcessData.transactions[0]?.machinename || [],
+                  alarmMessage: previousProcessData.transactions[0]?.alarmMessage || null,
                   thresholdQty: previousProcess?.thresholdQty || 0
                 }
               : null,
@@ -528,7 +566,6 @@ console.log(transactionsData);
   };
 
   const handleCatchClick = (record) => {
-    console.log(record);
     setCatchDetailModalShow(true);
     setCatchDetailModalData(record);
   };

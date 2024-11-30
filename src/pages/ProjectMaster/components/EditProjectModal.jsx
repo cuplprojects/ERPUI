@@ -21,7 +21,13 @@ const EditProjectModal = ({
   customBtn,
   customLightText,
   customLightBorder,
-  customDarkBorder
+  customDarkBorder,
+  numberOfSeries,
+  setNumberOfSeries,
+  projectName,
+  setProjectName,
+  selectedGroup,
+  selectedType
 }) => {
   
   return (
@@ -74,7 +80,10 @@ const EditProjectModal = ({
                   label={<span className={customDarkText}>{t('numberOfSeries')}</span>}
                   rules={[{ required: true, message: t('pleaseEnterNumberOfSeries') }]}
                 >
-                  <Select placeholder={t('selectNumberOfSeries')}>
+                  <Select 
+                    placeholder={t('selectNumberOfSeries')}
+                    onChange={(value) => setNumberOfSeries(value)}
+                  >
                     {[1,2,3,4,5,6,7,8].map(num => (
                       <Option key={num} value={num}>{num}</Option>
                     ))}
@@ -91,8 +100,15 @@ const EditProjectModal = ({
                   ]}
                 >
                   <Input 
-                    placeholder={t('enterSeriesName')}
+                    placeholder={t('ENTERSERIESNAME')}
+                    maxLength={numberOfSeries}
                     style={{ textTransform: 'uppercase' }}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value.length > numberOfSeries) {
+                        // Optionally handle the case where input exceeds limit
+                      }
+                    }}
                   />
                 </Form.Item>
               </Col>
@@ -105,7 +121,12 @@ const EditProjectModal = ({
                 label={<span className={customDarkText}>{t('projectName')}</span>}
                 rules={[{ required: true, message: t('pleaseEnterProjectName') }]}
               >
-                <Input placeholder={t('enterProjectName')} />
+                <Input 
+                  placeholder={t('enterProjectName')}
+                  value={projectName}
+                  onChange={(e) => setProjectName(e.target.value)}
+                  disabled={!selectedGroup || !selectedType}
+                />
               </Form.Item>
             </Col>
             <Col xs={24}>
