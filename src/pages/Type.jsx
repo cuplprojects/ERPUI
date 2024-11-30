@@ -259,9 +259,9 @@ console.log(originalData.requiredProcessIds)
                         onChange={setRequiredEditingProcessIds}
                         style={{ width: '100%' }}
                     >
-                        {processes.map(proc => (
-                            <Option key={proc.id} value={proc.id}>
-                                {proc.name}
+                        {editingProcessIds.map(id => (
+                            <Option key={id} value={id}>
+                                {processMap[id]}
                             </Option>
                         ))}
                     </Select>
