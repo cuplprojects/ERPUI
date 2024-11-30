@@ -46,14 +46,11 @@ const LockOverlay = () => {
                 inactivityTimer = setTimeout(() => {
                     setIsLocked(true);
                     setShowModal(false);
-                }, 300000); // 5 minutes = 300000ms
+                }, 300000); // 5 minutes
             }
         };
 
-        // Initialize timer
-        resetInactivityTimer();
-
-        // Track all these user activity events
+        // Enhanced list of events to track
         const events = [
             'mousemove',
             'mousedown',
@@ -61,27 +58,55 @@ const LockOverlay = () => {
             'keydown',
             'scroll',
             'touchstart',
-            'click'
+            'touchmove',
+            'touchend',
+            'click',
+            'contextmenu',
+            'orientationchange',
+            'resize',
+            'visibilitychange',
+            'focus',
+            'blur'
         ];
 
-        // Event handler for any user activity
+        // Debounced event handler to prevent excessive timer resets
+        let debounceTimeout;
         const handleUserActivity = () => {
-            resetInactivityTimer();
+            if (debounceTimeout) clearTimeout(debounceTimeout);
+            debounceTimeout = setTimeout(() => {
+                resetInactivityTimer();
+            }, 250); // Debounce for 250ms
         };
+
+        // Initialize timer on component mount
+        resetInactivityTimer();
 
         // Add event listeners
         events.forEach(event => {
-            window.addEventListener(event, handleUserActivity);
+            window.addEventListener(event, handleUserActivity, { passive: true });
+        });
+
+        // Handle page visibility changes
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                // Page is hidden, clear timer
+                if (inactivityTimer) clearTimeout(inactivityTimer);
+            } else {
+                // Page is visible again, reset timer
+                resetInactivityTimer();
+            }
         });
 
         // Cleanup
         return () => {
             if (inactivityTimer) clearTimeout(inactivityTimer);
+            if (debounceTimeout) clearTimeout(debounceTimeout);
             events.forEach(event => {
                 window.removeEventListener(event, handleUserActivity);
             });
+            document.removeEventListener('visibilitychange', handleUserActivity);
         };
-    }, [isLocked]); // Only re-run if isLocked changes
+    }, [isLocked]);
 
     const handleLock = useCallback(() => {
         setIsLocked(true);

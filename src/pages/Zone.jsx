@@ -74,14 +74,14 @@ const Zone = () => {
   };
 
   const handleAddZone = async (values) => {
-    const { zoneNo, zoneDescription, cameraIds, machineId } = values;
+    const { zoneNo, cameraIds, machineId } = values;
     const existingZone = zones.find(zone => zone.zoneNo === zoneNo);
     if (existingZone) {
       error(t('Zone Name already exists!'));
       return;
     }
 
-    const assignedCameras = zones.flatMap(zone => zone.cameraIds);
+    const assignedCameras = zones.flatMap(zone => zone.cameraIds || []);
     const alreadyAssignedCameras = cameraIds.filter(id => assignedCameras.includes(id));
     if (alreadyAssignedCameras.length > 0) {
       const cameraNames = alreadyAssignedCameras.map(id => camera.find(c => c.cameraId === id)?.name).join(', ');
@@ -89,19 +89,21 @@ const Zone = () => {
       return;
     }
 
-    const assignedMachines = zones.flatMap(zone => zone.machineId);
-    const alreadyAssignedMachines = machineId.filter(id => assignedMachines.includes(id));
-    if (alreadyAssignedMachines.length > 0) {
-      const machineNames = alreadyAssignedMachines.map(id => machine.find(m => m.machineId === id)?.machineName).join(', ');
-      error(t('The following machines are already assigned to other zones: {{machineNames}}', { machineNames }));
-      return;
+    if (machineId && machineId.length > 0) {
+      const assignedMachines = zones.flatMap(zone => zone.machineId || []);
+      const alreadyAssignedMachines = machineId.filter(id => assignedMachines.includes(id));
+      if (alreadyAssignedMachines.length > 0) {
+        const machineNames = alreadyAssignedMachines.map(id => machine.find(m => m.machineId === id)?.machineName).join(', ');
+        error(t('The following machines are already assigned to other zones: {{machineNames}}', { machineNames }));
+        return;
+      }
     }
 
     const newZone = {
       zoneNo,
-      zoneDescription,
+      zoneDescription: values.zoneDescription || '',
       cameraIds: Array.isArray(cameraIds) ? cameraIds : [cameraIds],
-      machineId: Array.isArray(machineId) ? machineId : [machineId],
+      machineId: machineId ? (Array.isArray(machineId) ? machineId : [machineId]) : [],
     };
 
     try {
@@ -116,8 +118,8 @@ const Zone = () => {
   };
 
   const handleEditZone = async (index) => {
-    if (!tempEditingZone.zoneNo || !tempEditingZone.zoneDescription || !tempEditingZone.cameraIds || !tempEditingZone.machineId || tempEditingZone.machineId.length === 0) {
-      error(t('Please fill in all required fields'));
+    if (!tempEditingZone.zoneNo || !tempEditingZone.cameraIds || tempEditingZone.cameraIds.length === 0) {
+      error(t('pleaseFillInAllRequiredFields'));
       return;
     }
 
@@ -130,7 +132,7 @@ const Zone = () => {
 
     const existingZone = zones.find(zone => zone.zoneNo === updatedZone.zoneNo && zone.zoneNo !== originalZone.zoneNo);
     if (existingZone) {
-      error(t('Zone Name already exists!'));
+      error(t('Zone Name already exists'));
       return;
     }
 
@@ -142,12 +144,14 @@ const Zone = () => {
       return;
     }
 
-    const assignedMachines = zones.flatMap(zone => zone.zoneId !== updatedZone.zoneId ? zone.machineId : []);
-    const alreadyAssignedMachines = updatedZone.machineId.filter(id => assignedMachines.includes(id));
-    if (alreadyAssignedMachines.length > 0) {
-      const machineNames = alreadyAssignedMachines.map(id => machine.find(m => m.machineId === id)?.machineName).join(', ');
-      error(t('The following machines are already assigned to other zones: {{machineNames}}', { machineNames }));
-      return;
+    if (updatedZone.machineId && updatedZone.machineId.length > 0) {
+      const assignedMachines = zones.flatMap(zone => zone.zoneId !== updatedZone.zoneId ? zone.machineId : []);
+      const alreadyAssignedMachines = updatedZone.machineId.filter(id => assignedMachines.includes(id));
+      if (alreadyAssignedMachines.length > 0) {
+        const machineNames = alreadyAssignedMachines.map(id => machine.find(m => m.machineId === id)?.machineName).join(', ');
+        error(t('The following machines are already assigned to other zones:', { machineNames }));
+        return;
+      }
     }
 
     try {
@@ -348,9 +352,9 @@ const Zone = () => {
             </Form.Item>
             <Form.Item 
               name="zoneDescription"
-              label={<span className={customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`}>{t('Zone Description')} <span className="text-danger">*</span></span>}
+              label={<span className={customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`}>{t('Zone Description')}</span>}
             >
-              <Input.TextArea placeholder={t("Zone Description")} required />
+              <Input.TextArea placeholder={t("Zone Description")} />
             </Form.Item>
             <Form.Item 
               name="cameraIds"
@@ -425,12 +429,11 @@ const Zone = () => {
               />
             </Form.Item>
             <Form.Item 
-              label={<span className={customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`}>{t('Zone Description')} <span className="text-danger">*</span></span>}
+              label={<span className={customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`}>{t('Zone Description')}</span>}
             >
               <Input.TextArea
                 value={tempEditingZone.zoneDescription}
                 onChange={(e) => setTempEditingZone({ ...tempEditingZone, zoneDescription: e.target.value })}
-                required
               />
             </Form.Item>
             <Form.Item 
@@ -454,13 +457,12 @@ const Zone = () => {
               </Select>
             </Form.Item>
             <Form.Item 
-              label={<span className={customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`}>{t('Assign Machine')} <span className="text-danger">*</span></span>}
+              label={<span className={customDark === "dark-dark" || customDark === "blue-dark" ? `text-white` : `${customDarkText}`}>{t('Assign Machine')}</span>}
             >
               <Select
                 mode="multiple"
                 value={tempEditingZone.machineId}
                 onChange={(value) => setTempEditingZone({ ...tempEditingZone, machineId: value })}
-                required
               >
                 {machine.map(m => (
                   <Option 
