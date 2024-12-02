@@ -38,7 +38,6 @@ const DashBarChart = ({ selectedChart, lotsData, handleBarClick, projectId }) =>
           acc[process.id] = process.name;
           return acc;
         }, {});
-        console.log(nameMapping);
         setProcessNames(nameMapping);
       } catch (error) {
         console.error("Error fetching process names:", error);
