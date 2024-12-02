@@ -23,7 +23,10 @@ import {
 } from "../CustomHooks/ApiServices/projectProcessAndFeatureService";
 import useCurrentProcessStore from "../store/currentProcessStore";
 import { decrypt } from "../Security/Security";
-import { getCombinedPercentages, getProjectTransactionsData } from "../CustomHooks/ApiServices/transacationService";
+import {
+  getCombinedPercentages,
+  getProjectTransactionsData,
+} from "../CustomHooks/ApiServices/transacationService";
 import ToggleProject from "../pages/processPage/Components/ToggleProject";
 import ToggleProcess from "../pages/processPage/Components/ToggleProcess";
 import PreviousProcess from "../pages/processPage/Components/PreviousProcess";
@@ -79,12 +82,11 @@ const ProcessTable = () => {
 
   const [showPieChart, setShowPieChart] = useState(false);
   const [showProgressBar, setShowProgressBar] = useState(false);
-  const [digitalandOffsetData, setDigitalandOffsetData] = useState([])
+  const [digitalandOffsetData, setDigitalandOffsetData] = useState([]);
 
   useEffect(() => {
     fetchCombinedPercentages();
   }, [selectedLot, previousProcess]);
-
 
   const handleProcessChange = async (value) => {
     console.log("handleProcessChange triggered with value:", value);
@@ -102,11 +104,11 @@ const ProcessTable = () => {
         );
         const processData = data.find((p) => p.processId === value);
         setFeatureData(processData);
-  
+
         if (processData.sequence > 1) {
           let previousSequence = processData.sequence - 1;
           let previousProcessData;
-  
+
           // Loop to find the previous valid process based on logic
           do {
             previousProcessData = await getProjectProcessByProjectAndSequence(
@@ -114,37 +116,50 @@ const ProcessTable = () => {
               previousSequence
             );
             if (!previousProcessData) break;
-  
+
             // Add logic to skip based on your conditions
             // If current process ID is 7 and previous process ID is 6, skip 6 and check further
-            if (processData.processId === 2 && previousProcessData.processId === 3) {
+            if (
+              processData.processId === 2 &&
+              previousProcessData.processId === 3
+            ) {
               previousSequence--; // Skip this and go to earlier sequence
               continue;
             }
-  
+
             // If current process ID is 6, skip previous process ID 5 and 7 and check further
-            if (processData.processId === 3 && (previousProcessData.processId === 1 || previousProcessData.processId === 2)) {
+            if (
+              processData.processId === 3 &&
+              (previousProcessData.processId === 1 ||
+                previousProcessData.processId === 2)
+            ) {
               previousSequence--; // Skip this and go to earlier sequence
               continue;
             }
-  
+
             // Check if the previous process matches conditions for Dependent or Independent
-            if (previousProcessData.processType === "Dependent" || 
-                (previousProcessData.processType === "Independent" && 
-                 previousProcessData.rangeStart <= processData.sequence &&
-                 previousProcessData.rangeEnd >= processData.sequence)) {
-  
+            if (
+              previousProcessData.processType === "Dependent" ||
+              (previousProcessData.processType === "Independent" &&
+                previousProcessData.rangeStart <= processData.sequence &&
+                previousProcessData.rangeEnd >= processData.sequence)
+            ) {
               // If current process is Independent and previous process is Independent
               if (previousProcessData.processType === "Independent") {
                 // Check if rangeEnd of previous process equals current processId
                 if (previousProcessData.rangeEnd === processData.processId) {
                   // If it matches, consider this previous process
                   setPreviousProcess(previousProcessData);
-                  const prevTransactions = await getProjectTransactionsData(selectedProject?.value || id, previousProcessData.processId)
-                  const mappedPrevTransactions = prevTransactions.data.map(transaction => ({
-                    ...transaction,
-                    thresholdQty: previousProcessData.thresholdQty
-                  }));
+                  const prevTransactions = await getProjectTransactionsData(
+                    selectedProject?.value || id,
+                    previousProcessData.processId
+                  );
+                  const mappedPrevTransactions = prevTransactions.data.map(
+                    (transaction) => ({
+                      ...transaction,
+                      thresholdQty: previousProcessData.thresholdQty,
+                    })
+                  );
                   setPreviousProcessTransactions(mappedPrevTransactions);
                   break;
                 } else {
@@ -153,27 +168,36 @@ const ProcessTable = () => {
                   continue; // Skip this process and check previous
                 }
               }
-  
+
               // If current process is Independent, set previous process to min range
-              if (processData.processType === "Independent" && processData.rangeStart) {
-                previousProcessData = await getProjectProcessByProjectAndSequence(
-                  selectedProject?.value || id,
-                  processData.rangeStart
-                );
+              if (
+                processData.processType === "Independent" &&
+                processData.rangeStart
+              ) {
+                previousProcessData =
+                  await getProjectProcessByProjectAndSequence(
+                    selectedProject?.value || id,
+                    processData.rangeStart
+                  );
               }
-  
+
               setPreviousProcess(previousProcessData);
-              const prevTransactions = await getProjectTransactionsData(selectedProject?.value || id, previousProcessData.processId)
-              const mappedPrevTransactions = prevTransactions.data.map(transaction => ({
-                ...transaction,
-                thresholdQty: previousProcessData.thresholdQty
-              }));
+              const prevTransactions = await getProjectTransactionsData(
+                selectedProject?.value || id,
+                previousProcessData.processId
+              );
+              const mappedPrevTransactions = prevTransactions.data.map(
+                (transaction) => ({
+                  ...transaction,
+                  thresholdQty: previousProcessData.thresholdQty,
+                })
+              );
               setPreviousProcessTransactions(mappedPrevTransactions);
               break;
             }
             previousSequence--;
           } while (previousSequence > 0);
-  
+
           if (previousSequence <= 0) {
             setPreviousProcess(null);
             setPreviousProcessTransactions([]);
@@ -182,7 +206,7 @@ const ProcessTable = () => {
           setPreviousProcess(null);
           setPreviousProcessTransactions([]);
         }
-  
+
         await fetchTransactions();
       } catch (error) {
         console.error("Error updating process data:", error);
@@ -190,34 +214,38 @@ const ProcessTable = () => {
         setIsLoading(false);
       }
     }
-  }
+  };
 
-  //get digital or offset data 
+  //get digital or offset data
   useEffect(() => {
     const fetchDigitalOrOffsetData = async () => {
       try {
-        
-console.log(previousProcess)
-        if (selectedProject && previousProcess?.processId === 7) {
-          const digitalData = await getProjectTransactionsData(selectedProject?.value || id, 6);
+        if (selectedProject && previousProcess?.processId === 3) {
+          const digitalData = await getProjectTransactionsData(
+            selectedProject?.value || id,
+            2
+          );
           setDigitalandOffsetData(digitalData.data);
         }
-        if (selectedProject && previousProcess?.processId === 6) {
-          const offsetData = await getProjectTransactionsData(selectedProject?.value || id, 7);
+        if (selectedProject && previousProcess?.processId === 2) {
+          const offsetData = await getProjectTransactionsData(
+            selectedProject?.value || id,
+            3
+          );
           setDigitalandOffsetData(offsetData.data);
         }
       } catch (error) {
         console.error("Error fetching digital/offset data:", error);
         console.error("Error details:", {
           message: error.message,
-          stack: error.stack
+          stack: error.stack,
         });
       }
     };
 
     fetchDigitalOrOffsetData();
   }, [selectedProject, processId, id]);
-  
+
   const handleProjectChange = async (selectedProject) => {
     if (!selectedProject || selectedProject.value === id) return;
     setSelectedProject(null);
@@ -279,7 +307,10 @@ console.log(previousProcess)
           );
           if (prevProcessData && prevProcessData.processType === "Dependent") {
             setPreviousProcess(prevProcessData);
-            const prevTransactions = await getProjectTransactionsData(selectedProject.value, prevProcessData.processId);
+            const prevTransactions = await getProjectTransactionsData(
+              selectedProject.value,
+              prevProcessData.processId
+            );
             setPreviousProcessTransactions(prevTransactions.data);
           }
         }
@@ -296,7 +327,7 @@ console.log(previousProcess)
     try {
       const data = await getCombinedPercentages(selectedProject?.value || id);
       if (data && previousProcess) {
-                setPreviousProcessCompletionPercentage(
+        setPreviousProcessCompletionPercentage(
           data?.lotProcessWeightageSum[selectedLot][previousProcess.processId]
         );
       }
@@ -307,11 +338,11 @@ console.log(previousProcess)
 
   const hasFeaturePermission = useCallback(
     (featureId) => {
-        // Check if the featureId is in the current process's featuresList
-        if (featureData?.featuresList) {
-            return featureData.featuresList.includes(featureId);
-        }
-        return false;
+      // Check if the featureId is in the current process's featuresList
+      if (featureData?.featuresList) {
+        return featureData.featuresList.includes(featureId);
+      }
+      return false;
     },
     [featureData]
   );
@@ -366,10 +397,26 @@ console.log(previousProcess)
               previousSequence
             );
             if (!previousProcessData) break;
-            if (previousProcessData.processType === "Dependent") {
+
+            // Check if the previous process matches conditions for Dependent or Independent
+            if (
+              previousProcessData.processType === "Dependent" ||
+              (previousProcessData.processType === "Independent" &&
+                previousProcessData.rangeStart <= selectedProcess.sequence &&
+                previousProcessData.rangeEnd >= selectedProcess.sequence)
+            ) {
               setPreviousProcess(previousProcessData);
-              const prevTransactions = await getProjectTransactionsData(selectedProject?.value || id, previousProcessData.processId);
-              setPreviousProcessTransactions(prevTransactions.data);
+              const prevTransactions = await getProjectTransactionsData(
+                selectedProject?.value || id,
+                previousProcessData.processId
+              );
+              const mappedPrevTransactions = prevTransactions.data.map(
+                (transaction) => ({
+                  ...transaction,
+                  thresholdQty: previousProcessData.thresholdQty,
+                })
+              );
+              setPreviousProcessTransactions(mappedPrevTransactions);
               break;
             }
             previousSequence--;
@@ -404,42 +451,41 @@ console.log(previousProcess)
 
   const fetchTransactions = useCallback(async () => {
     try {
-      const response = await getProjectTransactionsData(selectedProject?.value || id, processId);
+      const response = await getProjectTransactionsData(
+        selectedProject?.value || id,
+        processId
+      );
       const transactionsData = response.data;
 
       if (Array.isArray(transactionsData)) {
         // Filter transactions that contain current processId in processIds array
-        const validTransactions = transactionsData.filter(item => 
+        const validTransactions = transactionsData.filter((item) =>
           item.processIds?.includes(Number(processId))
         );
 
         const formDataGet = validTransactions.map((item) => {
-          console.log('Finding previousProcessData:', {
-            itemQuantitySheetId: item.quantitySheetId,
-            previousProcessTransactions: previousProcessTransactions.map(t => ({
-              quantitySheetId: t.quantitySheetId,
-              matches: t.quantitySheetId === item.quantitySheetId
-            }))
-          });
           let previousProcessData = previousProcessTransactions.find(
             (prevTrans) => prevTrans.quantitySheetId === item.quantitySheetId
           );
-          console.log('Found previousProcessData:', previousProcessData);
 
           // If no previous process data found, check digitalandOffsetData
-          if (!previousProcessData?.transactions?.length && digitalandOffsetData) {
-            console.log("No previous process data found");
+          if (
+            !previousProcessData?.transactions?.length &&
+            digitalandOffsetData
+          ) {
             // Check if digitalandOffsetData is an array before using find
             if (Array.isArray(digitalandOffsetData)) {
               previousProcessData = digitalandOffsetData.find(
-                (digitalOffset) => digitalOffset.quantitySheetId === item.quantitySheetId
+                (digitalOffset) =>
+                  digitalOffset.quantitySheetId === item.quantitySheetId
               );
             } else {
-              console.warn('digitalandOffsetData is not an array:', digitalandOffsetData);
+              console.warn(
+                "digitalandOffsetData is not an array:",
+                digitalandOffsetData
+              );
             }
           }
-
-                    
 
           return {
             catchNumber: item.catchNo,
@@ -460,26 +506,34 @@ console.log(previousProcess)
             alerts: item.transactions[0]?.alarmId || "",
             interimQuantity: item.transactions[0]?.interimQuantity || 0,
             remarks: item.transactions[0]?.remarks || "",
-            previousProcessData: previousProcessData && previousProcess
-              ? {
-                  status: previousProcessData.transactions[0]?.status || 0,
-                  interimQuantity: previousProcessData.transactions[0]?.interimQuantity || 0,
-                  remarks: previousProcessData.transactions[0]?.remarks || "",
-                  alarmId: previousProcessData.transactions[0]?.alarmId || "",
-                  teamUserNames: previousProcessData.transactions[0]?.teamUserNames || [],
-                  machinename: previousProcessData.transactions[0]?.machinename || [],
-                  alarmMessage: previousProcessData.transactions[0]?.alarmMessage || null,
-                  thresholdQty: previousProcess?.thresholdQty || 0
-                }
-              : null,
+            previousProcessData:
+              previousProcessData && previousProcess
+                ? {
+                    status: previousProcessData.transactions[0]?.status || 0,
+                    interimQuantity:
+                      previousProcessData.transactions[0]?.interimQuantity || 0,
+                    remarks: previousProcessData.transactions[0]?.remarks || "",
+                    alarmId: previousProcessData.transactions[0]?.alarmId || "",
+                    teamUserNames:
+                      previousProcessData.transactions[0]?.teamUserNames || [],
+                    machinename:
+                      previousProcessData.transactions[0]?.machinename || [],
+                    alarmMessage:
+                      previousProcessData.transactions[0]?.alarmMessage || null,
+                    thresholdQty: previousProcess?.thresholdQty || 0,
+                  }
+                : null,
             voiceRecording: item.transactions[0]?.voiceRecording || "",
             transactionId: item.transactions[0]?.transactionId || null,
             machineId: item.transactions[0]?.machineId || 0,
-            machinename : item.transactions[0]?.machinename || "No Machine Assigned",
+            machinename:
+              item.transactions[0]?.machinename || "No Machine Assigned",
             zoneNo: item.transactions?.[0]?.zoneNo || "No Zone Assigned",
             zoneId: item.transactions?.[0]?.zoneId || 0,
             teamId: item.transactions[0]?.teamId || [],
-            teamUserNames: item.transactions[0]?.teamUserNames || ["No Team Assigned"],
+            teamUserNames: item.transactions[0]?.teamUserNames || [
+              "No Team Assigned",
+            ],
             alarmMessage: item.transactions[0]?.alarmMessage || null,
             processIds: item.processIds || [], // like [1,3,4,5]
           };
@@ -509,7 +563,7 @@ console.log(previousProcess)
     selectedLot,
     previousProcessTransactions,
     selectedProject,
-    previousProcess
+    previousProcess,
   ]);
 
   useEffect(() => {
@@ -542,7 +596,10 @@ console.log(previousProcess)
       setSelectedLot(lot);
       setIsLoading(true);
       try {
-        const response = await getProjectTransactionsData(selectedProject?.value || id, processId);
+        const response = await getProjectTransactionsData(
+          selectedProject?.value || id,
+          processId
+        );
         const transactionsData = response.data;
         const formDataGet = transactionsData.map(formatQuantitySheetData);
         const filteredData = formDataGet.filter(
@@ -648,15 +705,15 @@ console.log(previousProcess)
       <Row>
         <Col lg={12} md={12}>
           <div className="marquee-container mt-2 mb-2">
-            <MarqueeAlert data={tableData} onClick={handleCatchClick}/>
+            <MarqueeAlert data={tableData} onClick={handleCatchClick} />
           </div>
         </Col>
       </Row>
 
-      { processName !== "Dispatch"  && (
+      {processName !== "Dispatch" && (
         <Row className="mb-5">
           <Col lg={12} md={12}>
-          <CatchProgressBar data={combinedTableData} />
+            <CatchProgressBar data={combinedTableData} />
           </Col>
         </Row>
       )}

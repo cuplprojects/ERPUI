@@ -34,6 +34,7 @@ const AuthService = {
     const { actions } = useUserDataStore.getState();
     
     clearToken();
+    localStorage.removeItem('isLocked');
     actions.clearUserData();
   },
 
