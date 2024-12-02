@@ -1,16 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import LineChart from "./../sub-Components/LineChart";
 import BarChart from "./../sub-Components/BarChart";
-import {
-  Card,
-  Col,
-  Row,
-  Carousel,
-  Container,
-  OverlayTrigger,
-  Tooltip,
-  Dropdown,
-} from "react-bootstrap";
+import { Card, Col,Row,Carousel,Container,OverlayTrigger,Tooltip,Dropdown} from "react-bootstrap";
 import CuDetailedAgGrid from "../sub-Components/CuDetailedAgGrid";
 import PieChart from "../sub-Components/PieChart";
 import Cards from "../sub-Components/Cards";
@@ -345,7 +336,7 @@ const CuDashboard = () => {
                             placement="bottom"
                             overlay={
                               <Tooltip id={`tooltip-${key}`}>
-                                {key.charAt(0).toUpperCase() + key.slice(1)}
+                                {key === 'agGrid' ? t("Table") : key.charAt(0).toUpperCase() + key.slice(1)}
                               </Tooltip>
                             }
                           >

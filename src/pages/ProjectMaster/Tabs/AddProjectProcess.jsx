@@ -114,6 +114,7 @@ const AddProjectProcess = ({ selectedProject, setIsProcessSubmitted }) => {
   const [independentProcesses, setIndependentProcesses] = useState([]);
   const [projectName, setProjectName] = useState('');
   const [isTransactionExists, setIsTransactionExists] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const tableRef = useRef(null);
   const { t } = useTranslation();
   const { getCssClasses } = useStore(themeStore);
@@ -278,37 +279,42 @@ const AddProjectProcess = ({ selectedProject, setIsProcessSubmitted }) => {
   };
 
   const handleSubmit = async () => {
-    const projectProcessesToSubmit = projectProcesses.map((process, index) => {
-      const matchingProcess = allProcesses.find(p => p.name === process.name);
-
-      return {
-        id: process.id,
-        projectId: selectedProject,
-        processId: matchingProcess ? matchingProcess.id : process.id,
-        weightage: process.relativeWeightage,
-        sequence: index + 1,
-        featuresList: process.installedFeatures,
-        userId: process.userId || [],
-        thresholdQty: process.thresholdQty || 0
-      };
-    });
-
-    const data = { projectProcesses: projectProcessesToSubmit };
-    const deleteData = { projectId: selectedProject, processIds: removedProcessIds };
+    if (isSubmitting) return;
+    setIsSubmitting(true);
 
     try {
-      await API.post('/ProjectProcess/AddProcessesToProject', data);
+      const projectProcessesToSubmit = projectProcesses.map((process, index) => {
+        const matchingProcess = allProcesses.find(p => p.name === process.name);
+        return {
+          id: process.id,
+          projectId: selectedProject,
+          processId: matchingProcess ? matchingProcess.id : process.id,
+          weightage: process.relativeWeightage,
+          sequence: index + 1,
+          featuresList: process.installedFeatures || [],
+          userId: process.userId || [],
+          thresholdQty: process.thresholdQty || 0
+        };
+      });
+
+      const data = { projectProcesses: projectProcessesToSubmit };
+      const deleteData = { projectId: selectedProject, processIds: removedProcessIds };
+
       if (removedProcessIds.length > 0) {
         await API.post('/ProjectProcess/DeleteProcessesFromProject', deleteData);
       }
 
+      await API.post('/ProjectProcess/AddProcessesToProject', data);
+
       message.success(t('processesUpdatedSuccessfully'));
-      setIsProcessSubmitted(true); // Set the submission status to true
+      setIsProcessSubmitted(true);
+      setRemovedProcessIds([]);
 
     } catch (error) {
       message.error(t('errorUpdatingProcessesPleaseTryAgain'));
+      console.error('Submit error:', error);
     } finally {
-      setRemovedProcessIds([]);
+      setIsSubmitting(false);
     }
   };
 
@@ -461,9 +467,9 @@ const AddProjectProcess = ({ selectedProject, setIsProcessSubmitted }) => {
         className={`${customBtn}`}
         onClick={handleSubmit}
         style={{ marginTop: '16px' }}
-        disabled={isTransactionExists}
+        disabled={isTransactionExists || isSubmitting}
       >
-        {t("submitProcesses")}
+        {isSubmitting ? t("submitting") : t("submitProcesses")}
       </Button>
 
       <style>
