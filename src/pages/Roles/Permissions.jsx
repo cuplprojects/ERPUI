@@ -217,20 +217,16 @@ const permissionOptions = [
   },
   { title: 'Message Management', key: '3' },
   { title: 'Reports', key: '4' },
- // { title: 'Cumulative Dashboard', key: '5' },
+  { title: 'Cumulative Dashboard', key: '5' },
   { title: 'Quantity Sheet', key: '6' },
 ];
 
 const Permissions = ({ selectedPermissions = [], onChange }) => {
   const { t } = useTranslation();
-  const defaultCheckedKeys = [...selectedPermissions, '5', '1'];
+  const defaultCheckedKeys = [...selectedPermissions];
 
   const onCheck = (checkedKeys) => {
-    if (checkedKeys.includes('5') || checkedKeys.includes('1')) {
-      onChange(checkedKeys.filter(key => key !== '5' && key !== '1'));
-    } else {
-      onChange(checkedKeys);
-    }
+    onChange(checkedKeys);
   };
 
   const renderTreeNodes = (data) =>
