@@ -32,6 +32,7 @@ import { useStore } from "zustand";
 import { BiSolidFlag } from "react-icons/bi";
 import { MdPending } from "react-icons/md"; // for pending
 import { IoCheckmarkDoneCircleSharp } from "react-icons/io5"; // for completed
+import { BsThreeDots } from "react-icons/bs"; // for in progress
 import API from "../CustomHooks/MasterApiHooks/api";
 import { hasPermission } from "../CustomHooks/Services/permissionUtils";
 import { useTranslation } from "react-i18next";
@@ -191,8 +192,8 @@ const ProjectDetailsTable = ({
       ? !item.previousProcessData ||
         item.previousProcessData.status === 2 ||
         (item.previousProcessData.thresholdQty != null &&
-          item.previousProcessData.thresholdQty >
-            item.previousProcessData.interimQuantity)
+          item.previousProcessData.thresholdQty > 0 &&
+          item.previousProcessData.interimQuantity >= item.previousProcessData.thresholdQty)
       : true;
 
     return (
@@ -228,8 +229,8 @@ const ProjectDetailsTable = ({
       updatedRow.previousProcessData.status !== 2 &&
       !(
         updatedRow.previousProcessData.thresholdQty != null &&
-        updatedRow.previousProcessData.thresholdQty >
-          updatedRow.previousProcessData.interimQuantity
+        updatedRow.previousProcessData.thresholdQty > 0 &&
+        updatedRow.previousProcessData.interimQuantity >= updatedRow.previousProcessData.thresholdQty
       )
     ) {
       showNotification(
@@ -366,27 +367,33 @@ const ProjectDetailsTable = ({
           <Row>
             <Col lg={3} md={3} sm={3} xs={3}>
               <div className="d-inline">
+                {/* Check if previous process data exists */}
                 {record.previousProcessData ? (
+                  // If previous process is completed (status 2), show green checkmark
                   record.previousProcessData.status === 2 ? (
-                    record.previousProcessData.thresholdQty != null &&
-                    record.previousProcessData.thresholdQty >
-                      record.previousProcessData.interimQuantity ? (
-                      <IoCheckmarkDoneCircleSharp
-                        size={20}
-                        color="blue"
-                        className=""
-                      />
-                    ) : (
-                      <IoCheckmarkDoneCircleSharp
-                        size={20}
-                        color="green"
-                        className=""
-                      />
-                    )
-                  ) : (
+                    <IoCheckmarkDoneCircleSharp
+                      size={20}
+                      color="green"
+                      className=""
+                    />
+                  ) : // If threshold quantity is met, show blue checkmark
+                  record.previousProcessData.thresholdQty != null &&
+                    record.previousProcessData.thresholdQty > 0 &&
+                    record.previousProcessData.interimQuantity >= record.previousProcessData.thresholdQty ? (
+                    <IoCheckmarkDoneCircleSharp
+                      size={20}
+                      color="blue"
+                      className=""
+                    />
+                  ) : // If status is pending (0), show orange pending icon
+                  record.previousProcessData.status === 0 ? (
+                    <MdPending size={20} color="orange" className="" />
+                  ) : // Otherwise show orange dots for in progress
+                  (
                     <MdPending size={20} color="orange" className="" />
                   )
-                ) : (
+                ) : // If no previous process, show orange checkmark
+                (
                   <IoCheckmarkDoneCircleSharp
                     size={20}
                     color="orange"
@@ -583,8 +590,8 @@ const ProjectDetailsTable = ({
             record.status === null ||
             record.status === "") &&
             ((record.previousProcessData.thresholdQty != null &&
-              record.previousProcessData.thresholdQty >
-                record.previousProcessData.interimQuantity) ||
+              record.previousProcessData.thresholdQty > 0 &&
+              record.previousProcessData.interimQuantity >= record.previousProcessData.thresholdQty) ||
               record.previousProcessData.status === 2)) ||
           // 3. If current process status is 1 and previous process status is 2, return true
           (record.status === 1 && record.previousProcessData?.status === 2) ||
@@ -742,8 +749,8 @@ const ProjectDetailsTable = ({
         !row.previousProcessData ||
         row.previousProcessData.status === 2 ||
         (row.previousProcessData.thresholdQty != null &&
-          row.previousProcessData.thresholdQty >
-            row.previousProcessData.interimQuantity)
+          row.previousProcessData.thresholdQty > 0 &&
+          row.previousProcessData.interimQuantity >= row.previousProcessData.thresholdQty)
       );
     });
 
