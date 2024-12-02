@@ -86,113 +86,139 @@ const ProcessTable = () => {
 
 
   const handleProcessChange = async (value) => {
+    console.log("handleProcessChange triggered with value:", value);
     const selectedProcess = processes.find((p) => p.processId === value);
+    console.log("Selected Process:", selectedProcess);
+
     if (selectedProcess) {
-      setProcess(selectedProcess.processId, selectedProcess.processName);
-      setIsLoading(true);
-      try {
-        // Fetch new feature data for selected process
-        const data = await getProjectProcessAndFeature(
-          userData.userId,
-          selectedProject?.value || id
-        );
-        const processData = data.find((p) => p.processId === value);
-        setFeatureData(processData);
-  
-        if (processData.sequence > 1) {
-          let previousSequence = processData.sequence - 1;
-          let previousProcessData;
-  
-          // Loop to find the previous valid process based on logic
-          do {
-            previousProcessData = await getProjectProcessByProjectAndSequence(
-              selectedProject?.value || id,
-              previousSequence
+        // Clear previous process data first
+        setPreviousProcess(null);
+        setPreviousProcessTransactions([]);
+        
+        console.log("Setting process with ID:", selectedProcess.processId, "and Name:", selectedProcess.processName);
+        setProcess(selectedProcess.processId, selectedProcess.processName);
+        setIsLoading(true);
+        try {
+            console.log("Fetching new feature data...");
+            // Fetch new feature data for selected process
+            const data = await getProjectProcessAndFeature(
+                userData.userId,
+                selectedProject?.value || id
             );
-            if (!previousProcessData) break;
-  
-            // Add logic to skip based on your conditions
-            // If current process ID is 7 and previous process ID is 6, skip 6 and check further
-            if (processData.processId === 2 && previousProcessData.processId === 3) {
-              previousSequence--; // Skip this and go to earlier sequence
-              continue;
-            }
-  
-            // If current process ID is 6, skip previous process ID 5 and check further
-            if (processData.processId === 3 && previousProcessData.processId === 1) {
-              previousSequence--; // Skip this and go to earlier sequence
-              continue;
-            }
-  
-            // Check if the previous process matches conditions for Dependent or Independent
-            if (previousProcessData.processType === "Dependent" || 
-                (previousProcessData.processType === "Independent" && 
-                 previousProcessData.rangeStart <= processData.sequence &&
-                 previousProcessData.rangeEnd >= processData.sequence)) {
-  
-              // If current process is Independent and previous process is Independent
-              if (previousProcessData.processType === "Independent") {
-                // Check if rangeEnd of previous process equals current processId
-                if (previousProcessData.rangeEnd === processData.processId) {
-                  console.log(previousProcessData);
-                  // If it matches, consider this previous process
-                  setPreviousProcess(previousProcessData);
-                  const prevTransactions = await getProjectTransactionsData(selectedProject?.value || id, previousProcessData.processId)
-                  const mappedPrevTransactions = prevTransactions.data.map(transaction => ({
-                    ...transaction,
-                    thresholdQty: previousProcessData.thresholdQty
-                  }));
-                  setPreviousProcessTransactions(mappedPrevTransactions);
-                  break;
-                } else {
-                  // If it doesn't match, go to the process before this one
-                  previousSequence--;
-                  continue; // Skip this process and check previous
+            console.log("Feature data fetched:", data);
+            const processData = data.find((p) => p.processId === value);
+            console.log("Process data for selected process:", processData);
+            setFeatureData(processData);
+
+            if (processData.sequence > 1) {
+                console.log("Process sequence is greater than 1, checking previous processes...");
+                let previousSequence = processData.sequence - 1;
+                let previousProcessData;
+
+                // Loop to find the previous valid process based on logic
+                do {
+                    console.log("Fetching previous process data for sequence:", previousSequence);
+                    previousProcessData = await getProjectProcessByProjectAndSequence(
+                        selectedProject?.value || id,
+                        previousSequence
+                    );
+                    console.log("Previous process data:", previousProcessData);
+                    if (!previousProcessData) break;
+
+                    // Add logic to skip based on your conditions
+                    // If current process ID is 7 and previous process ID is 6, skip 6 and check further
+                    if (processData.processId === 2 && previousProcessData.processId === 3) {
+                        console.log("Skipping previous process 3, going to earlier sequence.");
+                        previousSequence--; // Skip this and go to earlier sequence
+                        continue;
+                    }
+
+                    // If current process ID is 6, skip previous process ID 5 and check further
+                    if (processData.processId === 3 && previousProcessData.processId === 1) {
+                        console.log("Skipping previous process 1, going to earlier sequence.");
+                        previousSequence--; // Skip this and go to earlier sequence
+                        continue;
+                    }
+
+                    // Check if the previous process matches conditions for Dependent or Independent
+                    if (previousProcessData.processType === "Dependent" || 
+                        (previousProcessData.processType === "Independent" && 
+                        previousProcessData.rangeStart <= processData.sequence &&
+                        previousProcessData.rangeEnd >= processData.sequence)) {
+
+                        console.log("Previous process is valid, matching conditions...");
+                        // If current process is Independent and previous process is Independent
+                        if (previousProcessData.processType === "Independent") {
+                            console.log("Checking if previous process is Independent...");
+                            // Check if rangeEnd of previous process equals current processId
+                            if (previousProcessData.rangeEnd === processData.processId) {
+                                console.log("Range end matches current process, setting previous process:", previousProcessData);
+                                setPreviousProcess(previousProcessData);
+                                const prevTransactions = await getProjectTransactionsData(selectedProject?.value || id, previousProcessData.processId);
+                                console.log("Fetched previous transactions:", prevTransactions);
+                                const mappedPrevTransactions = prevTransactions.data.map(transaction => ({
+                                    ...transaction,
+                                    thresholdQty: previousProcessData.thresholdQty
+                                }));
+                                console.log("Mapped previous transactions with threshold:", mappedPrevTransactions);
+                                setPreviousProcessTransactions(mappedPrevTransactions);
+                                break;
+                            } else {
+                                console.log("Range end does not match current process, going to earlier sequence.");
+                                previousSequence--;
+                                continue; // Skip this process and check previous
+                            }
+                        }
+
+                        // If current process is Independent, set previous process to min range
+                        if (processData.processType === "Independent" && processData.rangeStart) {
+                            console.log("Setting previous process to min range:", processData.rangeStart);
+                            previousProcessData = await getProjectProcessByProjectAndSequence(
+                                selectedProject?.value || id,
+                                processData.rangeStart
+                            );
+                        }
+
+                        console.log("Setting previous process:", previousProcessData);
+                        setPreviousProcess(previousProcessData);
+                        const prevTransactions = await getProjectTransactionsData(selectedProject?.value || id, previousProcessData.processId);
+                        console.log("Fetched previous transactions:", prevTransactions);
+                        const mappedPrevTransactions = prevTransactions.data.map(transaction => ({
+                            ...transaction,
+                            thresholdQty: previousProcessData.thresholdQty
+                        }));
+                        console.log("Mapped previous transactions with threshold:", mappedPrevTransactions);
+                        setPreviousProcessTransactions(mappedPrevTransactions);
+                        break;
+                    }
+                    previousSequence--;
+                } while (previousSequence > 0);
+
+                if (previousSequence <= 0) {
+                    console.log("No previous valid process found.");
+                    setPreviousProcess(null);
+                    setPreviousProcessTransactions([]);
                 }
-              }
-  
-              // If current process is Independent, set previous process to min range
-              if (processData.processType === "Independent" && processData.rangeStart) {
-                previousProcessData = await getProjectProcessByProjectAndSequence(
-                  selectedProject?.value || id,
-                  processData.rangeStart
-                );
-              }
-  
-              setPreviousProcess(previousProcessData);
-              const prevTransactions = await getProjectTransactionsData(selectedProject?.value || id, previousProcessData.processId)
-              const mappedPrevTransactions = prevTransactions.data.map(transaction => ({
-                ...transaction,
-                thresholdQty: previousProcessData.thresholdQty
-              }));
-              setPreviousProcessTransactions(mappedPrevTransactions);
-              break;
+            } else {
+                console.log("Process sequence is 1 or less, no previous process.");
+                setPreviousProcess(null);
+                setPreviousProcessTransactions([]);
             }
-            previousSequence--;
-          } while (previousSequence > 0);
-  
-          if (previousSequence <= 0) {
-            setPreviousProcess(null);
-            setPreviousProcessTransactions([]);
-          }
-        } else {
-          setPreviousProcess(null);
-          setPreviousProcessTransactions([]);
+
+            console.log("Fetching transactions...");
+            await fetchTransactions();
+        } catch (error) {
+            console.error("Error updating process data:", error);
+        } finally {
+            console.log("Setting isLoading to false.");
+            setIsLoading(false);
         }
-  
-        await fetchTransactions();
-      } catch (error) {
-        console.error("Error updating process data:", error);
-      } finally {
-        setIsLoading(false);
-      }
     }
-  }
+}
+
   
   const handleProjectChange = async (selectedProject) => {
     if (!selectedProject || selectedProject.value === id) return;
-
-    // Clear all state data first
     setSelectedProject(null);
     setProjectName("");
     setProcess(0, "");
@@ -204,8 +230,6 @@ const ProcessTable = () => {
     setProjectLots([]);
     setSelectedLot(null);
     setPreviousProcessCompletionPercentage(0);
-
-    // Then set new project and fetch data
     setSelectedProject(selectedProject);
     setProjectName(selectedProject.label);
     setIsLoading(true);
@@ -238,20 +262,15 @@ const ProcessTable = () => {
           firstProcess.processId
         );
         const transactionsData = response.data;
-
         if (Array.isArray(transactionsData)) {
           const uniqueLots = [
             ...new Set(transactionsData.map((item) => item.lotNo)),
           ].sort((a, b) => a - b);
           setProjectLots(uniqueLots.map((lotNo) => ({ lotNo })));
-
-          // Set first lot as selected
           if (uniqueLots.length > 0) {
             setSelectedLot(uniqueLots[0]);
           }
         }
-
-        // Check for previous process
         if (firstProcess.sequence > 1) {
           const prevProcessData = await getProjectProcessByProjectAndSequence(
             selectedProject.value,
@@ -263,8 +282,6 @@ const ProcessTable = () => {
             setPreviousProcessTransactions(prevTransactions.data);
           }
         }
-
-        // Fetch transactions for new project with first process
         await fetchTransactions();
       }
     } catch (error) {
@@ -295,7 +312,6 @@ const ProcessTable = () => {
     (featureId) => {
         // Check if the featureId is in the current process's featuresList
         if (featureData?.featuresList) {
-          console.log("featureData.featuresList", featureData.featuresList);
             return featureData.featuresList.includes(featureId);
         }
         return false;
