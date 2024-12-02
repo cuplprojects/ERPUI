@@ -387,6 +387,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
     const payload = {
       ...updatedItem,
       processId: updatedProcessIds,
+      status: 1,
     };
 
     try {
