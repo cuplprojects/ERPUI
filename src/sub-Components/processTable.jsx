@@ -216,7 +216,7 @@ const ProcessTable = () => {
     }
   };
 
-  //get digital or offset data
+  // get digital or offset data
   useEffect(() => {
     const fetchDigitalOrOffsetData = async () => {
       try {
@@ -225,26 +225,27 @@ const ProcessTable = () => {
             selectedProject?.value || id,
             2
           );
-          setDigitalandOffsetData(digitalData.data);
+          if (digitalData?.data) {
+            setDigitalandOffsetData(digitalData.data);
+          }
         }
         if (selectedProject && previousProcess?.processId === 2) {
           const offsetData = await getProjectTransactionsData(
             selectedProject?.value || id,
             3
           );
-          setDigitalandOffsetData(offsetData.data);
+          if (offsetData?.data) {
+            setDigitalandOffsetData(offsetData.data);
+          }
         }
       } catch (error) {
         console.error("Error fetching digital/offset data:", error);
-        console.error("Error details:", {
-          message: error.message,
-          stack: error.stack,
-        });
+        setDigitalandOffsetData([]);
       }
     };
 
     fetchDigitalOrOffsetData();
-  }, [selectedProject, processId, id]);
+  }, [selectedProject, processId, previousProcess, id]);
 
   const handleProjectChange = async (selectedProject) => {
     if (!selectedProject || selectedProject.value === id) return;
@@ -471,20 +472,14 @@ const ProcessTable = () => {
           // If no previous process data found, check digitalandOffsetData
           if (
             !previousProcessData?.transactions?.length &&
-            digitalandOffsetData
+            digitalandOffsetData?.length > 0 && 
+            previousProcess?.processId && 
+            (previousProcess.processId === 2 || previousProcess.processId === 3)
           ) {
-            // Check if digitalandOffsetData is an array before using find
-            if (Array.isArray(digitalandOffsetData)) {
-              previousProcessData = digitalandOffsetData.find(
-                (digitalOffset) =>
-                  digitalOffset.quantitySheetId === item.quantitySheetId
-              );
-            } else {
-              console.warn(
-                "digitalandOffsetData is not an array:",
-                digitalandOffsetData
-              );
-            }
+            previousProcessData = digitalandOffsetData.find(
+              (digitalOffset) =>
+                digitalOffset.quantitySheetId === item.quantitySheetId
+            );
           }
 
           return {
@@ -564,6 +559,7 @@ const ProcessTable = () => {
     previousProcessTransactions,
     selectedProject,
     previousProcess,
+    digitalandOffsetData,
   ]);
 
   useEffect(() => {
