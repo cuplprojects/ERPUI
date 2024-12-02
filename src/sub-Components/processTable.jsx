@@ -89,7 +89,10 @@ const ProcessTable = () => {
   }, [selectedLot, previousProcess]);
 
   const handleProcessChange = async (value) => {
+    console.log("handleProcessChange triggered with value:", value);
     const selectedProcess = processes.find((p) => p.processId === value);
+    console.log("Selected Process:", selectedProcess);
+
     if (selectedProcess) {
       setProcess(selectedProcess.processId, selectedProcess.processName);
       setIsLoading(true);
@@ -245,8 +248,6 @@ const ProcessTable = () => {
 
   const handleProjectChange = async (selectedProject) => {
     if (!selectedProject || selectedProject.value === id) return;
-
-    // Clear all state data first
     setSelectedProject(null);
     setProjectName("");
     setProcess(0, "");
@@ -258,8 +259,6 @@ const ProcessTable = () => {
     setProjectLots([]);
     setSelectedLot(null);
     setPreviousProcessCompletionPercentage(0);
-
-    // Then set new project and fetch data
     setSelectedProject(selectedProject);
     setProjectName(selectedProject.label);
     setIsLoading(true);
@@ -292,20 +291,15 @@ const ProcessTable = () => {
           firstProcess.processId
         );
         const transactionsData = response.data;
-
         if (Array.isArray(transactionsData)) {
           const uniqueLots = [
             ...new Set(transactionsData.map((item) => item.lotNo)),
           ].sort((a, b) => a - b);
           setProjectLots(uniqueLots.map((lotNo) => ({ lotNo })));
-
-          // Set first lot as selected
           if (uniqueLots.length > 0) {
             setSelectedLot(uniqueLots[0]);
           }
         }
-
-        // Check for previous process
         if (firstProcess.sequence > 1) {
           const prevProcessData = await getProjectProcessByProjectAndSequence(
             selectedProject.value,
@@ -320,8 +314,6 @@ const ProcessTable = () => {
             setPreviousProcessTransactions(prevTransactions.data);
           }
         }
-
-        // Fetch transactions for new project with first process
         await fetchTransactions();
       }
     } catch (error) {

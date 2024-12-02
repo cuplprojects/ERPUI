@@ -86,8 +86,7 @@ const ProjectDetailsTable = ({
   const [pageSize, setPageSize] = useState(5);
   const [currentPage, setCurrentPage] = useState(1);
   const [alarmModalData, setAlarmModalData] = useState(null);
-  const [interimQuantityModalData, setInterimQuantityModalData] =
-    useState(null);
+  const [interimQuantityModalData, setInterimQuantityModalData] = useState(null);
   const [remarksModalData, setRemarksModalData] = useState(null);
   const [selectAll, setSelectAll] = useState(false);
   const [visibleRowKeys, setVisibleRowKeys] = useState([]);
@@ -101,14 +100,12 @@ const ProjectDetailsTable = ({
   const [selectMachineModalData, setSelectMachineModalData] = useState(null);
   const [assignTeamModalData, setAssignTeamModalData] = useState(null);
   const [showOnlyAlerts, setShowOnlyAlerts] = useState(false);
-  const [
-    showOnlyCompletedPreviousProcess,
-    setShowOnlyCompletedPreviousProcess,
-  ] = useState(true);
+  const [ showOnlyCompletedPreviousProcess,setShowOnlyCompletedPreviousProcess] = useState(true);
   const [showOnlyRemarks, setShowOnlyRemarks] = useState(false);
   const [paperData, setPaperData] = useState([]);
   const [courseData, setCourseData] = useState([]);
   const [subjectData, setSubjectData] = useState([]);
+  console.log(tableData)
 
   const showNotification = (type, messageKey, descriptionKey, details = "") => {
     notification[type]({
