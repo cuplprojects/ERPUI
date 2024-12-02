@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Button, Tag, Checkbox, DatePicker } from 'antd';
+import { Modal, Button, Tag, Checkbox, DatePicker, Select } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 import { decrypt } from '../Security/Security';
@@ -26,6 +26,9 @@ const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots =
     const [isConfirmed, setIsConfirmed] = useState(false);
     const [key, setKey] = useState(0);
     const [lotDateRanges, setLotDateRanges] = useState({});
+    const [showManualLotSelection, setShowManualLotSelection] = useState(false);
+    const [availableLots, setAvailableLots] = useState([]);
+    const [disabledDates, setDisabledDates] = useState([]);
 
     useEffect(() => {
         const fetchProjectName = async () => {
@@ -42,6 +45,20 @@ const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots =
                 const response = await API.get(`/QuantitySheet/lot-dates?projectId=${projectId}`);
                 if (response.data && typeof response.data === 'object') {
                     setLotDateRanges(response.data);
+                    
+                    // Calculate disabled dates based on dispatched lots
+                    let maxDispatchedDate = null;
+                    dispatchedLots.forEach(dispatchedLot => {
+                        const lotRange = response.data[dispatchedLot];
+                        if (lotRange) {
+                            const lotMaxDate = dayjs(lotRange.maxDate, 'DD-MM-YYYY');
+                            if (!maxDispatchedDate || lotMaxDate.isAfter(maxDispatchedDate)) {
+                                maxDispatchedDate = lotMaxDate;
+                            }
+                        }
+                    });
+                    setDisabledDates(maxDispatchedDate);
+                    
                 } else {
                     console.error('Invalid date ranges format:', response.data);
                     setLotDateRanges({});
@@ -56,12 +73,21 @@ const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots =
             fetchProjectName();
             fetchLotDateRanges();
         }
-    }, [projectId, visible]);
+    }, [projectId, visible, dispatchedLots]);
 
-    // Handle date selection and checking against lot date ranges
+    const disabledDate = (current) => {
+        // Disable dates before and including maxDispatchedDate if it exists
+        if (disabledDates && current && current.isBefore(disabledDates, 'day') || current.isSame(disabledDates, 'day')) {
+            return true;
+        }
+        return false;
+    };
+
     const handleDateChange = (date) => {
         const formattedDate = date ? date.format('DD-MM-YYYY') : null;
         setSelectedDate(formattedDate);
+        setShowManualLotSelection(false);
+        setIsConfirmed(false);
     
         if (formattedDate) {
             const selectedDateObj = dayjs(formattedDate, 'DD-MM-YYYY');
@@ -79,6 +105,15 @@ const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots =
                 const bMinDate = dayjs(b[1].minDate, 'DD-MM-YYYY');
                 return aMinDate.isBefore(bMinDate) ? -1 : 1;
             });
+
+            // Filter lots that are adjacent to the selected date
+            const adjacentLots = sortedLots.filter(([lot, range]) => {
+                const minDate = dayjs(range.minDate, 'DD-MM-YYYY');
+                const maxDate = dayjs(range.maxDate, 'DD-MM-YYYY');
+                return selectedDateObj.isBetween(minDate.subtract(1, 'day'), maxDate.add(1, 'day'), 'day', '[]');
+            });
+            
+            setAvailableLots(adjacentLots.map(([lot]) => lot));
     
             // Loop through the sorted lots to check if the selected date is within any lot's range
             sortedLots.forEach(([lot, range]) => {
@@ -96,25 +131,35 @@ const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots =
     
             if (foundLot) {
                 setSelectedLot(foundLot);
-                setIsConfirmed(true);  // Enable confirmation once a valid lot is found
+                setIsConfirmed(true);
+                setShowManualLotSelection(false);
             } else if (selectedDateObj.isBefore(dayjs(sortedLots[0][1].minDate, 'DD-MM-YYYY'))) {
                 // If the selected date is earlier than the first lot's minDate, assign it to the first lot
                 setSelectedLot(firstLot);
                 setIsConfirmed(true);
+                setShowManualLotSelection(false);
             } else if (selectedDateObj.isAfter(dayjs(sortedLots[sortedLots.length - 1][1].maxDate, 'DD-MM-YYYY'))) {
                 // If the selected date is later than the last lot's maxDate, assign it to the last lot
                 setSelectedLot(lastLot);
                 setIsConfirmed(true);
+                setShowManualLotSelection(false);
             } else {
                 setSelectedLot(null);
                 setIsConfirmed(false);
+                setShowManualLotSelection(true);
             }
         } else {
             setSelectedLot(null);
             setIsConfirmed(false);
+            setShowManualLotSelection(false);
+            setAvailableLots([]);
         }
     };
-    
+
+    const handleManualLotSelection = (lotNo) => {
+        setSelectedLot(lotNo);
+        setIsConfirmed(true);
+    };
 
     const handleTransfer = async () => {
         try {
@@ -149,6 +194,8 @@ const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots =
         setSelectedLot(null);
         setSelectedDate(null);
         setIsConfirmed(false);
+        setShowManualLotSelection(false);
+        setAvailableLots([]);
         onClose();
     };
 
@@ -207,9 +254,32 @@ const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots =
                                 format="DD-MM-YYYY"
                                 className={`w-100 ${customDarkText}`}
                                 placeholder={t('selectDate')}
+                                disabledDate={disabledDate}
                             />
                         </div>
                     </div>
+
+                    {showManualLotSelection && (
+                        <div className="mb-3">
+                            <div className={`${customDarkText} mb-2`}>{t('noLotFoundForSelectedDate')}</div>
+                            <label className={`${customDarkText} mb-2`}>{t('pleaseSelectLot')}:</label>
+                            <Select
+                                className="w-100"
+                                onChange={handleManualLotSelection}
+                                value={selectedLot}
+                                placeholder={t('selectLot')}
+                            >
+                                {availableLots
+                                    .filter(lot => lot !== selectedLotNo && !dispatchedLots.includes(lot))
+                                    .map(lot => (
+                                        <Select.Option key={lot} value={lot}>
+                                            {t('lot')} {lot}
+                                        </Select.Option>
+                                    ))
+                                }
+                            </Select>
+                        </div>
+                    )}
 
                     {selectedLot && (
                         <div className="mt-4">                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
