@@ -18,7 +18,7 @@ const RolesAndDepartments = () => {
   const cssClasses = getCssClasses();
   const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
   const [roles, setRoles] = useState([]);
-  const [newRole, setNewRole] = useState({ roleId: 0, roleName: '', priorityOrder: 0, status: true, permissions: [] });
+  const [newRole, setNewRole] = useState({ roleId: 0, roleName: '', priorityOrder: 0, status: true, permissions: ['1', '5'] }); // Default permissions 1 and 5
   const [isRoleModalVisible, setIsRoleModalVisible] = useState(false);
   
   // Pagination state
@@ -46,7 +46,7 @@ const RolesAndDepartments = () => {
   };
 
   const onCreateRole = () => {
-    setNewRole({ roleId: 0, roleName: '', priorityOrder: 0, status: true, permissions: [] });
+    setNewRole({ roleId: 0, roleName: '', priorityOrder: 0, status: true, permissions: ['1', '5'] }); // Default permissions 1 and 5 when creating
     setIsRoleModalVisible(true);
   };
 
@@ -69,12 +69,15 @@ const RolesAndDepartments = () => {
   
     try {
       let response;
+      // Ensure permission 5 is always included
+      const updatedPermissions = Array.from(new Set([...newRole.permissions, '5']));
+      
       if (newRole.roleId === 0) {
         response = await API.post('/Roles', {
           roleName: trimmedRoleName,
           priorityOrder: newRole.priorityOrder,
           status: newRole.status,
-          permissionList: newRole.permissions.map(permission => permission.toString()),
+          permissionList: updatedPermissions,
         });
         setRoles([...roles, { ...response.data }]);
         success(t('Role added successfully'));
@@ -85,7 +88,7 @@ const RolesAndDepartments = () => {
           priorityOrder: newRole.priorityOrder,
           status: newRole.status,
           permission:'',
-          permissionList: newRole.permissions.map(permission => permission.toString()),
+          permissionList: updatedPermissions,
         });
         const updatedRoles = roles.map(role => (role.roleId === newRole.roleId ? response.data : role));
         setRoles(updatedRoles);
@@ -101,11 +104,12 @@ const RolesAndDepartments = () => {
 
   const handleRoleCancel = () => {
     setIsRoleModalVisible(false);
-    setNewRole({ roleId: 0, roleName: '', priorityOrder: 0, status: true, permissions: [] });
+    setNewRole({ roleId: 0, roleName: '', priorityOrder: 0, status: true, permissions: ['1', '5'] }); // Reset with default permissions 1 and 5
   };
 
   const handleEditRole = (role) => {
-    const defaultCheckedPermissions = role.permissionList || [];
+    // Ensure permission 5 is included when editing, and add permission 1 if no permissions exist
+    const defaultCheckedPermissions = Array.from(new Set([...(role.permissionList || ['1']), '5']));
     setNewRole({ ...role, permissions: defaultCheckedPermissions });
     setIsRoleModalVisible(true);
   };
@@ -135,7 +139,9 @@ const RolesAndDepartments = () => {
   };
 
   const handlePermissionChange = (checkedKeys) => {
-    setNewRole({ ...newRole, permissions: checkedKeys });
+    // Ensure permission 5 is always included, but allow toggling of permission 1
+    const updatedPermissions = Array.from(new Set([...checkedKeys, '5']));
+    setNewRole({ ...newRole, permissions: updatedPermissions });
   };
 
   // Pagination logic for roles (on the frontend)

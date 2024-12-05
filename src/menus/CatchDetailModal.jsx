@@ -9,7 +9,7 @@ import { success, error } from '../CustomHooks/Services/AlertMessageService';
 const { TextArea } = Input;
 const { Text } = Typography;
 
-const CatchDetailModal = ({ show, handleClose, data, processId, fetchTransaction}) => {
+const CatchDetailModal = ({ show, handleClose, data, processId, handleSave}) => {
     const { t } = useTranslation();
 
     const [isPlaying, setIsPlaying] = useState(false);
@@ -266,6 +266,7 @@ const CatchDetailModal = ({ show, handleClose, data, processId, fetchTransaction
             console.log('Posting transaction data:', postData);
             await API.post('/Transactions', postData);
             success('Transaction saved successfully');
+            handleSave("0")
             handleClose();
         } catch (err) {
             console.error('Error saving alarm:', err);

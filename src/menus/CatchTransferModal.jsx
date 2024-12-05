@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Button, Select, Tag, Checkbox, DatePicker } from 'antd';
-import { RightOutlined } from '@ant-design/icons';
+import { Modal, Button, Tag, Checkbox, DatePicker, Select } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 import { decrypt } from '../Security/Security';
@@ -9,6 +8,10 @@ import { useStore } from 'zustand';
 import themeStore from '../store/themeStore';
 import { Modal as BootstrapModal } from 'react-bootstrap';
 import dayjs from 'dayjs';
+import isBetween from 'dayjs/plugin/isBetween';
+
+// Extend dayjs with the isBetween plugin
+dayjs.extend(isBetween);
 
 const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots = [], selectedLotNo, fetchQuantity, dispatchedLots = [] }) => {
     const { t } = useTranslation();
@@ -19,17 +22,13 @@ const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots =
     const { getCssClasses } = useStore(themeStore);
     const cssClasses = getCssClasses();
     const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
-    const [availableDates, setAvailableDates] = useState([]);
     const [selectedDate, setSelectedDate] = useState(null);
     const [isConfirmed, setIsConfirmed] = useState(false);
-    const [dateRange, setDateRange] = useState({ start: null, end: null });
-    const [lotDates, setLotDates] = useState({
-        previousLot: [],
-        nextLot: []
-    });
-    const [isFirstLot, setIsFirstLot] = useState(false);
-    const [isLastLot, setIsLastLot] = useState(false);
-    const [key, setKey] = useState(0); // Add key for DatePicker
+    const [key, setKey] = useState(0);
+    const [lotDateRanges, setLotDateRanges] = useState({});
+    const [showManualLotSelection, setShowManualLotSelection] = useState(false);
+    const [availableLots, setAvailableLots] = useState([]);
+    const [disabledDates, setDisabledDates] = useState([]);
 
     useEffect(() => {
         const fetchProjectName = async () => {
@@ -41,97 +40,151 @@ const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots =
             }
         };
 
+        const fetchLotDateRanges = async () => {
+            try {
+                const response = await API.get(`/QuantitySheet/lot-dates?projectId=${projectId}`);
+                if (response.data && typeof response.data === 'object') {
+                    setLotDateRanges(response.data);
+                    
+                    // Calculate disabled dates based on dispatched lots
+                    let maxDispatchedDate = null;
+                    dispatchedLots.forEach(dispatchedLot => {
+                        const lotRange = response.data[dispatchedLot];
+                        if (lotRange) {
+                            const lotMaxDate = dayjs(lotRange.maxDate, 'DD-MM-YYYY');
+                            if (!maxDispatchedDate || lotMaxDate.isAfter(maxDispatchedDate)) {
+                                maxDispatchedDate = lotMaxDate;
+                            }
+                        }
+                    });
+                    setDisabledDates(maxDispatchedDate);
+                    
+                } else {
+                    console.error('Invalid date ranges format:', response.data);
+                    setLotDateRanges({});
+                }
+            } catch (error) {
+                console.error('Failed to fetch lot date ranges:', error);
+                setLotDateRanges({});
+            }
+        };
+
         if (visible) {
             fetchProjectName();
+            fetchLotDateRanges();
         }
-    }, [projectId, visible]);
+    }, [projectId, visible, dispatchedLots]);
 
-    // Filter out the current lot and dispatched lots from available lots
-    const availableLots = lots.filter(lot => 
-        lot !== selectedLotNo && !dispatchedLots.includes(lot)
-    );
-
-    // Fetch available dates when target lot is selected
-    useEffect(() => {
-        const fetchAvailableDates = async () => {
-            if (selectedLot) {
-                try {
-                    const response = await API.get(`/QuantitySheet/exam-dates?projectId=${projectId}&lotNo=${selectedLot}`);
-                    setAvailableDates(response.data);
-                } catch (error) {
-                    console.error('Failed to fetch available dates:', error);
-                }
-            }
-        };
-
-        fetchAvailableDates();
-    }, [selectedLot]);
-
-    // Fetch date range from backend when lot is selected
-    useEffect(() => {
-        const fetchDateRange = async () => {
-            if (!selectedLot) return;
-
-            try {
-                const response = await API.get(`/QuantitySheet/calculate-date-range?projectId=${projectId}&selectedLot=${selectedLot}`);
-                const { startDate, endDate, isFirstLot, isLastLot } = response.data;
-
-                // Set date range based on backend response
-                setDateRange({
-                    start: dayjs(startDate),
-                    end: dayjs(endDate)
-                });
-
-                // Reset selected date and increment key to force re-render
-                setSelectedDate(null);
-                setKey(prevKey => prevKey + 1);
-
-                // Set flags for first/last lot
-                setIsFirstLot(isFirstLot);
-                setIsLastLot(isLastLot);
-            } catch (error) {
-                console.error('Failed to fetch date range:', error);
-            }
-        };
-
-        fetchDateRange();
-    }, [selectedLot, projectId]);
-
-    // Custom date disabling function
     const disabledDate = (current) => {
-        if (!dateRange.start || !dateRange.end) return false;
-
-        // Convert current to start of day for consistent comparison
-        const currentDate = current.startOf('day');
-        const startDate = dateRange.start.startOf('day');
-        const endDate = dateRange.end.startOf('day');
-
-        // Check if date is outside the valid range
-        const isOutsideRange = currentDate.isBefore(startDate) || currentDate.isAfter(endDate);
-
-        return isOutsideRange;
+        // Disable dates before and including maxDispatchedDate if it exists
+        if (disabledDates && current && current.isBefore(disabledDates, 'day') || current.isSame(disabledDates, 'day')) {
+            return true;
+        }
+        return false;
     };
 
-    // Update the date selection handler
     const handleDateChange = (date) => {
-        setSelectedDate(date ? date.format('DD-MM-YYYY') : null);
+        const formattedDate = date ? date.format('DD-MM-YYYY') : null;
+        setSelectedDate(formattedDate);
+        setShowManualLotSelection(false);
+        setIsConfirmed(false);
+    
+        if (formattedDate) {
+            const selectedDateObj = dayjs(formattedDate, 'DD-MM-YYYY');
+    
+            // Find the lot that matches the selected date range
+            let foundLot = null;
+            let firstLot = null;
+            let lastLot = null;
+            
+            const lotEntries = Object.entries(lotDateRanges);
+    
+            // Sort the lots by their min date for easier comparison
+            const sortedLots = lotEntries.sort((a, b) => {
+                const aMinDate = dayjs(a[1].minDate, 'DD-MM-YYYY');
+                const bMinDate = dayjs(b[1].minDate, 'DD-MM-YYYY');
+                return aMinDate.isBefore(bMinDate) ? -1 : 1;
+            });
+
+            // Filter lots that are adjacent to the selected date
+            const adjacentLots = sortedLots.filter(([lot, range]) => {
+                const minDate = dayjs(range.minDate, 'DD-MM-YYYY');
+                const maxDate = dayjs(range.maxDate, 'DD-MM-YYYY');
+                return selectedDateObj.isBetween(minDate.subtract(1, 'day'), maxDate.add(1, 'day'), 'day', '[]');
+            });
+            
+            setAvailableLots(adjacentLots.map(([lot]) => lot));
+    
+            // Loop through the sorted lots to check if the selected date is within any lot's range
+            sortedLots.forEach(([lot, range]) => {
+                const minDate = dayjs(range.minDate, 'DD-MM-YYYY');
+                const maxDate = dayjs(range.maxDate, 'DD-MM-YYYY');
+    
+                // Check if the selected date is within the lot's date range
+                if (selectedDateObj.isBetween(minDate, maxDate, null, '[]')) {
+                    foundLot = lot;
+                }
+                // Track the first and last lots based on the minDate
+                if (!firstLot) firstLot = lot;
+                lastLot = lot;
+            });
+    
+            if (foundLot) {
+                setSelectedLot(foundLot);
+                setIsConfirmed(true);
+                setShowManualLotSelection(false);
+            } else if (selectedDateObj.isBefore(dayjs(sortedLots[0][1].minDate, 'DD-MM-YYYY'))) {
+                // If the selected date is earlier than the first lot's minDate, assign it to the first lot
+                setSelectedLot(firstLot);
+                setIsConfirmed(true);
+                setShowManualLotSelection(false);
+            } else if (selectedDateObj.isAfter(dayjs(sortedLots[sortedLots.length - 1][1].maxDate, 'DD-MM-YYYY'))) {
+                // If the selected date is later than the last lot's maxDate, assign it to the last lot
+                setSelectedLot(lastLot);
+                setIsConfirmed(true);
+                setShowManualLotSelection(false);
+            } else {
+                setSelectedLot(null);
+                setIsConfirmed(false);
+                setShowManualLotSelection(true);
+            }
+        } else {
+            setSelectedLot(null);
+            setIsConfirmed(false);
+            setShowManualLotSelection(false);
+            setAvailableLots([]);
+        }
+    };
+
+    const handleManualLotSelection = (lotNo) => {
+        setSelectedLot(lotNo);
+        setIsConfirmed(true);
     };
 
     const handleTransfer = async () => {
-        if (!selectedLot || !selectedDate || !isConfirmed) return;
-        
-        const payload = {
-            projectId: projectId,
-            sourceLotNo: selectedLotNo,
-            targetLotNo: selectedLot,
-            catchIds: catches.map(catch_ => catch_.id),
-            newExamDate: selectedDate
-        };
-
         try {
-            await API.put('/QuantitySheet/transfer-catches', payload);
-            await fetchQuantity();
-            resetModal();
+            if (!selectedLot || !selectedDate || !isConfirmed) {
+                console.log('Validation failed:', { selectedLot, selectedDate, isConfirmed });
+                return;
+            }
+
+            const payload = {
+                projectId: projectId,
+                sourceLotNo: selectedLotNo,
+                targetLotNo: selectedLot,
+                catchIds: catches.map(catch_ => catch_.id),
+                newExamDate: selectedDate
+            };
+
+            const response = await API.put('/QuantitySheet/transfer-catches', payload);
+            if (response && response.status === 200) {
+                try {
+                    await fetchQuantity();
+                } catch (fetchError) {
+                    console.error('Error fetching updated quantity:', fetchError);
+                }
+                resetModal();
+            }
         } catch (error) {
             console.error('Transfer failed:', error);
         }
@@ -141,6 +194,8 @@ const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots =
         setSelectedLot(null);
         setSelectedDate(null);
         setIsConfirmed(false);
+        setShowManualLotSelection(false);
+        setAvailableLots([]);
         onClose();
     };
 
@@ -153,7 +208,6 @@ const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots =
         }
     };
 
-    // Don't render if not visible
     if (!visible) {
         return null;
     }
@@ -171,7 +225,6 @@ const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots =
                         {t('selectedCatchesWillBeTransferredToSelectedLot')}:
                     </div>
                     
-                    {/* Selected Catches */}
                     <div className="mb-3">
                         <label className={`${customDarkText} mb-2`}>{t('selectedCatches')}:</label>
                         <div className="d-flex flex-wrap gap-2">
@@ -191,49 +244,45 @@ const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots =
                         </div>
                     </div>
 
-                    {/* Target Lot Selection */}
                     <div className="mb-3">
-                        <label className={`${customDarkText} mb-2`}>{t('targetLot')}:</label>
-                        <Select
-                            placeholder={t('selectLot')}
-                            onChange={setSelectedLot}
-                            value={selectedLot}
-                            style={{ width: '100%' }}
-                            className={`${customMid} ${customDarkText} rounded`}
-                        >
-                            {availableLots.map(lot => (
-                                <Select.Option key={lot} value={lot} className={customDarkText}>
-                                    {t('lot')} - {lot}
-                                </Select.Option>
-                            ))}
-                        </Select>
+                        <label className={`${customDarkText} mb-2`}>{t('selectNewExamDate')}:</label>
+                        <div className="mt-2">
+                            <DatePicker
+                                key={key}
+                                onChange={handleDateChange}
+                                value={selectedDate ? dayjs(selectedDate, 'DD-MM-YYYY') : null}
+                                format="DD-MM-YYYY"
+                                className={`w-100 ${customDarkText}`}
+                                placeholder={t('selectDate')}
+                                disabledDate={disabledDate}
+                            />
+                        </div>
                     </div>
 
-                    {/* Date Selection with Calendar */}
-                    {selectedLot && (
+                    {showManualLotSelection && (
                         <div className="mb-3">
-                            <label className={`${customDarkText} mb-2`}>{t('selectNewExamDate')}:</label>
-                            <div className="mt-2">
-                                <DatePicker
-                                    key={key} // Add key prop to force re-render
-                                    disabledDate={disabledDate}
-                                    onChange={handleDateChange}
-                                    value={selectedDate ? dayjs(selectedDate, 'DD-MM-YYYY') : null}
-                                    format="DD-MM-YYYY"
-                                    className={`w-100 ${customDarkText}`}
-                                    placeholder={t('selectDate')}
-                                    minDate={dateRange.start}
-                                    maxDate={dateRange.end}
-                                    defaultValue={dateRange.start}
-                                    defaultPickerValue={dateRange.start}
-                                />
-                            </div>
+                            <div className={`${customDarkText} mb-2`}>{t('noLotFoundForSelectedDate')}</div>
+                            <label className={`${customDarkText} mb-2`}>{t('pleaseSelectLot')}:</label>
+                            <Select
+                                className="w-100"
+                                onChange={handleManualLotSelection}
+                                value={selectedLot}
+                                placeholder={t('selectLot')}
+                            >
+                                {availableLots
+                                    .filter(lot => lot !== selectedLotNo && !dispatchedLots.includes(lot))
+                                    .map(lot => (
+                                        <Select.Option key={lot} value={lot}>
+                                            {t('lot')} {lot}
+                                        </Select.Option>
+                                    ))
+                                }
+                            </Select>
                         </div>
                     )}
 
-                    {/* Confirmation Checkbox */}
-                    {selectedLot && selectedDate && (
-                        <div className="mt-4">
+                    {selectedLot && (
+                        <div className="mt-4">                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
                             <Checkbox 
                                 checked={isConfirmed} 
                                 onChange={(e) => setIsConfirmed(e.target.checked)}
@@ -245,7 +294,6 @@ const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots =
                     )}
                 </div>
 
-                {/* Summary */}
                 <div className={`fs-6 mt-3 text-center ${customDarkText}`}>
                     {t('transferSummary')}: {t('lot')} {selectedLotNo} → {selectedLot ? `${t('lot')} ${selectedLot}` : t('selectLot')}
                     {selectedDate && <div>{t('newExamDate')}: {selectedDate}</div>}

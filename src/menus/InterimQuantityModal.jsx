@@ -121,6 +121,11 @@ const InterimQuantityModal = ({ show, handleClose, handleSave, data, processId }
                         placeholder={t("enterInterimQuantity")}
                         value={interimQuantity}
                         onChange={(e) => setInterimQuantity(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                                handleSubmit();
+                            }
+                        }}
                     />
                 </Form.Group>
             </Modal.Body>

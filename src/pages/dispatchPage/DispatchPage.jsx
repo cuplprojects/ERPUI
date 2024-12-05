@@ -31,7 +31,7 @@ const DispatchPage = ({ projectId, processId, lotNo, fetchTransactions }) => {
     try {
       const response = await API.get(`/Processes`);
       const mappedProcesses = response.data
-        .filter(process => process.id !== 10)
+        .filter(process => process.id !== 14)
         .map(process => ({
           id: process.id,
           name: process.name,
@@ -52,7 +52,7 @@ const DispatchPage = ({ projectId, processId, lotNo, fetchTransactions }) => {
   const checkPreviousProcessStatus = async () => {
     try {
       const { processes } = await getProcessPercentages(projectId);
-      const filteredProcesses = processes.filter(process => process.processId !== 10);
+      const filteredProcesses = processes.filter(process => process.processId !== 14);
       setProcessPercentages(filteredProcesses);
     } catch (error) {
       console.error("Error checking process status:", error);
@@ -109,11 +109,10 @@ const DispatchPage = ({ projectId, processId, lotNo, fetchTransactions }) => {
   };
 
   const showConfirmModal = (dispatch) => {
-    const allProcessesComplete = processPercentages.find(process => 
-      process.lots.find(lot => lot.lotNumber === dispatch.lotNo)
-    )?.lots.find(lot => 
-      lot.lotNumber === dispatch.lotNo
-    )?.percentage === 100;
+    const allProcessesComplete = processPercentages.every(process => {
+      const lotData = process.lots.find(lot => lot.lotNumber === dispatch.lotNo);
+      return lotData?.percentage === 100;
+    });
 
     if (!allProcessesComplete) {
       message.error(t("cannotCompleteDispatchAllProcessesIncomplete"));
@@ -246,10 +245,10 @@ const DispatchPage = ({ projectId, processId, lotNo, fetchTransactions }) => {
                       </span>
                     </td>
                   </tr>
-                  {!dispatch.status && processPercentages.some(process => 
-                    process.lots.some(lot => 
-                      lot.lotNumber === lotNo && lot.percentage === 100
-                    )
+                  {!dispatch.status && processPercentages.every(process => 
+                    process.lots.find(lot => 
+                      lot.lotNumber === dispatch.lotNo
+                    )?.percentage === 100
                   ) && (
                     <tr>
                       <th>{t("actions")}</th>
