@@ -241,6 +241,20 @@ const ProjectDetailsTable = ({
       return;
     }
 
+    // Check if independent process exists and is not completed
+    if (
+      updatedRow.independentProcessData &&
+      updatedRow.independentProcessData !== null &&
+      updatedRow.independentProcessData.status !== 2
+    ) {
+      showNotification(
+        "error", 
+        "Status Update Failed",
+        `${updatedRow.independentProcessData.processName} must be completed first`
+      );
+      return;
+    }
+
     // Only check interim quantity if hasFeaturePermission(7) is true
     if (hasFeaturePermission(4) && newStatusIndex === 2) {
       if (updatedRow.interimQuantity !== updatedRow.quantity) {
@@ -597,6 +611,12 @@ const ProjectDetailsTable = ({
           (record.status === 1 && record.previousProcessData?.status === 2) ||
           // 4. If current process status is 2, return true
           record.status === 2;
+
+        // Check if independent process exists and is completed
+        const isIndependentProcessCompleted =
+          !record.independentProcessData ||
+          record.independentProcessData.status === 2;
+
         // Check if 'Assign Team' and 'Select Zone' data is populated
         const isZoneAssigned = Boolean(record.zoneId);
         const isTeamAssigned = Boolean(record.teamId?.length);
@@ -608,6 +628,7 @@ const ProjectDetailsTable = ({
 
         const canChangeStatus =
           isPreviousProcessCompleted &&
+          isIndependentProcessCompleted &&
           (hasSelectMachinePermission
             ? record.machineId !== 0 &&
               record.machineId !== null &&
@@ -632,6 +653,12 @@ const ProjectDetailsTable = ({
           !requirements.includes(t("previousProcessErrorDescription"))
         ) {
           requirements.push(t("previousProcessErrorDescription"));
+        }
+        if (
+          !isIndependentProcessCompleted &&
+          !requirements.includes("Independent process must be completed first")
+        ) {
+          requirements.push("Independent process must be completed first");
         }
         if (!canChangeStatus) {
           if (
@@ -754,11 +781,34 @@ const ProjectDetailsTable = ({
       );
     });
 
+    // Check if all selected rows have completed independent process or no independent process
+    const allIndependentCompleted = selectedRowKeys.every((key) => {
+      const row = tableData.find((row) => row.srNo === key);
+      if (row.independentProcessData && row.independentProcessData.status !== 2) {
+        showNotification(
+          "error",
+          "Status Update Failed",
+          `${row.independentProcessData.processName} must be completed first`
+        );
+        return false;
+      }
+      return true;
+    });
+
     if (!allPreviousCompleted) {
       showNotification(
         "error",
         "Status Update Failed",
         "Previous process must be completed for all selected items"
+      );
+      return;
+    }
+
+    if (!allIndependentCompleted) {
+      showNotification(
+        "error",
+        "Status Update Failed",
+        "Independent process must be completed for all selected items"
       );
       return;
     }
