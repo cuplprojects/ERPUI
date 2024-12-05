@@ -9,7 +9,14 @@ const AddMessage = ({
   handleInputChange,
   formData,
   onCancel,
-  customDarkText
+  customDark,
+  customMid,
+  customLight,
+  customBtn,
+  customDarkText,
+  customLightText,
+  customLightBorder,
+  customDarkBorder
 }) => {
   const { t } = useTranslation();
 
@@ -20,14 +27,15 @@ const AddMessage = ({
       size="lg"
       backdrop="static"
       keyboard={false}
+      
     >
-      <Modal.Header closeButton>
+      <Modal.Header className={`${customDark} ${customLightText} border border-bottom-0`}>
         <Modal.Title>
           {showAddForm ? t('addMessage') : t('updateMessage')}
         </Modal.Title>
       </Modal.Header>
 
-      <Modal.Body>
+      <Modal.Body className={`${customMid} ${customLightText} border border-top-0 border-bottom-0`}>
         <Form onSubmit={handleSubmit}>
           <Row>
             {showEditForm && (
@@ -84,11 +92,11 @@ const AddMessage = ({
         </Form>
       </Modal.Body>
 
-      <Modal.Footer>
+      <Modal.Footer className={`${customDark} ${customLightText} border border-top-0`}>
         <button className="btn btn-secondary" onClick={onCancel}>
           {t('cancel')}
         </button>
-        <button className="btn btn-primary" onClick={handleSubmit}>
+        <button className={`btn  ${customBtn} border`} onClick={handleSubmit}>
           {t('save')}
         </button>
       </Modal.Footer>

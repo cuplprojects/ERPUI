@@ -1378,7 +1378,7 @@ const ProjectDetailsTable = ({
                     : "custom-theme-dark-text"
                 } fs-6 fw-bold`}
               >
-                Update Status:
+                {t('updateStatus')}
               </span>
               {(() => {
                 const requirements = [];
@@ -1462,9 +1462,9 @@ const ProjectDetailsTable = ({
                       )
                     }
                     statusSteps={[
-                      { status: "Pending", color: "red" },
-                      { status: "Started", color: "blue" },
-                      { status: "Completed", color: "green" },
+                      { status: t("pending"), color: "red" },
+                      { status: t("started"), color: "blue" },
+                      { status: t("completed"), color: "green" },
                     ]}
                     disabled={requirements.length > 0}
                   />

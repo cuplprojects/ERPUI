@@ -805,6 +805,7 @@ const ProcessTable = () => {
           projectId={selectedProject?.value || id}
           processId={processId}
           lotNo={selectedLot}
+          projectName={projectName}
         />
       ) : (
         <Row className="mb-2 mt-1">

@@ -158,7 +158,7 @@ const Message = () => {
   };
 
   return (
-    <div className={`container ${customLight} rounded py-2 shadow-lg`}>
+    <div className={`container ${customLight} rounded py-2 shadow-lg ${customDark === "dark-dark" ? `border` : ``}`}>
       <h2 className={`text-center mt-2 ${customDarkText}`}>
         {t('messageManagement')}
       </h2>
@@ -167,30 +167,24 @@ const Message = () => {
           {t(alertMessage.text)}
         </Alert>
       )}
-      
-      <AddMessage
-        showEditForm={showEditForm}
-        showAddForm={showAddForm}
-        handleSubmit={handleSubmit}
-        handleInputChange={handleInputChange}
-        formData={formData}
-        onCancel={handleModalClose}
-        customDarkText={customDarkText}
-      />
+
+
 
       <div className="mt-4">
-        <div className="d-flex justify-content-end mb-3">
-          <div className="d-flex gap-3">
-            <Input.Search
-              placeholder={t('searchMessages')} 
-              onChange={(e) => handleSearch(e.target.value)}
-              style={{ width: 300 }}
-            />
+        <div className="d-flex justify-content-between mb-3">
+          <div>
             {isDeveloper && (
               <Button onClick={handleAdd} className={`${customBtn} ${customLightBorder}`}>
                 {t('addMessage')}
               </Button>
             )}
+          </div>
+          <div className="d-flex gap-3">
+            <Input.Search
+              placeholder={t('searchMessages')}
+              onChange={(e) => handleSearch(e.target.value)}
+              style={{ width: 300 }}
+            />
           </div>
         </div>
         <Table
@@ -219,6 +213,22 @@ const Message = () => {
           />
         </div>
       </div>
+      <AddMessage
+        showEditForm={showEditForm}
+        showAddForm={showAddForm}
+        handleSubmit={handleSubmit}
+        handleInputChange={handleInputChange}
+        formData={formData}
+        onCancel={handleModalClose}
+        customDark={customDark}
+        customMid={customMid}
+        customLight={customLight}
+        customBtn={customBtn}
+        customDarkText={customDarkText}
+        customLightText={customLightText}
+        customLightBorder={customLightBorder}
+        customDarkBorder={customDarkBorder}
+      />
     </div>
   );
 };
