@@ -245,8 +245,7 @@ const ProcessTable = () => {
             2
           );
           setDigitalandOffsetData(digitalData.data);
-        }
-        if (selectedProject && previousProcess?.processId === 2) {
+        } else if (selectedProject && previousProcess?.processId === 2) {
           const offsetData = await getProjectTransactionsData(
             selectedProject?.value || id,
             3
@@ -263,7 +262,7 @@ const ProcessTable = () => {
     };
 
     fetchDigitalOrOffsetData();
-  }, [selectedProject, processId, id]);
+  }, [selectedProject, previousProcess, id]);
 
   const handleProjectChange = async (selectedProject) => {
     if (!selectedProject || selectedProject.value === id) return;
@@ -500,114 +499,130 @@ const ProcessTable = () => {
   }, [userData, id, processId, setProcess, selectedProject]);
 
   const fetchTransactions = useCallback(async () => {
-    try {
-      const response = await getProjectTransactionsData(
-        selectedProject?.value || id,
-        processId
-      );
-      const transactionsData = response.data;
-
-      if (Array.isArray(transactionsData)) {
-        // Filter transactions that contain current processId in processIds array
-        const validTransactions = transactionsData.filter((item) =>
-          item.processIds?.includes(Number(processId))
+    if(processId>0) {
+      try {
+        const response = await getProjectTransactionsData(
+          selectedProject?.value || id,
+          processId
         );
+        const transactionsData = response.data;
 
-        const formDataGet = validTransactions.map((item) => {
-          // First try to get previous process data
-          let previousProcessData = previousProcessTransactions.find(
-            (prevTrans) => prevTrans.quantitySheetId === item.quantitySheetId
+        if (Array.isArray(transactionsData)) {
+          // Filter transactions that contain current processId in processIds array
+          const validTransactions = transactionsData.filter((item) =>
+            item.processIds?.includes(Number(processId))
           );
 
-          // If no transactions found and previous process is either 2 or 3
-          if (
-            (!previousProcessData?.transactions?.length) &&
-            (previousProcess?.processId === 2 || previousProcess?.processId === 3) &&
-            digitalandOffsetData?.length > 0
-          ) {
-            // If we're in process 2 and no data, look for process 3 data
-            // If we're in process 3 and no data, look for process 2 data
-            const alternateProcessData = digitalandOffsetData.find(
-              (digitalOffset) => 
-                digitalOffset.quantitySheetId === item.quantitySheetId &&
-                digitalOffset.transactions?.length > 0
+          const formDataGet = validTransactions.map((item) => {
+            // Find matching previous process data
+            let previousProcessData = previousProcessTransactions.find(
+              (prevTrans) => prevTrans.quantitySheetId === item.quantitySheetId
             );
 
-            if (alternateProcessData) {
-              previousProcessData = alternateProcessData;
+            // Only try to access transactions if previousProcessData exists
+            if (previousProcessData) {
+              console.log('previous', previousProcessData.transactions);
+              
+              // Check if transactions array is empty before proceeding
+              if (!previousProcessData.transactions?.length && 
+                  (previousProcess?.processId === 2 || previousProcess?.processId === 3) && 
+                  digitalandOffsetData) {
+                // If no matching previous process data, find a matching digitalandOffsetData
+                previousProcessData = digitalandOffsetData.find(
+                  (data) => data.quantitySheetId === item.quantitySheetId
+                );
+              }
             }
-          }
 
-          return {
-            catchNumber: item.catchNo,
-            srNo: item.quantitySheetId,
-            lotNo: item.lotNo,
-            paper: item.paper,
-            examDate: item.examDate,
-            examTime: item.examTime,
-            course: item.course,
-            subject: item.subject,
-            innerEnvelope: item.innerEnvelope,
-            outerEnvelope: item.outerEnvelope,
-            quantity: item.quantity,
-            percentageCatch: item.percentageCatch,
-            projectId: selectedProject?.value || id,
-            processId: processId,
-            status: item.transactions[0]?.status || 0,
-            alerts: item.transactions[0]?.alarmId || "",
-            interimQuantity: item.transactions[0]?.interimQuantity || 0,
-            remarks: item.transactions[0]?.remarks || "",
-            previousProcessData:
-              previousProcessData && previousProcess
+            // Find matching independent process data only for the current quantity sheet
+            const independentData = previousIndependent.transactions.find(
+              (indTrans) => indTrans.quantitySheetId === item.quantitySheetId
+            );
+
+            return {
+              catchNumber: item.catchNo,
+              srNo: item.quantitySheetId,
+              lotNo: item.lotNo,
+              paper: item.paper,
+              examDate: item.examDate,
+              examTime: item.examTime,
+              course: item.course,
+              subject: item.subject,
+              innerEnvelope: item.innerEnvelope,
+              outerEnvelope: item.outerEnvelope,
+              quantity: item.quantity,
+              percentageCatch: item.percentageCatch,
+              projectId: selectedProject?.value || id,
+              processId: processId,
+              status: item.transactions[0]?.status || 0,
+              alerts: item.transactions[0]?.alarmId || "",
+              interimQuantity: item.transactions[0]?.interimQuantity || 0,
+              remarks: item.transactions[0]?.remarks || "",
+              previousProcessData:
+                previousProcessData && previousProcess
+                  ? {
+                      status: previousProcessData.transactions?.[0]?.status || 0,
+                      interimQuantity:
+                        previousProcessData.transactions?.[0]?.interimQuantity || 0,
+                      remarks: previousProcessData.transactions?.[0]?.remarks || "",
+                      alarmId: previousProcessData.transactions?.[0]?.alarmId || "",
+                      teamUserNames:
+                        previousProcessData.transactions?.[0]?.teamUserNames || [],
+                      machinename:
+                        previousProcessData.transactions?.[0]?.machinename || [],
+                      alarmMessage:
+                        previousProcessData.transactions?.[0]?.alarmMessage || null,
+                      thresholdQty: previousProcess?.thresholdQty || 0,
+                    }
+                  : null,
+              voiceRecording: item.transactions[0]?.voiceRecording || "",
+              transactionId: item.transactions[0]?.transactionId || null,
+              machineId: item.transactions[0]?.machineId || 0,
+              machinename:
+                item.transactions[0]?.machinename || "No Machine Assigned",
+              zoneNo: item.transactions?.[0]?.zoneNo || "No Zone Assigned",
+              zoneId: item.transactions?.[0]?.zoneId || 0,
+              teamId: item.transactions[0]?.teamId || [],
+              teamUserNames: item.transactions[0]?.teamUserNames || [
+                "No Team Assigned",
+              ],
+              alarmMessage: item.transactions[0]?.alarmMessage || null,
+              processIds: item.processIds || [],
+              independentProcessData: independentData
                 ? {
-                    status: previousProcessData.transactions[0]?.status || 0,
-                    interimQuantity:
-                      previousProcessData.transactions[0]?.interimQuantity || 0,
-                    remarks: previousProcessData.transactions[0]?.remarks || "",
-                    alarmId: previousProcessData.transactions[0]?.alarmId || "",
-                    teamUserNames:
-                      previousProcessData.transactions[0]?.teamUserNames || [],
-                    machinename:
-                      previousProcessData.transactions[0]?.machinename || [],
-                    alarmMessage:
-                      previousProcessData.transactions[0]?.alarmMessage || null,
-                    thresholdQty: previousProcess?.thresholdQty || 0,
+                    status: independentData.transactions[0]?.status || 0,
+                    interimQuantity: independentData.transactions[0]?.interimQuantity || 0,
+                    remarks: independentData.transactions[0]?.remarks || "",
+                    alarmId: independentData.transactions[0]?.alarmId || "",
+                    teamUserNames: independentData.transactions[0]?.teamUserNames || [],
+                    machinename: independentData.transactions[0]?.machinename || [],
+                    alarmMessage: independentData.transactions[0]?.alarmMessage || null,
+                    processName: previousIndependent.process?.processName || ""
                   }
                 : null,
-            voiceRecording: item.transactions[0]?.voiceRecording || "",
-            transactionId: item.transactions[0]?.transactionId || null,
-            machineId: item.transactions[0]?.machineId || 0,
-            machinename:
-              item.transactions[0]?.machinename || "No Machine Assigned",
-            zoneNo: item.transactions?.[0]?.zoneNo || "No Zone Assigned",
-            zoneId: item.transactions?.[0]?.zoneId || 0,
-            teamId: item.transactions[0]?.teamId || [],
-            teamUserNames: item.transactions[0]?.teamUserNames || [
-              "No Team Assigned",
-            ],
-            alarmMessage: item.transactions[0]?.alarmMessage || null,
-            processIds: item.processIds || [],
-          };
-        });
+            };
+          });
 
-        const filteredData = selectedLot
-          ? formDataGet.filter(
-              (item) => Number(item.lotNo) === Number(selectedLot)
-            )
-          : formDataGet;
+          const filteredData = selectedLot
+            ? formDataGet.filter(
+                (item) => Number(item.lotNo) === Number(selectedLot)
+              )
+            : formDataGet;
 
-        setTableData(filteredData);
+          setTableData(filteredData);
 
-        const uniqueLots = [
-          ...new Set(validTransactions.map((item) => item.lotNo)),
-        ].sort((a, b) => a - b);
-        setProjectLots(uniqueLots.map((lotNo) => ({ lotNo })));
-      }
-    } catch (error) {
-      console.error("Error fetching transactions data:", error);
-      setTableData([]);
-      setProjectLots([]);
+          const uniqueLots = [
+            ...new Set(validTransactions.map((item) => item.lotNo)),
+          ].sort((a, b) => a - b);
+          setProjectLots(uniqueLots.map((lotNo) => ({ lotNo })));
+        }
+      } catch (error) {
+        console.error("Error fetching transactions data:", error);
+        setTableData([]);
+        setProjectLots([]);
+      } 
     }
+
   }, [
     id,
     processId,
