@@ -469,7 +469,7 @@ const ProcessTable = () => {
 
           // If no previous process data found, check digitalandOffsetData
           if (
-            !previousProcessData?.transactions?.length &&
+            !previousProcessData?.transactions?.length && (processId === 2 || processId === 3) &&
             digitalandOffsetData
           ) {
             // Check if digitalandOffsetData is an array before using find

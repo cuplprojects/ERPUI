@@ -300,9 +300,9 @@ const AddProjectProcess = ({ selectedProject, setIsProcessSubmitted }) => {
       const data = { projectProcesses: projectProcessesToSubmit };
       const deleteData = { projectId: selectedProject, processIds: removedProcessIds };
 
-      if (removedProcessIds.length > 0) {
-        await API.post('/ProjectProcess/DeleteProcessesFromProject', deleteData);
-      }
+      // if (removedProcessIds.length > 0) {
+      //   await API.post('/ProjectProcess/DeleteProcessesFromProject', deleteData);
+      // }
 
       await API.post('/ProjectProcess/AddProcessesToProject', data);
 
