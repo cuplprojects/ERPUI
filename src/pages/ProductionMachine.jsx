@@ -289,7 +289,7 @@ const Machine = () => {
                 setPageSize(pageSize);
               }}
               showSizeChanger
-              showQuickJumper
+              // showQuickJumper//GO TO PAGE feature
               showTotal={(total, range) => t('', { range0: range[0], range1: range[1], total: total })}
             />
           </div>

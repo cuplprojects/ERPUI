@@ -392,7 +392,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
 
     try {
       await API.put(`/QuantitySheet/${editingRow}`, payload);
-      setEditingRow(null);
+      handleModalClose()
       fetchQuantity(selectedLotNo);
     } catch (error) {
       console.error(t("failedToSaveChanges"), error);
@@ -430,6 +430,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
     setSelectedProcessIds([]);
     setIsConfirmed(false);
     setSelectedCatches([]);
+    setModalMessage("")
   };
 
   const handleEditButtonClick = (key) => {
