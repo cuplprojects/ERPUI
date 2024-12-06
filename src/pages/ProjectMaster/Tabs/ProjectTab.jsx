@@ -102,7 +102,8 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
       setSelectedProject(response.data.projectId);
     } catch (error) {
       console.error('Error adding project:', error);
-      message.error(t('errorAddingProject'));
+      const errorMessage = error.response?.data || t('errorAddingProject');
+      message.error(errorMessage);
     }
   };
 
