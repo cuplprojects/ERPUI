@@ -26,6 +26,7 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
   const [selectedType, setSelectedType] = useState(null);
   const [showSeriesFields, setShowSeriesFields] = useState(false);
   const [numberOfSeries, setNumberOfSeries] = useState(0);
+  const [seriesNames, setSeriesNames] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchText, setSearchText] = useState('');
@@ -83,7 +84,7 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
       groupId: selectedGroup.id,
       typeId: selectedType.typeId,
       noOfSeries: numberOfSeries, // Use the state value directly
-      seriesName: values.seriesName || '',
+      seriesName: seriesNames,
       quantityThreshold: values.quantityThreshold || 0
     };
 
@@ -97,6 +98,7 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
       setSelectedGroup(null);
       setSelectedType(null);
       setNumberOfSeries(0); // Reset numberOfSeries
+      setSeriesNames('');
       message.success(t('projectAddedSuccessfully'));
       setActiveTabKey("2");
       setSelectedProject(response.data.projectId);
@@ -120,7 +122,7 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
         groupId: values.group,
         typeId: values.type,
         noOfSeries: numberOfSeries, // Use the state value directly
-        seriesName: values.seriesName || ''
+        seriesName: values.seriesNames
       };
 
       if (selectedTypeObj?.types.toLowerCase() === 'booklet') {
@@ -138,6 +140,7 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
       setIsEditModalVisible(false);
       setEditingProject(null);
       setNumberOfSeries(0); // Reset numberOfSeries
+      setNumberOfSeries('');
       message.success(t('projectUpdatedSuccessfully'));
     } catch (error) {
       console.error('Failed to update project:', error);
@@ -195,6 +198,7 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
           onClick={() => {
             setEditingProject(record);
             setNumberOfSeries(record.noOfSeries); // Set numberOfSeries when editing
+            setSeriesNames(record.seriesName);
             editForm.setFieldsValue({
               name: record.name,
               description: record.description,
@@ -202,7 +206,7 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
               group: record.groupId,
               type: record.typeId,
               numberOfSeries: record.noOfSeries,
-              seriesName: record.seriesName,
+              seriesNames: record.seriesName,
               quantityThreshold: record.quantityThreshold
             });
             setIsEditModalVisible(true);
@@ -331,6 +335,7 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
           setSelectedGroup(null);
           setSelectedType(null);
           setNumberOfSeries(0); // Reset numberOfSeries
+          setSeriesNames('');
         }}
         form={form}
         onFinish={handleAddProject}
@@ -350,6 +355,8 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
         handleTypeChange={handleTypeChange}
         numberOfSeries={numberOfSeries}
         setNumberOfSeries={setNumberOfSeries}
+        seriesNames = {seriesNames}
+        setSeriesNames = {setSeriesNames}
         projectName={projectName}
         setProjectName={setProjectName}
         selectedGroup={selectedGroup}
@@ -362,6 +369,7 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
           setIsEditModalVisible(false);
           editForm.resetFields();
           setNumberOfSeries(0); // Reset numberOfSeries
+          setSeriesNames('');
         }}
         form={editForm}
         onFinish={handleEditSave}
@@ -378,6 +386,8 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
         customDarkBorder={customDarkBorder}
         numberOfSeries={numberOfSeries}
         setNumberOfSeries={setNumberOfSeries}
+        seriesNames = {seriesNames}
+        setSeriesNames = {setSeriesNames}
         t={t}
       />
     </>
