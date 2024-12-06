@@ -78,13 +78,13 @@ const QtySheetUpload = () => {
   const [skipLots, setSkipLots] = useState([]); // Lots to be skipped based on matching
   const [mappedData, setMappeddata] = useState([]);
   const [transactionExist, setTransactionExist] = useState(false);
-
+  const [unreleasedLots, setUnReleasedLots] = useState([]);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [showConfigDisclaimer, setShowConfigDisclaimer] = useState(false);
   const [isProcessingFile, setIsProcessingFile] = useState(false);
   const [showDeleteButton, setShowDeleteButton] = useState(false);
   const [hasUploadedFile, setHasUploadedFile] = useState(false);
-
+ const [rightClickLotNo, setRightClickLotNo] = useState(null);
   const [isUpdateMode, setIsUpdateMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -151,11 +151,28 @@ const QtySheetUpload = () => {
     fetchDispatchedLots();
   }, [projectId]);
 
+
+  useEffect(() => {
+    const fetchUnReleasedLots = async () => {
+      try {
+        const response = await API.get(`/QuantitySheet/UnReleasedLots?ProjectId=${projectId}`);
+        setUnReleasedLots(response.data);
+      } catch (error) {
+        console.error("Failed to fetch dispatched lots status:", error);
+      }
+    };
+
+    fetchUnReleasedLots();
+  }, [projectId]);
+
   const handleRightClick = (e, lotNo) => {
-    e.preventDefault(); // Prevent default context menu
-    setSelectedLotNo(lotNo);
-    setContextMenuPosition({ x: e.clientX, y: e.clientY });
-    setIsDropdownVisible(true);
+    // Only allow right click if the lot is in unreleasedLots
+    if (unreleasedLots.includes(lotNo)) {
+      e.preventDefault(); // Prevent default context menu
+      setSelectedLotNo(lotNo);
+      setContextMenuPosition({ x: e.clientX, y: e.clientY });
+      setIsDropdownVisible(true);
+    }
   };
 
   // Handle clicking outside context menu
