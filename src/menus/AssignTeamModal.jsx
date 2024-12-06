@@ -13,38 +13,7 @@ const AssignTeamModal = ({ show, handleClose, data , processId , fetchTransactio
   const { getCssClasses } = useStore(themeStore);
   const [customDark, customMid, customDarkText, customLightText] = getCssClasses();
 
-  const handleSave = async () => {
-    try {
-      const promises = data.map(async (row) => {
-        const postData = {
-          transactionId: row.transactionId || 0,
-          interimQuantity: row.interimQuantity || 0,
-          remarks: row.remarks || "",
-          projectId: row.projectId,
-          quantitysheetId: row.srNo,
-          processId: processId,
-          zoneId: row.zoneId || 0,
-          machineId: row.machineId || 0,
-          status: row.status || 0,
-          alarmId: row.alarmId || "",
-          teamId: selectedTeams,
-          lotNo: row.lotNo,
-          voiceRecording: row.voiceRecording || ""
-        };
-
-        await API.post("/Transactions", postData);
-      });
-
-      await Promise.all(promises);
-      await fetchTransactions();
-      onSuccess();
-      handleClose();
-    } catch (error) {
-      onError(error);
-      console.error('Error assigning team:', error);
-    }
-  };
-
+ 
   return (
     <Modal show={show} onHide={handleClose} centered className='custom-modal'>
       <Modal.Header closeButton className={customMid}>
