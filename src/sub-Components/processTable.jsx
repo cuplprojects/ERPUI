@@ -79,9 +79,7 @@ const ProcessTable = () => {
   const [previousProcessTransactions, setPreviousProcessTransactions] =
     useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
-
   const [showPieChart, setShowPieChart] = useState(false);
-  const [showProgressBar, setShowProgressBar] = useState(false);
   const [digitalandOffsetData, setDigitalandOffsetData] = useState([]);
   const [previousIndependent, setPreviousIndependent] = useState({
     process: null,
