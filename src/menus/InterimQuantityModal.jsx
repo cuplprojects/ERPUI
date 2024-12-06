@@ -5,6 +5,8 @@ import { useTranslation } from 'react-i18next';
 import { useStore } from 'zustand';
 import themeStore from '../store/themeStore';
 import { useMemo } from 'react';
+import { error, warning } from '../CustomHooks/Services/AlertMessageService';
+import { ToastContainer } from 'react-toastify';
 
 const statusMapping = {
     0: 'pending',
@@ -13,6 +15,7 @@ const statusMapping = {
 };
 
 const InterimQuantityModal = ({ show, handleClose, handleSave, data, processId }) => {
+    console.log(data)
     const [interimQuantity, setInterimQuantity] = useState('');
     const { t } = useTranslation();
     const themeState = useStore(themeStore);
@@ -30,10 +33,13 @@ const InterimQuantityModal = ({ show, handleClose, handleSave, data, processId }
     ] = cssClasses;
 
     const handleSubmit = async () => {
+        const totalQuantity = data.previousProcessData && data.previousProcessData.interimQuantity
+        ? data.previousProcessData.interimQuantity 
+        : data.quantity;
         const totalInterimQuantity = data.interimQuantity + parseFloat(interimQuantity);
 
-        if (totalInterimQuantity > data.quantity) {
-            alert(t("interimQuantityError"));
+        if (totalInterimQuantity > totalQuantity) {
+            error(t('interimQuantityError'));
             return;
         }
 
@@ -72,7 +78,8 @@ const InterimQuantityModal = ({ show, handleClose, handleSave, data, processId }
     };
 
     return (
-        <Modal show={show} onHide={handleClose} >
+        <Modal show={show} onHide={handleClose} > 
+        <ToastContainer></ToastContainer>
             <Modal.Header closeButton={false} className={customDark}>
                 <Modal.Title className={customLightText}>{t("setInterimQuantity")}</Modal.Title>
             </Modal.Header>
