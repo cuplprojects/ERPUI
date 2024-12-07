@@ -540,6 +540,7 @@ const ProcessTable = () => {
             return {
               catchNumber: item.catchNo,
               srNo: item.quantitySheetId,
+              seriesName : item.seriesName,
               lotNo: item.lotNo,
               paper: item.paper,
               examDate: item.examDate,
@@ -700,7 +701,7 @@ const ProcessTable = () => {
     .map((item) => item.catchNumber)
     .sort((a, b) => a - b);
 
-  const combinedTableData =
+    const combinedTableData =
     processName !== "Digital Printing" &&
     processName !== "Offset Printing" &&
     processName !== "CTP" &&
@@ -712,11 +713,14 @@ const ProcessTable = () => {
           if (existingItem) {
             existingItem.quantity += item.quantity;
           } else {
-            acc.push({ ...item });
+            // Remove seriesName from item before pushing to the accumulator
+            const { seriesName, ...restItem } = item;
+            acc.push({ ...restItem });
           }
           return acc;
         }, [])
       : tableData;
+  
 
   return (
     <div className="container-fluid">

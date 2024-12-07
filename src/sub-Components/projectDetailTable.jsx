@@ -422,7 +422,7 @@ const ProjectDetailsTable = ({
                   className="rounded border fs-6 custom-zoom-btn bg-white position-relative"
                   onClick={() => handleCatchClick(record)}
                 >
-                  {text}
+                  {text} {record.seriesName? `- ${record.seriesName}`:""}
                 </button>
               </div>
             </Col>
