@@ -44,6 +44,25 @@ const AnimatedDropdownMenu = styled(Dropdown.Menu)`
   }
 `;
 
+const ScrollableContainer = styled.div`
+  .scrollable-container {
+    &::-webkit-scrollbar {
+      display: none;
+    }
+    
+    .d-flex {
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+      scroll-snap-type: x mandatory;
+      padding: 8px 0;
+      
+      > div {
+        scroll-snap-align: start;
+      }
+    }
+  }
+`;
+
 const CuDashboard = () => {
   const { t } = useTranslation();
   const userData = useUserData();
@@ -223,71 +242,89 @@ const CuDashboard = () => {
 
     const itemsPerSlide = 5;
     const carouselItems = [];
-    for (let i = 0; i < data.length; i += itemsPerSlide) {
-      carouselItems.push(
-        <Carousel.Item
-          key={i}
-          className="px-3"
-          style={{ background: "transparent" }}
-        >
-          <Row
-            className="flex-nowrap justify-content-start"
+
+    // For large screens, use carousel
+    if (window.innerWidth >= 992) {  // lg breakpoint
+      for (let i = 0; i < data.length; i += itemsPerSlide) {
+        carouselItems.push(
+          <Carousel.Item
+            key={i}
+            className="px-3"
             style={{ background: "transparent" }}
           >
-            {data.slice(i, i + itemsPerSlide).map((item) => (
-              <Col key={item.projectId} xs="auto" className="px-1">
-                <Cards
-                  item={item}
-                  onclick={onclick}
-                  disableProject={hasDisable(item.projectId)}
-                  activeCardStyle={activeCard === item.projectId}
-                />
-              </Col>
-            ))}
-          </Row>
-        </Carousel.Item>
+            <Row
+              className="flex-nowrap justify-content-start"
+              style={{ background: "transparent", margin: "0" }}
+            >
+              {data.slice(i, i + itemsPerSlide).map((item) => (
+                <Col key={item.projectId} xs="auto" className="px-1">
+                  <Cards
+                    item={item}
+                    onclick={onclick}
+                    disableProject={hasDisable(item.projectId)}
+                    activeCardStyle={activeCard === item.projectId}
+                  />
+                </Col>
+              ))}
+            </Row>
+          </Carousel.Item>
+        );
+      }
+
+      return (
+        <div className="position-relative mb-4">
+          <div className="d-none d-lg-block">
+            <div
+              className={`position-absolute top-50 start-0 translate-middle-y rounded-circle ${customDark}`}
+              style={{ zIndex: 9, left: "10px", cursor: "pointer" }}
+              onClick={() => handleCarouselControl("prev")}
+            >
+              <IoMdArrowDropleftCircle
+                size={40}
+                className={`${customBtn} rounded-circle custom-zoom-btn ${customLightBorder}`}
+              />
+            </div>
+            <div
+              className={`position-absolute top-50 end-0 translate-middle-y rounded-circle ${customDark}`}
+              style={{ zIndex: 9, right: "10px", cursor: "pointer" }}
+              onClick={() => handleCarouselControl("next")}
+            >
+              <IoMdArrowDroprightCircle
+                size={40}
+                className={`${customBtn} rounded-circle custom-zoom-btn ${customLightBorder}`}
+              />
+            </div>
+          </div>
+          <Carousel
+            ref={carouselRef}
+            interval={null}
+            indicators={false}
+            controls={false}
+            touch={true}
+            slide={true}
+          >
+            {carouselItems}
+          </Carousel>
+        </div>
       );
     }
 
+    // For medium and small screens, use scrollable container
     return (
-      <div className="position-relative mb-4">
-        <div className="d-none d-lg-block">
-          <div
-            className={`position-absolute top-50 start-0 translate-middle-y rounded-circle ${customDark}`}
-            style={{ zIndex: 9, left: "10px", cursor: "pointer" }}
-            onClick={() => handleCarouselControl("prev")}
-          >
-            <IoMdArrowDropleftCircle
-              size={40}
-              className={`${customBtn} rounded-circle custom-zoom-btn ${customLightBorder}`}
-            />
-          </div>
-          <div
-            className={`position-absolute top-50 end-0 translate-middle-y rounded-circle ${customDark} ${customDark === "dark-dark"
-                ? `${customMid} border-light border-1`
-                : "border-0"
-              }`}
-            style={{ zIndex: 9, right: "10px", cursor: "pointer" }}
-            onClick={() => handleCarouselControl("next")}
-          >
-            <IoMdArrowDroprightCircle
-              size={40}
-              className={`${customBtn} rounded-circle custom-zoom-btn ${customLightBorder}`}
-            />
-          </div>
+      <ScrollableContainer className="scrollable-container mb-4" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        <div className="d-flex flex-nowrap px-2" style={{ gap: '12px' }}>
+          {data.map((item) => (
+            <div key={item.projectId} style={{ flex: '0 0 auto', minWidth: '343px' }}>
+              <Cards
+                item={item}
+                onclick={onclick}
+                disableProject={hasDisable(item.projectId)}
+                activeCardStyle={activeCard === item.projectId}
+              />
+            </div>
+          ))}
         </div>
-
-        <Carousel
-          ref={carouselRef}
-          interval={null}
-          indicators={false}
-          controls={false}
-          touch={true}
-          slide={true}
-        >
-          {carouselItems}
-        </Carousel>
-      </div>
+      </ScrollableContainer>
     );
   };
 
