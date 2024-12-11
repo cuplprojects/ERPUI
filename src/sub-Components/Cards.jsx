@@ -19,10 +19,7 @@ import themeStore from "../store/themeStore";
 
 import { useStore } from "zustand";
 
-
-
 const Cards = ({ item, onclick, disableProject, activeCardStyle }) => {
-
   const navigate = useNavigate();
 
   const { userData } = useUserDataStore();
@@ -36,7 +33,6 @@ const Cards = ({ item, onclick, disableProject, activeCardStyle }) => {
   const { getCssClasses } = useStore(themeStore);
 
   const [
-
     customDark,
 
     customMid,
@@ -54,7 +50,6 @@ const Cards = ({ item, onclick, disableProject, activeCardStyle }) => {
     customDarkBorder,
 
     customThead,
-
   ] = getCssClasses();
 
   const [hasProcesses, setHasProcesses] = useState(false);
@@ -65,237 +60,174 @@ const Cards = ({ item, onclick, disableProject, activeCardStyle }) => {
 
   const [isUploadDisabled, setIsUploadDisabled] = useState(true);
 
-
-
   useEffect(() => {
-
     if (item?.projectId) {
-
       fetchProjectProcess();
 
       checkTransactionStatus();
-
     }
-
   }, [item?.projectId]);
-
-
 
   // Navigate to quantity sheet uploads and send projectId
 
   const handleUploadClick = (e) => {
-
     e.stopPropagation();
 
     if (hasProcesses) {
-
       navigate(`/quantity-sheet-uploads/${encrypt(item.projectId)}`);
-
     }
-
   };
 
-
-
   const fetchProjectProcess = async () => {
-
     try {
-
-      const response = await API.get(`/ProjectProcess/GetProjectProcesses/${item.projectId}`);
+      const response = await API.get(
+        `/ProjectProcess/GetProjectProcesses/${item.projectId}`
+      );
 
       if (response.data.length === 0) {
-
         setIsUploadDisabled(true);
-
       } else {
-
         setHasProcesses(true);
 
         setIsUploadDisabled(false);
-
       }
-
     } catch (error) {
-
       console.error("Error fetching project processes:", error);
 
       setHasProcesses(false);
 
       setIsUploadDisabled(true);
-
     }
-
   };
-
-
 
   // Check transaction status
 
   const checkTransactionStatus = async () => {
-
     try {
-
       const response = await API.get(`/Transactions/exists/${item.projectId}`);
 
       setTransactionStatus(response.data ? "Running" : "Pending");
-
     } catch (error) {
-
       if (error.response?.status === 404) {
-
         console.warn("Transaction not found, setting status to 'Pending'.");
 
         setTransactionStatus("Pending");
-
       } else {
-
         console.error("Error checking transaction status:", error);
 
         setTransactionStatus("Pending");
-
       }
-
     }
-
   };
-
-
 
   // Navigate to the dashboard and send projectId as a route parameter
 
   const handleCardClick = () => {
-
     if (!disableProject) {
-
       setTooltipVisible(true);
 
       setTimeout(() => {
-
         setTooltipVisible(false);
-
       }, 2000);
 
       return;
-
     }
 
     if (supervisor) {
-
       navigate(`/project-details/${encrypt(item.projectId)}/${encrypt(1)}`);
-
     } else {
-
       navigate(`/dashboard/${encrypt(item.projectId)}`);
-
     }
-
   };
-
-
 
   // Handle info button click
 
   const handleInfoClick = (e) => {
-
     e.stopPropagation();
 
     if (!disableProject) {
-
       return;
-
     }
 
     onclick(item);
-
   };
 
-
-
   return (
-
     <StyledWrapper>
-
-      <Tooltip title={isUploadDisabled ? t("firstAddProjectConfiguration") : (!disableProject ? t("uploadQuantitySheetfirst") : "")} placement="below" visible={tooltipVisible}>
-
+      <Tooltip
+        title={
+          isUploadDisabled
+            ? t("firstAddProjectConfiguration")
+            : !disableProject
+            ? t("uploadQuantitySheetfirst")
+            : ""
+        }
+        placement="below"
+        visible={tooltipVisible}
+      >
         <div
-
           className={` card ${
-
             !activeCardStyle
-
               ? `${customLight} ${customDarkText}`
-
               : `${
-
                   customDark === "dark-dark"
-
                     ? `bg-white text-dark border border-dark `
-
-                    : `${customDark} ${customDark === "blue-dark" ? "border-white" : customLightBorder} ${customLightText}`
-
+                    : `${customDark} ${
+                        customDark === "blue-dark"
+                          ? "border-white"
+                          : customLightBorder
+                      } ${customLightText}`
                 }  `
-
           }`}
-
           onClick={handleCardClick}
-
         >
-
           <div className="header">
-
             <h4 className="project-name">{item.name}</h4>
 
-
-
-            <Tooltip title={isUploadDisabled ? t("firstAddProjectConfiguration") : t("uploadQuantitySheet")} placement="top">
-
-              <div className="upload-button" onClick={handleUploadClick} style={{ opacity: isUploadDisabled ? 0.5 : 1, cursor: isUploadDisabled ? 'not-allowed' : 'pointer' }}>
-
+            <Tooltip
+              title={
+                isUploadDisabled
+                  ? t("firstAddProjectConfiguration")
+                  : t("uploadQuantitySheet")
+              }
+              placement="top"
+            >
+              <div
+                className="upload-button"
+                onClick={handleUploadClick}
+                style={{
+                  opacity: isUploadDisabled ? 0.5 : 1,
+                  cursor: isUploadDisabled ? "not-allowed" : "pointer",
+                }}
+              >
                 <FaUpload />
-
               </div>
-
             </Tooltip>
-
           </div>
 
+          <p className="p-0 m-0">
+            {item.completionPercentage}% {t("completed")}
+          </p>
 
-
-          <p className="p-0 m-0">{item.completionPercentage}% {t("completed")}</p>
-
-          <p className="p-0 m-0">{item.remainingPercentage}% {t("remaining")}</p>
+          <p className="p-0 m-0">
+            {item.remainingPercentage}% {t("remaining")}
+          </p>
 
           <p className="p-0 m-0">Status: {transactionStatus}</p>
 
-
-
           <Tooltip title={t("viewProjectInfo")} placement="top">
-
             <div
-
               className={`info-button ${!disableProject ? "disabled" : ""}`}
-
               onClick={handleInfoClick}
-
             >
-
               <FaInfoCircle />
-
             </div>
-
           </Tooltip>
-
         </div>
-
       </Tooltip>
-
     </StyledWrapper>
-
   );
-
 };
-
-
 
 const StyledWrapper = styled.div`
   .card {
@@ -399,7 +331,5 @@ const StyledWrapper = styled.div`
     background-color: transparent;
   }
 `;
-
-
 
 export default Cards;
