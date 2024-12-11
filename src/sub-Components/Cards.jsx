@@ -105,7 +105,6 @@ const Cards = ({ item, onclick, disableProject, activeCardStyle }) => {
   const checkTransactionStatus = async () => {
     try {
       const response = await API.get(`/Transactions/exists/${item.projectId}`);
-
       setTransactionStatus(response.data ? "Running" : "Pending");
     } catch (error) {
       if (error.response?.status === 404) {
