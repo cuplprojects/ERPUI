@@ -298,180 +298,108 @@ const Cards = ({ item, onclick, disableProject, activeCardStyle }) => {
 
 
 const StyledWrapper = styled.div`
-
   .card {
-
     box-sizing: border-box;
-
-    width: 343px;
-
-    height: 170px;
-
+    width: 280px;
+    height: 150px;
     background: rgba(217, 217, 217, 0.3);
-
     border: 1px solid white;
-
     backdrop-filter: blur(6px);
-
     border-radius: 17px;
-
     text-align: center;
-
     cursor: pointer;
-
     transition: all 0.5s;
-
     display: flex;
-
     flex-direction: column;
-
     align-items: center;
-
     justify-content: center;
-
     user-select: none;
-
     color: black;
-
     margin: 6px;
-
     position: relative;
 
+    @media (min-width: 768px) {
+      width: 343px;
+      height: 170px;
+    }
   }
-
-
 
   .header {
-
     width: 100%;
-
     display: flex;
-
     justify-content: center;
-
     align-items: center;
-
     position: relative;
+    padding: 0 30px;
 
-    padding: 0 40px;
-
+    @media (min-width: 768px) {
+      padding: 0 40px;
+    }
   }
-
-
-
-  .card:hover {
-
-    border: 1px solid black;
-
-    transform: scale(1.05);
-
-  }
-
-
-
-  .card:active {
-
-    transform: scale(0.95) rotateZ(1.7deg);
-
-  }
-
-
-
-  .upload-button,
-
-  .info-button {
-
-    position: absolute;
-
-    cursor: pointer;
-
-    transition: background-color 0.3s ease;
-
-  }
-
-
-
-  .upload-button {
-
-    top: 50%;
-
-    right: 10px;
-
-    transform: translateY(-50%);
-
-    padding: 10px;
-
-    font-size: 1.2em;
-
-    border-radius: 50%;
-
-  }
-
-
-
-  .info-button {
-
-    bottom: 10px;
-
-    right: 10px;
-
-    padding: 10px;
-
-    font-size: 1.2em;
-
-    border-radius: 50%;
-
-  }
-
-
-
-  .upload-button:hover,
-
-  .info-button:hover {
-
-    background-color: rgba(0, 0, 0, 0.1);
-
-  }
-
-
-
-  .info-button.disabled,
-
-  .upload-button.disabled {
-
-    opacity: 0.5;
-
-    cursor: not-allowed;
-
-  }
-
-
-
-  .info-button.disabled:hover,
-
-  .upload-button.disabled:hover {
-
-    background-color: transparent;
-
-  }
-
-
 
   .project-name {
-
     white-space: normal;
-
     word-wrap: break-word;
-
     max-width: 90%;
+    margin: 8px 0;
+    font-size: 0.9rem;
 
-    margin: 10px 0;
-
+    @media (min-width: 768px) {
+      margin: 10px 0;
+      font-size: 1rem;
+    }
   }
 
+  .card:hover {
+    border: 1px solid black;
+    transform: scale(1.05);
+  }
+
+  .card:active {
+    transform: scale(0.95) rotateZ(1.7deg);
+  }
+
+  .upload-button,
+  .info-button {
+    position: absolute;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  .upload-button {
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    padding: 10px;
+    font-size: 1.2em;
+    border-radius: 50%;
+  }
+
+  .info-button {
+    bottom: 10px;
+    right: 10px;
+    padding: 10px;
+    font-size: 1.2em;
+    border-radius: 50%;
+  }
+
+  .upload-button:hover,
+  .info-button:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+  }
+
+  .info-button.disabled,
+  .upload-button.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .info-button.disabled:hover,
+  .upload-button.disabled:hover {
+    background-color: transparent;
+  }
 `;
 
 
 
 export default Cards;
-

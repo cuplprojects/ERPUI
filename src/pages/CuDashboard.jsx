@@ -312,9 +312,13 @@ const CuDashboard = () => {
     // For medium and small screens, use scrollable container
     return (
       <ScrollableContainer className="scrollable-container mb-4" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-        <div className="d-flex flex-nowrap px-2" style={{ gap: '12px' }}>
+        <div className="d-flex flex-nowrap px-2" style={{ gap: '8px' }}>
           {data.map((item) => (
-            <div key={item.projectId} style={{ flex: '0 0 auto', minWidth: '343px' }}>
+            <div key={item.projectId} style={{ 
+              flex: '0 0 auto', 
+              minWidth: window.innerWidth < 768 ? '280px' : '343px',
+              transition: 'min-width 0.3s ease'
+            }}>
               <Cards
                 item={item}
                 onclick={onclick}
