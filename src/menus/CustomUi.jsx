@@ -20,6 +20,11 @@ import useShowLabelIdStore from './../store/showLabelIdStore';
 import { useTranslation } from 'react-i18next';
 import { hasPermission } from '../CustomHooks/Services/permissionUtils';
 
+export const openCustomUiSidebar = () => {
+  const event = new CustomEvent('openCustomUiSidebar');
+  window.dispatchEvent(event);
+};
+
 const CustomUi = () => {
   const { t } = useTranslation();
   const { getCssClasses } = useStore(themeStore);
@@ -39,6 +44,14 @@ const CustomUi = () => {
 
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
+
+  useEffect(() => {
+    const handleOpenSidebar = () => setShow(true);
+    window.addEventListener('openCustomUiSidebar', handleOpenSidebar);
+    return () => {
+      window.removeEventListener('openCustomUiSidebar', handleOpenSidebar);
+    };
+  }, []);
 
   useEffect(() => {
     document.documentElement.style.fontSize = `${fontSize}px`;
