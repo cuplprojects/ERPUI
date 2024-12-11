@@ -206,15 +206,13 @@ const CuDashboard = () => {
     const activeCards = Object.values(visibleCards).filter(Boolean).length;
     if (activeCards === 0) {
       return (
-        <Row className="g-3">
+        <Row className="g-4">
           {data.map((item) => (
-            <Col key={item.projectId} xs={12} sm={6} md={4} lg={3}>
+            <Col key={item.projectId} xs={12} sm={12} md={6} lg={3}>
               <Cards
                 item={item}
                 onclick={onclick}
                 disableProject={hasDisable(item.projectId)}
-                remainingPercentage={item.remainingPercentage}
-                completionPercentage={item.completionPercentage}
                 activeCardStyle={activeCard === item.projectId}
               />
             </Col>
