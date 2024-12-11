@@ -92,7 +92,7 @@ const EditProjectModal = ({
               </Col>
               <Col xs={24} sm={12}>
                 <Form.Item
-                  name="seriesName"
+                  name="seriesNames"
                   label={<span className={customDarkText}>{t('seriesName')}</span>}
                   rules={[
                     { required: true, message: t('pleaseEnterSeriesName') },
