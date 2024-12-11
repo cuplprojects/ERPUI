@@ -1,7 +1,7 @@
 import { Modal, Button, Form, Row, Col } from 'react-bootstrap';
 import { BsInfoCircleFill } from "react-icons/bs";
-import { useState } from 'react';
-import { Tooltip, Spin, Input } from 'antd';
+import { useState, useEffect } from 'react';
+import { Tooltip, Spin } from 'antd';
 
 const AddProjectModal = ({
   visible,
@@ -11,15 +11,9 @@ const AddProjectModal = ({
   groups,
   types,
   showSeriesFields,
-  // validateSeriesInput,
   customDarkText,
   customDark,
-  customMid,
   customLight,
-  customBtn,
-  customLightText,
-  customLightBorder,
-  customDarkBorder,
   t,
   handleGroupChange,
   handleTypeChange,
@@ -30,10 +24,21 @@ const AddProjectModal = ({
   projectName,
   setProjectName,
   selectedGroup,
-  selectedType
+  selectedType,
+  selectedProject
 }) => {
   const [status, setStatus] = useState(true);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (selectedProject) {
+      setNumberOfSeries(selectedProject.numberOfSeries);
+      setSeriesNames(selectedProject.seriesNames);
+      form.setFieldsValue({
+        quantityThreshold: selectedProject.quantityThreshold
+      });
+    }
+  }, [selectedProject, form, setNumberOfSeries, setSeriesNames]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -56,7 +61,6 @@ const AddProjectModal = ({
     }
   };
 
-  
   return (
     <Modal 
       show={visible} 
@@ -67,7 +71,7 @@ const AddProjectModal = ({
       backdrop="static"
       keyboard={false}
     >
-      <Modal.Header closeButton={false} className={`${customDark} ${customLightText}`}>
+      <Modal.Header closeButton={false} className={`${customDark}`}>
         <Modal.Title>{t('addNewProject')}</Modal.Title>
       </Modal.Header>
       <Modal.Body className={`${customLight}`}>
@@ -132,31 +136,27 @@ const AddProjectModal = ({
                   </Form.Text>
                 </Form.Group>
               </Col>
-              <Col xs={6}>
-                <Form.Group controlId="seriesNames">
-                  <Form.Label className={customDarkText}>{t('seriesNames')}
-                    <span className='text-danger ms-2 fs-6'>*</span>
-                  </Form.Label>
-                  <Form.Control
-                    type="text"
-                    placeholder={t('ENTERSERIESNAME')}
-                    maxLength={numberOfSeries}
-                    style={{ textTransform: 'uppercase' }}
-                    value={seriesNames} // ensure seriesNames is the value here
-                    // onChange={(e) => {
-                    //   const value = e.target.value.toUpperCase();
-                    //   setSeriesNames(value);
-                    // }}
-                    onChange={(e) => setSeriesNames(e.target.value.toUpperCase())}
-                    required
-                  />
-                  <Form.Text className="text-danger">
-                    {form.getFieldError('seriesName')?.[0]}
-                  </Form.Text>
-                </Form.Group>
-               
-
-              </Col>
+              {numberOfSeries > 1 && (
+                <Col xs={6}>
+                  <Form.Group controlId="seriesNames">
+                    <Form.Label className={customDarkText}>{t('seriesNames')}
+                      <span className='text-danger ms-2 fs-6'>*</span>
+                    </Form.Label>
+                    <Form.Control
+                      type="text"
+                      placeholder={t('ENTERSERIESNAME')}
+                      maxLength={numberOfSeries}
+                      style={{ textTransform: 'uppercase' }}
+                      value={seriesNames}
+                      onChange={(e) => setSeriesNames(e.target.value.toUpperCase())}
+                      required
+                    />
+                    <Form.Text className="text-danger">
+                      {form.getFieldError('seriesName')?.[0]}
+                    </Form.Text>
+                  </Form.Group>
+                </Col>
+              )}
             </Row>
           )}
           <Row className="mb-3">
