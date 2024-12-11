@@ -330,7 +330,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Row, Col } from "react-bootstrap";
-import { Button, message, Card, Table } from "antd";
+import { Button, message, Card, Table, Modal } from "antd";
 import { Modal as BootstrapModal, Button as Btn } from 'react-bootstrap';
 import { IoClose } from "react-icons/io5";
 import {

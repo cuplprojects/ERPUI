@@ -81,9 +81,13 @@ const AddUsers = () => {
           const response = await API.post('/User/create', formData); // API call to add user
           const { userName, password } = response.data;
           console.log(formData)//check the payload data
-          // Set user details for modal
-          setUserDetails({ userName, password });
-          setShowModal(true);
+          
+          // Only show modal if password is returned
+          if (password) {
+            setUserDetails({ userName, password });
+            setShowModal(true);
+          }
+          
           toast.success(t('userAddedSuccessfully'));
         } catch (error) {
           toast.error(t('failedToAddUser') + error.response.data.message);
