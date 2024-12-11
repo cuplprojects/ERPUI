@@ -86,95 +86,128 @@ const CuDetailedAgGrid = ({ projectId , clickedProject }) => {
       title: t('sn'),
       dataIndex: 'sn',
       key: 'sn',
-      width: '10%',
+      width: 140,
       align: 'center',
       className: 'border-right',
-      sorter: (a, b) => a.sn - b.sn
+      sorter: (a, b) => a.sn - b.sn,
+      ellipsis: true
     },
     {
       title: t('processes'),
       dataIndex: 'processName',
       key: 'processName',
-      width: '20%',
+      width: 140,
       className: 'border-right',
-      sorter: (a, b) => a.processName.localeCompare(b.processName)
+      sorter: (a, b) => a.processName.localeCompare(b.processName),
+      ellipsis: true
     },
     {
       title: t('totalCatches'),
       dataIndex: 'totalCatch',
       key: 'totalCatch',
-      width: '15%',
+      width: 140,
       align: 'center',
       className: 'border-right',
-      sorter: (a, b) => a.totalCatch - b.totalCatch
+      sorter: (a, b) => a.totalCatch - b.totalCatch,
+      ellipsis: true
     },
     {
       title: t('remainingCatches'),
       dataIndex: 'remainingCatch',
       key: 'remainingCatch',
-      width: '15%',
+      width: 180,
       align: 'center',
       className: 'border-right',
-      sorter: (a, b) => a.remainingCatch - b.remainingCatch
+      sorter: (a, b) => a.remainingCatch - b.remainingCatch,
+      ellipsis: true
     },
     {
       title: t('totalQuantity'),
       dataIndex: 'totalQuantity',
       key: 'totalQuantity',
-      width: '10%',
+      width: 140,
       align: 'center',
       className: 'border-right',
-      sorter: (a, b) => a.totalQuantity - b.totalQuantity
+      sorter: (a, b) => a.totalQuantity - b.totalQuantity,
+      ellipsis: true
     }
   ];
 
+  const tableStyle = {
+    '.ant-table': {
+      width: '100%',
+      overflowX: 'auto',
+      display: 'block'
+    },
+    '.ant-table-container': {
+      width: '100%'
+    },
+    '.ant-table-header': {
+      overflow: 'hidden !important'
+    },
+    '.ant-table-cell': {
+      whiteSpace: 'nowrap',
+      minWidth: '80px'
+    }
+  };
+
   return (
     <div style={containerStyle}>
-      <div id="grid-wrapper" style={{ width: '100%', height: '100%', maxWidth: '850px', margin: 'auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-          <h4 className={`${customDarkText}`}>
+      <div id="grid-wrapper" style={{ width: '100%', height: '100%', margin: 'auto', padding: '0 10px' }}>
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          gap: '10px',
+          marginBottom: '15px',
+          '@media (min-width: 768px)': {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }
+        }}>
+          <h4 className={`${customDarkText} m-0`}>
             {clickedProject || t("selectProject")}
           </h4>
           <Search
             placeholder={t('search')}
             allowClear
             onChange={e => setSearchText(e.target.value)}
-            style={{ width: '200px', maxWidth: '100%' }}
-            // className={`${customDarkBorder} rounded-3`}
+            style={{ width: '100%', maxWidth: '300px' }}
           />
         </div>
-        <Table
-          columns={columns}
-          dataSource={filteredData}
-          pagination={{
-            position: ['bottomCenter'],
-            pageSize: 8,
-            showSizeChanger: true,
-            // showQuickJumper: true,
-            pageSizeOptions: ['8', '10', '20', '50'],
-            showTotal: (total) => `${t("total")} ${total} ${t("items")}`,
-            className: `${customDark === "dark-dark"? "bg-white" : `${customMid}`} p-3 rounded-bottom border`
-          }}
-          size="small"
-          bordered
-          scroll={{ x: 'max-content', y: 350 }}
-          rowClassName={(record, index) => index % 2 === 0 ? 'striped-row' : ''}
-          className={`${customDark === "default-dark" ? "thead-default" : ""}
-            ${customDark === "red-dark" ? "thead-red" : ""}
-            ${customDark === "green-dark" ? "thead-green" : ""}
-            ${customDark === "blue-dark" ? "thead-blue" : ""}
-            ${customDark === "dark-dark" ? "thead-dark" : ""}
-            ${customDark === "pink-dark" ? "thead-pink" : ""}
-            ${customDark === "purple-dark" ? "thead-purple" : ""}
-            ${customDark === "light-dark" ? "thead-light" : ""}
-            ${customDark === "brown-dark" ? "thead-brown" : ""} `}
-          style={{
-            height: 'calc(100% - 50px)',
-            width: '100%',
-            maxWidth: '850px',
-            margin: 'auto'
-          }}
-        />
+        <div style={{ width: '100%', overflowX: 'auto' }}>
+          <Table
+            columns={columns}
+            dataSource={filteredData}
+            pagination={{
+              position: ['bottomCenter'],
+              pageSize: 8,
+              showSizeChanger: true,
+              pageSizeOptions: ['8', '10', '20', '50'],
+              showTotal: (total) => `${t("total")} ${total} ${t("items")}`,
+              className: `${customDark === "dark-dark"? "bg-white" : `${customMid}`} p-2 rounded-bottom border`,
+              responsive: true
+            }}
+            size="small"
+            bordered
+            scroll={{ x: '100%' }}
+            rowClassName={(record, index) => index % 2 === 0 ? 'striped-row' : ''}
+            className={`${customDark === "default-dark" ? "thead-default" : ""}
+              ${customDark === "red-dark" ? "thead-red" : ""}
+              ${customDark === "green-dark" ? "thead-green" : ""}
+              ${customDark === "blue-dark" ? "thead-blue" : ""}
+              ${customDark === "dark-dark" ? "thead-dark" : ""}
+              ${customDark === "pink-dark" ? "thead-pink" : ""}
+              ${customDark === "purple-dark" ? "thead-purple" : ""}
+              ${customDark === "light-dark" ? "thead-light" : ""}
+              ${customDark === "brown-dark" ? "thead-brown" : ""} responsive-table`}
+            style={{
+              ...tableStyle,
+              width: '100%',
+              minWidth: '100%'
+            }}
+          />
+        </div>
       </div>
     </div>
   );

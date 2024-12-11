@@ -58,7 +58,7 @@ const UserLayout = () => {
 
               {/* --------------- User Menu Routes -------------- */}
               <Route path="/profile" element={<Profile />} />
-              <Route path="/settings" element={<UserSettings />} />
+              {/* <Route path="/settings" element={<UserSettings />} /> */}
               <Route path="/change-password" element={<ChangePassword />} />
 
               <Route path="/quantity-sheet-uploads/:encryptedProjectId" element={checkPermissionAndRender("2.4", QtySheetUpload)} />
