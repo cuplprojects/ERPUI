@@ -119,7 +119,7 @@ const Machine = () => {
       title: t('SN.'),
       dataIndex: 'serial',
       key: 'serial',
-      render: (_, __, index) => index + 1,
+      render: (_, __, index) => (currentPage - 1) * pageSize + index + 1,
       width: '10%',
     },
     {
@@ -226,6 +226,8 @@ const Machine = () => {
     (machine.status ? t('Functional') : t('Dysfunctional')).toLowerCase().includes(searchText.toLowerCase())
   );
 
+  const paginatedMachines = filteredMachines.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
   return (
     <div className={`${customDark === "dark-dark" ? `${customDark} border` : `border-0`}`} style={{ padding: '20px', background: '#f9f9f9', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)' }}>
       <h2 style={{ marginBottom: '20px', fontSize: 'clamp(1.5rem, 4vw, 2rem)' }} className={`${customDark === "dark-dark" ? ` text-white` : `${customDarkText}`}`}>{t('Production Machines')}</h2>
@@ -262,7 +264,7 @@ const Machine = () => {
       ) : (
         <div style={{ overflowX: 'auto' }}>
           <Table
-            dataSource={filteredMachines}
+            dataSource={paginatedMachines}
             columns={columns}
             rowKey="machineId"
             pagination={false}
@@ -284,12 +286,12 @@ const Machine = () => {
               current={currentPage}
               pageSize={pageSize}
               total={filteredMachines.length}
-              onChange={(page, pageSize) => {
+              onChange={(page, size) => {
                 setCurrentPage(page);
-                setPageSize(pageSize);
+                setPageSize(size);
               }}
               showSizeChanger
-              // showQuickJumper//GO TO PAGE feature
+              pageSizeOptions={['5', '10', '20']}
               showTotal={(total, range) => t('', { range0: range[0], range1: range[1], total: total })}
             />
           </div>
