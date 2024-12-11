@@ -148,12 +148,12 @@ const CustomUi = () => {
 
   return (
     <>
-      <div className="user-interface-container" ref={dragRef} style={{ zIndex: "99999" }} onClick={handleShow}>
+      {/* <div className="user-interface-container" ref={dragRef} style={{ zIndex: "99999" }} onClick={handleShow}>
         <div className="user-interface-icon" >
           <IoSettings className={`settings-icon-ui ${customDark === 'dark-dark' ? "text-dark border-dark" : ''}`} />
           <img src={themeIcons[customDark] || themeIcons["default"]} alt={t('themeIcon')} className='ui-icon-img' />
         </div>
-      </div>
+      </div> */}
 
       <Offcanvas show={show} onHide={handleClose} placement="end" style={{ zIndex: "9999999" }}>
         <Offcanvas.Header closeButton={false} className={`${customDark} ${customLightText} d-flex justify-content-between`}>
