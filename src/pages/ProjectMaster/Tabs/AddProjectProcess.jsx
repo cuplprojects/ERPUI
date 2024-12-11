@@ -21,6 +21,7 @@ const DragHandle = SortableHandle(({ disabled }) => {
 
 const SortableRow = SortableElement(({ process, index, features, editingProcessId, editingFeatures, handleFeatureChange, handleSaveFeatures, handleCancelEdit, handleEdit, independentProcesses, disabled, handleThresholdChange }) => {
   const { t } = useTranslation();
+  const canEditThreshold = process.installedFeatures?.includes(4);
 
   return (
     <tr style={{ opacity: 1, background: 'white', margin: '10px' }}>
@@ -58,14 +59,14 @@ const SortableRow = SortableElement(({ process, index, features, editingProcessI
       <td>{process.weightage}</td>
       <td>{process.relativeWeightage.toFixed(4)}%</td>
       <td>
-        {editingProcessId === process.id ? (
+        {editingProcessId === process.id && canEditThreshold ? (
           <InputNumber
             min={0}
             value={process.thresholdQty}
             onChange={(value) => handleThresholdChange(process.id, value)}
           />
         ) : (
-          process.thresholdQty ? process.thresholdQty : ''
+          canEditThreshold ? process.thresholdQty : ''
         )}
       </td>
       <td>
@@ -113,7 +114,8 @@ const AddProjectProcess = ({ selectedProject, setIsProcessSubmitted }) => {
   const [previousFeatures, setPreviousFeatures] = useState([]);
   const [independentProcesses, setIndependentProcesses] = useState([]);
   const [projectName, setProjectName] = useState('');
-  const [isTransactionExists, setIsTransactionExists] = useState(false);
+  const [isQuantitySheetExists, setIsQuantitySheetExists] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const tableRef = useRef(null);
   const { t } = useTranslation();
   const { getCssClasses } = useStore(themeStore);
@@ -191,16 +193,18 @@ const AddProjectProcess = ({ selectedProject, setIsProcessSubmitted }) => {
       }
     };
 
-    const checkTransactions = async () => {
+    const checkQuantity = async () => {
       try {
-        const response = await API.get(`/Transactions/exists/${selectedProject}`);
-        setIsTransactionExists(response.data);
+        const response = await API.get(`/QuantitySheet/CatchByproject?ProjectId=${selectedProject}`);
+        if (response.data.length > 1) {
+          setIsQuantitySheetExists(response.data);
+        }
       } catch (error) {
         console.error(t('errorCheckingTransactionStatus'), error);
       }
     };
 
-    checkTransactions();
+    checkQuantity();
     fetchFeatures();
     fetchProcessesOfProject();
     fetchAllProcesses();
@@ -211,7 +215,7 @@ const AddProjectProcess = ({ selectedProject, setIsProcessSubmitted }) => {
   }, [projectProcesses]);
 
   const handleProcessSelect = (processId) => {
-    if (isTransactionExists) return;
+    if (isQuantitySheetExists) return;
     const process = allProcesses.find(p => p.id === processId);
 
     setSelectedProcessIds((prev) => {
@@ -278,37 +282,42 @@ const AddProjectProcess = ({ selectedProject, setIsProcessSubmitted }) => {
   };
 
   const handleSubmit = async () => {
-    const projectProcessesToSubmit = projectProcesses.map((process, index) => {
-      const matchingProcess = allProcesses.find(p => p.name === process.name);
-
-      return {
-        id: process.id,
-        projectId: selectedProject,
-        processId: matchingProcess ? matchingProcess.id : process.id,
-        weightage: process.relativeWeightage,
-        sequence: index + 1,
-        featuresList: process.installedFeatures,
-        userId: process.userId || [],
-        thresholdQty: process.thresholdQty || 0
-      };
-    });
-
-    const data = { projectProcesses: projectProcessesToSubmit };
-    const deleteData = { projectId: selectedProject, processIds: removedProcessIds };
+    if (isSubmitting) return;
+    setIsSubmitting(true);
 
     try {
+      const projectProcessesToSubmit = projectProcesses.map((process, index) => {
+        const matchingProcess = allProcesses.find(p => p.name === process.name);
+        return {
+          id: process.id,
+          projectId: selectedProject,
+          processId: matchingProcess ? matchingProcess.id : process.id,
+          weightage: process.relativeWeightage,
+          sequence: index + 1,
+          featuresList: process.installedFeatures || [],
+          userId: process.userId || [],
+          thresholdQty: process.thresholdQty || 0
+        };
+      });
+
+      const data = { projectProcesses: projectProcessesToSubmit };
+      const deleteData = { projectId: selectedProject, processIds: removedProcessIds };
+
+      // if (removedProcessIds.length > 0) {
+      //   await API.post('/ProjectProcess/DeleteProcessesFromProject', deleteData);
+      // }
+
       await API.post('/ProjectProcess/AddProcessesToProject', data);
-      if (removedProcessIds.length > 0) {
-        await API.post('/ProjectProcess/DeleteProcessesFromProject', deleteData);
-      }
 
       message.success(t('processesUpdatedSuccessfully'));
-      setIsProcessSubmitted(true); // Set the submission status to true
+      setIsProcessSubmitted(true);
+      setRemovedProcessIds([]);
 
     } catch (error) {
       message.error(t('errorUpdatingProcessesPleaseTryAgain'));
+      console.error('Submit error:', error);
     } finally {
-      setRemovedProcessIds([]);
+      setIsSubmitting(false);
     }
   };
 
@@ -357,7 +366,7 @@ const AddProjectProcess = ({ selectedProject, setIsProcessSubmitted }) => {
   };
 
   const onSortEnd = useCallback(({ oldIndex, newIndex }) => {
-    if (isTransactionExists) return;
+    if (isQuantitySheetExists) return;
 
     const process = projectProcesses[oldIndex];
     const processWithRange = independentProcesses.find(p => p.id === process.id);
@@ -376,7 +385,7 @@ const AddProjectProcess = ({ selectedProject, setIsProcessSubmitted }) => {
       const newProcesses = arrayMove(prevProcesses, oldIndex, newIndex);
       return calculatedWeightage(newProcesses);
     });
-  }, [projectProcesses, independentProcesses, isTransactionExists]);
+  }, [projectProcesses, independentProcesses, isQuantitySheetExists]);
 
   const handleSomeAction = () => {
     if (tableRef.current) {
@@ -398,14 +407,14 @@ const AddProjectProcess = ({ selectedProject, setIsProcessSubmitted }) => {
       <h4>Project: {projectName}</h4>
 
       <Collapse defaultActiveKey={['1']}>
-        <Panel header={`${t('manageProcess')}`} key="1" inert={isTransactionExists ? "true" : undefined}>
+        <Panel header={`${t('manageProcess')}`} key="1" inert={isQuantitySheetExists ? "true" : undefined}>
           {allProcesses.map(process => (
             <Checkbox
               key={process.id}
               checked={selectedProcessIds.includes(process.id)}
               onChange={() => handleProcessSelect(process.id)}
-              disabled={requiredProcessIds.includes(process.id) || isTransactionExists}
-              aria-hidden={requiredProcessIds.includes(process.id) || isTransactionExists}
+              disabled={requiredProcessIds.includes(process.id) || isQuantitySheetExists}
+              aria-hidden={requiredProcessIds.includes(process.id) || isQuantitySheetExists}
             >
               {process.name}
             </Checkbox>
@@ -433,7 +442,7 @@ const AddProjectProcess = ({ selectedProject, setIsProcessSubmitted }) => {
             lockOffset={["30%", "50%"]}
             useDragHandle={true}
             helperClass="row-dragging"
-            disabled={isTransactionExists}
+            disabled={isQuantitySheetExists}
           >
             {projectProcesses.map((process, index) => (
               <SortableRow
@@ -448,7 +457,7 @@ const AddProjectProcess = ({ selectedProject, setIsProcessSubmitted }) => {
                 handleCancelEdit={handleCancelEdit}
                 handleEdit={handleEdit}
                 independentProcesses={independentProcesses}
-                disabled={isTransactionExists}
+                disabled={isQuantitySheetExists}
                 handleThresholdChange={handleThresholdChange}
               />
             ))}
@@ -461,9 +470,9 @@ const AddProjectProcess = ({ selectedProject, setIsProcessSubmitted }) => {
         className={`${customBtn}`}
         onClick={handleSubmit}
         style={{ marginTop: '16px' }}
-        disabled={isTransactionExists}
+        disabled={isQuantitySheetExists || isSubmitting}
       >
-        {t("submitProcesses")}
+        {isSubmitting ? t("submitting") : t("submitProcesses")}
       </Button>
 
       <style>

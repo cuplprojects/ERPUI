@@ -41,7 +41,7 @@ export const getProcessPercentages = async (projectId) => {
 }
 export const getProjectTransactionsData = async (projectId, processId, isPrevious = false) => {
   try {
-    const response = await API.get(`/Transactions/GetProjectTransactionsData?projectId=${projectId}&processId=${processId}`);
+    const response = await API.get(`/Transactions/GetProjectTransactionsDataOld?projectId=${projectId}&processId=${processId}`);
     return response;
   } catch (error) {
     console.error('Error fetching project transactions data:', error);

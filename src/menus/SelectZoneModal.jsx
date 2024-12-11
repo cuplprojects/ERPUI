@@ -104,6 +104,11 @@ const SelectZoneModal = ({ show, handleClose, data, processId, handleSave }) => 
             value={selectedZone}
             onChange={handleZoneChange}
             className={` ${customDarkText}`}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                handleConfirm();
+              }
+            }}
           >
             <option value="">{t('selectZone')}</option>
             {zoneOptions.map(option => (

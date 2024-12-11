@@ -1,7 +1,7 @@
 import { Modal, Button, Form, Row, Col } from 'react-bootstrap';
 import { BsInfoCircleFill } from "react-icons/bs";
 import { useState } from 'react';
-import { Tooltip, Spin } from 'antd';
+import { Tooltip, Spin, Input } from 'antd';
 
 const AddProjectModal = ({
   visible,
@@ -25,6 +25,8 @@ const AddProjectModal = ({
   handleTypeChange,
   numberOfSeries,
   setNumberOfSeries,
+  seriesNames,
+  setSeriesNames,
   projectName,
   setProjectName,
   selectedGroup,
@@ -39,7 +41,8 @@ const AddProjectModal = ({
       name: projectName,
       group: selectedGroup?.id,
       type: selectedType?.typeId,
-      status: status
+      status: status,
+      seriesNames: seriesNames,
     });
     
     setLoading(true);
@@ -130,8 +133,8 @@ const AddProjectModal = ({
                 </Form.Group>
               </Col>
               <Col xs={6}>
-                <Form.Group controlId="seriesName">
-                  <Form.Label className={customDarkText}>{t('seriesName')}
+                <Form.Group controlId="seriesNames">
+                  <Form.Label className={customDarkText}>{t('seriesNames')}
                     <span className='text-danger ms-2 fs-6'>*</span>
                   </Form.Label>
                   <Form.Control
@@ -139,18 +142,20 @@ const AddProjectModal = ({
                     placeholder={t('ENTERSERIESNAME')}
                     maxLength={numberOfSeries}
                     style={{ textTransform: 'uppercase' }}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      if (value.length > numberOfSeries) {
-                        // Optionally handle the case where the input exceeds the limit
-                      }
-                    }}
+                    value={seriesNames} // ensure seriesNames is the value here
+                    // onChange={(e) => {
+                    //   const value = e.target.value.toUpperCase();
+                    //   setSeriesNames(value);
+                    // }}
+                    onChange={(e) => setSeriesNames(e.target.value.toUpperCase())}
                     required
                   />
                   <Form.Text className="text-danger">
                     {form.getFieldError('seriesName')?.[0]}
                   </Form.Text>
                 </Form.Group>
+               
+
               </Col>
             </Row>
           )}
