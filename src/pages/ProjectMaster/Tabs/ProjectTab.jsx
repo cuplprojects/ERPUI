@@ -76,18 +76,18 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
       message.error(t('pleaseSelectGroupAndType'));
       return;
     }
-
     const newProject = {
       name: projectName,
       status: values.status || true,
       description: values.description || '',
       groupId: selectedGroup.id,
       typeId: selectedType.typeId,
-      noOfSeries: numberOfSeries, // Use the state value directly
+      noOfSeries: numberOfSeries, 
       seriesName: seriesNames,
-      quantityThreshold: values.quantityThreshold || 0
+      quantityThreshold: parseInt(values.quantityThreshold) 
     };
-
+    
+    console.log(newProject);
     try {
       const response = await API.post('/Project', newProject);
       getProjects();
@@ -128,6 +128,7 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
       if (selectedTypeObj?.types.toLowerCase() === 'booklet') {
         if (numberOfSeries !== values.seriesName?.length) {
           message.error(t('seriesNameLengthMismatch'));
+          // console.log('Series Name Length Mismatch');
           return;
         }
       }
@@ -207,7 +208,7 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
               type: record.typeId,
               numberOfSeries: record.noOfSeries,
               seriesNames: record.seriesName,
-              quantityThreshold: record.quantityThreshold
+              quantityThreshold: parseInt(record.quantityThreshold)
             });
             setIsEditModalVisible(true);
           }}

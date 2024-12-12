@@ -29,31 +29,36 @@ const AddProjectModal = ({
 }) => {
   const [status, setStatus] = useState(true);
   const [loading, setLoading] = useState(false);
-
+  const [thresholdValue, setThresholdValue] = useState(selectedProject?.quantityThreshold || 0);
+  const [descriptionValue, setDescriptionValue] = useState(selectedProject?.description || '');
   useEffect(() => {
     if (selectedProject) {
       setNumberOfSeries(selectedProject.numberOfSeries);
       setSeriesNames(selectedProject.seriesNames);
-      form.setFieldsValue({
-        quantityThreshold: selectedProject.quantityThreshold
-      });
+      setThresholdValue(selectedProject.quantityThreshold);
+      setDescriptionValue(selectedProject.description);
     }
-  }, [selectedProject, form, setNumberOfSeries, setSeriesNames]);
+  }, [selectedProject, setNumberOfSeries, setSeriesNames]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    form.setFieldsValue({
+    const formValues = form.getFieldsValue();
+    
+    const projectData = {
       name: projectName,
-      group: selectedGroup?.id,
-      type: selectedType?.typeId,
       status: status,
-      seriesNames: seriesNames,
-    });
+      description: descriptionValue,
+      groupId: selectedGroup?.id,
+      typeId: selectedType?.typeId,
+      noOfSeries: parseInt(numberOfSeries) || 0,
+      seriesName: seriesNames || null,
+      quantityThreshold: thresholdValue
+    };
     
     setLoading(true);
     try {
       await form.validateFields();
-      await onFinish(form.getFieldsValue());
+      await onFinish(projectData);
     } catch (err) {
       console.log(err);
     } finally {
@@ -183,7 +188,18 @@ const AddProjectModal = ({
             <Col xs={12}>
               <Form.Group controlId="description">
                 <Form.Label className={customDarkText}>{t('description')}</Form.Label>
-                <Form.Control as="textarea" rows={2} placeholder={t('enterDescription')} />
+                <Form.Control
+                  as="textarea"
+                  name="description"
+                  rows={2}
+                  placeholder={t('enterDescription')}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setDescriptionValue(value);
+                    form.setFieldsValue({ description: value });
+                  }}
+                  value={descriptionValue}
+                />
               </Form.Group>
             </Col>
           </Row>
@@ -198,8 +214,15 @@ const AddProjectModal = ({
                 </Form.Label>
                 <Form.Control
                   type="number"
+                  name="quantityThreshold"
                   min={0}
                   placeholder={t('enterQuantityThreshold')}
+                  onChange={(e) => {
+                    const value = e.target.value ? parseInt(e.target.value) : '';
+                    setThresholdValue(value);
+                    form.setFieldsValue({ quantityThreshold: value });
+                  }}
+                  value={thresholdValue}
                 />
                 <Form.Text className="text-danger">
                   {form.getFieldError('quantityThreshold')?.[0]}
