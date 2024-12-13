@@ -15,6 +15,7 @@ import { useUserData, useUserDataActions } from '../store/userDataStore';
 import { useMediaQuery } from 'react-responsive';
 import { useTranslation } from 'react-i18next';
 import AuthService from '../CustomHooks/ApiServices/AuthService';
+import { openCustomUiSidebar } from './CustomUi';
 
 const UserMenu = ({ onClose }) => {
   const { t, i18n } = useTranslation();
@@ -47,7 +48,9 @@ const UserMenu = ({ onClose }) => {
 
   const handleLogoutClick = () => setShowModal(true);
   const handleProfileClick = () => navigate('/profile');
-  const handleSettingsClick = () => navigate('/settings');
+  const handleSettingsClick = () => {
+    console.log("Trigger the right side bar.")
+  };
   const handleChangePasswordClick = () => navigate('/change-password');
 
   const handleLogoutConfirm = () => {
@@ -104,9 +107,9 @@ const UserMenu = ({ onClose }) => {
         </div>
       </div>
       <ul className="list-unstyled">
-        {[
+        {[/* eslint-disable */
           { icon: <ImProfile />, text: 'profile', route: '/profile', onClick: handleProfileClick },
-          // { icon: <IoSettingsSharp />, text: 'mySettings', route: '/settings', onClick: handleSettingsClick },
+          { icon: <IoSettingsSharp />, text: 'mySettings', onClick: openCustomUiSidebar },
           { icon: <RiLockPasswordFill />, text: 'changePassword', route: '/change-password', onClick: handleChangePasswordClick },
           { icon: <FaPowerOff />, text: 'logout', onClick: handleLogoutClick },
         ].map((item, index) => (
