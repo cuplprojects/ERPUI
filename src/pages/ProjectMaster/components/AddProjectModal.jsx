@@ -12,6 +12,7 @@ const AddProjectModal = ({
   types,
   showSeriesFields,
   customDarkText,
+  customLightText,
   customDark,
   customLight,
   t,
@@ -77,7 +78,7 @@ const AddProjectModal = ({
       keyboard={false}
     >
       <Modal.Header closeButton={false} className={`${customDark}`}>
-        <Modal.Title>{t('addNewProject')}</Modal.Title>
+        <Modal.Title className={customLightText}>{t('addNewProject')}</Modal.Title>
       </Modal.Header>
       <Modal.Body className={`${customLight}`}>
         <Form id="addProjectForm" onSubmit={handleSubmit} form={form}>
@@ -232,6 +233,7 @@ const AddProjectModal = ({
             <Col xs={3} className="mt-3 d-flex align-items-center">
               <Form.Group controlId="status" className={customDarkText}>
                 <Form.Check 
+                disabled
                   type="switch" 
                   label={t('status')} 
                   checked={status}

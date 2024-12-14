@@ -265,8 +265,8 @@ const ProjectDetailsTable = ({
       return;
     }
 
-    // Only check interim quantity if hasFeaturePermission(7) is true
-    if (hasFeaturePermission(4) && newStatusIndex === 2) {
+    // Only check interim quantity if hasFeaturePermission(7) is true and interimQuantity is not 0
+    if (hasFeaturePermission(4) && newStatusIndex === 2 && updatedRow.interimQuantity !== 0) {
       if (updatedRow.interimQuantity !== updatedRow.quantity) {
         showNotification(
           "error",
@@ -334,7 +334,15 @@ const ProjectDetailsTable = ({
     setCatchDetailModalShow(true);
     setCatchDetailModalData(record);
   };
-
+  const formatDate = (dateString) => {
+    if (!dateString) return 'NA';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+    });
+};
   const columns = [
     {
       title: (
@@ -498,6 +506,7 @@ const ProjectDetailsTable = ({
             align: "center",
             key: "examDate",
             sorter: (a, b) => a.examDate - b.examDate,
+            render: (text) => formatDate(text), // Apply formatDate here
           },
         ]
       : []),
@@ -659,9 +668,10 @@ const ProjectDetailsTable = ({
               isTeamAssigned
             : isZoneAssigned && isTeamAssigned);
 
-        // Only check interim quantity if hasFeaturePermission(7) is true
+        // Only check interim quantity if hasFeaturePermission(7) is true and interimQuantity is not 0
         const canBeCompleted =
           !hasFeaturePermission(4) ||
+          record.interimQuantity === 0 ||
           record.interimQuantity === record.quantity;
 
         // Populate the requirements array based on conditions
@@ -710,6 +720,7 @@ const ProjectDetailsTable = ({
           initialStatusIndex === 1 &&
           !canBeCompleted &&
           hasFeaturePermission(4) &&
+          record.interimQuantity !== 0 &&
           !requirements.includes(
             t("cannotSetStatusToCompletedInterimQuantityMustEqualQuantity")
           )
@@ -840,18 +851,18 @@ const ProjectDetailsTable = ({
       return;
     }
 
-    // Only check interim quantity if hasFeaturePermission(7) is true
+    // Only check interim quantity if hasFeaturePermission(4) is true and newStatusIndex is 2 (Completed)
     if (hasFeaturePermission(4) && newStatusIndex === 2) {
       const hasIncompleteQuantity = selectedRowKeys.some((key) => {
         const row = tableData.find((row) => row.srNo === key);
-        return row.interimQuantity !== row.quantity;
+        return row.interimQuantity !== 0 && row.interimQuantity !== row.quantity;
       });
 
       if (hasIncompleteQuantity) {
         showNotification(
           "error",
           "Status Update Failed",
-          "Interim Quantity must equal Quantity for all selected items"
+          "Interim Quantity must equal Quantity for all selected items where Interim Quantity is not zero"
         );
         return;
       }
@@ -1470,7 +1481,7 @@ const ProjectDetailsTable = ({
                 // Check completion requirements if trying to complete
                 if (getSelectedStatus() === 1 && hasFeaturePermission(4)) {
                   const incompleteQuantity = selectedRows.find(
-                    (row) => row.interimQuantity !== row.quantity
+                    (row) => row.interimQuantity !== 0 && row.interimQuantity !== row.quantity
                   );
                   if (incompleteQuantity) {
                     requirements.push(
