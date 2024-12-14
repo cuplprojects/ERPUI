@@ -20,6 +20,11 @@ import useShowLabelIdStore from './../store/showLabelIdStore';
 import { useTranslation } from 'react-i18next';
 import { hasPermission } from '../CustomHooks/Services/permissionUtils';
 
+export const openCustomUiSidebar = () => {
+  const event = new CustomEvent('openCustomUiSidebar');
+  window.dispatchEvent(event);
+};
+
 const CustomUi = () => {
   const { t } = useTranslation();
   const { getCssClasses } = useStore(themeStore);
@@ -39,6 +44,14 @@ const CustomUi = () => {
 
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
+
+  useEffect(() => {
+    const handleOpenSidebar = () => setShow(true);
+    window.addEventListener('openCustomUiSidebar', handleOpenSidebar);
+    return () => {
+      window.removeEventListener('openCustomUiSidebar', handleOpenSidebar);
+    };
+  }, []);
 
   useEffect(() => {
     document.documentElement.style.fontSize = `${fontSize}px`;
@@ -135,12 +148,12 @@ const CustomUi = () => {
 
   return (
     <>
-      <div className="user-interface-container" ref={dragRef} style={{ zIndex: "99999" }} onClick={handleShow}>
+      {/* <div className="user-interface-container" ref={dragRef} style={{ zIndex: "99999" }} onClick={handleShow}>
         <div className="user-interface-icon" >
           <IoSettings className={`settings-icon-ui ${customDark === 'dark-dark' ? "text-dark border-dark" : ''}`} />
           <img src={themeIcons[customDark] || themeIcons["default"]} alt={t('themeIcon')} className='ui-icon-img' />
         </div>
-      </div>
+      </div> */}
 
       <Offcanvas show={show} onHide={handleClose} placement="end" style={{ zIndex: "9999999" }}>
         <Offcanvas.Header closeButton={false} className={`${customDark} ${customLightText} d-flex justify-content-between`}>
