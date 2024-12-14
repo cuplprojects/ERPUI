@@ -334,7 +334,15 @@ const ProjectDetailsTable = ({
     setCatchDetailModalShow(true);
     setCatchDetailModalData(record);
   };
-
+  const formatDate = (dateString) => {
+    if (!dateString) return 'NA';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+    });
+};
   const columns = [
     {
       title: (
@@ -498,6 +506,7 @@ const ProjectDetailsTable = ({
             align: "center",
             key: "examDate",
             sorter: (a, b) => a.examDate - b.examDate,
+            render: (text) => formatDate(text), // Apply formatDate here
           },
         ]
       : []),
