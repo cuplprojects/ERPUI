@@ -144,8 +144,23 @@ const RolesAndDepartments = () => {
     setNewRole({ ...newRole, permissions: updatedPermissions });
   };
 
-  // Pagination logic for roles (on the frontend)
-  const paginatedRoles = roles.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const paginationConfig = {
+    pageSize: pageSize,
+    current: currentPage,
+    total: roles.length,
+    showSizeChanger: true,
+    pageSizeOptions: [5, 10, 20],
+    onChange: handlePaginationChange,
+    onShowSizeChange: (current, size) => {
+      setCurrentPage(1);
+      setPageSize(size);
+    }
+  };
+
+  // Update the paginatedRoles calculation
+  const paginatedRoles = React.useMemo(() => {
+    return roles.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  }, [roles, currentPage, pageSize]);
 
   const roleColumns = [
     {
@@ -197,12 +212,6 @@ const RolesAndDepartments = () => {
     }
   ];
 
-  const paginationConfig = {
-    pageSize: 5,
-    showSizeChanger: true,
-    pageSizeOptions: [5, 10, 20],
-  };
-
   return (
     <Card
       className={`w-100 mx-auto ${customMid} border-0`}
@@ -218,15 +227,7 @@ const RolesAndDepartments = () => {
       <Table
         rowKey="roleId"
         size="small"
-        pagination={{
-          ...paginationConfig,
-          current: currentPage,
-          total: roles.length,
-          onChange: handlePaginationChange,
-          className: `${customDark === "dark-dark" || customDark === "blue-dark" ? "bg-white" : ""} p-3 rounded-bottom-3 `,
-          responsive: true,
-          showSizeChanger: true
-        }}
+        pagination={paginationConfig}
         columns={roleColumns}
         dataSource={paginatedRoles}
         style={{  width: '100%' }}
