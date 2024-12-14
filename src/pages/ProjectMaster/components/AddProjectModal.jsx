@@ -48,6 +48,7 @@ const AddProjectModal = ({
       type: selectedType?.typeId,
       status: status,
       seriesNames: seriesNames,
+      quantityThreshold: form.getFieldValue('quantityThreshold')
     });
     
     setLoading(true);
