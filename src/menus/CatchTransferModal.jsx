@@ -164,7 +164,6 @@ const CatchTransferModal = ({ visible, onClose, catches, onCatchesChange, lots =
     const handleTransfer = async () => {
         try {
             if (!selectedLot || !selectedDate || !isConfirmed) {
-                console.log('Validation failed:', { selectedLot, selectedDate, isConfirmed });
                 return;
             }
 

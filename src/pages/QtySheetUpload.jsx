@@ -234,7 +234,7 @@ const QtySheetUpload = () => {
       };
     });
 
-    console.log(t("finalPayload"), JSON.stringify(finalPayload, null, 2));
+
 
     try {
       const response = await API.post("/QuantitySheet", finalPayload, {
@@ -242,7 +242,6 @@ const QtySheetUpload = () => {
           "Content-Type": "application/json",
         },
       });
-      console.log(t("uploadSuccessful"), response.data);
       setDataSource(finalPayload);
       success(
         isUpdateMode
@@ -291,7 +290,6 @@ const QtySheetUpload = () => {
             rowData[property] = value;
           }
 
-          console.log(t("rowDataMapped"), rowData);
           rowData["projectId"] = projectId;
           rowData["percentageCatch"] = "0";
           return rowData;
@@ -312,11 +310,9 @@ const QtySheetUpload = () => {
 
       // Extract LotNo values from the mapped data and existing data
       const mappedLotNos = [...new Set(mappedData.map((item) => item.LotNo))];
-      console.log(mappedLotNos);
 
       // Find matching lots between mapped data and existing lots
       const matchingLots = mappedLotNos.filter((lotNo) => lots.includes(lotNo));
-      console.log(matchingLots);
 
       // Get unique lots to skip by using Set to deduplicate lot numbers
       const uniqueLotsToSkip = Array.from(
@@ -326,7 +322,6 @@ const QtySheetUpload = () => {
             .map((item) => item.LotNo)
         )
       ).map((lotNo) => ({ LotNo: lotNo }));
-      console.log(uniqueLotsToSkip);
 
       if (uniqueLotsToSkip.length > 0) {
         // If there are matching lots, show the modal with unique lots
@@ -345,14 +340,10 @@ const QtySheetUpload = () => {
 
   const handleSkipUpdate = () => {
     // Remove the skipped lots from the mapped data
-    console.log(mappedData);
-    console.log(skipLots);
     const skipLotNos = skipLots.map((item) => item.LotNo);
-    console.log(skipLotNos);
     const remainingMappedData = mappedData.filter(
       (item) => !skipLotNos.includes(item.LotNo)
     );
-    console.log(remainingMappedData);
 
     if (remainingMappedData.length === 0) {
       warning(t("allLotsSkipped"));

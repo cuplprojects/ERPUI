@@ -210,7 +210,6 @@ const AllProjects = () => {
     const fetchProjectName = async () => {
       try {
         const response = await API.get(`/Project/${projectId}`);
-        console.log(response.data);
         setProjectName(response.data.name);
         setType(response.data.projectType);
       } catch (error) {

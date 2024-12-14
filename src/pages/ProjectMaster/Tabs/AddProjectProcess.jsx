@@ -394,7 +394,6 @@ const AddProjectProcess = ({ selectedProject, setIsProcessSubmitted }) => {
         features: features,
         selectedProcessIds: selectedProcessIds
       };
-      // console.log('Table data:', tableData);
     }
   };
 

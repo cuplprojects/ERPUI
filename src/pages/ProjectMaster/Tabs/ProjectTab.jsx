@@ -87,7 +87,6 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
       quantityThreshold: parseInt(values.quantityThreshold) 
     };
     
-    console.log(newProject);
     try {
       const response = await API.post('/Project1', newProject);
       getProjects();
@@ -128,7 +127,6 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
       if (selectedTypeObj?.types.toLowerCase() === 'booklet') {
         if (numberOfSeries !== values.seriesName?.length) {
           message.error(t('seriesNameLengthMismatch'));
-          // console.log('Series Name Length Mismatch');
           return;
         }
       }

@@ -176,7 +176,6 @@ const CuDashboard = () => {
   };
 
   useEffect(() => {
-    console.log(data[0]?.projectId);
     if (data && data.length > 0) {
       setSelectedLots(data[0]?.lots || []);
       setClickData(data[0]);
@@ -186,7 +185,6 @@ const CuDashboard = () => {
   }, [data]);
 
   const onclick = (item) => {
-    console.log(item.projectId);
     setSelectedLots(item.lots || []);
     setClickData(item);
     setPieData(item.processes || []);

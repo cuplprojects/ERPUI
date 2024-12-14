@@ -28,7 +28,6 @@ const RolesAndDepartments = () => {
   const fetchRoles = async () => {
     try {
       const response = await API.get('/Roles');
-      console.log(response.data);
       setRoles(response.data);
     } catch (err) {
       console.error('Failed to fetch roles');

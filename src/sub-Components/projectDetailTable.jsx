@@ -49,7 +49,6 @@ const ProjectDetailsTable = ({
   lotNo,
   fetchTransactions,
 }) => {
-  console.log(tableData);
   //Theme Change Section
   const { t } = useTranslation();
   const { getCssClasses } = useStore(themeStore);
@@ -111,7 +110,6 @@ const ProjectDetailsTable = ({
   const [courseData, setCourseData] = useState([]);
   const [subjectData, setSubjectData] = useState([]);
   const [examDate, setExamDate] = useState([]);
-  console.log(tableData);
 
   const showNotification = (type, messageKey, descriptionKey, details = "") => {
     notification[type]({
@@ -880,7 +878,6 @@ const ProjectDetailsTable = ({
               `/Transactions/${updatedRow.transactionId}`
             );
             existingTransactionData = response.data;
-            // console.log('trasaction data -', existingTransactionData);
           } catch (error) {
             console.error(`Error fetching transaction data for ${key}:`, error);
           }

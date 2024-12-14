@@ -22,7 +22,6 @@ const AlarmModal = ({ show, handleClose, data, processId, handleSave }) => {
         2: t('completed'),
     };
 
-    console.log(data);
     const [alarmType, setAlarmType] = useState('');
     const [alarmId, setAlarmId] = useState(null);
     const [customMessage, setCustomMessage] = useState('');
