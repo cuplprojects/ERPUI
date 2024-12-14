@@ -27,7 +27,6 @@ const CuDashboardGrid = ({ setClickData }) => {
     customThead
   ] = getCssClasses();
   const [hasProcesses, setHasProcesses] = useState(false);
-  console.log(setClickData);
   const containerStyle = useMemo(() => ({ width: '100%', height: '100%' }), []);
   const gridStyle = useMemo(() => ({ height: '100%', width: '100%' }), []);
 
@@ -106,7 +105,6 @@ const CuDashboardGrid = ({ setClickData }) => {
     <div style={containerStyle}>
       <div id="grid-wrapper" style={{ width: '100%', height: '100%' }}>
         <div style={gridStyle} className="ag-theme-quartz-dark">
-          {console.log(rowData)}
           <AgGridReact
             rowData={rowData}
             columnDefs={columnDefs}

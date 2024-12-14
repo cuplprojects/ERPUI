@@ -22,23 +22,19 @@ const DashboardAlarmModal = ({ projectId, lotNo, hasResolvePermission }) => {
   useEffect(() => {
     const fetchData = async () => {
       if (!projectId) {
-        console.log("No projectId provided");
         return;
       }
 
       try {
-        console.log("Fetching data for projectId:", projectId);
 
         // Fetch alarms data
         const alarmsResponse = await API.get(`/Transactions/alarms?projectId=${projectId}`);
         const alarms = alarmsResponse.data;
-        console.log("Alarms data:", alarms);
 
         // Fetch project details
         const projectResponse = await API.get(`/Project/${projectId}`);
         const projectDetails = projectResponse.data;
         setProjectName(projectDetails.name);
-        console.log("Project details:", projectDetails);
 
         setAlarmsData(alarms);
 
@@ -56,11 +52,9 @@ const DashboardAlarmModal = ({ projectId, lotNo, hasResolvePermission }) => {
   // Filter alarms based on the selected lotNo
   useEffect(() => {
     if (lotNo && alarmsData.length > 0) {
-      console.log("Filtering alarms for lotNo:", lotNo);
       const filteredData = alarmsData.filter(
         (alert) => alert.lotNo === Number(lotNo) && alert.alarmId.trim() !== "" // filter out alarms with empty alarmId
       );
-      console.log("Filtered alarms:", filteredData);
       setFilteredAlarmsData(filteredData);
     }
   }, [lotNo, alarmsData]);
@@ -95,12 +89,10 @@ const DashboardAlarmModal = ({ projectId, lotNo, hasResolvePermission }) => {
   // Handle resolve functionality
   const handleResolve = async (quantitysheetId) => {
     try {
-      console.log("Resolving alarm for quantitySheetId:", quantitysheetId);
 
       const alarmData = filteredAlarmsData.find(
         (alarm) => alarm.quantitysheetId === quantitysheetId
       );
-      console.log(alarmData)
       if (!alarmData) {
         throw new Error(
           `Alarm not found for QuantitySheetId: ${quantitysheetId}`
@@ -112,7 +104,6 @@ const DashboardAlarmModal = ({ projectId, lotNo, hasResolvePermission }) => {
       if (alarmData.transactionId) {
         const response = await API.get(`/Transactions/${alarmData.transactionId}`);
         existingTransactionData = response.data;
-        console.log("Existing transaction data:", existingTransactionData);
       }
 
       // Prepare the data to send in the POST request
@@ -132,16 +123,13 @@ const DashboardAlarmModal = ({ projectId, lotNo, hasResolvePermission }) => {
         voiceRecording: existingTransactionData.voiceRecording || "",
       };
 
-      console.log("Sending POST request with data:", postData);
 
       // Send the POST request to create or update the transaction
       const response = await API.post(`/Transactions`, postData);
 
-      console.log("Alarm resolved successfully", response.data);
       setSuccessMessage("Alarm resolved successfully!");
       const alarmsResponse = await API.get(`/Transactions/alarms?projectId=${projectId}`);
       const updatedAlarms = alarmsResponse.data;
-      console.log("Updated alarms data:", updatedAlarms);
 
       setAlarmsData(updatedAlarms);
     } catch (error) {

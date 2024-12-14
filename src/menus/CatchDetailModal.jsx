@@ -21,10 +21,8 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave}) => 
     useEffect(() => {
         const fetchProcesses = async () => {
             try {
-                console.log('Fetching processes...');
                 setRequestError(null);
                 const response = await API.get('/Processes');
-                console.log('Processes fetched:', response.data);
                 setProcesses(response.data);
             } catch (error) {
                 console.error('Error fetching processes:', error);
@@ -40,7 +38,6 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave}) => 
         }
 
         return () => {
-            console.log('Cleaning up processes state');
             setProcesses([]);
             setRequestError(null);
         };
@@ -48,7 +45,6 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave}) => 
 
     useEffect(() => {
         if (!show && audioElement) {
-            console.log('Cleaning up audio element');
             audioElement.pause();
             setIsPlaying(false);
             setAudioElement(null);
@@ -63,7 +59,6 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave}) => 
     };
 
     const getProcessName = (processId) => {
-        console.log('Getting process name for ID:', processId);
         const process = processes.find(p => p.id === processId);
         return process ? process.name : 'Unknown Process';
     };
@@ -82,7 +77,6 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave}) => 
         .filter(key => !['serialNumber', 'voiceRecording', 'teamUserNames', 'teamId', 'transactionId', 'srNo', 'projectId', 'processIds', 'previousProcessData'].includes(key))
         .map((key, index) => {
             let value = data[key];
-            console.log('Processing table data for key:', key, 'value:', value);
             
             if (typeof value === 'object' && value !== null) {
                 if (Array.isArray(value)) {
@@ -129,7 +123,6 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave}) => 
         });
 
     if (data?.teamUserNames?.length) {
-        console.log('Adding team members to table data');
         tableData.push({
             key: 'team',
             label: 'Team Members',
@@ -138,22 +131,18 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave}) => 
     }
 
     const handleAudioPlay = async (audioData) => {
-        console.log('Handling audio play');
         if (!audioData) {
-            console.log('No audio data available');
             message.info('No audio recording available');
             return;
         }
 
         try {
             if (isPlaying && audioElement) {
-                console.log('Pausing current audio');
                 audioElement.pause();
                 setIsPlaying(false);
                 return;
             }
 
-            console.log('Creating audio blob');
             const byteCharacters = atob(audioData);
             const byteNumbers = new Array(byteCharacters.length);
             for (let i = 0; i < byteCharacters.length; i++) {
@@ -166,15 +155,12 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave}) => 
             const audio = new Audio(audioUrl);
 
             audio.onplay = () => {
-                console.log('Audio started playing');
                 setIsPlaying(true);
             };
             audio.onpause = () => {
-                console.log('Audio paused');
                 setIsPlaying(false);
             };
             audio.onended = () => {
-                console.log('Audio playback ended');
                 setIsPlaying(false);
                 URL.revokeObjectURL(audioUrl);
             };
@@ -189,7 +175,6 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave}) => 
     };
 
     const renderAudioControl = (voiceRecording) => {
-        console.log('Rendering audio control for recording:', !!voiceRecording);
         if (!voiceRecording) {
             return (
                 <AudioMutedOutlined
@@ -235,13 +220,11 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave}) => 
     };
 
     const handleResolve = async () => {
-        console.log('Handling resolve action');
         try {
             setLoading(true);
             let existingTransactionData;
             
             if (data.transactionId) {
-                console.log('Fetching existing transaction data');
                 const response = await API.get(`/Transactions/${data.transactionId}`);
                 existingTransactionData = response.data;
             }
@@ -263,7 +246,6 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave}) => 
                 voiceRecording: existingTransactionData?.voiceRecording ?? ""
             };
 
-            console.log('Posting transaction data:', postData);
             await API.post('/Transactions', postData);
             success('Transaction saved successfully');
             handleSave("0")
@@ -289,7 +271,6 @@ const CatchDetailModal = ({ show, handleClose, data, processId, handleSave}) => 
             dataIndex: 'value',
             key: 'value',
             render: (value, record) => {
-                console.log('Rendering table cell for:', record);
                 if (record.label === 'Remarks' || record.label === 'Alerts') {
                     return (
                         <>

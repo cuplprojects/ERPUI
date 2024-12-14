@@ -40,7 +40,6 @@ const SetPassword = () => {
   useEffect(() => {
     API.get('/SecurityQuestions')
       .then(response => {
-        console.log('API response:', response.data);
         setSecurityQuestions(response.data);
       })
       .catch(error => {

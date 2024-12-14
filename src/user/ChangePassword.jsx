@@ -78,7 +78,6 @@ const ChangePassword = () => {
   const authToken = userToken; // assume you have the token stored in a variable
   const decodedToken = jwtDecode(authToken);
   const [firstKey, userIdApi] = Object.entries(decodedToken)[0]; // extract the userId from the decoded token
-  // console.log("user id with token -",userIdApi)//console for checking user  id with token
 
   /**
    * Handle form submission

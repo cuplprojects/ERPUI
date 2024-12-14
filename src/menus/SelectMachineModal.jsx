@@ -22,18 +22,15 @@ const SelectMachineModal = ({ show, handleClose, data, processId, handleSave }) 
   const [selectedZone, setSelectedZone] = useState(null); // State to store selected zone info
 
   const handleMachineChange = (selectedOption) => {
-    console.log('Machine selected:', selectedOption);
     setSelectedMachine(selectedOption);
     setMachineId(selectedOption ? selectedOption.value : null);
   
     // Find the associated zone data for the selected machine
     const selectedMachineData = machineOptions.find(machine => machine.value === selectedOption.value);
-    console.log('Selected machine data:', selectedMachineData);
   
     if (selectedMachineData) {
       // Ensure machineIds is defined and an array before calling .includes
       const associatedZone = zoneData.find(zone => Array.isArray(zone.machineId) && zone.machineId.includes(selectedOption.value));
-      console.log('Associated Zone:', associatedZone);
   
       setSelectedZone(associatedZone || null); // Set selected zone data
     }

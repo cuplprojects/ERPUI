@@ -15,7 +15,6 @@ const statusMapping = {
 };
 
 const InterimQuantityModal = ({ show, handleClose, handleSave, data, processId }) => {
-    console.log(data)
     const [interimQuantity, setInterimQuantity] = useState('');
     const { t } = useTranslation();
     const themeState = useStore(themeStore);
@@ -67,7 +66,6 @@ const InterimQuantityModal = ({ show, handleClose, handleSave, data, processId }
             };
 
             const response = await API.post('/Transactions', postData);
-            console.log('Response:', response.data);
             
             handleSave(interimQuantity);
             setInterimQuantity('');
