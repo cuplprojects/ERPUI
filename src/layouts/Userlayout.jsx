@@ -61,10 +61,10 @@ const UserLayout = () => {
               {/* <Route path="/settings" element={<UserSettings />} /> */}
               <Route path="/change-password" element={<ChangePassword />} />
 
-              <Route path="/quantity-sheet-uploads/:encryptedProjectId" element={checkPermissionAndRender("2.4", QtySheetUpload)} />
+              <Route path="/quantity-sheet-uploads/:encryptedProjectId" element={checkPermissionAndRender("6", QtySheetUpload)} />
               <Route path="/project-details/:encryptedProjectId/:encryptedLotNo" element={<ProcessTable />} />
               <Route path="/labels" element={checkPermissionAndRender("3", Labels)} />
-              <Route path="/reports" element={checkPermissionAndRender("3", Reports)} />
+              <Route path="/reports" element={checkPermissionAndRender("4", Reports)} />
 
               <Route path="/*" element={<Navigate to="/404" replace />} />
               <Route path="/404" element={<PageNotFound />} />

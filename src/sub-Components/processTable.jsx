@@ -441,13 +441,11 @@ const ProcessTable = () => {
                 setPreviousProcess(previousProcessData);
                 break;
               } else if (previousProcessData.processType === "Independent") {
-                if (
-                  previousProcessData.rangeStart <= selectedProcess.sequence &&
-                  previousProcessData.rangeEnd >= selectedProcess.sequence
-                ) {
-                  setPreviousProcess(previousProcessData);
-                  break;
-                }
+                // if (previousProcessData.rangeStart <= selectedProcess.sequence &&
+                //     previousProcessData.rangeEnd >= selectedProcess.sequence) {
+                //   setPreviousProcess(previousProcessData);
+                //   break;
+                // }
                 // Check for independent process with rangeEnd matching current processId
                 if (
                   previousProcessData.rangeEnd === selectedProcess.processId
@@ -467,17 +465,14 @@ const ProcessTable = () => {
               continue;
             }
 
-            if (
-              selectedProcess.processId === 3 &&
-              (previousProcessData.processId === 2 ||
-                previousProcessData.processId === 1)
-            ) {
-              previousSequence--;
+            if (selectedProcess.processId === 3 && 
+               (previousProcessData.processId === 2 || previousProcessData.processId === 1)) {
+              previousSequence = 0;
               continue;
             }
 
             previousSequence--;
-          } while (previousSequence > 0);
+          } while (previousSequence >= 0);
 
           // Fetch transactions for previous process if found
           if (previousProcessData) {
@@ -742,13 +737,49 @@ const ProcessTable = () => {
           );
           if (existingItem) {
             existingItem.quantity += item.quantity;
+            // Collect all statuses for this catch number
+            existingItem._allStatuses = existingItem._allStatuses || [];
+            existingItem._allStatuses.push(item.status);
+            
+            // Calculate combined status
+            const uniqueStatuses = new Set(existingItem._allStatuses);
+            if (uniqueStatuses.has(1)) {
+              existingItem.status = 1; // If any status is 1, combined status is 1
+            } else if (uniqueStatuses.size === 1 && uniqueStatuses.has(2)) {
+              existingItem.status = 2; // If all statuses are 2, combined status is 2
+            } else {
+              existingItem.status = 0; // Otherwise, combined status is 0
+            }
+            
+            // Same logic for previous process status if it exists
+            if (item.previousProcessData) {
+              existingItem._allPreviousStatuses = existingItem._allPreviousStatuses || [];
+              existingItem._allPreviousStatuses.push(item.previousProcessData.status);
+              
+              const uniquePrevStatuses = new Set(existingItem._allPreviousStatuses);
+              if (uniquePrevStatuses.has(1)) {
+                existingItem.previousProcessData.status = 1;
+              } else if (uniquePrevStatuses.size === 1 && uniquePrevStatuses.has(2)) {
+                existingItem.previousProcessData.status = 2;
+              } else {
+                existingItem.previousProcessData.status = 0;
+              }
+            }
           } else {
-            // Remove seriesName from item before pushing to the accumulator
+            // Remove seriesName and initialize status arrays for new items
             const { seriesName, ...restItem } = item;
-            acc.push({ ...restItem });
+            acc.push({
+              ...restItem,
+              _allStatuses: [item.status],
+              _allPreviousStatuses: item.previousProcessData ? [item.previousProcessData.status] : []
+            });
           }
           return acc;
-        }, [])
+        }, []).map(item => {
+          // Clean up temporary arrays before final output
+          const { _allStatuses, _allPreviousStatuses, ...cleanItem } = item;
+          return cleanItem;
+        })
       : tableData;
 
   return (
