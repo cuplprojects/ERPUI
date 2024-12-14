@@ -87,7 +87,8 @@ const ProjectDetailsTable = ({
   const [pageSize, setPageSize] = useState(5);
   const [currentPage, setCurrentPage] = useState(1);
   const [alarmModalData, setAlarmModalData] = useState(null);
-  const [interimQuantityModalData, setInterimQuantityModalData] = useState(null);
+  const [interimQuantityModalData, setInterimQuantityModalData] =
+    useState(null);
   const [remarksModalData, setRemarksModalData] = useState(null);
   const [selectAll, setSelectAll] = useState(false);
   const [visibleRowKeys, setVisibleRowKeys] = useState([]);
@@ -101,12 +102,16 @@ const ProjectDetailsTable = ({
   const [selectMachineModalData, setSelectMachineModalData] = useState(null);
   const [assignTeamModalData, setAssignTeamModalData] = useState(null);
   const [showOnlyAlerts, setShowOnlyAlerts] = useState(false);
-  const [ showOnlyCompletedPreviousProcess,setShowOnlyCompletedPreviousProcess] = useState(true);
+  const [
+    showOnlyCompletedPreviousProcess,
+    setShowOnlyCompletedPreviousProcess,
+  ] = useState(true);
   const [showOnlyRemarks, setShowOnlyRemarks] = useState(false);
   const [paperData, setPaperData] = useState([]);
   const [courseData, setCourseData] = useState([]);
   const [subjectData, setSubjectData] = useState([]);
-  console.log(tableData)
+  const [examDate, setExamDate] = useState([]);
+  console.log(tableData);
 
   const showNotification = (type, messageKey, descriptionKey, details = "") => {
     notification[type]({
@@ -148,6 +153,9 @@ const ProjectDetailsTable = ({
           );
           setSubjectData(
             data.filter((item) => item.subject).map((item) => item.subject)
+          );
+          setExamDateData(
+            data.filter((item) => item.examDate).map((item) => item.examDate)
           );
         }
       } catch (error) {
@@ -193,7 +201,8 @@ const ProjectDetailsTable = ({
         item.previousProcessData.status === 2 ||
         (item.previousProcessData.thresholdQty != null &&
           item.previousProcessData.thresholdQty > 0 &&
-          item.previousProcessData.interimQuantity >= item.previousProcessData.thresholdQty)
+          item.previousProcessData.interimQuantity >=
+            item.previousProcessData.thresholdQty)
       : true;
 
     return (
@@ -230,7 +239,8 @@ const ProjectDetailsTable = ({
       !(
         updatedRow.previousProcessData.thresholdQty != null &&
         updatedRow.previousProcessData.thresholdQty > 0 &&
-        updatedRow.previousProcessData.interimQuantity >= updatedRow.previousProcessData.thresholdQty
+        updatedRow.previousProcessData.interimQuantity >=
+          updatedRow.previousProcessData.thresholdQty
       )
     ) {
       showNotification(
@@ -248,15 +258,15 @@ const ProjectDetailsTable = ({
       updatedRow.independentProcessData.status !== 2
     ) {
       showNotification(
-        "error", 
+        "error",
         "Status Update Failed",
         `${updatedRow.independentProcessData.processName} must be completed first`
       );
       return;
     }
 
-    // Only check interim quantity if hasFeaturePermission(7) is true
-    if (hasFeaturePermission(4) && newStatusIndex === 2) {
+    // Only check interim quantity if hasFeaturePermission(7) is true and interimQuantity is not 0
+    if (hasFeaturePermission(4) && newStatusIndex === 2 && updatedRow.interimQuantity !== 0) {
       if (updatedRow.interimQuantity !== updatedRow.quantity) {
         showNotification(
           "error",
@@ -393,7 +403,8 @@ const ProjectDetailsTable = ({
                   ) : // If threshold quantity is met, show blue checkmark
                   record.previousProcessData.thresholdQty != null &&
                     record.previousProcessData.thresholdQty > 0 &&
-                    record.previousProcessData.interimQuantity >= record.previousProcessData.thresholdQty ? (
+                    record.previousProcessData.interimQuantity >=
+                      record.previousProcessData.thresholdQty ? (
                     <IoCheckmarkDoneCircleSharp
                       size={20}
                       color="blue"
@@ -402,12 +413,12 @@ const ProjectDetailsTable = ({
                   ) : // If status is pending (0), show orange pending icon
                   record.previousProcessData.status === 0 ? (
                     <MdPending size={20} color="orange" className="" />
-                  ) : // Otherwise show orange dots for in progress
-                  (
+                  ) : (
+                    // Otherwise show orange dots for in progress
                     <MdPending size={20} color="orange" className="" />
                   )
-                ) : // If no previous process, show orange checkmark
-                (
+                ) : (
+                  // If no previous process, show orange checkmark
                   <IoCheckmarkDoneCircleSharp
                     size={20}
                     color="orange"
@@ -422,7 +433,7 @@ const ProjectDetailsTable = ({
                   className="rounded border fs-6 custom-zoom-btn bg-white position-relative"
                   onClick={() => handleCatchClick(record)}
                 >
-                  {text} {record.seriesName? `- ${record.seriesName}`:""}
+                  {text} {record.seriesName ? `- ${record.seriesName}` : ""}
                 </button>
               </div>
             </Col>
@@ -479,6 +490,17 @@ const ProjectDetailsTable = ({
       align: "center",
       sorter: (a, b) => a.quantity - b.quantity,
     },
+    ...(columnVisibility["Exam Date"]
+      ? [
+          {
+            title: t("examDate"),
+            dataIndex: "examDate",
+            align: "center",
+            key: "examDate",
+            sorter: (a, b) => a.examDate - b.examDate,
+          },
+        ]
+      : []),
     ...(columnVisibility["Interim Quantity"]
       ? [
           {
@@ -605,7 +627,8 @@ const ProjectDetailsTable = ({
             record.status === "") &&
             ((record.previousProcessData.thresholdQty != null &&
               record.previousProcessData.thresholdQty > 0 &&
-              record.previousProcessData.interimQuantity >= record.previousProcessData.thresholdQty) ||
+              record.previousProcessData.interimQuantity >=
+                record.previousProcessData.thresholdQty) ||
               record.previousProcessData.status === 2)) ||
           // 3. If current process status is 1 and previous process status is 2, return true
           (record.status === 1 && record.previousProcessData?.status === 2) ||
@@ -636,9 +659,10 @@ const ProjectDetailsTable = ({
               isTeamAssigned
             : isZoneAssigned && isTeamAssigned);
 
-        // Only check interim quantity if hasFeaturePermission(7) is true
+        // Only check interim quantity if hasFeaturePermission(7) is true and interimQuantity is not 0
         const canBeCompleted =
           !hasFeaturePermission(4) ||
+          record.interimQuantity === 0 ||
           record.interimQuantity === record.quantity;
 
         // Populate the requirements array based on conditions
@@ -687,6 +711,7 @@ const ProjectDetailsTable = ({
           initialStatusIndex === 1 &&
           !canBeCompleted &&
           hasFeaturePermission(4) &&
+          record.interimQuantity !== 0 &&
           !requirements.includes(
             t("cannotSetStatusToCompletedInterimQuantityMustEqualQuantity")
           )
@@ -777,14 +802,18 @@ const ProjectDetailsTable = ({
         row.previousProcessData.status === 2 ||
         (row.previousProcessData.thresholdQty != null &&
           row.previousProcessData.thresholdQty > 0 &&
-          row.previousProcessData.interimQuantity >= row.previousProcessData.thresholdQty)
+          row.previousProcessData.interimQuantity >=
+            row.previousProcessData.thresholdQty)
       );
     });
 
     // Check if all selected rows have completed independent process or no independent process
     const allIndependentCompleted = selectedRowKeys.every((key) => {
       const row = tableData.find((row) => row.srNo === key);
-      if (row.independentProcessData && row.independentProcessData.status !== 2) {
+      if (
+        row.independentProcessData &&
+        row.independentProcessData.status !== 2
+      ) {
         showNotification(
           "error",
           "Status Update Failed",
@@ -813,18 +842,18 @@ const ProjectDetailsTable = ({
       return;
     }
 
-    // Only check interim quantity if hasFeaturePermission(7) is true
+    // Only check interim quantity if hasFeaturePermission(4) is true and newStatusIndex is 2 (Completed)
     if (hasFeaturePermission(4) && newStatusIndex === 2) {
       const hasIncompleteQuantity = selectedRowKeys.some((key) => {
         const row = tableData.find((row) => row.srNo === key);
-        return row.interimQuantity !== row.quantity;
+        return row.interimQuantity !== 0 && row.interimQuantity !== row.quantity;
       });
 
       if (hasIncompleteQuantity) {
         showNotification(
           "error",
           "Status Update Failed",
-          "Interim Quantity must equal Quantity for all selected items"
+          "Interim Quantity must equal Quantity for all selected items where Interim Quantity is not zero"
         );
         return;
       }
@@ -842,6 +871,7 @@ const ProjectDetailsTable = ({
               `/Transactions/${updatedRow.transactionId}`
             );
             existingTransactionData = response.data;
+            // console.log('trasaction data -', existingTransactionData);
           } catch (error) {
             console.error(`Error fetching transaction data for ${key}:`, error);
           }
@@ -1378,7 +1408,7 @@ const ProjectDetailsTable = ({
                     : "custom-theme-dark-text"
                 } fs-6 fw-bold`}
               >
-                {t('updateStatus')}
+                {t("updateStatus")}
               </span>
               {(() => {
                 const requirements = [];
@@ -1442,7 +1472,7 @@ const ProjectDetailsTable = ({
                 // Check completion requirements if trying to complete
                 if (getSelectedStatus() === 1 && hasFeaturePermission(4)) {
                   const incompleteQuantity = selectedRows.find(
-                    (row) => row.interimQuantity !== row.quantity
+                    (row) => row.interimQuantity !== 0 && row.interimQuantity !== row.quantity
                   );
                   if (incompleteQuantity) {
                     requirements.push(

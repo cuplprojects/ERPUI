@@ -1,14 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  Form,
-  Upload,
-  Button,
-  Select,
-  message,
-  Menu,
-  Dropdown,
-  Spin,
-} from "antd";
+import {Form,Upload,Button,Select,message,Menu,Spin} from "antd";
 import { Row, Col, Modal } from "react-bootstrap";
 import { UploadOutlined, DeleteOutlined } from "@ant-design/icons";
 import * as XLSX from "xlsx";
@@ -21,11 +12,7 @@ import API from "../CustomHooks/MasterApiHooks/api";
 import { useTranslation } from "react-i18next";
 import { decrypt } from "../Security/Security";
 import { BsCheckCircleFill } from "react-icons/bs";
-import {
-  success,
-  error,
-  warning,
-} from "../CustomHooks/Services/AlertMessageService";
+import {success,error,warning} from "../CustomHooks/Services/AlertMessageService";
 
 // Helper function to convert Excel date number to JS Date
 const convertExcelDate = (excelDate) => {
@@ -107,11 +94,12 @@ const QtySheetUpload = () => {
   useEffect(() => {
     const checkTransactionExistence = async () => {
       try {
-        const response = await API.get(`/Transactions/exists/${projectId}`);
-        const hasTransactions = response.data;
+        // const response = await API.get(`/Transactions/exists/${projectId}`);
+        const response = await API.get(`/Dispatch/project/${projectId}/lot/${selectedLotNo}`);
+        const hasDispatched = response.data?.status;
         // Only show delete button if there are no transactions AND a file has been uploaded
         setShowDeleteButton(
-          !hasTransactions && (hasUploadedFile || isLotsFetched)
+          !hasDispatched && (hasUploadedFile || isLotsFetched)
         );
       } catch (error) {
         console.error("Failed to check transaction existence:", error);
@@ -120,7 +108,7 @@ const QtySheetUpload = () => {
     };
 
     checkTransactionExistence();
-  }, [hasUploadedFile, isLotsFetched]); // Run when hasUploadedFile changes
+  }, [hasUploadedFile, isLotsFetched,selectedLotNo]); // Run when hasUploadedFile changes
 
   useEffect(() => {
     const fetchProjectName = async () => {
