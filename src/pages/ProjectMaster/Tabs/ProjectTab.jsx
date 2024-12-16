@@ -88,7 +88,7 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
     };
     
     try {
-      const response = await API.post('/Project1', newProject);
+      const response = await API.post('/Project', newProject);
       getProjects();
       setProjects([...projects, response.data]);
       form.resetFields();
