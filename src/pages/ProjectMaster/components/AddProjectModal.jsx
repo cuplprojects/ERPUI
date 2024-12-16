@@ -1,5 +1,5 @@
 import { Modal, Button, Form, Row, Col } from 'react-bootstrap';
-import { BsInfoCircleFill } from "react-icons/bs";
+import { BsInfoCircleFill, BsPlusCircle, BsDashCircle } from "react-icons/bs";
 import { useState, useEffect } from 'react';
 import { Tooltip, Spin } from 'antd';
 
@@ -30,20 +30,37 @@ const AddProjectModal = ({
 }) => {
   const [status, setStatus] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [thresholdValue, setThresholdValue] = useState(selectedProject?.quantityThreshold || 0);
+  const [pageQuantities, setPageQuantities] = useState([{ pages: '', quantity: '' }]);
   const [descriptionValue, setDescriptionValue] = useState(selectedProject?.description || '');
+
   useEffect(() => {
     if (selectedProject) {
       setNumberOfSeries(selectedProject.numberOfSeries);
       setSeriesNames(selectedProject.seriesNames);
-      setThresholdValue(selectedProject.quantityThreshold);
       setDescriptionValue(selectedProject.description);
+      if (selectedProject.pageQuantities) {
+        setPageQuantities(selectedProject.pageQuantities);
+      }
     }
   }, [selectedProject, setNumberOfSeries, setSeriesNames]);
 
+  const handleAddRow = () => {
+    setPageQuantities([...pageQuantities, { pages: '', quantity: '' }]);
+  };
+
+  const handleRemoveRow = (index) => {
+    const newEntries = pageQuantities.filter((_, i) => i !== index);
+    setPageQuantities(newEntries);
+  };
+
+  const handlePageQuantityChange = (index, field, value) => {
+    const newEntries = [...pageQuantities];
+    newEntries[index][field] = value;
+    setPageQuantities(newEntries);
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
-    const formValues = form.getFieldsValue();
     
     const projectData = {
       name: projectName,
@@ -53,9 +70,11 @@ const AddProjectModal = ({
       typeId: selectedType?.typeId,
       noOfSeries: parseInt(numberOfSeries) || 0,
       seriesName: seriesNames || null,
-      quantityThreshold: thresholdValue
+      quantityThreshold: JSON.stringify(pageQuantities.filter(entry => entry.pages && entry.quantity))
+        .replace(/\"/g, "'")
     };
-    
+
+
     setLoading(true);
     try {
       await form.validateFields();
@@ -205,29 +224,54 @@ const AddProjectModal = ({
             </Col>
           </Row>
           <Row className="mb-3 d-flex align-items-center">
-            <Col xs={9}>
-              <Form.Group controlId="quantityThreshold">
+            <Col xs={12}>
+              <Form.Group>
                 <Form.Label className={customDarkText}>
-                  {t('quantityThreshold')}
-                  <Tooltip title={t('quantityThresholdTooltip')}>
+                  {t('pageQuantities')}
+                  <Tooltip title={t('pageQuantitiesTooltip')}>
                     <BsInfoCircleFill className='ms-2'/>
                   </Tooltip>
                 </Form.Label>
-                <Form.Control
-                  type="number"
-                  name="quantityThreshold"
-                  min={0}
-                  placeholder={t('enterQuantityThreshold')}
-                  onChange={(e) => {
-                    const value = e.target.value ? parseInt(e.target.value) : '';
-                    setThresholdValue(value);
-                    form.setFieldsValue({ quantityThreshold: value });
-                  }}
-                  value={thresholdValue}
-                />
-                <Form.Text className="text-danger">
-                  {form.getFieldError('quantityThreshold')?.[0]}
-                </Form.Text>
+                <div className="page-quantities-container">
+                  {pageQuantities.map((entry, index) => (
+                    <Row key={index} className="mb-2">
+                      <Col xs={5}>
+                        <Form.Control
+                          type="number"
+                          min={0}
+                          placeholder={t('enterPages')}
+                          value={entry.pages}
+                          onChange={(e) => handlePageQuantityChange(index, 'pages', e.target.value)}
+                        />
+                      </Col>
+                      <Col xs={5}>
+                        <Form.Control
+                          type="number"
+                          min={0}
+                          placeholder={t('enterQuantity')}
+                          value={entry.quantity}
+                          onChange={(e) => handlePageQuantityChange(index, 'quantity', e.target.value)}
+                        />
+                      </Col>
+                      <Col xs={2} className="d-flex align-items-center">
+                        {pageQuantities.length > 1 && (
+                          <BsDashCircle
+                            className="text-danger cursor-pointer me-2"
+                            onClick={() => handleRemoveRow(index)}
+                            style={{ cursor: 'pointer' }}
+                          />
+                        )}
+                        {index === pageQuantities.length - 1 && (
+                          <BsPlusCircle
+                            className="text-success cursor-pointer"
+                            onClick={handleAddRow}
+                            style={{ cursor: 'pointer' }}
+                          />
+                        )}
+                      </Col>
+                    </Row>
+                  ))}
+                </div>
               </Form.Group>
             </Col>
             <Col xs={3} className="mt-3 d-flex align-items-center">

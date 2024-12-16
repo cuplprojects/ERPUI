@@ -76,6 +76,7 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
       message.error(t('pleaseSelectGroupAndType'));
       return;
     }
+    console.log(values)
     const newProject = {
       name: projectName,
       status: values.status || true,
@@ -84,11 +85,11 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
       typeId: selectedType.typeId,
       noOfSeries: numberOfSeries, 
       seriesName: seriesNames,
-      quantityThreshold: parseInt(values.quantityThreshold) 
+      quantityThreshold: values.quantityThreshold
     };
     
     try {
-      const response = await API.post('/Project1', newProject);
+      const response = await API.post('/Project', newProject);
       getProjects();
       setProjects([...projects, response.data]);
       form.resetFields();
