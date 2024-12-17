@@ -76,6 +76,7 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
       message.error(t('pleaseSelectGroupAndType'));
       return;
     }
+    console.log(values)
     const newProject = {
       name: projectName,
       status: values.status || true,
