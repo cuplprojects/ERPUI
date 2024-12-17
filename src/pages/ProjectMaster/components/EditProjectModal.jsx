@@ -147,7 +147,7 @@ const EditProjectModal = ({
                   </Tooltip></span>}
                 // tooltip={t('quantityThresholdTooltip')}
               >
-                <Input type="number" min={0} placeholder={t('enterQuantityThreshold')} />
+                <Input type="text" min={0} placeholder={t('enterQuantityThreshold')} />
               </Form.Item>
             </Col>
             <Col xs={24}>
