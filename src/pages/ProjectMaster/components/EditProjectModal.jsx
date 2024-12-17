@@ -36,12 +36,26 @@ const EditProjectModal = ({
     const currentQuantityThreshold = form.getFieldValue('quantityThreshold');
     if (currentQuantityThreshold) {
       try {
-        const parsedData = JSON.parse(currentQuantityThreshold.replace(/'/g, '"'));
+        // First, replace single quotes with double quotes to make it a valid JSON string
+        const jsonString = currentQuantityThreshold.replace(/'/g, '"');
+        
+        // Parse the JSON string
+        const parsedData = JSON.parse(jsonString);
+        
+        // Ensure it's an array and has entries
         if (Array.isArray(parsedData) && parsedData.length > 0) {
-          setPageQuantities(parsedData);
+          // Ensure each entry has pages and quantity
+          const validatedData = parsedData.map(entry => ({
+            pages: entry.pages || '',
+            quantity: entry.quantity || ''
+          }));
+          
+          setPageQuantities(validatedData);
         }
       } catch (error) {
         console.error('Error parsing quantity threshold:', error);
+        // Fallback to default state if parsing fails
+        setPageQuantities([{ pages: '', quantity: '' }]);
       }
     }
   }, [form]);
