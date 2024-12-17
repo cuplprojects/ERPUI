@@ -82,9 +82,9 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
       description: values.description || '',
       groupId: selectedGroup.id,
       typeId: selectedType.typeId,
-      noOfSeries: numberOfSeries, 
+      noOfSeries: numberOfSeries || 0, 
       seriesName: seriesNames,
-      quantityThreshold: parseInt(values.quantityThreshold) 
+      quantityThreshold: values.quantityThreshold
     };
     
     try {
@@ -124,12 +124,6 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
         seriesName: values.seriesNames
       };
 
-      if (selectedTypeObj?.types.toLowerCase() === 'booklet') {
-        if (numberOfSeries !== values.seriesName?.length) {
-          message.error(t('seriesNameLengthMismatch'));
-          return;
-        }
-      }
 
       await API.put(`/Project/${editingProject.projectId}`, updatedProject);
       const updatedProjects = projects.map(p =>
