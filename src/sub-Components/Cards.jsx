@@ -158,26 +158,23 @@ const Cards = ({ item, onclick, disableProject, activeCardStyle }) => {
           isUploadDisabled
             ? t("firstAddProjectConfiguration")
             : !disableProject
-            ? t("uploadQuantitySheetfirst")
-            : ""
+              ? t("uploadQuantitySheetfirst")
+              : ""
         }
         placement="below"
         visible={tooltipVisible}
       >
         <div
-          className={` card ${
-            !activeCardStyle
-              ? `${customLight} ${customDarkText}`
-              : `${
-                  customDark === "dark-dark"
-                    ? `bg-white text-dark border border-dark `
-                    : `${customDark} ${
-                        customDark === "blue-dark"
-                          ? "border-white"
-                          : customLightBorder
-                      } ${customLightText}`
-                }  `
-          }`}
+          className={` card ${!activeCardStyle
+            ? `${customLight} ${customDarkText}`
+            : `${customDark === "dark-dark"
+              ? `bg-white text-dark border border-dark `
+              : `${customDark} ${customDark === "blue-dark"
+                ? "border-white"
+                : customLightBorder
+              } ${customLightText}`
+            }  `
+            }`}
           onClick={handleCardClick}
         >
           <div className="header">
@@ -205,11 +202,13 @@ const Cards = ({ item, onclick, disableProject, activeCardStyle }) => {
           </div>
 
           <p className="p-0 m-0">
-            {item.completionPercentage}% {t("completed")}
+            {parseFloat(item.completionPercentage) >= 99.99 ? 100 : parseFloat(item.completionPercentage).toFixed(2)}%
+            {t("completed")}
           </p>
 
           <p className="p-0 m-0">
-            {item.remainingPercentage}% {t("remaining")}
+            {parseFloat(item.completionPercentage) >= 99.99 ? 0 : parseFloat(item.remainingPercentage).toFixed(2)}%
+            {t("remaining")}
           </p>
 
           <p className="p-0 m-0">Status: {transactionStatus}</p>
