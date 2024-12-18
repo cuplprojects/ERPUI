@@ -739,6 +739,7 @@ const ProjectDetailsTable = ({
           <div className="d-flex justify-content-center">
             {!(record.alerts === "0" || !record.alerts?.trim()) ? (
               <Tippy
+              duration={[300, 1]}
               delay={10}
               className={`${customMid} ${customLightText} ${customDarkBorder} p-2 rounded-3`}
                 content={requirements.map((req, index) => (
@@ -759,6 +760,7 @@ const ProjectDetailsTable = ({
               </Tippy>
             ) : (
               <Tippy
+              duration={[300, 1]}
               delay={10}
               className={`${customMid} ${customLightText} p-2 border border-dark rounded-3`}
                 content={
