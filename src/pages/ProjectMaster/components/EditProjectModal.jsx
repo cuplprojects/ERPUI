@@ -31,13 +31,14 @@ const EditProjectModal = ({
   selectedType
 }) => {
   const [pageQuantities, setPageQuantities] = useState([{ pages: '', quantity: '' }]);
-
+  
   useEffect(() => {
-    const currentQuantityThreshold = form.getFieldValue('quantityThreshold');
-    if (currentQuantityThreshold) {
+    const quantityThresholdValue = form.getFieldValue('quantityThreshold');
+    
+    if (quantityThresholdValue) {
       try {
         // First, replace single quotes with double quotes to make it a valid JSON string
-        const jsonString = currentQuantityThreshold.replace(/'/g, '"');
+        const jsonString = quantityThresholdValue.replace(/'/g, '"');
         
         // Parse the JSON string
         const parsedData = JSON.parse(jsonString);
@@ -51,6 +52,9 @@ const EditProjectModal = ({
           }));
           
           setPageQuantities(validatedData);
+        } else {
+          // Fallback to default state if no valid entries
+          setPageQuantities([{ pages: '', quantity: '' }]);
         }
       } catch (error) {
         console.error('Error parsing quantity threshold:', error);
@@ -58,28 +62,31 @@ const EditProjectModal = ({
         setPageQuantities([{ pages: '', quantity: '' }]);
       }
     }
-  }, [form]);
+  }, [form, visible]);
 
   const handleAddRow = () => {
     setPageQuantities([...pageQuantities, { pages: '', quantity: '' }]);
   };
 
+  // Remove a specific row from pageQuantities
   const handleRemoveRow = (index) => {
     const newEntries = pageQuantities.filter((_, i) => i !== index);
     setPageQuantities(newEntries);
   };
 
+  // Handle changes to pages or quantity in a specific row
   const handlePageQuantityChange = (index, field, value) => {
     const newEntries = [...pageQuantities];
     newEntries[index][field] = value;
     setPageQuantities(newEntries);
   };
 
+  // Format and submit data
   const handleFormSubmit = async (values) => {
     const formattedValues = {
       ...values,
       quantityThreshold: JSON.stringify(pageQuantities.filter(entry => entry.pages && entry.quantity))
-        .replace(/"/g, "'")
+        .replace(/"/g, "'"), // Use single quotes for backend consistency
     };
     await onFinish(formattedValues);
   };
