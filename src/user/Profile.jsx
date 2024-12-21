@@ -10,6 +10,7 @@ import { useUserData, useUserDataActions } from '../store/userDataStore';
 import API from '../CustomHooks/MasterApiHooks/api';
 import { useTranslation } from 'react-i18next';
 import ScreenLockPin from './ScreenLockPin';
+import { success } from '../CustomHooks/Services/AlertMessageService';
 
 const UserProfile = () => {
   const { t } = useTranslation();
@@ -134,9 +135,10 @@ const UserProfile = () => {
       });
       await refreshUserData();
       // window.location.reload();
-      console.log('Update successful');
+      success(t('profilePictureUpdatedSuccessfully'));
     } catch (error) {
       console.error('Update failed', error);
+      error(t('failedToUpdateProfilePicture'));
     }
   };
 

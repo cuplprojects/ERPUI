@@ -87,7 +87,7 @@ const Sidebar = () => {
     { key: 'camera', icon: <FaCamera />, label: t('camera'), permission: '2.6' },
     { key: 'machine', icon: <GiGears />, label: t('productionMachines'), permission: '2.7' },
     { key: 'zone', icon: <BiSolidCctv />, label: t('zone'), permission: '2.5' },
-    { key: 'teams', icon: <RiTeamFill />, label: t('teams'), permission: '2.4' },
+    { key: 'teams', icon: <RiTeamFill />, label: t('teams'), permission: '2.9' },
     { key: 'alarm', icon: <FaBell />, label: t('alarm'), permission: '2.8' },
     {
       key: 'developerTools',
@@ -175,7 +175,7 @@ const Sidebar = () => {
           {hasPermission('2.2') && selectedMenu === 'group' && <GroupManager />}
           {hasPermission('2.3') && selectedMenu === 'type' && <Type />}
           {hasPermission('2.4') && selectedMenu === 'project' && <Project />}
-          {hasPermission('2.4') && selectedMenu === 'teams' && <Teams />}
+          {hasPermission('2.9') && selectedMenu === 'teams' && <Teams />}
           {hasPermission('2.5') && selectedMenu === 'zone' && <Zone />}
           {hasPermission('2.6') && selectedMenu === 'camera' && <CameraList />}
           {hasPermission('2.10') && selectedMenu === 'systemSettings' && <SystemSettings />}

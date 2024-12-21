@@ -13,42 +13,67 @@ const SelectMachineModal = ({ show, handleClose, data, processId, handleSave }) 
   const [customDark, customMid, customLight, customBtn, customDarkText, customLightText] = cssClasses;
 
   // Force re-render when theme changes
-  useEffect(() => {
-    // This empty dependency array ensures cssClasses are always fresh
-  }, [cssClasses]);
-
-  const statusMapping = {
-    0: t('pending'),
-    1: t('started'),
-    2: t('completed'),
-  };
+  useEffect(() => {}, [cssClasses]);
 
   const [selectedMachine, setSelectedMachine] = useState(null);
   const [machineOptions, setMachineOptions] = useState([]);
   const [machineId, setMachineId] = useState(null);
+  const [zoneData, setZoneData] = useState([]); // State to store zone data
+  const [selectedZone, setSelectedZone] = useState(null); // State to store selected zone info
 
   const handleMachineChange = (selectedOption) => {
     setSelectedMachine(selectedOption);
     setMachineId(selectedOption ? selectedOption.value : null);
+  
+    // Find the associated zone data for the selected machine
+    const selectedMachineData = machineOptions.find(machine => machine.value === selectedOption.value);
+  
+    if (selectedMachineData) {
+      // Ensure machineIds is defined and an array before calling .includes
+      const associatedZone = zoneData.find(zone => Array.isArray(zone.machineId) && zone.machineId.includes(selectedOption.value));
+  
+      setSelectedZone(associatedZone || null); // Set selected zone data
+    }
   };
+  
 
   const getMachine = async () => {
     try {
       const response = await API.get('/Machines');
-      // Filter machines by processId
       const filteredMachines = response.data.filter(machine => machine.processId === processId);
-      const formattedOptions = filteredMachines.map(machine => ({
+
+      const machineWithZoneData = filteredMachines.map(machine => ({
         value: machine.machineId,
-        label: machine.machineName
+        label: machine.machineName,
+        zoneId: machine.zoneId, // Zone Id in machine data
       }));
-      setMachineOptions(formattedOptions);
+
+      setMachineOptions(machineWithZoneData);
     } catch (error) {
-      console.error("Failed to fetch machine options", error);
+      console.error('Failed to fetch machine options', error);
     }
   };
 
+  const getZoneData = async () => {
+    console.log('Fetching zone data...');
+    try {
+      const response = await API.get('/Zones'); // Fetch zone data
+      console.log('Fetched zone response:', response);
+      // Sanitize zone data to ensure machineIds is always an array
+      const sanitizedZoneData = response.data.map(zone => ({
+        ...zone,
+        machineIds: Array.isArray(zone.machineIds) ? zone.machineIds : [] // Ensure machineIds is always an array
+      }));
+      setZoneData(sanitizedZoneData); // Store sanitized zone data
+    } catch (error) {
+      console.error('Failed to fetch zone data', error);
+    }
+  };
+  
+
   useEffect(() => {
     getMachine();
+    getZoneData();
   }, []);
 
   const handleConfirm = async () => {
@@ -60,7 +85,6 @@ const SelectMachineModal = ({ show, handleClose, data, processId, handleSave }) 
           existingTransactionData = response.data;
         }
 
-        console.log(row)
         const postData = {
           transactionId: row.transactionId || 0,
           interimQuantity: row.interimQuantity,
@@ -68,7 +92,7 @@ const SelectMachineModal = ({ show, handleClose, data, processId, handleSave }) 
           projectId: row.projectId,
           quantitysheetId: row.srNo || 0,
           processId: processId,
-          zoneId: existingTransactionData ? existingTransactionData.zoneId : 0,
+          zoneId: selectedZone ? selectedZone.zoneId : 0, // Send zoneId from selected zone
           machineId: machineId,
           status: existingTransactionData ? existingTransactionData.status : 0,
           alarmId: existingTransactionData ? existingTransactionData.alarmId : "",
@@ -84,6 +108,7 @@ const SelectMachineModal = ({ show, handleClose, data, processId, handleSave }) 
       handleSave(machineId);
       setMachineId(null);
       setSelectedMachine(null);
+      setSelectedZone(null); // Reset zone data after confirmation
       handleClose();
     } catch (error) {
       console.error('Error updating machine:', error);

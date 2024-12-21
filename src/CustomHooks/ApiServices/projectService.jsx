@@ -13,7 +13,6 @@ export const getProjectById = async (projectId) => {
 export const getAllProcesses = async () => {
   try {
     const response = await API.get('/Processes');
-    console.log(response.data);
     return response.data;
   } catch (error) {
     console.error('Error fetching processes:', error);

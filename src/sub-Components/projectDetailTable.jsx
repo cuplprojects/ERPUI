@@ -49,7 +49,6 @@ const ProjectDetailsTable = ({
   lotNo,
   fetchTransactions,
 }) => {
-  console.log(tableData);
   //Theme Change Section
   const { t } = useTranslation();
   const { getCssClasses } = useStore(themeStore);
@@ -111,7 +110,6 @@ const ProjectDetailsTable = ({
   const [courseData, setCourseData] = useState([]);
   const [subjectData, setSubjectData] = useState([]);
   const [examDate, setExamDate] = useState([]);
-  console.log(tableData);
 
   const showNotification = (type, messageKey, descriptionKey, details = "") => {
     notification[type]({
@@ -198,11 +196,11 @@ const ProjectDetailsTable = ({
       : true;
     const previousProcessCondition = showOnlyCompletedPreviousProcess
       ? !item.previousProcessData ||
-        item.previousProcessData.status === 2 ||
-        (item.previousProcessData.thresholdQty != null &&
-          item.previousProcessData.thresholdQty > 0 &&
-          item.previousProcessData.interimQuantity >=
-            item.previousProcessData.thresholdQty)
+      item.previousProcessData.status === 2 ||
+      (item.previousProcessData.thresholdQty != null &&
+        item.previousProcessData.thresholdQty > 0 &&
+        item.previousProcessData.interimQuantity >=
+        item.previousProcessData.thresholdQty)
       : true;
 
     return (
@@ -240,7 +238,7 @@ const ProjectDetailsTable = ({
         updatedRow.previousProcessData.thresholdQty != null &&
         updatedRow.previousProcessData.thresholdQty > 0 &&
         updatedRow.previousProcessData.interimQuantity >=
-          updatedRow.previousProcessData.thresholdQty
+        updatedRow.previousProcessData.thresholdQty
       )
     ) {
       showNotification(
@@ -334,7 +332,15 @@ const ProjectDetailsTable = ({
     setCatchDetailModalShow(true);
     setCatchDetailModalData(record);
   };
-
+  const formatDate = (dateString) => {
+    if (!dateString) return 'NA';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  };
   const columns = [
     {
       title: (
@@ -401,22 +407,22 @@ const ProjectDetailsTable = ({
                       className=""
                     />
                   ) : // If threshold quantity is met, show blue checkmark
-                  record.previousProcessData.thresholdQty != null &&
-                    record.previousProcessData.thresholdQty > 0 &&
-                    record.previousProcessData.interimQuantity >=
+                    record.previousProcessData.thresholdQty != null &&
+                      record.previousProcessData.thresholdQty > 0 &&
+                      record.previousProcessData.interimQuantity >=
                       record.previousProcessData.thresholdQty ? (
-                    <IoCheckmarkDoneCircleSharp
-                      size={20}
-                      color="blue"
-                      className=""
-                    />
-                  ) : // If status is pending (0), show orange pending icon
-                  record.previousProcessData.status === 0 ? (
-                    <MdPending size={20} color="orange" className="" />
-                  ) : (
-                    // Otherwise show orange dots for in progress
-                    <MdPending size={20} color="orange" className="" />
-                  )
+                      <IoCheckmarkDoneCircleSharp
+                        size={20}
+                        color="blue"
+                        className=""
+                      />
+                    ) : // If status is pending (0), show orange pending icon
+                      record.previousProcessData.status === 0 ? (
+                        <MdPending size={20} color="orange" className="" />
+                      ) : (
+                        // Otherwise show orange dots for in progress
+                        <MdPending size={20} color="orange" className="" />
+                      )
                 ) : (
                   // If no previous process, show orange checkmark
                   <IoCheckmarkDoneCircleSharp
@@ -492,115 +498,116 @@ const ProjectDetailsTable = ({
     },
     ...(columnVisibility["Exam Date"]
       ? [
-          {
-            title: t("examDate"),
-            dataIndex: "examDate",
-            align: "center",
-            key: "examDate",
-            sorter: (a, b) => a.examDate - b.examDate,
-          },
-        ]
+        {
+          title: t("examDate"),
+          dataIndex: "examDate",
+          align: "center",
+          key: "examDate",
+          sorter: (a, b) => a.examDate - b.examDate,
+          render: (text) => formatDate(text), // Apply formatDate here
+        },
+      ]
       : []),
     ...(columnVisibility["Interim Quantity"]
       ? [
-          {
-            title: t("interimQuantity"),
-            dataIndex: "interimQuantity",
-            align: "center",
-            key: "interimQuantity",
-            sorter: (a, b) => a.interimQuantity - b.interimQuantity,
-          },
-        ]
+        {
+          title: t("interimQuantity"),
+          dataIndex: "interimQuantity",
+          align: "center",
+          key: "interimQuantity",
+          sorter: (a, b) => a.interimQuantity - b.interimQuantity,
+        },
+      ]
       : []),
     ...(columnVisibility.Remarks
       ? [
-          {
-            title: t("remarks"),
-            dataIndex: "remarks",
-            key: "remarks",
-            align: "center",
-            sorter: (a, b) => a.remarks.localeCompare(b.remarks),
-          },
-        ]
+        {
+          title: t("remarks"),
+          dataIndex: "remarks",
+          key: "remarks",
+          align: "center",
+          sorter: (a, b) => a.remarks.localeCompare(b.remarks),
+        },
+      ]
       : []),
     ...(columnVisibility["Team Assigned"]
       ? [
-          {
-            title: t("teamAssigned"),
-            dataIndex: "teamUserNames",
-            align: "center",
-            key: "teamUserNames",
-            render: (teamUserNames) => teamUserNames?.join(", "),
-            sorter: (a, b) => {
-              const aNames = a.teamUserNames?.join(", ") || "";
-              const bNames = b.teamUserNames?.join(", ") || "";
-              return aNames.localeCompare(bNames);
-            },
+        {
+          title: t("teamAssigned"),
+          dataIndex: "teamUserNames",
+          align: "center",
+          key: "teamUserNames",
+          render: (teamUserNames) => teamUserNames?.join(", "),
+          sorter: (a, b) => {
+            const aNames = a.teamUserNames?.join(", ") || "";
+            const bNames = b.teamUserNames?.join(", ") || "";
+            return aNames.localeCompare(bNames);
           },
-        ]
+        },
+      ]
       : []),
     ...(columnVisibility["Zone"]
       ? [
-          {
-            title: t("zone"),
-            dataIndex: "zoneNo",
-            align: "center",
-            key: "zoneNo",
-            sorter: (a, b) => (a.zoneNo || "").localeCompare(b.zoneNo || ""),
-          },
-        ]
+        {
+          title: t("zone"),
+          dataIndex: "zoneNo",
+          align: "center",
+          key: "zoneNo",
+          sorter: (a, b) => (a.zoneNo || "").localeCompare(b.zoneNo || ""),
+        },
+      ]
       : []),
     ...(columnVisibility["Machine"]
       ? [
-          {
-            title: t("machine"),
-            dataIndex: "machinename",
-            align: "center",
-            key: "machinename",
-            sorter: (a, b) =>
-              (a.machinename || "").localeCompare(b.machinename || ""),
-          },
-        ]
+        {
+          title: t("machine"),
+          dataIndex: "machinename",
+          align: "center",
+          key: "machinename",
+          sorter: (a, b) =>
+            (a.machinename || "").localeCompare(b.machinename || ""),
+        },
+      ]
       : []),
     ...(columnVisibility["Course"]
       ? [
-          {
-            title: t("course"),
+        {
+          title: t("course"),
 
-            dataIndex: "course",
-            // width: '20%',
-            align: "center",
-            key: "course",
+          dataIndex: "course",
+          // width: '20%',
+          align: "center",
+          key: "course",
 
-            sorter: (a, b) => a.course - b.course,
-          },
-        ]
+          sorter: (a, b) => a.course - b.course,
+        },
+      ]
       : []),
     ...(columnVisibility["Subject"]
       ? [
-          {
-            title: t("subject"),
-            dataIndex: "subject",
-            width: "20%",
-            align: "center",
-            key: "subject",
+        {
+          title: t("subject"),
+          dataIndex: "subject",
+          width: "20%",
+          align: "center",
+          key: "subject",
 
-            sorter: (a, b) => a.subject - b.subject,
-          },
-        ]
+          sorter: (a, b) => a.subject - b.subject,
+        },
+      ]
       : []),
     ...(columnVisibility["Paper"]
       ? [
-          {
-            title: t("questionPaper"),
+        {
+          title: t("questionPaper"),
 
-            dataIndex: "paper",
-            width: "20%",
-            align: "center",
-            key: "paper",
-            sorter: (a, b) => a.paper - b.paper,
-          },
-        ]
+          dataIndex: "paper",
+          width: "20%",
+          align: "center",
+          key: "paper",
+          sorter: (a, b) => a.paper - b.paper,
+        },
+      ]
       : []),
     {
       title: t("status"),
@@ -628,7 +635,7 @@ const ProjectDetailsTable = ({
             ((record.previousProcessData.thresholdQty != null &&
               record.previousProcessData.thresholdQty > 0 &&
               record.previousProcessData.interimQuantity >=
-                record.previousProcessData.thresholdQty) ||
+              record.previousProcessData.thresholdQty) ||
               record.previousProcessData.status === 2)) ||
           // 3. If current process status is 1 and previous process status is 2, return true
           (record.status === 1 && record.previousProcessData?.status === 2) ||
@@ -654,9 +661,9 @@ const ProjectDetailsTable = ({
           isIndependentProcessCompleted &&
           (hasSelectMachinePermission
             ? record.machineId !== 0 &&
-              record.machineId !== null &&
-              isZoneAssigned &&
-              isTeamAssigned
+            record.machineId !== null &&
+            isZoneAssigned &&
+            isTeamAssigned
             : isZoneAssigned && isTeamAssigned);
 
         // Only check interim quantity if hasFeaturePermission(7) is true and interimQuantity is not 0
@@ -749,8 +756,8 @@ const ProjectDetailsTable = ({
                 title={
                   isDisabled
                     ? requirements.map((req, index) => (
-                        <div key={index}>{req}</div>
-                      ))
+                      <div key={index}>{req}</div>
+                    ))
                     : ""
                 }
                 placement="top"
@@ -803,7 +810,7 @@ const ProjectDetailsTable = ({
         (row.previousProcessData.thresholdQty != null &&
           row.previousProcessData.thresholdQty > 0 &&
           row.previousProcessData.interimQuantity >=
-            row.previousProcessData.thresholdQty)
+          row.previousProcessData.thresholdQty)
       );
     });
 
@@ -871,7 +878,6 @@ const ProjectDetailsTable = ({
               `/Transactions/${updatedRow.transactionId}`
             );
             existingTransactionData = response.data;
-            // console.log('trasaction data -', existingTransactionData);
           } catch (error) {
             console.error(`Error fetching transaction data for ${key}:`, error);
           }
@@ -1241,9 +1247,8 @@ const ProjectDetailsTable = ({
   );
 
   const customPagination = {
-    className: `bg-white p-3 rounded rounded-top-0 mt-0  ${
-      customDark === "dark-dark" ? `` : ``
-    }`,
+    className: `bg-white p-3 rounded rounded-top-0 mt-0  ${customDark === "dark-dark" ? `` : ``
+      }`,
     current: currentPage,
     pageSize,
     pageSizeOptions: [5, 10, 25, 50, 100],
@@ -1303,295 +1308,295 @@ const ProjectDetailsTable = ({
 
   return (
     <>
-      <Row>
-        <Col
-          lg={1}
-          md={1}
-          sx={2}
-          className="d-flex justify-content- mt-md-1 mt-xs-1 mb-md-1 mb-xs-1"
-        >
-          {hasFeaturePermission(6) && (
-            <Dropdown
-              overlay={
-                <Menu>
-                  <Menu.Item className="d-flex align-items-center">
-                    <Switch
-                      checked={hideCompleted}
-                      onChange={handleToggleChange}
-                    />
-                    <span className="ms-2">{t("hideCompleted")}</span>
-                  </Menu.Item>
+      <div className="">
+        <Row className={`${customLight} mb-2 p-2 rounded`}>
+          <Col
+            lg={1}
+            md={1}
+            sx={2}
+            className="d-flex justify-content- mt-md-1 mt-xs-1 mb-md-1 mb-xs-1"
+          >
+            {hasFeaturePermission(6) && (
+              <Dropdown
+                overlay={
+                  <Menu>
+                    <Menu.Item className="d-flex align-items-center">
+                      <Switch
+                        checked={hideCompleted}
+                        onChange={handleToggleChange}
+                      />
+                      <span className="ms-2">{t("hideCompleted")}</span>
+                    </Menu.Item>
 
-                  <Menu.Divider />
-                  <Menu.Item className="d-flex align-items-center">
-                    <Switch
-                      checked={showOnlyCompletedPreviousProcess}
-                      onChange={() =>
-                        setShowOnlyCompletedPreviousProcess(
-                          !showOnlyCompletedPreviousProcess
-                        )
-                      }
-                    />
-                    {/* <span className='ms-2'>{previousProcess} Completed</span> */}
-                    <span className="ms-2">{t("previousCompleted")}</span>
-                  </Menu.Item>
-                  <Menu.Divider />
+                    <Menu.Divider />
+                    <Menu.Item className="d-flex align-items-center">
+                      <Switch
+                        checked={showOnlyCompletedPreviousProcess}
+                        onChange={() =>
+                          setShowOnlyCompletedPreviousProcess(
+                            !showOnlyCompletedPreviousProcess
+                          )
+                        }
+                      />
+                      {/* <span className='ms-2'>{previousProcess} Completed</span> */}
+                      <span className="ms-2">{t("previousCompleted")}</span>
+                    </Menu.Item>
+                    <Menu.Divider />
 
-                  <Menu.Item className="d-flex align-items-center">
-                    <Switch
-                      checked={showOnlyAlerts}
-                      onChange={() => setShowOnlyAlerts(!showOnlyAlerts)}
-                    />
-                    <span className="ms-2">{t("catchesWithAlerts")}</span>
-                  </Menu.Item>
+                    <Menu.Item className="d-flex align-items-center">
+                      <Switch
+                        checked={showOnlyAlerts}
+                        onChange={() => setShowOnlyAlerts(!showOnlyAlerts)}
+                      />
+                      <span className="ms-2">{t("catchesWithAlerts")}</span>
+                    </Menu.Item>
 
-                  <Menu.Divider />
-                  <Menu.Item className="d-flex align-items-center">
-                    <Switch
-                      checked={showOnlyRemarks}
-                      onChange={() => setShowOnlyRemarks(!showOnlyRemarks)}
-                    />
-                    <span className="ms-2">{t("catchesWithRemarks")}</span>
-                  </Menu.Item>
+                    <Menu.Divider />
+                    <Menu.Item className="d-flex align-items-center">
+                      <Switch
+                        checked={showOnlyRemarks}
+                        onChange={() => setShowOnlyRemarks(!showOnlyRemarks)}
+                      />
+                      <span className="ms-2">{t("catchesWithRemarks")}</span>
+                    </Menu.Item>
 
-                  <Menu.Divider />
+                    <Menu.Divider />
 
-                  <Menu.Item onClick={(e) => e.stopPropagation()}>
-                    {" "}
-                    {/* Add this */}
-                    <span>{t("limitRows")}:</span>
-                    <Select
-                      value={pageSize}
-                      style={{ width: 60 }}
-                      onChange={(value) => setPageSize(value)}
-                      className="ms-4"
-                    >
-                      <Option value={5}>5</Option>
-                      <Option value={10}>10</Option>
-                      <Option value={25}>25</Option>
-                      <Option value={50}>50</Option>
-                      <Option value={100}>100</Option>
-                    </Select>
-                  </Menu.Item>
-                </Menu>
-              }
-              trigger={["click"]}
-            >
-              <Button
-                style={{
-                  backgroundColor: "transparent",
-                  border: "none",
-                  boxShadow: "none",
-                  padding: 0,
-                  width: "30px",
-                }}
-                className={`p- border ${
-                  customDark === "dark-dark"
+                    <Menu.Item onClick={(e) => e.stopPropagation()}>
+                      {" "}
+                      {/* Add this */}
+                      <span>{t("limitRows")}:</span>
+                      <Select
+                        value={pageSize}
+                        style={{ width: 60 }}
+                        onChange={(value) => setPageSize(value)}
+                        className="ms-4"
+                      >
+                        <Option value={5}>5</Option>
+                        <Option value={10}>10</Option>
+                        <Option value={25}>25</Option>
+                        <Option value={50}>50</Option>
+                        <Option value={100}>100</Option>
+                      </Select>
+                    </Menu.Item>
+                  </Menu>
+                }
+                trigger={["click"]}
+              >
+                <Button
+                  style={{
+                    backgroundColor: "transparent",
+                    border: "none",
+                    boxShadow: "none",
+                    padding: 0,
+                    width: "30px",
+                  }}
+                  className={`p- border ${customDark === "dark-dark"
                     ? `${customDark} text-white`
                     : "bg-white"
-                }`}
-              >
-                <FaFilter size={20} className={`${customDarkText}`} />
-              </Button>
-            </Dropdown>
-          )}
-        </Col>
+                    }`}
+                >
+                  <FaFilter size={20} className={`${customDarkText}`} />
+                </Button>
+              </Dropdown>
+            )}
+          </Col>
 
-        {/* update status button */}
-        <Col lg={5} md={4} sx={2} className="mt-md-1 mt-xs-1">
-          {selectedRowKeys.length > 1 && getSelectedStatus() !== null && (
-            <div className="mt-1 d-flex align-items-center">
-              <span
-                className={`me-2 ${
-                  customDark === "dark-dark"
+          {/* update status button */}
+          <Col lg={5} md={4} sx={2} className="mt-md-1 mt-xs-1">
+            {selectedRowKeys.length > 1 && getSelectedStatus() !== null && (
+              <div className="mt-1 d-flex align-items-center">
+                <span
+                  className={`me-2 ${customDark === "dark-dark"
                     ? "text-white"
                     : "custom-theme-dark-text"
-                } fs-6 fw-bold`}
-              >
-                {t("updateStatus")}
-              </span>
-              {(() => {
-                const requirements = [];
-                const selectedRows = selectedRowKeys
-                  .map((srNo) => tableData.find((item) => item.srNo === srNo))
-                  .filter(Boolean);
+                    } fs-6 fw-bold`}
+                >
+                  {t("updateStatus")}
+                </span>
+                {(() => {
+                  const requirements = [];
+                  const selectedRows = selectedRowKeys
+                    .map((srNo) => tableData.find((item) => item.srNo === srNo))
+                    .filter(Boolean);
 
-                // Check if any selected row has alerts
-                const hasAlertsRow = selectedRows.find(
-                  (row) => row.alerts && row.alerts !== "0"
-                );
-                if (hasAlertsRow) {
-                  requirements.push(t("statusCannotBeChangedDueToAlerts"));
-                }
+                  // Check if any selected row has alerts
+                  const hasAlertsRow = selectedRows.find(
+                    (row) => row.alerts && row.alerts !== "0"
+                  );
+                  if (hasAlertsRow) {
+                    requirements.push(t("statusCannotBeChangedDueToAlerts"));
+                  }
 
-                // Check previous process completion
-                const hasIncompletePrevious = selectedRows.find((row) => {
-                  return (
-                    row.previousProcessData &&
-                    row.previousProcessData.status !== 2 &&
-                    !(
-                      row.previousProcessData.thresholdQty != null &&
-                      row.previousProcessData.thresholdQty >
+                  // Check previous process completion
+                  const hasIncompletePrevious = selectedRows.find((row) => {
+                    return (
+                      row.previousProcessData &&
+                      row.previousProcessData.status !== 2 &&
+                      !(
+                        row.previousProcessData.thresholdQty != null &&
+                        row.previousProcessData.thresholdQty >
                         row.previousProcessData.interimQuantity
-                    )
-                  );
-                });
-                if (hasIncompletePrevious) {
-                  requirements.push(t("previousProcessErrorDescription"));
-                }
-
-                // Check zone assignment if permission exists
-                if (hasFeaturePermission(1)) {
-                  const missingZone = selectedRows.find((row) => !row.zoneId);
-                  if (missingZone) {
-                    requirements.push(t("zoneNotAssigned"));
-                  }
-                }
-
-                // Check team assignment if permission exists
-                if (hasFeaturePermission(2)) {
-                  const missingTeam = selectedRows.find(
-                    (row) => !row.teamId?.length
-                  );
-                  if (missingTeam) {
-                    requirements.push(t("teamNotAssigned"));
-                  }
-                }
-
-                // Check machine assignment if permission exists
-                const hasSelectMachinePermission = hasFeaturePermission(3);
-                if (hasSelectMachinePermission) {
-                  const missingMachine = selectedRows.find(
-                    (row) => row.machineId === 0 || row.machineId === null
-                  );
-                  if (missingMachine) {
-                    requirements.push(t("machineNotAssigned"));
-                  }
-                }
-
-                // Check completion requirements if trying to complete
-                if (getSelectedStatus() === 1 && hasFeaturePermission(4)) {
-                  const incompleteQuantity = selectedRows.find(
-                    (row) => row.interimQuantity !== 0 && row.interimQuantity !== row.quantity
-                  );
-                  if (incompleteQuantity) {
-                    requirements.push(
-                      t(
-                        "cannotSetStatusToCompletedInterimQuantityMustEqualQuantity"
                       )
                     );
+                  });
+                  if (hasIncompletePrevious) {
+                    requirements.push(t("previousProcessErrorDescription"));
                   }
-                }
 
-                const StatusToggleComponent = (
-                  <StatusToggle
-                    initialStatusIndex={getSelectedStatus()}
-                    onStatusChange={(newIndex) =>
-                      handleStatusChange(
-                        ["Pending", "Started", "Completed"][newIndex]
-                      )
+                  // Check zone assignment if permission exists
+                  if (hasFeaturePermission(1)) {
+                    const missingZone = selectedRows.find((row) => !row.zoneId);
+                    if (missingZone) {
+                      requirements.push(t("zoneNotAssigned"));
                     }
-                    statusSteps={[
-                      { status: t("pending"), color: "red" },
-                      { status: t("started"), color: "blue" },
-                      { status: t("completed"), color: "green" },
-                    ]}
-                    disabled={requirements.length > 0}
-                  />
-                );
+                  }
 
-                return requirements.length > 0 ? (
-                  <Tooltip
-                    title={requirements.map((req, index) => (
-                      <div key={index}>{req}</div>
-                    ))}
-                    placement="top"
-                  >
-                    <span>{StatusToggleComponent}</span>
-                  </Tooltip>
-                ) : (
-                  StatusToggleComponent
-                );
-              })()}
-            </div>
-          )}
-        </Col>
-        {/* search box */}
-        <Col lg={5} md={6} xs={12}>
-          <div className="d-flex justify-content-end align-items-center search-container">
-            {searchVisible && (
-              <div
-                className="search-box"
-                style={{ position: "relative", zIndex: "2" }}
-              >
-                {searchText && (
-                  <Button
-                    className={`${customBtn}`}
-                    onClick={() => setSearchText("")}
-                    icon={
-                      <IoCloseCircle
-                        size={25}
-                        className={`rounded-circle ${customBtn}`}
-                      />
+                  // Check team assignment if permission exists
+                  if (hasFeaturePermission(2)) {
+                    const missingTeam = selectedRows.find(
+                      (row) => !row.teamId?.length
+                    );
+                    if (missingTeam) {
+                      requirements.push(t("teamNotAssigned"));
                     }
-                    style={{
-                      position: "absolute",
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      border: "none",
-                      background: "none",
-                      cursor: "pointer",
-                      right: 8,
-                    }}
-                  />
-                )}
-                <Input
-                  placeholder="Search Within Table"
-                  allowClear
-                  value={searchText}
-                  onChange={(e) => setSearchText(e.target.value)}
-                  style={{ width: "180px" }} // Space for remove icon
-                  className={`custom-placeholder text-primary `}
-                />
+                  }
+
+                  // Check machine assignment if permission exists
+                  const hasSelectMachinePermission = hasFeaturePermission(3);
+                  if (hasSelectMachinePermission) {
+                    const missingMachine = selectedRows.find(
+                      (row) => row.machineId === 0 || row.machineId === null
+                    );
+                    if (missingMachine) {
+                      requirements.push(t("machineNotAssigned"));
+                    }
+                  }
+
+                  // Check completion requirements if trying to complete
+                  if (getSelectedStatus() === 1 && hasFeaturePermission(4)) {
+                    const incompleteQuantity = selectedRows.find(
+                      (row) => row.interimQuantity !== 0 && row.interimQuantity !== row.quantity
+                    );
+                    if (incompleteQuantity) {
+                      requirements.push(
+                        t(
+                          "cannotSetStatusToCompletedInterimQuantityMustEqualQuantity"
+                        )
+                      );
+                    }
+                  }
+
+                  const StatusToggleComponent = (
+                    <StatusToggle
+                      initialStatusIndex={getSelectedStatus()}
+                      onStatusChange={(newIndex) =>
+                        handleStatusChange(
+                          ["Pending", "Started", "Completed"][newIndex]
+                        )
+                      }
+                      statusSteps={[
+                        { status: t("pending"), color: "red" },
+                        { status: t("started"), color: "blue" },
+                        { status: t("completed"), color: "green" },
+                      ]}
+                      disabled={requirements.length > 0}
+                    />
+                  );
+
+                  return requirements.length > 0 ? (
+                    <Tooltip
+                      title={requirements.map((req, index) => (
+                        <div key={index}>{req}</div>
+                      ))}
+                      placement="top"
+                    >
+                      <span>{StatusToggleComponent}</span>
+                    </Tooltip>
+                  ) : (
+                    StatusToggleComponent
+                  );
+                })()}
               </div>
             )}
-            <Button
-              onClick={() => setSearchVisible(!searchVisible)}
-              icon={<RiSearchLine size={20} />}
-              className="custom-theme-dark-borde p-1 search-btn"
-              style={{ marginLeft: 5 }}
-            />
-          </div>
-        </Col>
-
-        {/* group action icon */}
-        <Col lg={0} md={1} sx={2}>
-          <div className="d-flex justify-content-end ms-">
-            <Dropdown overlay={menu} trigger={["click"]}>
+          </Col>
+          {/* search box */}
+          <Col lg={5} md={6} xs={12}>
+            <div className="d-flex justify-content-end align-items-center search-container">
+              {searchVisible && (
+                <div
+                  className="search-box"
+                  style={{ position: "relative", zIndex: "2" }}
+                >
+                  {searchText && (
+                    <Button
+                      className={`${customBtn}`}
+                      onClick={() => setSearchText("")}
+                      icon={
+                        <IoCloseCircle
+                          size={25}
+                          className={`rounded-circle ${customBtn}`}
+                        />
+                      }
+                      style={{
+                        position: "absolute",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        border: "none",
+                        background: "none",
+                        cursor: "pointer",
+                        right: 8,
+                      }}
+                    />
+                  )}
+                  <Input
+                    placeholder="Search Within Table"
+                    allowClear
+                    value={searchText}
+                    onChange={(e) => setSearchText(e.target.value)}
+                    style={{ width: "180px" }} // Space for remove icon
+                    className={`custom-placeholder text-primary `}
+                  />
+                </div>
+              )}
               <Button
-                style={{
-                  backgroundColor: "transparent", // Remove background
-                  border: "none", // Remove border
-                  boxShadow: "none", // Remove shadow
-                  padding: 0, // Optional: adjust padding if needed
-                }}
-              >
-                <PiDotsNineBold
-                  size={30}
-                  className={` ${
-                    customDark === "dark-dark" ? "text-white" : customDarkText
-                  }`}
-                />
-              </Button>
-            </Dropdown>
-          </div>
-        </Col>
-      </Row>
-      <Row>
-        <Col lg={12} md={12}>
-          <Table
-            rowClassName={rowClassName}
-            className={`${customDark === "default-dark" ? "thead-default" : ""}
+                onClick={() => setSearchVisible(!searchVisible)}
+                icon={<RiSearchLine size={20} />}
+                className="custom-theme-dark-borde p-1 search-btn"
+                style={{ marginLeft: 5 }}
+              />
+            </div>
+          </Col>
+
+          {/* group action icon */}
+          <Col lg={0} md={1} sx={2}>
+            <div className="d-flex justify-content-end ms-">
+              <Dropdown overlay={menu} trigger={["click"]}>
+                <Button
+                  style={{
+                    backgroundColor: "transparent", // Remove background
+                    border: "none", // Remove border
+                    boxShadow: "none", // Remove shadow
+                    padding: 0, // Optional: adjust padding if needed
+                  }}
+                >
+                  <PiDotsNineBold
+                    size={30}
+                    className={` ${customDark === "dark-dark" ? "text-white" : customDarkText
+                      }`}
+                  />
+                </Button>
+              </Dropdown>
+            </div>
+          </Col>
+        </Row>
+      </div>
+      <div>
+        <Row>
+          <Col lg={12} md={12}>
+            <Table
+              rowClassName={rowClassName}
+              className={`${customDark === "default-dark" ? "thead-default" : ""}
             ${customDark === "red-dark" ? "thead-red" : ""}
             ${customDark === "green-dark" ? "thead-green" : ""}
             ${customDark === "blue-dark" ? "thead-blue" : ""}
@@ -1600,21 +1605,21 @@ const ProjectDetailsTable = ({
             ${customDark === "purple-dark" ? "thead-purple" : ""}
             ${customDark === "light-dark" ? "thead-light" : ""}
             ${customDark === "brown-dark" ? "thead-brown" : ""} `}
-            rowKey="srNo"
-            columns={columns}
-            dataSource={filteredData}
-            pagination={customPagination}
-            bordered
-            style={{ position: "relative", zIndex: "900" }}
-            striped={true}
-            tableLayout="auto"
-            responsive={true}
-            scroll={{ x: true }}
-            size="middle"
-          />
-        </Col>
-      </Row>
-
+              rowKey="srNo"
+              columns={columns}
+              dataSource={filteredData}
+              pagination={customPagination}
+              bordered
+              style={{ position: "relative", zIndex: "900" }}
+              striped={true}
+              tableLayout="auto"
+              responsive={true}
+              scroll={{ x: true }}
+              size="middle"
+            />
+          </Col>
+        </Row>
+      </div>
       <ColumnToggleModal
         show={columnModalShow}
         handleClose={() => setColumnModalShow(false)}

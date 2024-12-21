@@ -26,7 +26,8 @@ const SortableRow = SortableElement(({ process, index, features, editingProcessI
   return (
     <tr style={{ opacity: 1, background: 'white', margin: '10px' }}>
       <td>
-        {independentProcesses.some(p => p.id === process.id) && <DragHandle disabled={disabled} />}
+        {<DragHandle disabled={disabled} />}
+        {independentProcesses.some(p => p.id === process.id) && <span className='fw-bold c-pointer' style={{ color: 'green' }} title='Independent Process'>~ </span>}
         {process.name}
       </td>
       <td>
@@ -371,15 +372,15 @@ const AddProjectProcess = ({ selectedProject, setIsProcessSubmitted }) => {
     const process = projectProcesses[oldIndex];
     const processWithRange = independentProcesses.find(p => p.id === process.id);
 
-    if (processWithRange?.rangeStart && processWithRange?.rangeEnd) {
-      const rangeStartIndex = projectProcesses.findIndex(p => p.id === processWithRange.rangeStart);
-      const rangeEndIndex = projectProcesses.findIndex(p => p.id === processWithRange.rangeEnd);
+    // if (processWithRange?.rangeStart && processWithRange?.rangeEnd) {
+    //   const rangeStartIndex = projectProcesses.findIndex(p => p.id === processWithRange.rangeStart);
+    //   const rangeEndIndex = projectProcesses.findIndex(p => p.id === processWithRange.rangeEnd);
 
-      if (newIndex <= rangeStartIndex || newIndex >= rangeEndIndex) {
-        message.error(`${t('thisProcessMustBePositionedBetween')} ${projectProcesses[rangeStartIndex]?.name} ${t('and')} ${projectProcesses[rangeEndIndex]?.name}`);
-        return;
-      }
-    }
+    //   if (newIndex <= rangeStartIndex || newIndex >= rangeEndIndex) {
+    //     message.error(`${t('thisProcessMustBePositionedBetween')} ${projectProcesses[rangeStartIndex]?.name} ${t('and')} ${projectProcesses[rangeEndIndex]?.name}`);
+    //     return;
+    //   }
+    // }
 
     setProjectProcesses(prevProcesses => {
       const newProcesses = arrayMove(prevProcesses, oldIndex, newIndex);
@@ -394,7 +395,6 @@ const AddProjectProcess = ({ selectedProject, setIsProcessSubmitted }) => {
         features: features,
         selectedProcessIds: selectedProcessIds
       };
-      // console.log('Table data:', tableData);
     }
   };
 

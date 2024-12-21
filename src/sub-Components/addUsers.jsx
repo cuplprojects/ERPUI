@@ -80,7 +80,6 @@ const AddUsers = () => {
         try {
           const response = await API.post('/User/create', formData); // API call to add user
           const { userName, password } = response.data;
-          console.log(formData)//check the payload data
           
           // Only show modal if password is returned
           if (password) {

@@ -8,7 +8,6 @@ import API from '../CustomHooks/MasterApiHooks/api';
 import AssignTeams from '../pages/processPage/AssignTeam/AssignTeams';
 
 const AssignTeamModal = ({ show, handleClose, data , processId , fetchTransactions, onSuccess, onError }) => {
-  console.log(data)
   const { t } = useTranslation();
   const { getCssClasses } = useStore(themeStore);
   const [customDark, customMid, customDarkText, customLightText] = getCssClasses();
