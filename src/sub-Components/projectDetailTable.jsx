@@ -1270,6 +1270,7 @@ const ProjectDetailsTable = ({
 
   const isCompleted = selectedRows.every((row) => row.status === 2);
   const isStarted = selectedRows.every((row) => row.status == 1);
+   const allStatusZero = selectedRows.every((row) => row.status === 0);
 
   const menu = (
     <Menu>
@@ -1296,7 +1297,7 @@ const ProjectDetailsTable = ({
       <Menu.Item onClick={() => setColumnModalShow(true)}>
         {t("columns")}
       </Menu.Item>
-      {hasFeaturePermission(1) && (
+      {hasFeaturePermission(1) && allStatusZero && (
         <Menu.Item
           onClick={() => handleDropdownSelect("Select Zone")}
           disabled={selectedRowKeys.length === 0}
@@ -1304,7 +1305,7 @@ const ProjectDetailsTable = ({
           {t("selectZone")}
         </Menu.Item>
       )}
-      {hasFeaturePermission(3) && (
+      {hasFeaturePermission(3) && allStatusZero && (
         <Menu.Item
           onClick={() => handleDropdownSelect("Select Machine")}
           disabled={selectedRowKeys.length === 0}
@@ -1312,7 +1313,7 @@ const ProjectDetailsTable = ({
           {t("selectMachine")}
         </Menu.Item>
       )}
-      {hasFeaturePermission(2) && (
+      {hasFeaturePermission(2) && allStatusZero &&  (
         <Menu.Item
           onClick={() => handleDropdownSelect("Assign Team")}
           disabled={selectedRowKeys.length === 0}
