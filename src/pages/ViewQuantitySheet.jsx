@@ -334,7 +334,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
     const fetchDispatchedLots = async () => {
       try {
         const response = await API.get(`/Dispatch/project/${projectId}`);
-        const dispatchedLotNos = response.data.map(
+        const dispatchedLotNos = response.data.filter((dispatch) => dispatch.status).map(
           (dispatch) => dispatch.lotNo
         );
         setDispatchedLots(dispatchedLotNos);
