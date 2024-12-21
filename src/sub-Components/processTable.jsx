@@ -68,6 +68,7 @@ const ProcessTable = () => {
   const [projectLots, setProjectLots] = useState([]);
   const [previousProcess, setPreviousProcess] = useState(null);
   const [processes, setProcesses] = useState([]);
+  const [dispatchedLots, setDispatchedLots] = useState([]);
   const [
     previousProcessCompletionPercentage,
     setPreviousProcessCompletionPercentage,
@@ -511,6 +512,23 @@ const ProcessTable = () => {
       setIsLoading(false);
     }
   }, [userData, id, processId, setProcess, selectedProject]);
+
+  useEffect(() => {
+    const fetchDispatchedLots = async () => {
+      try {
+        const response = await API.get(`/Dispatch/project/${selectedProject.value}`);
+        const dispatchedLotNos = response.data
+        .filter((dispatch) => dispatch.status === true) // Filter by status
+        .map((dispatch) => dispatch.lotNo);
+        console.log(dispatchedLotNos)
+        setDispatchedLots(dispatchedLotNos);
+      } catch (error) {
+        console.error("Failed to fetch dispatched lots:", error);
+      }
+    };
+
+    fetchDispatchedLots();
+  }, [selectedProject]);
   
   const fetchTransactions = useCallback(async () => {
     if(processId>0) {
@@ -628,7 +646,11 @@ const ProcessTable = () => {
           const uniqueLots = [
             ...new Set(validTransactions.map((item) => item.lotNo)),
           ].sort((a, b) => a - b);
-          setProjectLots(uniqueLots.map((lotNo) => ({ lotNo })));
+          const filteredUniqueLots = uniqueLots.filter(
+            (lotNo) => !dispatchedLots.includes(lotNo)
+          );
+  
+          setProjectLots(filteredUniqueLots.map((lotNo) => ({ lotNo })));
         }
       } catch (error) {
         console.error("Error fetching transactions data:", error);
