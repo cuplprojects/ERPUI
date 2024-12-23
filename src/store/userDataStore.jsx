@@ -37,10 +37,7 @@ const useUserDataStore = create((set, get) => ({
     updateUserData: async (updatedData) => {
       set({ loading: true });
       try {
-        // Note: The userService doesn't have an update method, so this is left as a placeholder
-        // You may need to implement an update method in userService.jsx
-        // After implementing, call the update method here
-        // Then refresh the user data
+        // Placeholder for updating user data, as userService doesn't have an update method
         await get().actions.refreshUserData();
       } catch (error) {
         set({ error: error.message, loading: false });
