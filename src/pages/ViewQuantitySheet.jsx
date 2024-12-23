@@ -78,7 +78,24 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
   const [dates, setDates] = useState([]);
   const [minDate, setMinDate] = useState(null);
   const [maxDate, setMaxDate] = useState(null);
+  const [disabledCatches, setDisabledCatches] = useState([]);
+  useEffect(() => {
+    const fetchDisabledCatches = async () => {
+      try {
+        const projectId = decrypt(encryptedProjectId);
+        const response = await API.get(
+          `/Transactions/CheckTransaction?projectId=${projectId}&lotNo=${selectedLotNo}`
+        );
+        setDisabledCatches(response.data);
+      } catch (error) {
+        console.error("Failed to fetch disabled catches:", error);
+      }
+    };
 
+    if (selectedLotNo) {
+      fetchDisabledCatches();
+    }
+  }, [selectedLotNo, encryptedProjectId]);
   const columns = [
     {
       title: t("select"),
@@ -100,7 +117,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
                   {
                     id: record.quantitySheetId,
                     catchNo: record.catchNo,
-                    processId: record.processId
+                    processId: record.processId,
                   },
                 ]);
               } else {
@@ -225,24 +242,34 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
         const isDispatched = dispatchedLots.includes(selectedLotNo);
         return (
           <>
-            {/* <Button
-              icon={<EditOutlined />}
-              onClick={() => handleEditButtonClick(record.key)}
-              style={{ marginRight: 8 }}
-              disabled={isDispatched}
-            /> */}
             <Button
-              icon={<DeleteOutlined />}
-              onClick={() => handleRemoveButtonClick(record.key)}
-              style={{ marginRight: 8 }}
+              type="primary"
+              icon={<EditOutlined />}
+              onClick={() => handleEdit(record)}
+              disabled={disabledCatches.includes(record.catchNo)}
+              title={
+                disabledCatches.includes(record.catchNo)
+                  ? t("This catch has an existing transaction")
+                  : ""
+              }
+            />
+            <Button
+              type="primary"
               danger
-              disabled={isDispatched}
+              icon={<DeleteOutlined />}
+              onClick={() => handleDelete(record)}
+              disabled={disabledCatches.includes(record.catchNo)}
+              title={
+                disabledCatches.includes(record.catchNo)
+                  ? t("This catch has an existing transaction")
+                  : ""
+              }
             />
             <Button
               icon={<StopOutlined />}
               onClick={() => handleStopButtonClick(record.key)}
               danger
-              disabled={isDispatched}
+              disabled={disabledCatches.includes(record.catchNo)}
             />
           </>
         );
@@ -370,7 +397,9 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
     try {
       // Process all selected catches
       const updatePromises = selectedCatches.map(async (selectedCatch) => {
-        const catchToUpdate = dataSource.find((item) => item.key === selectedCatch.id);
+        const catchToUpdate = dataSource.find(
+          (item) => item.key === selectedCatch.id
+        );
         if (!catchToUpdate) return;
 
         let updatedProcessIds = [...catchToUpdate.processId];
@@ -436,7 +465,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
     setSelectedProcessIds([]);
     setIsConfirmed(false);
     setSelectedCatches([]);
-    setModalMessage("")
+    setModalMessage("");
   };
 
   const handleEditButtonClick = (key) => {
@@ -481,16 +510,17 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
     }));
   };
 
-    const validateForm = () => {
-        const errors = {};
-        if (!newRowData.catchNo) errors.catchNo = t('catchNoRequired');
-        if (!newRowData.examDate) errors.examDate = t('examDateRequired');
-        if (!newRowData.examTime) errors.examTime = t('examTimeRequired');
-        if (!newRowData.quantity || newRowData.quantity <= 0) errors.quantity = t('validQuantityRequired');
-        
-        setFormErrors(errors);
-        return Object.keys(errors).length === 0;
-    };
+  const validateForm = () => {
+    const errors = {};
+    if (!newRowData.catchNo) errors.catchNo = t("catchNoRequired");
+    if (!newRowData.examDate) errors.examDate = t("examDateRequired");
+    if (!newRowData.examTime) errors.examTime = t("examTimeRequired");
+    if (!newRowData.quantity || newRowData.quantity <= 0)
+      errors.quantity = t("validQuantityRequired");
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleAddRow = async () => {
     if (!selectedLotNo) {
@@ -562,26 +592,34 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
 
   const isProcessSwitchingAllowed = (selectedCatches) => {
     // Get first catch record
-    const firstCatch = dataSource.find(item => item.quantitySheetId === selectedCatches[0]?.id);
+    const firstCatch = dataSource.find(
+      (item) => item.quantitySheetId === selectedCatches[0]?.id
+    );
     if (!firstCatch) return false;
 
     // Check if first catch has process ID 3
     if (firstCatch.processId.includes(3)) {
       // Return true only if all catches have process ID 3
-      return selectedCatches.every(catch_ => {
-        const catchRecord = dataSource.find(item => item.quantitySheetId === catch_.id);
+      return selectedCatches.every((catch_) => {
+        const catchRecord = dataSource.find(
+          (item) => item.quantitySheetId === catch_.id
+        );
         return catchRecord && catchRecord.processId.includes(3);
       });
     }
-    
+
     // Check if first catch has process IDs 1 and 2
     if (firstCatch.processId.includes(1) && firstCatch.processId.includes(2)) {
       // Return true only if all catches have process IDs 1 and 2
-      return selectedCatches.every(catch_ => {
-        const catchRecord = dataSource.find(item => item.quantitySheetId === catch_.id);
-        return catchRecord && 
-               catchRecord.processId.includes(1) && 
-               catchRecord.processId.includes(2);
+      return selectedCatches.every((catch_) => {
+        const catchRecord = dataSource.find(
+          (item) => item.quantitySheetId === catch_.id
+        );
+        return (
+          catchRecord &&
+          catchRecord.processId.includes(1) &&
+          catchRecord.processId.includes(2)
+        );
       });
     }
 
@@ -592,204 +630,227 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
     setSelectedCatches(updatedCatches);
   };
 
-    return (
-        <div className='mt-'>
-            {showBtn && (
-                <>
-                    <div className="d-flex justify-content-between align-items-center mb-3 mt-3">
-                        <Input.Search
-                            placeholder={t('searchAllFields')}
-                            onChange={(e) => setSearchText(e.target.value)}
-                            style={{ width: '250px' }}
-                            allowClear
-                        />
-    
-                        <div>
-                            {selectedCatches.length > 0 && !dispatchedLots.includes(selectedLotNo) && (
-                                <>
-                                    <Button
-                                        type="primary"
-                                        className={`${customBtn} ${customDark === "dark-dark" ? `border` : `border-0`} me-2`}
-                                        onClick={() => handleEditButtonClick(selectedCatches[0].id)}
-                                    >
-                                        {t('editProcess')}
-                                    </Button>
-                                    <Button
-                                        type="primary"
-                                        className={`${customBtn} ${customDark === "dark-dark" ? `border` : `border-0`} me-2`}
-                                        onClick={() => setShowTransferModal(true)}
-                                    >
-                                        {t('transferCatch')}
-                                    </Button>
-                                </>
-                            )}
-                            
-                            <Button 
-                                onClick={() => setShowNewRow(prev => !prev)} 
-                                type="primary" 
-                                className={`${customBtn} ${customDark === "dark-dark" ? `border` : `border-0`}`}
-                                disabled={dispatchedLots.includes(selectedLotNo)}
-                            >
-                                {showNewRow ? t('cancel') : t('addNewCatch')}
-                            </Button>
-                        </div>
-                    </div>
-                    {showNewRow && (
-                        <Form layout="vertical" className="mb-3">
-                            <Row gutter={16}>
-                                <Col span={6}>
-                                    <Form.Item label={<>
-                                            {t('catchNo')} <span style={{ color: 'red' }}>*</span>
-                                        </>}
-                                        validateStatus={formErrors.catchNo ? "error" : ""}
-                                        help={formErrors.catchNo}
-                                    >
-                                        <Input 
-                                            size="small" 
-                                            name="catchNo" 
-                                            value={newRowData.catchNo} 
-                                            onChange={handleNewRowChange}
-                                            placeholder={t('enterCatchNo')}
-                                        />
-                                    </Form.Item>
-                                </Col>
-                                <Col span={6}>
-                                    <Form.Item 
-                                        label={<>
-                                            {t('paperCode')}
-                                        </>}
-                                        help={formErrors.paper}
-                                    >
-                                        <Input 
-                                            size="small" 
-                                            name="paper" 
-                                            value={newRowData.paper} 
-                                            onChange={handleNewRowChange}
-                                            placeholder={t('enterPaperCode')}
-                                        />
-                                    </Form.Item>
-                                </Col>
-                                <Col span={6}>
-                                    <Form.Item 
-                                        label={<>
-                                            {t('course')} 
-                                        </>}
-                                        help={formErrors.course}
-                                    >
-                                        <Input 
-                                            size="small" 
-                                            name="course" 
-                                            value={newRowData.course} 
-                                            onChange={handleNewRowChange}
-                                            placeholder={t('enterCourse')}
-                                        />
-                                    </Form.Item>
-                                </Col>
-                                <Col span={6}>
-                                    <Form.Item label={t('subject')}>
-                                        <Input 
-                                            size="small" 
-                                            name="subject" 
-                                            value={newRowData.subject} 
-                                            onChange={handleNewRowChange}
-                                            placeholder={t('enterSubject')}
-                                        />
-                                    </Form.Item>
-                                </Col>
-                            </Row>
-                            <Row gutter={16}>
-                                <Col span={6}>
-                                    <Form.Item 
-                                        label={<>
-                                            {t('examDate')} <span style={{ color: 'red' }}>*</span>
-                                        </>}
-                                        validateStatus={formErrors.examDate ? "error" : ""}
-                                        help={formErrors.examDate}
-                                    >
-                                        <Input
-                                            size="small"
-                                            type="date"
-                                            name="examDate"
-                                            value={newRowData.examDate}
-                                            onChange={handleNewRowChange}
-                                            min={minDate}
-                                            max={maxDate}
-                                            disabled={dates.length === 0}
-                                            placeholder={t('selectExamDate')}
-                                        />
-                                    </Form.Item>
-                                </Col>
-                                <Col span={6}>
-                                    <Form.Item 
-                                        label={<>
-                                            {t('examTime')}  <span style={{ color: 'red' }}>*</span>
-                                        </>}
-                                        validateStatus={formErrors.examTime ? "error" : ""}
-                                        help={formErrors.examTime || "Please enter the time in this format: 03:00 PM to 05:00 PM"}
-                                    >
-                                        <Input 
-                                            size="small" 
-                                            name="examTime" 
-                                            value={newRowData.examTime} 
-                                            onChange={handleNewRowChange}
-                                            placeholder={t('enterExamTime')}
-                                        />
-                                    </Form.Item>
-                                </Col>
-                                <Col span={6}>
-                                    <Form.Item label={t('innerEnvelope')}>
-                                        <Input 
-                                            size="small" 
-                                            name="innerEnvelope" 
-                                            value={newRowData.innerEnvelope} 
-                                            onChange={handleNewRowChange}
-                                            placeholder={t('enterInnerEnvelope')}
-                                        />
-                                    </Form.Item>
-                                </Col>
-                                <Col span={6}>
-                                    <Form.Item label={t('outerEnvelope')}>
-                                        <Input 
-                                            size="small" 
-                                            name="outerEnvelope" 
-                                            value={newRowData.outerEnvelope} 
-                                            onChange={handleNewRowChange}
-                                            placeholder={t('enterOuterEnvelope')}
-                                        />
-                                    </Form.Item>
-                                </Col>
-                            </Row>
-                            <Row gutter={16}>
-                                <Col span={6}>
-                                    <Form.Item 
-                                        label={<>
-                                            {t('quantity')} <span style={{ color: 'red' }}>*</span>
-                                        </>}
-                                        validateStatus={formErrors.quantity ? "error" : ""}
-                                        help={formErrors.quantity}
-                                    >
-                                        <Input 
-                                            size="small" 
-                                            type="number" 
-                                            name="quantity" 
-                                            value={newRowData.quantity} 
-                                            onChange={handleNewRowChange}
-                                            placeholder={t('enterQuantity')}
-                                        />
-                                    </Form.Item>
-                                </Col>
-                                <Col span={6}>
-                                    <Form.Item label=" ">
-                                        <Button size="small" onClick={handleAddRow} className={`${customDark === "dark-dark" ? `border` : ``}`}>
-                                            {t('add')}
-                                        </Button>
-                                    </Form.Item>
-                                </Col>
-                            </Row>
-                        </Form>
-                    )}
-                </>
-            )}
+  return (
+    <div className="mt-">
+      {showBtn && (
+        <>
+          <div className="d-flex justify-content-between align-items-center mb-3 mt-3">
+            <Input.Search
+              placeholder={t("searchAllFields")}
+              onChange={(e) => setSearchText(e.target.value)}
+              style={{ width: "250px" }}
+              allowClear
+            />
+
+            <div>
+              {selectedCatches.length > 0 &&
+                !dispatchedLots.includes(selectedLotNo) && (
+                  <>
+                    <Button
+                      type="primary"
+                      className={`${customBtn} ${
+                        customDark === "dark-dark" ? `border` : `border-0`
+                      } me-2`}
+                      onClick={() =>
+                        handleEditButtonClick(selectedCatches[0].id)
+                      }
+                    >
+                      {t("editProcess")}
+                    </Button>
+                    <Button
+                      type="primary"
+                      className={`${customBtn} ${
+                        customDark === "dark-dark" ? `border` : `border-0`
+                      } me-2`}
+                      onClick={() => setShowTransferModal(true)}
+                    >
+                      {t("transferCatch")}
+                    </Button>
+                  </>
+                )}
+
+              <Button
+                onClick={() => setShowNewRow((prev) => !prev)}
+                type="primary"
+                className={`${customBtn} ${
+                  customDark === "dark-dark" ? `border` : `border-0`
+                }`}
+                disabled={dispatchedLots.includes(selectedLotNo)}
+              >
+                {showNewRow ? t("cancel") : t("addNewCatch")}
+              </Button>
+            </div>
+          </div>
+          {showNewRow && (
+            <Form layout="vertical" className="mb-3">
+              <Row gutter={16}>
+                <Col span={6}>
+                  <Form.Item
+                    label={
+                      <>
+                        {t("catchNo")} <span style={{ color: "red" }}>*</span>
+                      </>
+                    }
+                    validateStatus={formErrors.catchNo ? "error" : ""}
+                    help={formErrors.catchNo}
+                  >
+                    <Input
+                      size="small"
+                      name="catchNo"
+                      value={newRowData.catchNo}
+                      onChange={handleNewRowChange}
+                      placeholder={t("enterCatchNo")}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Form.Item
+                    label={<>{t("paperCode")}</>}
+                    help={formErrors.paper}
+                  >
+                    <Input
+                      size="small"
+                      name="paper"
+                      value={newRowData.paper}
+                      onChange={handleNewRowChange}
+                      placeholder={t("enterPaperCode")}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Form.Item
+                    label={<>{t("course")}</>}
+                    help={formErrors.course}
+                  >
+                    <Input
+                      size="small"
+                      name="course"
+                      value={newRowData.course}
+                      onChange={handleNewRowChange}
+                      placeholder={t("enterCourse")}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Form.Item label={t("subject")}>
+                    <Input
+                      size="small"
+                      name="subject"
+                      value={newRowData.subject}
+                      onChange={handleNewRowChange}
+                      placeholder={t("enterSubject")}
+                    />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Row gutter={16}>
+                <Col span={6}>
+                  <Form.Item
+                    label={
+                      <>
+                        {t("examDate")} <span style={{ color: "red" }}>*</span>
+                      </>
+                    }
+                    validateStatus={formErrors.examDate ? "error" : ""}
+                    help={formErrors.examDate}
+                  >
+                    <Input
+                      size="small"
+                      type="date"
+                      name="examDate"
+                      value={newRowData.examDate}
+                      onChange={handleNewRowChange}
+                      min={minDate}
+                      max={maxDate}
+                      disabled={dates.length === 0}
+                      placeholder={t("selectExamDate")}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Form.Item
+                    label={
+                      <>
+                        {t("examTime")} <span style={{ color: "red" }}>*</span>
+                      </>
+                    }
+                    validateStatus={formErrors.examTime ? "error" : ""}
+                    help={
+                      formErrors.examTime ||
+                      "Please enter the time in this format: 03:00 PM to 05:00 PM"
+                    }
+                  >
+                    <Input
+                      size="small"
+                      name="examTime"
+                      value={newRowData.examTime}
+                      onChange={handleNewRowChange}
+                      placeholder={t("enterExamTime")}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Form.Item label={t("innerEnvelope")}>
+                    <Input
+                      size="small"
+                      name="innerEnvelope"
+                      value={newRowData.innerEnvelope}
+                      onChange={handleNewRowChange}
+                      placeholder={t("enterInnerEnvelope")}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Form.Item label={t("outerEnvelope")}>
+                    <Input
+                      size="small"
+                      name="outerEnvelope"
+                      value={newRowData.outerEnvelope}
+                      onChange={handleNewRowChange}
+                      placeholder={t("enterOuterEnvelope")}
+                    />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Row gutter={16}>
+                <Col span={6}>
+                  <Form.Item
+                    label={
+                      <>
+                        {t("quantity")} <span style={{ color: "red" }}>*</span>
+                      </>
+                    }
+                    validateStatus={formErrors.quantity ? "error" : ""}
+                    help={formErrors.quantity}
+                  >
+                    <Input
+                      size="small"
+                      type="number"
+                      name="quantity"
+                      value={newRowData.quantity}
+                      onChange={handleNewRowChange}
+                      placeholder={t("enterQuantity")}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Form.Item label=" ">
+                    <Button
+                      size="small"
+                      onClick={handleAddRow}
+                      className={`${
+                        customDark === "dark-dark" ? `border` : ``
+                      }`}
+                    >
+                      {t("add")}
+                    </Button>
+                  </Form.Item>
+                </Col>
+              </Row>
+            </Form>
+          )}
+        </>
+      )}
 
       {showTable && (
         <Table
@@ -835,49 +896,58 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
         />
       )}
 
-            {editingRow !== null && (
-                <BootstrapModal show={true} onHide={handleModalClose}>
-                    <BootstrapModal.Header closeButton>
-                        <BootstrapModal.Title>{t('editProcess')}</BootstrapModal.Title>
-                    </BootstrapModal.Header>
-                    <BootstrapModal.Body>
-                        <div className="mb-3">
-                            <strong>{t('selectedCatches')}:</strong>
-                            <ul>
-                                {selectedCatches.map((catch_, index) => (
-                                    <li key={index}>{catch_.catchNo}</li>
-                                ))}
-                            </ul>
-                        </div>
-                        {!isProcessSwitchingAllowed(selectedCatches) ? (
-                            <div className="alert alert-danger">
-                                <WarningOutlined /> {t('processSwitchingNotAllowed')}
-                            </div>
-                        ) : (
-                            <>
-                                {t(modalMessage)}
-                                <div className="mt-3">
-                                    <Checkbox checked={isConfirmed} onChange={(e) => setIsConfirmed(e.target.checked)}>
-                                        {modalMessage === "switchToDigitalPrintingQuestion" ? t('switchFromOffsetToDigital') :
-                                            modalMessage === "switchToOffsetPrintingQuestion" ? t('switchFromDigitalToOffset') :
-                                                t('confirmThisChange')}
-                                    </Checkbox>
-                                </div>
-                            </>
-                        )}
-                    </BootstrapModal.Body>
-                    <BootstrapModal.Footer>
-                        <Button variant="secondary" onClick={handleModalClose}>{t('close')}</Button>
-                        <Button 
-                            variant="primary" 
-                            onClick={handleSaveEdit} 
-                            disabled={!isConfirmed || !isProcessSwitchingAllowed(selectedCatches)}
-                        >
-                            {t('saveChanges')}
-                        </Button>
-                    </BootstrapModal.Footer>
-                </BootstrapModal>
+      {editingRow !== null && (
+        <BootstrapModal show={true} onHide={handleModalClose}>
+          <BootstrapModal.Header closeButton>
+            <BootstrapModal.Title>{t("editProcess")}</BootstrapModal.Title>
+          </BootstrapModal.Header>
+          <BootstrapModal.Body>
+            <div className="mb-3">
+              <strong>{t("selectedCatches")}:</strong>
+              <ul>
+                {selectedCatches.map((catch_, index) => (
+                  <li key={index}>{catch_.catchNo}</li>
+                ))}
+              </ul>
+            </div>
+            {!isProcessSwitchingAllowed(selectedCatches) ? (
+              <div className="alert alert-danger">
+                <WarningOutlined /> {t("processSwitchingNotAllowed")}
+              </div>
+            ) : (
+              <>
+                {t(modalMessage)}
+                <div className="mt-3">
+                  <Checkbox
+                    checked={isConfirmed}
+                    onChange={(e) => setIsConfirmed(e.target.checked)}
+                  >
+                    {modalMessage === "switchToDigitalPrintingQuestion"
+                      ? t("switchFromOffsetToDigital")
+                      : modalMessage === "switchToOffsetPrintingQuestion"
+                      ? t("switchFromDigitalToOffset")
+                      : t("confirmThisChange")}
+                  </Checkbox>
+                </div>
+              </>
             )}
+          </BootstrapModal.Body>
+          <BootstrapModal.Footer>
+            <Button variant="secondary" onClick={handleModalClose}>
+              {t("close")}
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleSaveEdit}
+              disabled={
+                !isConfirmed || !isProcessSwitchingAllowed(selectedCatches)
+              }
+            >
+              {t("saveChanges")}
+            </Button>
+          </BootstrapModal.Footer>
+        </BootstrapModal>
+      )}
 
       {showDeleteModal && (
         <BootstrapModal show={true} onHide={handleModalClose}>
