@@ -126,9 +126,9 @@ const QtySheetUpload = () => {
   useEffect(() => {
     const fetchDispatchedLots = async () => {
       try {
-        const response = await API.get(`/Dispatch/project/${projectId}/lot/1`);
+        const response = await API.get(`/Dispatch/project/${projectId}/lot/${selectedLotNo}`);
         const dispatchedLotStatus = response.data.map(
-          (dispatch) => dispatch.status
+          (dispatch) => dispatch.lotNo
         );
         setDispatchedLots(dispatchedLotStatus);
       } catch (error) {

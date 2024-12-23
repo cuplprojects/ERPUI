@@ -59,6 +59,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
   const [CTP_ID, setCTP_ID] = useState(null);
   const [OFFSET_PRINTING_ID, setOFFSET_PRINTING_ID] = useState(null);
   const [DIGITAL_PRINTING_ID, setDIGITAL_PRINTING_ID] = useState(null);
+  const [CUTTING_ID, setCUTTING_ID] = useState(null);
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
   const [
@@ -361,7 +362,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
     const fetchDispatchedLots = async () => {
       try {
         const response = await API.get(`/Dispatch/project/${projectId}`);
-        const dispatchedLotNos = response.data.map(
+        const dispatchedLotNos = response.data.filter((dispatch) => dispatch.status).map(
           (dispatch) => dispatch.lotNo
         );
         setDispatchedLots(dispatchedLotNos);
@@ -384,10 +385,14 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
       const digitalProcess = response.data.find(
         (proc) => proc.name === "Digital Printing"
       );
+      const cutting = response.data.find(
+        (proc) => proc.name === "Cutting"
+      );
 
       setCTP_ID(ctpProcess ? ctpProcess.id : null);
       setOFFSET_PRINTING_ID(offsetProcess ? offsetProcess.id : null);
       setDIGITAL_PRINTING_ID(digitalProcess ? digitalProcess.id : null);
+      setCUTTING_ID(cutting ? cutting.id : null);
     } catch (error) {
       console.error(t("failedToFetchProcesses"), error);
     }
@@ -406,7 +411,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
 
         if (modalMessage === "switchToDigitalPrintingQuestion") {
           updatedProcessIds = updatedProcessIds.filter(
-            (id) => id !== CTP_ID && id !== OFFSET_PRINTING_ID
+            (id) => id !== CTP_ID && id !== OFFSET_PRINTING_ID && id!== CUTTING_ID
           );
           updatedProcessIds.push(DIGITAL_PRINTING_ID);
         } else if (modalMessage === "switchToOffsetPrintingQuestion") {
@@ -415,6 +420,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
           );
           updatedProcessIds.push(CTP_ID);
           updatedProcessIds.push(OFFSET_PRINTING_ID);
+          updatedProcessIds.push(CUTTING_ID);
         }
 
         const payload = {
@@ -486,8 +492,9 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
       const hasCTP = record.processId.includes(CTP_ID);
       const hasOffsetPrinting = record.processId.includes(OFFSET_PRINTING_ID);
       const hasDigitalPrinting = record.processId.includes(DIGITAL_PRINTING_ID);
+      const hasCutting = record.processId.includes(CUTTING_ID);
 
-      if (hasCTP && hasOffsetPrinting) {
+      if (hasCTP && hasOffsetPrinting && hasCutting) {
         setModalMessage("switchToDigitalPrintingQuestion");
       } else if (hasDigitalPrinting) {
         setModalMessage("switchToOffsetPrintingQuestion");

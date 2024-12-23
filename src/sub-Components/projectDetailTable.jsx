@@ -214,8 +214,13 @@ const ProjectDetailsTable = ({
   });
 
   useEffect(() => {
-    setShowOptions(selectedRowKeys.length === 1);
-  }, [selectedRowKeys]);
+    const visibleRows = tableData
+      .slice((currentPage - 1) * pageSize, currentPage * pageSize)
+      .map((row) => row.srNo);
+
+    // If all visible rows are selected, mark "Select All" as checked
+    setSelectAll(visibleRows.every((key) => selectedRowKeys.includes(key)));
+  }, [selectedRowKeys, currentPage, pageSize, tableData]);
 
   // Update useEffect to immediately fetch data when lotNo changes
   useEffect(() => {
@@ -355,10 +360,15 @@ const ProjectDetailsTable = ({
           onChange={(e) => {
             const checked = e.target.checked;
             setSelectAll(checked);
+
             if (checked) {
-              setSelectedRowKeys(tableData.map((row) => row.srNo));
+              // Select only visible rows on the current page
+              const visibleRowKeys = tableData
+                .slice((currentPage - 1) * pageSize, currentPage * pageSize) // Get rows for the current page
+                .map((row) => row.srNo);
+              setSelectedRowKeys(visibleRowKeys);
             } else {
-              setSelectedRowKeys([]);
+              setSelectedRowKeys([]); // Deselect all rows
             }
           }}
         />
@@ -367,21 +377,23 @@ const ProjectDetailsTable = ({
       render: (_, record) => (
         <input
           type="checkbox"
-          checked={selectAll || selectedRowKeys.includes(record.srNo)}
+          checked={selectedRowKeys.includes(record.srNo)}
           onChange={(e) => {
             const checked = e.target.checked;
             if (checked) {
+              // Select this row
               setSelectedRowKeys([...selectedRowKeys, record.srNo]);
             } else {
+              // Deselect this row
               setSelectedRowKeys(
                 selectedRowKeys.filter((key) => key !== record.srNo)
               );
-              setSelectAll(false);
+              setSelectAll(false); // Deselect "Select All" if individual row is deselected
             }
           }}
         />
       ),
-      responsive: ["xs", "sm"], // Changed to include xs for phone view
+      responsive: ["xs", "sm"],
     },
     {
       title: t("srNo"),
@@ -1270,6 +1282,7 @@ const ProjectDetailsTable = ({
 
   const isCompleted = selectedRows.every((row) => row.status === 2);
   const isStarted = selectedRows.every((row) => row.status == 1);
+   const allStatusZero = selectedRows.every((row) => row.status === 0);
 
   const menu = (
     <Menu>
@@ -1296,7 +1309,7 @@ const ProjectDetailsTable = ({
       <Menu.Item onClick={() => setColumnModalShow(true)}>
         {t("columns")}
       </Menu.Item>
-      {hasFeaturePermission(1) && (
+      {hasFeaturePermission(1) && allStatusZero && (
         <Menu.Item
           onClick={() => handleDropdownSelect("Select Zone")}
           disabled={selectedRowKeys.length === 0}
@@ -1304,7 +1317,7 @@ const ProjectDetailsTable = ({
           {t("selectZone")}
         </Menu.Item>
       )}
-      {hasFeaturePermission(3) && (
+      {hasFeaturePermission(3) && allStatusZero && (
         <Menu.Item
           onClick={() => handleDropdownSelect("Select Machine")}
           disabled={selectedRowKeys.length === 0}
@@ -1312,7 +1325,7 @@ const ProjectDetailsTable = ({
           {t("selectMachine")}
         </Menu.Item>
       )}
-      {hasFeaturePermission(2) && (
+      {hasFeaturePermission(2) && allStatusZero &&  (
         <Menu.Item
           onClick={() => handleDropdownSelect("Assign Team")}
           disabled={selectedRowKeys.length === 0}

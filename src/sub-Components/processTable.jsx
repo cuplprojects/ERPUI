@@ -68,6 +68,7 @@ const ProcessTable = () => {
   const [projectLots, setProjectLots] = useState([]);
   const [previousProcess, setPreviousProcess] = useState(null);
   const [processes, setProcesses] = useState([]);
+  const [dispatchedLots, setDispatchedLots] = useState([]);
   const [
     previousProcessCompletionPercentage,
     setPreviousProcessCompletionPercentage,
@@ -165,6 +166,10 @@ const ProcessTable = () => {
               previousSequence--;
               continue;
             }
+            if (processData.processId === 4 && previousProcessData.processId === 3) {
+              previousSequence--;
+              continue;
+            }
 
             // If current process ID is 3, skip process IDs 2 and 1
             if (processData.processId === 3 && 
@@ -232,16 +237,16 @@ const ProcessTable = () => {
   useEffect(() => {
     const fetchDigitalOrOffsetData = async () => {
       try {
-        if (selectedProject && previousProcess?.processId === 3) {
+        if (selectedProject && previousProcess?.processId === 4) {
           const digitalData = await getProjectTransactionsData(
             selectedProject?.value || id,
-            2
+            3
           );
           setDigitalandOffsetData(digitalData.data);
-        } else if (selectedProject && previousProcess?.processId === 2) {
+        } else if (selectedProject && previousProcess?.processId === 3) {
           const offsetData = await getProjectTransactionsData(
             selectedProject?.value || id,
-            3
+            4
           );
           setDigitalandOffsetData(offsetData.data);
         }
@@ -452,6 +457,10 @@ const ProcessTable = () => {
                   previousSequence--;
                   continue;
                 }
+                if (selectedProcess.processId === 4 && previousProcessData.processId === 3) {
+                  previousSequence--;
+                  continue;
+                }
                 setPreviousProcess(previousProcessData);
                 break;
               } else if (previousProcessData.processType === "Independent") {
@@ -465,6 +474,10 @@ const ProcessTable = () => {
   
             // Apply special rules for processes 2 and 3
             if (selectedProcess.processId === 2 && previousProcessData.processId === 3) {
+              previousSequence--;
+              continue;
+            }
+            if (selectedProcess.processId === 4 && previousProcessData.processId === 3) {
               previousSequence--;
               continue;
             }
@@ -511,6 +524,23 @@ const ProcessTable = () => {
       setIsLoading(false);
     }
   }, [userData, id, processId, setProcess, selectedProject]);
+
+  useEffect(() => {
+    const fetchDispatchedLots = async () => {
+      try {
+        const response = await API.get(`/Dispatch/project/${selectedProject.value}`);
+        const dispatchedLotNos = response.data
+        .filter((dispatch) => dispatch.status === true) // Filter by status
+        .map((dispatch) => dispatch.lotNo);
+        console.log(dispatchedLotNos)
+        setDispatchedLots(dispatchedLotNos);
+      } catch (error) {
+        console.error("Failed to fetch dispatched lots:", error);
+      }
+    };
+
+    fetchDispatchedLots();
+  }, [selectedProject]);
   
   const fetchTransactions = useCallback(async () => {
     if(processId>0) {
@@ -538,7 +568,7 @@ const ProcessTable = () => {
               
               // Check if transactions array is empty before proceeding
               if (!previousProcessData.transactions?.length && 
-                  (previousProcess?.processId === 2 || previousProcess?.processId === 3) && 
+                  (previousProcess?.processId === 3 || previousProcess?.processId === 4) && 
                   digitalandOffsetData) {
                 // If no matching previous process data, find a matching digitalandOffsetData
                 previousProcessData = digitalandOffsetData.find(
@@ -628,7 +658,11 @@ const ProcessTable = () => {
           const uniqueLots = [
             ...new Set(validTransactions.map((item) => item.lotNo)),
           ].sort((a, b) => a - b);
-          setProjectLots(uniqueLots.map((lotNo) => ({ lotNo })));
+          const filteredUniqueLots = uniqueLots.filter(
+            (lotNo) => !dispatchedLots.includes(lotNo)
+          );
+  
+          setProjectLots(filteredUniqueLots.map((lotNo) => ({ lotNo })));
         }
       } catch (error) {
         console.error("Error fetching transactions data:", error);
