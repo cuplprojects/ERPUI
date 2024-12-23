@@ -166,6 +166,10 @@ const ProcessTable = () => {
               previousSequence--;
               continue;
             }
+            if (processData.processId === 4 && previousProcessData.processId === 3) {
+              previousSequence--;
+              continue;
+            }
 
             // If current process ID is 3, skip process IDs 2 and 1
             if (processData.processId === 3 && 
@@ -233,16 +237,16 @@ const ProcessTable = () => {
   useEffect(() => {
     const fetchDigitalOrOffsetData = async () => {
       try {
-        if (selectedProject && previousProcess?.processId === 3) {
+        if (selectedProject && previousProcess?.processId === 4) {
           const digitalData = await getProjectTransactionsData(
             selectedProject?.value || id,
-            2
+            3
           );
           setDigitalandOffsetData(digitalData.data);
-        } else if (selectedProject && previousProcess?.processId === 2) {
+        } else if (selectedProject && previousProcess?.processId === 3) {
           const offsetData = await getProjectTransactionsData(
             selectedProject?.value || id,
-            3
+            4
           );
           setDigitalandOffsetData(offsetData.data);
         }
@@ -453,6 +457,10 @@ const ProcessTable = () => {
                   previousSequence--;
                   continue;
                 }
+                if (selectedProcess.processId === 4 && previousProcessData.processId === 3) {
+                  previousSequence--;
+                  continue;
+                }
                 setPreviousProcess(previousProcessData);
                 break;
               } else if (previousProcessData.processType === "Independent") {
@@ -466,6 +474,10 @@ const ProcessTable = () => {
   
             // Apply special rules for processes 2 and 3
             if (selectedProcess.processId === 2 && previousProcessData.processId === 3) {
+              previousSequence--;
+              continue;
+            }
+            if (selectedProcess.processId === 4 && previousProcessData.processId === 3) {
               previousSequence--;
               continue;
             }
@@ -556,7 +568,7 @@ const ProcessTable = () => {
               
               // Check if transactions array is empty before proceeding
               if (!previousProcessData.transactions?.length && 
-                  (previousProcess?.processId === 2 || previousProcess?.processId === 3) && 
+                  (previousProcess?.processId === 3 || previousProcess?.processId === 4) && 
                   digitalandOffsetData) {
                 // If no matching previous process data, find a matching digitalandOffsetData
                 previousProcessData = digitalandOffsetData.find(
