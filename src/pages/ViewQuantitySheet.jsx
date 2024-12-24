@@ -42,7 +42,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
     course: "",
     subject: "",
     innerEnvelope: "",
-    outerEnvelope: "",
+    outerEnvelope: 0,
     examDate: "",
     examTime: "",
     quantity: 0,
@@ -50,6 +50,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
     status: 0,
     projectId: projectId,
     quantitySheetId: quantitySheetId,
+    pages: 0,
   });
   const [formErrors, setFormErrors] = useState({});
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -195,6 +196,13 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
       key: "quantity",
       width: 100,
       sorter: (a, b) => a.quantity - b.quantity,
+    },
+    {
+      title: t("pages"),
+      dataIndex: "pages",
+      key: "pages",
+      width: 100,
+      sorter: (a, b) => a.pages - b.pages,
     },
     {
       title: t("Process"),
@@ -525,6 +533,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
         examTime: newRowData.examTime,
         processId: [],
         status: 0,
+        pages: newRowData.pages,
       },
     ];
 
@@ -546,8 +555,9 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
         examDate: "",
         examTime: "",
         innerEnvelope: "",
-        outerEnvelope: "",
+        outerEnvelope: 0,
         quantity: 0,
+        pages: 0,
         percentageCatch: 0,
         projectId: projectId,
         status: 0,
@@ -630,6 +640,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
                                     </Button>
                                 </>
                             )}
+                           
                             
                             <Button 
                                 onClick={() => setShowNewRow(prev => !prev)} 
@@ -767,6 +778,25 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
                                 </Col>
                             </Row>
                             <Row gutter={16}>
+                              
+                                <Col span={6}>
+                                    <Form.Item 
+                                        label={<>
+                                            {t('pages')} 
+                                        </>}
+
+                                        help={formErrors.pages}
+                                    >
+                                        <Input 
+                                            size="small" 
+                                            type="number" 
+                                            name="pages" 
+                                            value={newRowData.pages} 
+                                            onChange={handleNewRowChange}
+                                            placeholder={t('enterPages')}
+                                        />
+                                    </Form.Item>
+                                </Col>
                                 <Col span={6}>
                                     <Form.Item 
                                         label={<>
