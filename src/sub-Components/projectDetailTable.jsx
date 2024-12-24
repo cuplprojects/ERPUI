@@ -36,6 +36,7 @@ import { BsThreeDots } from "react-icons/bs"; // for in progress
 import API from "../CustomHooks/MasterApiHooks/api";
 import { hasPermission } from "../CustomHooks/Services/permissionUtils";
 import { useTranslation } from "react-i18next";
+import Tippy from "@tippyjs/react";
 
 const { Option } = Select;
 
@@ -196,11 +197,11 @@ const ProjectDetailsTable = ({
       : true;
     const previousProcessCondition = showOnlyCompletedPreviousProcess
       ? !item.previousProcessData ||
-      item.previousProcessData.status === 2 ||
-      (item.previousProcessData.thresholdQty != null &&
-        item.previousProcessData.thresholdQty > 0 &&
-        item.previousProcessData.interimQuantity >=
-        item.previousProcessData.thresholdQty)
+        item.previousProcessData.status === 2 ||
+        (item.previousProcessData.thresholdQty != null &&
+          item.previousProcessData.thresholdQty > 0 &&
+          item.previousProcessData.interimQuantity >=
+            item.previousProcessData.thresholdQty)
       : true;
 
     return (
@@ -213,8 +214,13 @@ const ProjectDetailsTable = ({
   });
 
   useEffect(() => {
-    setShowOptions(selectedRowKeys.length === 1);
-  }, [selectedRowKeys]);
+    const visibleRows = tableData
+      .slice((currentPage - 1) * pageSize, currentPage * pageSize)
+      .map((row) => row.srNo);
+
+    // If all visible rows are selected, mark "Select All" as checked
+    setSelectAll(visibleRows.every((key) => selectedRowKeys.includes(key)));
+  }, [selectedRowKeys, currentPage, pageSize, tableData]);
 
   // Update useEffect to immediately fetch data when lotNo changes
   useEffect(() => {
@@ -238,7 +244,7 @@ const ProjectDetailsTable = ({
         updatedRow.previousProcessData.thresholdQty != null &&
         updatedRow.previousProcessData.thresholdQty > 0 &&
         updatedRow.previousProcessData.interimQuantity >=
-        updatedRow.previousProcessData.thresholdQty
+          updatedRow.previousProcessData.thresholdQty
       )
     ) {
       showNotification(
@@ -264,7 +270,11 @@ const ProjectDetailsTable = ({
     }
 
     // Only check interim quantity if hasFeaturePermission(7) is true and interimQuantity is not 0
-    if (hasFeaturePermission(4) && newStatusIndex === 2 && updatedRow.interimQuantity !== 0) {
+    if (
+      hasFeaturePermission(4) &&
+      newStatusIndex === 2 &&
+      updatedRow.interimQuantity !== 0
+    ) {
       if (updatedRow.interimQuantity !== updatedRow.quantity) {
         showNotification(
           "error",
@@ -333,12 +343,12 @@ const ProjectDetailsTable = ({
     setCatchDetailModalData(record);
   };
   const formatDate = (dateString) => {
-    if (!dateString) return 'NA';
+    if (!dateString) return "NA";
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
+    return date.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
     });
   };
   const columns = [
@@ -350,10 +360,15 @@ const ProjectDetailsTable = ({
           onChange={(e) => {
             const checked = e.target.checked;
             setSelectAll(checked);
+
             if (checked) {
-              setSelectedRowKeys(tableData.map((row) => row.srNo));
+              // Select only visible rows on the current page
+              const visibleRowKeys = tableData
+                .slice((currentPage - 1) * pageSize, currentPage * pageSize) // Get rows for the current page
+                .map((row) => row.srNo);
+              setSelectedRowKeys(visibleRowKeys);
             } else {
-              setSelectedRowKeys([]);
+              setSelectedRowKeys([]); // Deselect all rows
             }
           }}
         />
@@ -362,21 +377,23 @@ const ProjectDetailsTable = ({
       render: (_, record) => (
         <input
           type="checkbox"
-          checked={selectAll || selectedRowKeys.includes(record.srNo)}
+          checked={selectedRowKeys.includes(record.srNo)}
           onChange={(e) => {
             const checked = e.target.checked;
             if (checked) {
+              // Select this row
               setSelectedRowKeys([...selectedRowKeys, record.srNo]);
             } else {
+              // Deselect this row
               setSelectedRowKeys(
                 selectedRowKeys.filter((key) => key !== record.srNo)
               );
-              setSelectAll(false);
+              setSelectAll(false); // Deselect "Select All" if individual row is deselected
             }
           }}
         />
       ),
-      responsive: ["xs", "sm"], // Changed to include xs for phone view
+      responsive: ["xs", "sm"],
     },
     {
       title: t("srNo"),
@@ -407,22 +424,22 @@ const ProjectDetailsTable = ({
                       className=""
                     />
                   ) : // If threshold quantity is met, show blue checkmark
-                    record.previousProcessData.thresholdQty != null &&
-                      record.previousProcessData.thresholdQty > 0 &&
-                      record.previousProcessData.interimQuantity >=
+                  record.previousProcessData.thresholdQty != null &&
+                    record.previousProcessData.thresholdQty > 0 &&
+                    record.previousProcessData.interimQuantity >=
                       record.previousProcessData.thresholdQty ? (
-                      <IoCheckmarkDoneCircleSharp
-                        size={20}
-                        color="blue"
-                        className=""
-                      />
-                    ) : // If status is pending (0), show orange pending icon
-                      record.previousProcessData.status === 0 ? (
-                        <MdPending size={20} color="orange" className="" />
-                      ) : (
-                        // Otherwise show orange dots for in progress
-                        <MdPending size={20} color="orange" className="" />
-                      )
+                    <IoCheckmarkDoneCircleSharp
+                      size={20}
+                      color="blue"
+                      className=""
+                    />
+                  ) : // If status is pending (0), show orange pending icon
+                  record.previousProcessData.status === 0 ? (
+                    <MdPending size={20} color="orange" className="" />
+                  ) : (
+                    // Otherwise show orange dots for in progress
+                    <MdPending size={20} color="orange" className="" />
+                  )
                 ) : (
                   // If no previous process, show orange checkmark
                   <IoCheckmarkDoneCircleSharp
@@ -498,116 +515,116 @@ const ProjectDetailsTable = ({
     },
     ...(columnVisibility["Exam Date"]
       ? [
-        {
-          title: t("examDate"),
-          dataIndex: "examDate",
-          align: "center",
-          key: "examDate",
-          sorter: (a, b) => a.examDate - b.examDate,
-          render: (text) => formatDate(text), // Apply formatDate here
-        },
-      ]
+          {
+            title: t("examDate"),
+            dataIndex: "examDate",
+            align: "center",
+            key: "examDate",
+            sorter: (a, b) => a.examDate - b.examDate,
+            render: (text) => formatDate(text), // Apply formatDate here
+          },
+        ]
       : []),
     ...(columnVisibility["Interim Quantity"]
       ? [
-        {
-          title: t("interimQuantity"),
-          dataIndex: "interimQuantity",
-          align: "center",
-          key: "interimQuantity",
-          sorter: (a, b) => a.interimQuantity - b.interimQuantity,
-        },
-      ]
+          {
+            title: t("interimQuantity"),
+            dataIndex: "interimQuantity",
+            align: "center",
+            key: "interimQuantity",
+            sorter: (a, b) => a.interimQuantity - b.interimQuantity,
+          },
+        ]
       : []),
     ...(columnVisibility.Remarks
       ? [
-        {
-          title: t("remarks"),
-          dataIndex: "remarks",
-          key: "remarks",
-          align: "center",
-          sorter: (a, b) => a.remarks.localeCompare(b.remarks),
-        },
-      ]
+          {
+            title: t("remarks"),
+            dataIndex: "remarks",
+            key: "remarks",
+            align: "center",
+            sorter: (a, b) => a.remarks.localeCompare(b.remarks),
+          },
+        ]
       : []),
     ...(columnVisibility["Team Assigned"]
       ? [
-        {
-          title: t("teamAssigned"),
-          dataIndex: "teamUserNames",
-          align: "center",
-          key: "teamUserNames",
-          render: (teamUserNames) => teamUserNames?.join(", "),
-          sorter: (a, b) => {
-            const aNames = a.teamUserNames?.join(", ") || "";
-            const bNames = b.teamUserNames?.join(", ") || "";
-            return aNames.localeCompare(bNames);
+          {
+            title: t("teamAssigned"),
+            dataIndex: "teamUserNames",
+            align: "center",
+            key: "teamUserNames",
+            render: (teamUserNames) => teamUserNames?.join(", "),
+            sorter: (a, b) => {
+              const aNames = a.teamUserNames?.join(", ") || "";
+              const bNames = b.teamUserNames?.join(", ") || "";
+              return aNames.localeCompare(bNames);
+            },
           },
-        },
-      ]
+        ]
       : []),
     ...(columnVisibility["Zone"]
       ? [
-        {
-          title: t("zone"),
-          dataIndex: "zoneNo",
-          align: "center",
-          key: "zoneNo",
-          sorter: (a, b) => (a.zoneNo || "").localeCompare(b.zoneNo || ""),
-        },
-      ]
+          {
+            title: t("zone"),
+            dataIndex: "zoneNo",
+            align: "center",
+            key: "zoneNo",
+            sorter: (a, b) => (a.zoneNo || "").localeCompare(b.zoneNo || ""),
+          },
+        ]
       : []),
     ...(columnVisibility["Machine"]
       ? [
-        {
-          title: t("machine"),
-          dataIndex: "machinename",
-          align: "center",
-          key: "machinename",
-          sorter: (a, b) =>
-            (a.machinename || "").localeCompare(b.machinename || ""),
-        },
-      ]
+          {
+            title: t("machine"),
+            dataIndex: "machinename",
+            align: "center",
+            key: "machinename",
+            sorter: (a, b) =>
+              (a.machinename || "").localeCompare(b.machinename || ""),
+          },
+        ]
       : []),
     ...(columnVisibility["Course"]
       ? [
-        {
-          title: t("course"),
+          {
+            title: t("course"),
 
-          dataIndex: "course",
-          // width: '20%',
-          align: "center",
-          key: "course",
+            dataIndex: "course",
+            // width: '20%',
+            align: "center",
+            key: "course",
 
-          sorter: (a, b) => a.course - b.course,
-        },
-      ]
+            sorter: (a, b) => a.course - b.course,
+          },
+        ]
       : []),
     ...(columnVisibility["Subject"]
       ? [
-        {
-          title: t("subject"),
-          dataIndex: "subject",
-          width: "20%",
-          align: "center",
-          key: "subject",
+          {
+            title: t("subject"),
+            dataIndex: "subject",
+            width: "20%",
+            align: "center",
+            key: "subject",
 
-          sorter: (a, b) => a.subject - b.subject,
-        },
-      ]
+            sorter: (a, b) => a.subject - b.subject,
+          },
+        ]
       : []),
     ...(columnVisibility["Paper"]
       ? [
-        {
-          title: t("questionPaper"),
+          {
+            title: t("questionPaper"),
 
-          dataIndex: "paper",
-          width: "20%",
-          align: "center",
-          key: "paper",
-          sorter: (a, b) => a.paper - b.paper,
-        },
-      ]
+            dataIndex: "paper",
+            width: "20%",
+            align: "center",
+            key: "paper",
+            sorter: (a, b) => a.paper - b.paper,
+          },
+        ]
       : []),
     {
       title: t("status"),
@@ -635,7 +652,7 @@ const ProjectDetailsTable = ({
             ((record.previousProcessData.thresholdQty != null &&
               record.previousProcessData.thresholdQty > 0 &&
               record.previousProcessData.interimQuantity >=
-              record.previousProcessData.thresholdQty) ||
+                record.previousProcessData.thresholdQty) ||
               record.previousProcessData.status === 2)) ||
           // 3. If current process status is 1 and previous process status is 2, return true
           (record.status === 1 && record.previousProcessData?.status === 2) ||
@@ -661,9 +678,9 @@ const ProjectDetailsTable = ({
           isIndependentProcessCompleted &&
           (hasSelectMachinePermission
             ? record.machineId !== 0 &&
-            record.machineId !== null &&
-            isZoneAssigned &&
-            isTeamAssigned
+              record.machineId !== null &&
+              isZoneAssigned &&
+              isTeamAssigned
             : isZoneAssigned && isTeamAssigned);
 
         // Only check interim quantity if hasFeaturePermission(7) is true and interimQuantity is not 0
@@ -733,13 +750,15 @@ const ProjectDetailsTable = ({
         return (
           <div className="d-flex justify-content-center">
             {!(record.alerts === "0" || !record.alerts?.trim()) ? (
-              <Tooltip
-                title={requirements.map((req, index) => (
+              <Tippy
+              duration={[300, 1]}
+              delay={10}
+              className={`${customMid} ${customLightText} ${customDarkBorder} p-2 rounded-3`}
+                content={requirements.map((req, index) => (
                   <div key={index}>{req}</div>
                 ))}
-                placement="top"
               >
-                <span className="text-danger">
+                <span className="text-danger tooltip-trigger">
                   <StatusToggle
                     initialStatusIndex={initialStatusIndex}
                     statusSteps={statusSteps.map((status, index) => ({
@@ -750,19 +769,21 @@ const ProjectDetailsTable = ({
                     disabled // Disable the toggle due to alerts
                   />
                 </span>
-              </Tooltip>
+              </Tippy>
             ) : (
-              <Tooltip
-                title={
+              <Tippy
+              duration={[300, 1]}
+              delay={10}
+              className={`${customMid} ${customLightText} p-2 border border-dark rounded-3`}
+                content={
                   isDisabled
                     ? requirements.map((req, index) => (
-                      <div key={index}>{req}</div>
-                    ))
+                        <div key={index}>{req}</div>
+                      ))
                     : ""
                 }
-                placement="top"
               >
-                <span>
+                <span className="tooltip-trigger">
                   <StatusToggle
                     initialStatusIndex={initialStatusIndex}
                     onStatusChange={(newIndex) =>
@@ -776,10 +797,76 @@ const ProjectDetailsTable = ({
                     disabled={isDisabled} // Disable the toggle if status can't be changed
                   />
                 </span>
-              </Tooltip>
+              </Tippy>
             )}
           </div>
         );
+        // return (
+        //   <div className="d-flex justify-content-center">
+        //     {!(record.alerts === "0" || !record.alerts?.trim()) ? (
+        //       <Tooltip
+        //         title={requirements.map((req, index) => (
+        //           <div key={index}>{req}</div>
+        //         ))}
+        //         placement="top"
+        //         trigger={['hover', 'click']}
+        //         defaultVisible={false}
+        //         overlayClassName="custom-tooltip"
+        //         overlayStyle={{
+        //           maxWidth: '250px',
+        //           wordWrap: 'break-word'
+        //         }}
+        //         destroyTooltipOnHide
+        //       >
+        //         <span className="text-danger tooltip-trigger">
+        //           <StatusToggle
+        //             initialStatusIndex={initialStatusIndex}
+        //             statusSteps={statusSteps.map((status, index) => ({
+        //               status,
+        //               color:
+        //                 index === 0 ? "red" : index === 1 ? "blue" : "green",
+        //             }))}
+        //             disabled // Disable the toggle due to alerts
+        //           />
+        //         </span>
+        //       </Tooltip>
+        //     ) : (
+        //       <Tooltip
+        //         title={
+        //           isDisabled
+        //             ? requirements.map((req, index) => (
+        //                 <div key={index}>{req}</div>
+        //               ))
+        //             : ""
+        //         }
+        //         placement="top"
+        //         trigger={['hover', 'click']}
+        //         defaultVisible={false}
+        //         overlayClassName="custom-tooltip"
+        //         overlayStyle={{
+        //           maxWidth: '250px',
+        //           wordWrap: 'break-word'
+        //         }}
+        //         destroyTooltipOnHide
+        //       >
+        //         <span className="tooltip-trigger">
+        //           <StatusToggle
+        //             initialStatusIndex={initialStatusIndex}
+        //             onStatusChange={(newIndex) =>
+        //               handleRowStatusChange(record.srNo, newIndex)
+        //             }
+        //             statusSteps={statusSteps.map((status, index) => ({
+        //               status,
+        //               color:
+        //                 index === 0 ? "red" : index === 1 ? "blue" : "green",
+        //             }))}
+        //             disabled={isDisabled} // Disable the toggle if status can't be changed
+        //           />
+        //         </span>
+        //       </Tooltip>
+        //     )}
+        //   </div>
+        // );
       },
 
       sorter: (a, b) => {
@@ -810,7 +897,7 @@ const ProjectDetailsTable = ({
         (row.previousProcessData.thresholdQty != null &&
           row.previousProcessData.thresholdQty > 0 &&
           row.previousProcessData.interimQuantity >=
-          row.previousProcessData.thresholdQty)
+            row.previousProcessData.thresholdQty)
       );
     });
 
@@ -853,7 +940,9 @@ const ProjectDetailsTable = ({
     if (hasFeaturePermission(4) && newStatusIndex === 2) {
       const hasIncompleteQuantity = selectedRowKeys.some((key) => {
         const row = tableData.find((row) => row.srNo === key);
-        return row.interimQuantity !== 0 && row.interimQuantity !== row.quantity;
+        return (
+          row.interimQuantity !== 0 && row.interimQuantity !== row.quantity
+        );
       });
 
       if (hasIncompleteQuantity) {
@@ -1193,6 +1282,7 @@ const ProjectDetailsTable = ({
 
   const isCompleted = selectedRows.every((row) => row.status === 2);
   const isStarted = selectedRows.every((row) => row.status == 1);
+   const allStatusZero = selectedRows.every((row) => row.status === 0);
 
   const menu = (
     <Menu>
@@ -1219,7 +1309,7 @@ const ProjectDetailsTable = ({
       <Menu.Item onClick={() => setColumnModalShow(true)}>
         {t("columns")}
       </Menu.Item>
-      {hasFeaturePermission(1) && (
+      {hasFeaturePermission(1) && allStatusZero && (
         <Menu.Item
           onClick={() => handleDropdownSelect("Select Zone")}
           disabled={selectedRowKeys.length === 0}
@@ -1227,7 +1317,7 @@ const ProjectDetailsTable = ({
           {t("selectZone")}
         </Menu.Item>
       )}
-      {hasFeaturePermission(3) && (
+      {hasFeaturePermission(3) && allStatusZero && (
         <Menu.Item
           onClick={() => handleDropdownSelect("Select Machine")}
           disabled={selectedRowKeys.length === 0}
@@ -1235,7 +1325,7 @@ const ProjectDetailsTable = ({
           {t("selectMachine")}
         </Menu.Item>
       )}
-      {hasFeaturePermission(2) && (
+      {hasFeaturePermission(2) && allStatusZero &&  (
         <Menu.Item
           onClick={() => handleDropdownSelect("Assign Team")}
           disabled={selectedRowKeys.length === 0}
@@ -1247,8 +1337,9 @@ const ProjectDetailsTable = ({
   );
 
   const customPagination = {
-    className: `bg-white p-3 rounded rounded-top-0 mt-0  ${customDark === "dark-dark" ? `` : ``
-      }`,
+    className: `bg-white p-3 rounded rounded-top-0 mt-0  ${
+      customDark === "dark-dark" ? `` : ``
+    }`,
     current: currentPage,
     pageSize,
     pageSizeOptions: [5, 10, 25, 50, 100],
@@ -1391,10 +1482,11 @@ const ProjectDetailsTable = ({
                     padding: 0,
                     width: "30px",
                   }}
-                  className={`p- border ${customDark === "dark-dark"
-                    ? `${customDark} text-white`
-                    : "bg-white"
-                    }`}
+                  className={`p- border ${
+                    customDark === "dark-dark"
+                      ? `${customDark} text-white`
+                      : "bg-white"
+                  }`}
                 >
                   <FaFilter size={20} className={`${customDarkText}`} />
                 </Button>
@@ -1407,10 +1499,11 @@ const ProjectDetailsTable = ({
             {selectedRowKeys.length > 1 && getSelectedStatus() !== null && (
               <div className="mt-1 d-flex align-items-center">
                 <span
-                  className={`me-2 ${customDark === "dark-dark"
-                    ? "text-white"
-                    : "custom-theme-dark-text"
-                    } fs-6 fw-bold`}
+                  className={`me-2 ${
+                    customDark === "dark-dark"
+                      ? "text-white"
+                      : "custom-theme-dark-text"
+                  } fs-6 fw-bold`}
                 >
                   {t("updateStatus")}
                 </span>
@@ -1436,7 +1529,7 @@ const ProjectDetailsTable = ({
                       !(
                         row.previousProcessData.thresholdQty != null &&
                         row.previousProcessData.thresholdQty >
-                        row.previousProcessData.interimQuantity
+                          row.previousProcessData.interimQuantity
                       )
                     );
                   });
@@ -1476,7 +1569,9 @@ const ProjectDetailsTable = ({
                   // Check completion requirements if trying to complete
                   if (getSelectedStatus() === 1 && hasFeaturePermission(4)) {
                     const incompleteQuantity = selectedRows.find(
-                      (row) => row.interimQuantity !== 0 && row.interimQuantity !== row.quantity
+                      (row) =>
+                        row.interimQuantity !== 0 &&
+                        row.interimQuantity !== row.quantity
                     );
                     if (incompleteQuantity) {
                       requirements.push(
@@ -1582,8 +1677,9 @@ const ProjectDetailsTable = ({
                 >
                   <PiDotsNineBold
                     size={30}
-                    className={` ${customDark === "dark-dark" ? "text-white" : customDarkText
-                      }`}
+                    className={` ${
+                      customDark === "dark-dark" ? "text-white" : customDarkText
+                    }`}
                   />
                 </Button>
               </Dropdown>
@@ -1596,7 +1692,9 @@ const ProjectDetailsTable = ({
           <Col lg={12} md={12}>
             <Table
               rowClassName={rowClassName}
-              className={`${customDark === "default-dark" ? "thead-default" : ""}
+              className={`${
+                customDark === "default-dark" ? "thead-default" : ""
+              }
             ${customDark === "red-dark" ? "thead-red" : ""}
             ${customDark === "green-dark" ? "thead-green" : ""}
             ${customDark === "blue-dark" ? "thead-blue" : ""}

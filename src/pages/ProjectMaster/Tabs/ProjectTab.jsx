@@ -201,7 +201,7 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
               type: record.typeId,
               numberOfSeries: record.noOfSeries,
               seriesNames: record.seriesName,
-              quantityThreshold: parseInt(record.quantityThreshold)
+              quantityThreshold: record.quantityThreshold
             });
             setIsEditModalVisible(true);
           }}
