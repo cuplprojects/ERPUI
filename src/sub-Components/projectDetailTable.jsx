@@ -153,7 +153,7 @@ const ProjectDetailsTable = ({
           setSubjectData(
             data.filter((item) => item.subject).map((item) => item.subject)
           );
-          setExamDateData(
+          setExamDate(
             data.filter((item) => item.examDate).map((item) => item.examDate)
           );
         }
