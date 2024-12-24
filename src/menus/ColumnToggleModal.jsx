@@ -4,7 +4,7 @@ import themeStore from '../store/themeStore';
 import { useStore } from 'zustand';
 import { useTranslation } from 'react-i18next';
 
-const ColumnToggleModal = ({ show, handleClose, columnVisibility, setColumnVisibility, featureData, hasFeaturePermission }) => {
+const ColumnToggleModal = ({ show, handleClose, columnVisibility, setColumnVisibility, featureData, hasFeaturePermission , processId }) => {
     const themeState = useStore(themeStore);
     const cssClasses = themeState.getCssClasses();
     const { t } = useTranslation();
@@ -40,6 +40,9 @@ const ColumnToggleModal = ({ show, handleClose, columnVisibility, setColumnVisib
         { key: 'Remarks', label: 'remarks' },
         { key: 'Team Assigned', label: 'teamAssigned' },
         { key: 'Paper', label: 'paper' },
+        ...(processId === 8
+            ? [{ key: 'Paper Details', label: 'paperDetails' }]
+            : []),
         { key: 'Course', label: 'course' },
         { key: 'Machine', label: 'machine' },
         { key: 'Zone', label: 'zone' },

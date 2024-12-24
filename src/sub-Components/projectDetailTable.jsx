@@ -613,12 +613,24 @@ const ProjectDetailsTable = ({
           },
         ]
       : []),
-    ...(columnVisibility["Paper"]
+      ...(columnVisibility["Paper"] && processId === 8
+        ? [
+            {
+              title: t("questionPaper"),
+              dataIndex: "paper",
+              width: "20%",
+              align: "center",
+              key: "paper",
+              sorter: (a, b) => a.paper - b.paper,
+            },
+          ]
+        : []),
+      
+    ...(columnVisibility["Paper Details"]
       ? [
           {
-            title: t("questionPaper"),
-
-            dataIndex: "paper",
+            title: t("paperDetails"),
+            dataIndex: "paperDetails",
             width: "20%",
             align: "center",
             key: "paper",
@@ -1725,6 +1737,7 @@ const ProjectDetailsTable = ({
         setColumnVisibility={setColumnVisibility}
         featureData={featureData}
         hasFeaturePermission={hasFeaturePermission}
+        processId={processId}
       />
       <AlarmModal
         show={alarmModalShow}
