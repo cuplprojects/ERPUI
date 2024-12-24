@@ -9,6 +9,8 @@ import { useStore } from 'zustand';
 import SuccessModal from './../menus/addedUserModal.jsx';
 import API from '../CustomHooks/MasterApiHooks/api.jsx';
 import { useTranslation } from 'react-i18next';
+import { useUserData } from '../store/userDataStore.jsx';
+
 
 const AddUsers = () => {
   const { t } = useTranslation();
@@ -36,6 +38,8 @@ const AddUsers = () => {
   const [showModal, setShowModal] = useState(false);
   const [message, setMessage] = useState(false);
   const [roles, setRoles] = useState([]);
+  const userData = useUserData();
+  console.log(userData)
 
   const handleCloseModal = () => {
     setShowModal(false);
@@ -105,7 +109,8 @@ const AddUsers = () => {
       try {
         const response = await API.get('/Roles');
         // Filter out roles with status false
-        const activeRoles = response.data.filter(role => role.status === true);
+        const activeRoles = response.data.filter(role => role.status === true)
+        .filter(role => userData.role && role.roleId > userData.role.roleId);
         setRoles(activeRoles);
       } catch (error) {
         console.error(t('failedToFetchRoles'), error);
@@ -113,7 +118,7 @@ const AddUsers = () => {
     };
 
     fetchRoles();
-  }, [t]);
+  }, [t, userData.role?.roleId]);
 
   // Generate username suggestion based on input
   useEffect(() => {
