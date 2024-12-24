@@ -626,18 +626,28 @@ const ProjectDetailsTable = ({
           ]
         : []),
       
-    ...(columnVisibility["Paper Details"]
-      ? [
-          {
-            title: t("paperDetails"),
-            dataIndex: "paperDetails",
-            width: "20%",
-            align: "center",
-            key: "paper",
-            sorter: (a, b) => a.paper - b.paper,
-          },
-        ]
-      : []),
+        ...(columnVisibility["Paper Details"]
+          ? [
+              {
+                title: t("paperDetails"),
+                dataIndex: 'paperDetails',
+                width: "20%",
+                align: "center",
+                key: "paperDetails",
+                render: (_, record) => (
+                  <div className="d-flex flex-column">
+                    <span className="fw-bold">{`Catch: ${record.catchNumber || 'N/A'}`}</span>
+                    <span className="fw-bold">{`Course: ${record.course || 'N/A'}`}</span>
+                    <span className="fw-bold">{`Paper: ${record.paper || 'N/A'}`}</span>
+                    <span className="fw-bold">{`Exam Date: ${formatDate(record.examDate) || 'N/A'}`}</span>
+                    <span className="fw-bold">{`Exam Time: ${record.examTime || 'N/A'}`}</span>
+                  </div>
+                ),
+                sorter: (a, b) => a.catchNumber.localeCompare(b.catchNumber)
+              }
+            ]
+          : []),
+        
     {
       title: t("status"),
       dataIndex: "status",
