@@ -214,13 +214,16 @@ const ProjectDetailsTable = ({
   });
 
   useEffect(() => {
-    const visibleRows = tableData
+    const visibleRows = filteredData
       .slice((currentPage - 1) * pageSize, currentPage * pageSize)
       .map((row) => row.srNo);
-
+  
     // If all visible rows are selected, mark "Select All" as checked
-    setSelectAll(visibleRows.every((key) => selectedRowKeys.includes(key)));
-  }, [selectedRowKeys, currentPage, pageSize, tableData]);
+    setSelectAll(
+      visibleRows.length > 0 && 
+      visibleRows.every((key) => selectedRowKeys.includes(key))
+    );
+  }, [selectedRowKeys, currentPage, pageSize, filteredData, hideCompleted]);
 
   // Update useEffect to immediately fetch data when lotNo changes
   useEffect(() => {
@@ -360,11 +363,11 @@ const ProjectDetailsTable = ({
           onChange={(e) => {
             const checked = e.target.checked;
             setSelectAll(checked);
-
+    
             if (checked) {
-              // Select only visible rows on the current page
-              const visibleRowKeys = tableData
-                .slice((currentPage - 1) * pageSize, currentPage * pageSize) // Get rows for the current page
+              // Select only visible rows on the current page of filtered data
+              const visibleRowKeys = filteredData
+                .slice((currentPage - 1) * pageSize, currentPage * pageSize)
                 .map((row) => row.srNo);
               setSelectedRowKeys(visibleRowKeys);
             } else {
