@@ -37,6 +37,8 @@ import API from "../CustomHooks/MasterApiHooks/api";
 import { hasPermission } from "../CustomHooks/Services/permissionUtils";
 import { useTranslation } from "react-i18next";
 import Tippy from "@tippyjs/react";
+import InputPages from "../menus/InputPages";
+import { success } from "../CustomHooks/Services/AlertMessageService";
 
 const { Option } = Select;
 
@@ -102,6 +104,11 @@ const ProjectDetailsTable = ({
   const [selectMachineModalData, setSelectMachineModalData] = useState(null);
   const [assignTeamModalData, setAssignTeamModalData] = useState(null);
   const [showOnlyAlerts, setShowOnlyAlerts] = useState(false);
+  // Update pages in qtysheet modal
+  const [inputPagesModalData, setInputPagesModalData] = useState(null);
+  const [inputPagesModalShow, setInputPagesModalShow] = useState(false);
+  const [examDateData, setExamDateData] = useState([]);
+
   const [
     showOnlyCompletedPreviousProcess,
     setShowOnlyCompletedPreviousProcess,
@@ -1087,6 +1094,10 @@ const ProjectDetailsTable = ({
         setAssignTeamModalShow(true);
         setAssignTeamModalData(selectedRows); // Pass array of all selected rows
       }
+      else if (action === "Pages" && hasFeaturePermission(7)) {
+        setInputPagesModalShow(true);
+        setInputPagesModalData(selectedRows);
+      }
     } else {
       alert("Please select at least one row.");
     }
@@ -1336,6 +1347,14 @@ const ProjectDetailsTable = ({
           {t("assignTeam")}
         </Menu.Item>
       )}
+      {hasFeaturePermission(7) && allStatusZero && (
+        <Menu.Item
+          onClick={() => handleDropdownSelect("Pages")}
+          disabled={selectedRowKeys.length === 0}
+        >
+          {t("Pages")}
+        </Menu.Item>
+      )}
     </Menu>
   );
 
@@ -1398,6 +1417,19 @@ const ProjectDetailsTable = ({
       "Failed to assign team. Please try again."
     );
     console.error("Error assigning team:", error);
+  };
+
+
+  const handleInputPagesSuccess = () => {
+    success("Pages updated successfully");
+    setSelectedRowKeys([]);
+    setSelectAll(false);
+    setShowOptions(false);
+  };
+
+  const handleInputPagesError = (error) => {
+    error("Failed to update pages");
+    console.error("Error updating pages:", error);
   };
 
   return (
@@ -1779,6 +1811,19 @@ const ProjectDetailsTable = ({
         processId={processId}
         onSuccess={handleAssignTeamSuccess}
         onError={handleAssignTeamError}
+      />
+
+      <InputPages
+        show={inputPagesModalShow}
+        onClose={() => {
+          setInputPagesModalShow(false);
+          setSelectedRowKeys([]);
+        }}
+        data={inputPagesModalData}
+        processId={processId}
+        fetchTransactions={fetchTransactions}
+        onSuccess={handleInputPagesSuccess}
+        onError={handleInputPagesError}
       />
     </>
   );
