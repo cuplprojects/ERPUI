@@ -5,6 +5,7 @@ import { SortableContainer, SortableElement, SortableHandle } from 'react-sortab
 import { useTranslation } from 'react-i18next';
 import { useStore } from 'zustand';
 import themeStore from '../../../store/themeStore';
+import { success, error as err } from '../../../CustomHooks/Services/AlertMessageService';
 const { Panel } = Collapse;
 const { Option } = Select;
 
@@ -128,7 +129,7 @@ const AddProjectProcess = ({ selectedProject, setIsProcessSubmitted }) => {
         const response = await API.get(`/PaperTypes/${typeId}/RequiredProcesses`);
         setRequiredProcessIds(response.data.map(process => process.id));
       } catch (error) {
-        console.error(t('unableToFetchRequiredProcessesPleaseTryAgainLater'), error);
+        console.err(t('unableToFetchRequiredProcessesPleaseTryAgainLater'), error);
       }
     };
 
@@ -150,7 +151,7 @@ const AddProjectProcess = ({ selectedProject, setIsProcessSubmitted }) => {
           await fetchProjectProcesses(typeId);
         }
       } catch (error) {
-        console.error(t('unableToFetchProjectProcessesPleaseTryAgainLater'), error);
+        console.err(t('unableToFetchProjectProcessesPleaseTryAgainLater'), error);
       } finally {
         setLoading(false);
       }
@@ -162,7 +163,7 @@ const AddProjectProcess = ({ selectedProject, setIsProcessSubmitted }) => {
         const independentOnly = response.data.filter(process => process.processType !== "Dependent");
         setProjectProcesses(calculatedWeightage(independentOnly));
       } catch (error) {
-        console.error(t('unableToFetchProjectProcessesPleaseTryAgainLater'), error);
+        console.err(t('unableToFetchProjectProcessesPleaseTryAgainLater'), error);
       }
     };
 
@@ -171,7 +172,7 @@ const AddProjectProcess = ({ selectedProject, setIsProcessSubmitted }) => {
         const response = await API.get('/Features');
         setFeatures(response.data);
       } catch (error) {
-        console.error(t('unableToFetchProjectProcessesPleaseTryAgainLater'), error);
+        console.err(t('unableToFetchProjectProcessesPleaseTryAgainLater'), error);
       }
     };
 
@@ -190,7 +191,7 @@ const AddProjectProcess = ({ selectedProject, setIsProcessSubmitted }) => {
         setIndependentProcesses(independentOnly);
 
       } catch (error) {
-        console.error(t('unableToFetchProjectProcessesPleaseTryAgainLater'), error);
+        console.err(t('unableToFetchProjectProcessesPleaseTryAgainLater'), error);
       }
     };
 
@@ -201,7 +202,7 @@ const AddProjectProcess = ({ selectedProject, setIsProcessSubmitted }) => {
           setIsQuantitySheetExists(response.data);
         }
       } catch (error) {
-        console.error(t('errorCheckingTransactionStatus'), error);
+        console.err(t('errorCheckingTransactionStatus'), error);
       }
     };
 
@@ -310,12 +311,12 @@ const AddProjectProcess = ({ selectedProject, setIsProcessSubmitted }) => {
 
       await API.post('/ProjectProcess/AddProcessesToProject', data);
 
-      message.success(t('processesUpdatedSuccessfully'));
+      success(t('processesUpdatedSuccessfully'));
       setIsProcessSubmitted(true);
       setRemovedProcessIds([]);
 
     } catch (error) {
-      message.error(t('errorUpdatingProcessesPleaseTryAgain'));
+      err(t('errorUpdatingProcessesPleaseTryAgain'));
       console.error('Submit error:', error);
     } finally {
       setIsSubmitting(false);
@@ -357,9 +358,9 @@ const AddProjectProcess = ({ selectedProject, setIsProcessSubmitted }) => {
           return process;
         });
       });
-      message.success(t('processUpdateSuccess'));
+      success(t('processUpdateSuccess'));
     } catch (error) {
-      message.error(t('errorUpdatingProcessPleaseTryAgain'));
+      err(t('errorUpdatingProcessPleaseTryAgain'));
     } finally {
       setEditingProcessId(null);
       setEditingFeatures([]);
@@ -377,7 +378,7 @@ const AddProjectProcess = ({ selectedProject, setIsProcessSubmitted }) => {
     //   const rangeEndIndex = projectProcesses.findIndex(p => p.id === processWithRange.rangeEnd);
 
     //   if (newIndex <= rangeStartIndex || newIndex >= rangeEndIndex) {
-    //     message.error(`${t('thisProcessMustBePositionedBetween')} ${projectProcesses[rangeStartIndex]?.name} ${t('and')} ${projectProcesses[rangeEndIndex]?.name}`);
+    //     err(`${t('thisProcessMustBePositionedBetween')} ${projectProcesses[rangeStartIndex]?.name} ${t('and')} ${projectProcesses[rangeEndIndex]?.name}`);
     //     return;
     //   }
     // }

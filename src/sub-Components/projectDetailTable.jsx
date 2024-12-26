@@ -1094,7 +1094,7 @@ const ProjectDetailsTable = ({
         setAssignTeamModalShow(true);
         setAssignTeamModalData(selectedRows); // Pass array of all selected rows
       }
-      else if (action === "Pages") {
+      else if (action === "Pages" && hasFeaturePermission(7)) {
         setInputPagesModalShow(true);
         setInputPagesModalData(selectedRows);
       }
@@ -1347,12 +1347,14 @@ const ProjectDetailsTable = ({
           {t("assignTeam")}
         </Menu.Item>
       )}
-      <Menu.Item
-        onClick={() => handleDropdownSelect("Pages")}
-        disabled={selectedRowKeys.length === 0}
-      >
-        {t("Pages")}
-      </Menu.Item>
+      {hasFeaturePermission(7) && allStatusZero && (
+        <Menu.Item
+          onClick={() => handleDropdownSelect("Pages")}
+          disabled={selectedRowKeys.length === 0}
+        >
+          {t("Pages")}
+        </Menu.Item>
+      )}
     </Menu>
   );
 
