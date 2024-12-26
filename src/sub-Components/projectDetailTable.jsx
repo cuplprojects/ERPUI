@@ -37,6 +37,7 @@ import API from "../CustomHooks/MasterApiHooks/api";
 import { hasPermission } from "../CustomHooks/Services/permissionUtils";
 import { useTranslation } from "react-i18next";
 import Tippy from "@tippyjs/react";
+import InputPages from "../menus/InputPages";
 
 const { Option } = Select;
 
@@ -102,6 +103,11 @@ const ProjectDetailsTable = ({
   const [selectMachineModalData, setSelectMachineModalData] = useState(null);
   const [assignTeamModalData, setAssignTeamModalData] = useState(null);
   const [showOnlyAlerts, setShowOnlyAlerts] = useState(false);
+  // Update pages in qtysheet modal
+  const [inputPagesModalData, setInputPagesModalData] = useState(null);
+  const [inputPagesModalShow, setInputPagesModalShow] = useState(false);
+  const [examDateData, setExamDateData] = useState([]);
+
   const [
     showOnlyCompletedPreviousProcess,
     setShowOnlyCompletedPreviousProcess,
@@ -1084,6 +1090,10 @@ const ProjectDetailsTable = ({
         setAssignTeamModalShow(true);
         setAssignTeamModalData(selectedRows); // Pass array of all selected rows
       }
+      else if (action === "Pages") {
+        setInputPagesModalShow(true);
+        setInputPagesModalData(selectedRows);
+      }
     } else {
       alert("Please select at least one row.");
     }
@@ -1333,6 +1343,12 @@ const ProjectDetailsTable = ({
           {t("assignTeam")}
         </Menu.Item>
       )}
+      <Menu.Item
+        onClick={() => handleDropdownSelect("Pages")}
+        disabled={selectedRowKeys.length === 0}
+      >
+        {t("Pages")}
+      </Menu.Item>
     </Menu>
   );
 
@@ -1776,6 +1792,17 @@ const ProjectDetailsTable = ({
         processId={processId}
         onSuccess={handleAssignTeamSuccess}
         onError={handleAssignTeamError}
+      />
+
+      <InputPages
+        show={inputPagesModalShow}
+        handleClose={() => {
+          setInputPagesModalShow(false);
+          setSelectedRowKeys([]);
+        }}
+        data={inputPagesModalData}
+        processId={processId}
+        fetchTransactions={fetchTransactions}
       />
     </>
   );
