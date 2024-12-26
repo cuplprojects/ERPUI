@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Form, Row, Col, Button } from 'react-bootstrap';
 import API from '../../../../CustomHooks/MasterApiHooks/api';
 import { notification } from 'antd';
+import Select from 'react-select'; // Import react-select
 
-const CatchTeamAssignment = ({ teams, data, handleClose, processId , fetchTransactions}) => {
+const CatchTeamAssignment = ({ teams, data, handleClose, processId, fetchTransactions }) => {
   const [selectedTeam, setSelectedTeam] = useState('');
   const [usersInTeam, setUsersInTeam] = useState([]);
   const [userOptions, setUserOptions] = useState([]); // List of users to be added to the team
-  const [selectedUserToAdd, setSelectedUserToAdd] = useState(''); // User selected to be added
+  const [selectedUserToAdd, setSelectedUserToAdd] = useState(null); // User selected to be added
   
   useEffect(() => {
     if (data?.[0]?.teamId) {
@@ -37,14 +38,13 @@ const CatchTeamAssignment = ({ teams, data, handleClose, processId , fetchTransa
     if (team) {
       setUsersInTeam(team.users); // Update users when team changes
     }
- // Notify parent component about the selected team
   };
 
   const handleRemoveUser = (userId) => {
     setUsersInTeam(usersInTeam.filter(user => user.userId !== userId));
   };
 
-  const handleAddUser = async () => {
+  const handleAddUser = () => {
     if (!selectedUserToAdd) {
       notification.warning({
         message: 'Warning',
@@ -55,21 +55,22 @@ const CatchTeamAssignment = ({ teams, data, handleClose, processId , fetchTransa
       return;
     }
 
-    // Find the user object based on the selected user ID
-    const userToAdd = userOptions.find((user) => user.userId === parseInt(selectedUserToAdd));
+    const userToAdd = userOptions.find((user) => user.userId === selectedUserToAdd);
 
     if (userToAdd) {
       setUsersInTeam([...usersInTeam, userToAdd]); // Add the new user to the team
-      setSelectedUserToAdd(''); // Reset the user selection
+      setSelectedUserToAdd(null); // Reset the user selection
     }
   };
 
   const filteredUserOptions = userOptions.filter(user => 
     !usersInTeam.some(teamUser => teamUser.userId === user.userId)
-  );
+  ).map(user => ({
+    value: user.userId,
+    label: user.fullName
+  }));
 
   const handleConfirm = async () => {
-    // Validate team selection and users
     if (!selectedTeam) {
       notification.warning({
         message: 'Warning',
@@ -95,16 +96,14 @@ const CatchTeamAssignment = ({ teams, data, handleClose, processId , fetchTransa
         let existingTransactionData;
         
         if (item?.transactionId) {
-          // Fetch existing transaction data if available
           const response = await API.get(`/Transactions/${item.transactionId}`);
           existingTransactionData = response.data;
         }
-  
-        // Combine users from the selected team and newly added users
+
         const allUserIds = [
-          ...usersInTeam.map(user => user.userId),  // User IDs from selected team
+          ...usersInTeam.map(user => user.userId),
         ];
-  
+
         const postData = {
           transactionId: item?.transactionId || 0,
           interimQuantity: existingTransactionData ? existingTransactionData.interimQuantity : 0,
@@ -121,7 +120,6 @@ const CatchTeamAssignment = ({ teams, data, handleClose, processId , fetchTransa
           voiceRecording: existingTransactionData ? existingTransactionData.voiceRecording : "",
         };
 
-        // Always use POST
         await API.post('/Transactions', postData);
       }
       
@@ -148,7 +146,6 @@ const CatchTeamAssignment = ({ teams, data, handleClose, processId , fetchTransa
     <div>
       <Row className="mb-3">
         <Col md={12}>
-          {/* Display all catch numbers by iterating through `data` */}
           <h5>Catch Numbers:</h5>
           {data?.length > 0 ? (
             <ul>
@@ -161,24 +158,23 @@ const CatchTeamAssignment = ({ teams, data, handleClose, processId , fetchTransa
           )}
         </Col>
       </Row>
+      
       <Row>
-  <Col md={6}>
-    <Form.Group className="mb-3">
-      <Form.Label>Select Team</Form.Label>
-      <Form.Select value={selectedTeam} onChange={handleTeamChange}>
-        <option value="">Select a team...</option>
-        {teams.map((team) => (
-          <option key={team.teamId} value={team.teamId}>
-            {team.teamName} {/* Display team name */}
-            {/* Optionally, display users' names if needed */}
-            {team.users && team.users.length > 0 ? ` (${team.users.map(user => user.userName).join(', ')})` : ""}
-          </option>
-        ))}
-      </Form.Select>
-    </Form.Group>
-  </Col>
-</Row>
-
+        <Col md={6}>
+          <Form.Group className="mb-3">
+            <Form.Label>Select Team</Form.Label>
+            <Form.Select value={selectedTeam} onChange={handleTeamChange}>
+              <option value="">Select a team...</option>
+              {teams.map((team) => (
+                <option key={team.teamId} value={team.teamId}>
+                  {team.teamName} 
+                  {team.users && team.users.length > 0 ? ` (${team.users.map(user => user.fullName).join(', ')})` : ""}
+                </option>
+              ))}
+            </Form.Select>
+          </Form.Group>
+        </Col>
+      </Row>
 
       {selectedTeam && (
         <>
@@ -188,7 +184,7 @@ const CatchTeamAssignment = ({ teams, data, handleClose, processId , fetchTransa
               <ul>
                 {usersInTeam.map((user) => (
                   <li key={user.userId}>
-                    {user.userName}
+                    {user.fullName}
                     <Button
                       variant="danger"
                       size="sm"
@@ -203,22 +199,17 @@ const CatchTeamAssignment = ({ teams, data, handleClose, processId , fetchTransa
             </Col>
           </Row>
 
-          {/* Dropdown for adding new user */}
           <Row className="mb-3">
             <Col md={6}>
               <Form.Group className="mb-3">
                 <Form.Label>Select User to Add</Form.Label>
-                <Form.Select
-                  value={selectedUserToAdd}
-                  onChange={(e) => setSelectedUserToAdd(e.target.value)}
-                >
-                  <option value="">Select a user...</option>
-                  {filteredUserOptions.map((user) => (
-                    <option key={user.userId} value={user.userId}>
-                      {user.userName}
-                    </option>
-                  ))}
-                </Form.Select>
+                <Select
+                  value={selectedUserToAdd ? { value: selectedUserToAdd, label: userOptions.find(user => user.userId === selectedUserToAdd)?.fullName } : null}
+                  onChange={(selectedOption) => setSelectedUserToAdd(selectedOption?.value || null)}
+                  options={filteredUserOptions}
+                  placeholder="Select a user..."
+                  isClearable
+                />
               </Form.Group>
               <Button variant="primary" onClick={handleAddUser}>
                 Add User
