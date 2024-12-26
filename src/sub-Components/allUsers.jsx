@@ -15,6 +15,7 @@ import { BsFunnelFill } from "react-icons/bs";
 import { MdDeleteForever } from "react-icons/md";
 import { useTranslation } from 'react-i18next';
 import { success, error } from '../CustomHooks/Services/AlertMessageService';
+import { useUserData } from '../store/userDataStore';
 const BaseUrl = import.meta.env.VITE_API_BASE_URL;
 
 const { Option } = Select;
@@ -25,6 +26,9 @@ const AllUsers = () => {
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
   const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
+  const userData = useUserData()
+  const userRole = userData?.role
+  console.log(userRole.priorityOrder)
 
   const [users, setUsers] = useState([]);
   const [filterType, setFilterType] = useState('none');
@@ -116,6 +120,15 @@ const AllUsers = () => {
     setCurrentUserData({ ...record });
   }, []);
 
+
+
+  const isEditDisabled = (record) =>{
+    const roledata = roles.find(r => r.roleId === record.roleId)
+    const res = userRole?.priorityOrder <= roledata?.priorityOrder
+    console.log(res)
+    return 
+  }
+
   const handleSave = useCallback(async (record) => {
     try {
       const updatedUser = {
@@ -133,9 +146,9 @@ const AllUsers = () => {
       };
 
       const response = await API.put(`/User/edit/${record.userId}`, updatedUser);
-      
+
       if (response.status === 200) {
-        const newData = users.map(item => 
+        const newData = users.map(item =>
           item.userId === record.userId ? { ...item, ...updatedUser } : item
         );
         setUsers(newData);
@@ -284,10 +297,11 @@ const AllUsers = () => {
               icon={<EditOutlined />}
               onClick={() => handleEdit(record)}
               type="primary"
-
               className={`${customDark}  border-1 ${customLightText}  ${customDarkBorder} d-flex align-items-center gap-1`}
+              disabled={isEditDisabled(record)}
 
             >
+              {console.log(isEditDisabled(record))}
               <span className="ms-1">{t('edit')}</span>
             </Button>
           </Space>
@@ -343,8 +357,8 @@ const AllUsers = () => {
               </Button>
             </Dropdown>
             {filterType !== 'none' && (
-              <Button 
-                icon={<AiFillCloseSquare size={25} className={`${customBtn} rounded`}/>} 
+              <Button
+                icon={<AiFillCloseSquare size={25} className={`${customBtn} rounded`} />}
                 onClick={clearFilters}
                 className={`ms-2`}
               />
@@ -389,7 +403,7 @@ const AllUsers = () => {
           pageSize: pageSize,  // Set the page size
           total: filteredData.length,  // Total number of items for pagination
           showSizeChanger: true,
-          pageSizeOptions: ['5','10', '20', '30'],
+          pageSizeOptions: ['5', '10', '20', '30'],
           showTotal: (total, range) => `${range[0]}-${range[1]} ${t('of')} ${total} ${t('items')}`,
           onChange: handlePaginationChange, // Handle page change
           onShowSizeChange: handlePageSizeChange, // Handle page size change
@@ -527,14 +541,14 @@ const AllUsers = () => {
           )}
         </Modal.Body>
         <Modal.Footer className={`${customDark} ${customLightText}`}>
-          <Button 
+          <Button
             className={`${customDark === "dark-dark" ? `${customMid} text-white` : `${customLight} border-1 ${customDarkText}`} ${customDarkBorder} d-flex align-items-center gap-1`}
             onClick={() => setDeleteModalOpen(false)}
           >
             {t('cancel')}
           </Button>
-          <Button 
-             className={`${customDark === "dark-dark" ? `${customMid} text-white` : `${customLight} border-1 ${customDarkText}`} ${customDarkBorder} d-flex align-items-center gap-1`}
+          <Button
+            className={`${customDark === "dark-dark" ? `${customMid} text-white` : `${customLight} border-1 ${customDarkText}`} ${customDarkBorder} d-flex align-items-center gap-1`}
             onClick={handleDelete}
           >
             {t('delete')}

@@ -40,7 +40,7 @@ const ProjectUserAllocation = ({ selectedProject, activeKey }) => {
   const fetchUsers = async () => {
     try {
       const response = await API.get("/User");
-      const filteredUsers = response.data.filter(user => user.roleId === 5 || user.roleId === 1);
+      const filteredUsers = response.data.filter(user => user.roleId === 5 || user.roleId === 1 || user.roleId === 4 || user.roleId === 3);
       setUsers(filteredUsers);
     } catch (error) {
       console.error(t("failedToFetchUsers"), error);
