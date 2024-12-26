@@ -70,7 +70,7 @@ const InputPages = ({ show, onClose, data, processId, fetchTransactions, onSucce
 
         try {
             console.log('Formatted Data:', formattedData); // Log the formatted data before sending
-            const res = await API.post(`/QuantitySheet/UpdatePages1`, formattedData);
+            const res = await API.post(`/QuantitySheet/UpdatePages`, formattedData);
             if (res?.status === 200) {
                 onSuccess()
                 await fetchTransactions(processId, formattedData);
