@@ -216,9 +216,11 @@ const QtySheetUpload = () => {
       // Convert Excel date to proper date format
       const examDate = item.ExamDate ? convertExcelDate(item.ExamDate) : null;
       const lotNo = String(item.LotNo || "").trim();
+      const catchNo = String(item.CatchNo || "").trim();
 
       // Debugging lotNo value before sending it
       console.log(`lotNo before payload:`, lotNo, `Type:`, typeof lotNo);
+      console.log(`catchNo before payload:`, catchNo, `Type:`, typeof catchNo);
       return {
         catchNo: item.CatchNo || "",
         paper: item.Paper || "",
@@ -271,30 +273,44 @@ const QtySheetUpload = () => {
         const workbook = XLSX.read(data, { type: "array" });
         const firstSheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[firstSheetName];
+  
+        // Convert the sheet to JSON with the first row as headers
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
+  
+        // Ensure that jsonData[0] is an array (header row)
+        if (!Array.isArray(jsonData[0])) {
+          console.error('The first row (headers) is not an array.', jsonData[0]);
+          resolve([]);  // Resolve with an empty array if the headers are malformed
+          return;
+        }
+  
         const rows = jsonData.slice(1); // Skip the header row
         const mappedData = rows.map((row) => {
           const rowData = {};
-
+  
           // Iterate over each field in fieldMappings
           for (let property in fieldMappings) {
-            const headers = fieldMappings[property]; // Array of headers for this field
-
+            let headers = fieldMappings[property]; // Array of headers for this field
+  
+            // Ensure headers is an array
+            if (!Array.isArray(headers)) {
+              headers = [headers]; // Convert to array if it's a single value
+            }
+  
             // If there are multiple headers for the property, create a string value
             if (headers.length > 1) {
               const valueString = headers
                 .map((header) => {
                   const index = jsonData[0].indexOf(header); // Find the index of the header
                   if (index !== -1) {
-                    const value = row[index] || "";  // Get the value for that header
-                    return `${header}: ${value}`;  // Format as "header: value"
+                    const value = row[index] || ""; // Get the value for that header
+                    return `${header}: ${value}`; // Format as "header: value"
                   }
                   return null;
                 })
                 .filter(Boolean) // Remove any null values
                 .join(", "); // Join all header-value pairs with commas
-
+  
               // Store the formatted string (e.g., "E10: 2, E20: 4")
               rowData[property] = valueString;
             } else {
@@ -302,38 +318,36 @@ const QtySheetUpload = () => {
               const header = headers[0]; // Only one header for this property
               const index = jsonData[0].indexOf(header);
               if (index !== -1) {
-                let value = row[index] || "";  // Get the value for that header
-
-                // Explicitly convert 'lotNo' field to string
-                if (property === "LotNo") {
-                  value = String(value).trim();  // Ensure 'lotNo' is treated as a string
-                  console.log(`lotNo value before sending:`, value, `Type:`, typeof value);
+                let value = row[index] || ""; // Get the value for that header
+  
+                // Explicitly convert 'LotNo' and 'CatchNo' to strings
+                if (property === "LotNo" || property === "CatchNo") {
+                  value = String(value).trim(); // Ensure 'LotNo' and 'CatchNo' are treated as strings
+                  console.log(`${property} value before sending:`, value, `Type:`, typeof value);
                 }
-
-                // Log the value of lotNo before returning it
-
-
+  
                 // Add the value directly to the rowData
                 rowData[property] = value || ""; // Default to empty string if no value found
               }
             }
           }
-
+  
           // Add additional fields like projectId or percentageCatch
           rowData["projectId"] = projectId;
           rowData["percentageCatch"] = "0";
-
-          // If the rowData has only single field data and no complex mappings, exclude that property.
-          // In other words, only return rowData if it contains multiple fields after processing.
-          return rowData;
+  
+          return rowData; // Return the mapped row data
         });
-
-        setMappeddata(mappedData);  // Set the processed data
-        resolve(mappedData);
+  
+        setMappeddata(mappedData); // Set the processed data
+        resolve(mappedData); // Resolve with the mapped data
       };
-      reader.readAsArrayBuffer(selectedFile); // Read the file
+  
+      // Read the file as an ArrayBuffer
+      reader.readAsArrayBuffer(selectedFile);
     });
   };
+  
 
 
 
@@ -806,7 +820,7 @@ const QtySheetUpload = () => {
                     <td>{property} </td>
                     <td>
                       <Select
-                        mode="multiple"
+                        mode={property === "InnerEnvelope" ? "multiple" : "default"}
                         allowClear
                         value={fieldMappings[property]}
                         onChange={(value) =>
