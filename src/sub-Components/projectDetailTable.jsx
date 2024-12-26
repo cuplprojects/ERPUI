@@ -38,6 +38,7 @@ import { hasPermission } from "../CustomHooks/Services/permissionUtils";
 import { useTranslation } from "react-i18next";
 import Tippy from "@tippyjs/react";
 import InputPages from "../menus/InputPages";
+import { success } from "../CustomHooks/Services/AlertMessageService";
 
 const { Option } = Select;
 
@@ -1416,6 +1417,19 @@ const ProjectDetailsTable = ({
     console.error("Error assigning team:", error);
   };
 
+
+  const handleInputPagesSuccess = () => {
+    success("Pages updated successfully");
+    setSelectedRowKeys([]);
+    setSelectAll(false);
+    setShowOptions(false);
+  };
+
+  const handleInputPagesError = (error) => {
+    error("Failed to update pages");
+    console.error("Error updating pages:", error);
+  };
+
   return (
     <>
       <div className="">
@@ -1799,13 +1813,15 @@ const ProjectDetailsTable = ({
 
       <InputPages
         show={inputPagesModalShow}
-        handleClose={() => {
+        onClose={() => {
           setInputPagesModalShow(false);
           setSelectedRowKeys([]);
         }}
         data={inputPagesModalData}
         processId={processId}
         fetchTransactions={fetchTransactions}
+        onSuccess={handleInputPagesSuccess}
+        onError={handleInputPagesError}
       />
     </>
   );
