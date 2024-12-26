@@ -44,8 +44,8 @@
 //           rangeEnd: process.rangeEnd
 //         }));
 //       setProjectProcesses(mappedProcesses);
-//     } catch (error) {
-//       console.error("Error fetching project processes:", error);
+//     } catch (err) {
+//       console.error("Error fetching project processes:", err);
 //     }
 //   };
 
@@ -54,8 +54,8 @@
 //       const { processes } = await getProcessPercentages(projectId);
 //       const filteredProcesses = processes.filter(process => process.processId !== 14);
 //       setProcessPercentages(filteredProcesses);
-//     } catch (error) {
-//       console.error("Error checking process status:", error);
+//     } catch (err) {
+//       console.error("Error checking process status:", err);
 //       setPreviousProcessStatus(false);
 //     }
 //   };
@@ -104,7 +104,7 @@
 //     setDispatchModalVisible(false);
 //     if (success) {
 //       await fetchDispatchData();
-//       message.success(t("dispatchCreatedSuccess"));
+//       success(t("dispatchCreatedSuccess"));
 //     }
 //   };
 
@@ -115,7 +115,7 @@
 //     });
 
 //     if (!allProcessesComplete) {
-//       message.error(t("cannotCompleteDispatchAllProcessesIncomplete"));
+//       error(t("cannotCompleteDispatchAllProcessesIncomplete"));
 //       return;
 //     }
 
@@ -170,11 +170,11 @@
 //         completedAt: new Date(new Date().getTime() + (5.5 * 60 * 60 * 1000)).toISOString(),
 //         updatedAt: new Date(new Date().getTime() + (5.5 * 60 * 60 * 1000)).toISOString()
 //       });
-//       message.success(t("statusUpdateSuccess"));
+//       success(t("statusUpdateSuccess"));
 //       fetchDispatchData();
 //     } catch (error) {
 //       console.error("Error updating status:", error);
-//       message.error(t("statusUpdateFailed"));
+//       error(t("statusUpdateFailed"));
 //     }
 //   };
 
@@ -344,6 +344,7 @@ import { useTranslation } from 'react-i18next';
 import { getProcessPercentages } from "../../CustomHooks/ApiServices/transacationService";
 import { FaInfoCircle } from 'react-icons/fa';
 import API from "../../CustomHooks/MasterApiHooks/api";
+import { error, success } from "../../CustomHooks/Services/AlertMessageService";
 
 const DispatchPage = ({ projectId, processId, lotNo, fetchTransactions , projectName}) => {
   const { t } = useTranslation();
@@ -376,8 +377,8 @@ const DispatchPage = ({ projectId, processId, lotNo, fetchTransactions , project
           rangeEnd: process.rangeEnd
         }));
       setProjectProcesses(mappedProcesses);
-    } catch (error) {
-      console.error("Error fetching project processes:", error);
+    } catch (err) {
+      console.error("Error fetching project processes:", err);
     }
   };
 
@@ -386,8 +387,8 @@ const DispatchPage = ({ projectId, processId, lotNo, fetchTransactions , project
       const { processes } = await getProcessPercentages(projectId);
       const filteredProcesses = processes.filter(process => process.processId !== 14);
       setProcessPercentages(filteredProcesses);
-    } catch (error) {
-      console.error("Error checking process status:", error);
+    } catch (err) {
+      console.error("Error checking process status:", err);
       setPreviousProcessStatus(false);
     }
   };
@@ -410,8 +411,8 @@ const DispatchPage = ({ projectId, processId, lotNo, fetchTransactions , project
         }).sort((a, b) => a.sequence - b.sequence)
       }));
       setDispatchData(mappedDispatchData);
-    } catch (error) {
-      console.error("Error fetching dispatch data:", error);
+    } catch (err) {
+      console.error("Error fetching dispatch data:", err);
     }
   };
 
@@ -432,11 +433,11 @@ const DispatchPage = ({ projectId, processId, lotNo, fetchTransactions , project
     setDispatchModalVisible(true);
   };
 
-  const handleCloseModal = async (success = false) => {
+  const handleCloseModal = async (successs = false) => {
     setDispatchModalVisible(false);
-    if (success) {
+    if (successs) {
       await fetchDispatchData();
-      message.success(t("dispatchCreatedSuccess"));
+      success(t("dispatchCreatedSuccess"));
     }
   };
 
@@ -447,7 +448,7 @@ const DispatchPage = ({ projectId, processId, lotNo, fetchTransactions , project
     });
 
     if (!allProcessesComplete) {
-      message.error(t("cannotCompleteDispatchAllProcessesIncomplete"));
+      error(t("cannotCompleteDispatchAllProcessesIncomplete"));
       return;
     }
 
@@ -489,11 +490,11 @@ const DispatchPage = ({ projectId, processId, lotNo, fetchTransactions , project
         completedAt: new Date(new Date().getTime() + (5.5 * 60 * 60 * 1000)).toISOString(),
         updatedAt: new Date(new Date().getTime() + (5.5 * 60 * 60 * 1000)).toISOString()
       });
-      message.success(t("statusUpdateSuccess"));
+      success(t("statusUpdateSuccess"));
       fetchDispatchData();
-    } catch (error) {
-      console.error("Error updating status:", error);
-      message.error(t("statusUpdateFailed"));
+    } catch (err) {
+      console.error("Error updating status:", err);
+      error(t("statusUpdateFailed"));
     }
   };
 
