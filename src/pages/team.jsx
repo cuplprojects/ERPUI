@@ -433,6 +433,12 @@ const Team = () => {
                 placeholder={t("selectTeamMembers")}
                 allowClear
                 size="large"
+                showSearch
+                filterOption={(input, option) => {
+                  // Filter options based on search input
+                  const name = `${option.children}`.toLowerCase();
+                  return name.includes(input.toLowerCase());
+                }}
               >
                 {users.map((user) => (
                   <Option key={user.userId} value={user.userId}>

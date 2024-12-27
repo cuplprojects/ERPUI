@@ -37,6 +37,8 @@ import API from "../CustomHooks/MasterApiHooks/api";
 import { hasPermission } from "../CustomHooks/Services/permissionUtils";
 import { useTranslation } from "react-i18next";
 import Tippy from "@tippyjs/react";
+import InputPages from "../menus/InputPages";
+import { success } from "../CustomHooks/Services/AlertMessageService";
 
 const { Option } = Select;
 
@@ -102,6 +104,11 @@ const ProjectDetailsTable = ({
   const [selectMachineModalData, setSelectMachineModalData] = useState(null);
   const [assignTeamModalData, setAssignTeamModalData] = useState(null);
   const [showOnlyAlerts, setShowOnlyAlerts] = useState(false);
+  // Update pages in qtysheet modal
+  const [inputPagesModalData, setInputPagesModalData] = useState(null);
+  const [inputPagesModalShow, setInputPagesModalShow] = useState(false);
+  const [examDateData, setExamDateData] = useState([]);
+
   const [
     showOnlyCompletedPreviousProcess,
     setShowOnlyCompletedPreviousProcess,
@@ -153,7 +160,7 @@ const ProjectDetailsTable = ({
           setSubjectData(
             data.filter((item) => item.subject).map((item) => item.subject)
           );
-          setExamDateData(
+          setExamDate(
             data.filter((item) => item.examDate).map((item) => item.examDate)
           );
         }
@@ -214,13 +221,16 @@ const ProjectDetailsTable = ({
   });
 
   useEffect(() => {
-    const visibleRows = tableData
+    const visibleRows = filteredData
       .slice((currentPage - 1) * pageSize, currentPage * pageSize)
       .map((row) => row.srNo);
-
+  
     // If all visible rows are selected, mark "Select All" as checked
-    setSelectAll(visibleRows.every((key) => selectedRowKeys.includes(key)));
-  }, [selectedRowKeys, currentPage, pageSize, tableData]);
+    setSelectAll(
+      visibleRows.length > 0 && 
+      visibleRows.every((key) => selectedRowKeys.includes(key))
+    );
+  }, [selectedRowKeys, currentPage, pageSize, filteredData, hideCompleted]);
 
   // Update useEffect to immediately fetch data when lotNo changes
   useEffect(() => {
@@ -360,11 +370,11 @@ const ProjectDetailsTable = ({
           onChange={(e) => {
             const checked = e.target.checked;
             setSelectAll(checked);
-
+    
             if (checked) {
-              // Select only visible rows on the current page
-              const visibleRowKeys = tableData
-                .slice((currentPage - 1) * pageSize, currentPage * pageSize) // Get rows for the current page
+              // Select only visible rows on the current page of filtered data
+              const visibleRowKeys = filteredData
+                .slice((currentPage - 1) * pageSize, currentPage * pageSize)
                 .map((row) => row.srNo);
               setSelectedRowKeys(visibleRowKeys);
             } else {
@@ -1106,6 +1116,10 @@ const ProjectDetailsTable = ({
         setAssignTeamModalShow(true);
         setAssignTeamModalData(selectedRows); // Pass array of all selected rows
       }
+      else if (action === "Pages" && hasFeaturePermission(7)) {
+        setInputPagesModalShow(true);
+        setInputPagesModalData(selectedRows);
+      }
     } else {
       alert("Please select at least one row.");
     }
@@ -1355,6 +1369,14 @@ const ProjectDetailsTable = ({
           {t("assignTeam")}
         </Menu.Item>
       )}
+      {hasFeaturePermission(7) && allStatusZero && (
+        <Menu.Item
+          onClick={() => handleDropdownSelect("Pages")}
+          disabled={selectedRowKeys.length === 0}
+        >
+          {t("Pages")}
+        </Menu.Item>
+      )}
     </Menu>
   );
 
@@ -1417,6 +1439,19 @@ const ProjectDetailsTable = ({
       "Failed to assign team. Please try again."
     );
     console.error("Error assigning team:", error);
+  };
+
+
+  const handleInputPagesSuccess = () => {
+    success("Pages updated successfully");
+    setSelectedRowKeys([]);
+    setSelectAll(false);
+    setShowOptions(false);
+  };
+
+  const handleInputPagesError = (error) => {
+    error("Failed to update pages");
+    console.error("Error updating pages:", error);
   };
 
   return (
@@ -1799,6 +1834,19 @@ const ProjectDetailsTable = ({
         processId={processId}
         onSuccess={handleAssignTeamSuccess}
         onError={handleAssignTeamError}
+      />
+
+      <InputPages
+        show={inputPagesModalShow}
+        onClose={() => {
+          setInputPagesModalShow(false);
+          setSelectedRowKeys([]);
+        }}
+        data={inputPagesModalData}
+        processId={processId}
+        fetchTransactions={fetchTransactions}
+        onSuccess={handleInputPagesSuccess}
+        onError={handleInputPagesError}
       />
     </>
   );
