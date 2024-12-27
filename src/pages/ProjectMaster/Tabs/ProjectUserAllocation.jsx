@@ -4,6 +4,7 @@ import API from '../../../CustomHooks/MasterApiHooks/api';
 import { useTranslation } from 'react-i18next';
 import { useStore } from 'zustand';
 import themeStore from './../../../store/themeStore';
+import { success, error as err } from '../../../CustomHooks/Services/AlertMessageService';
 // import { useTranslation } from 'react-i18next';
 
 const { Option } = Select;
@@ -105,11 +106,11 @@ const ProjectUserAllocation = ({ selectedProject, activeKey }) => {
       }, {});
 
       await API.post(`/ProjectProcess/UpdateProcessUsers/${selectedProject}`, userAssignments);
-      message.success(t("usersAssignedSuccessfully"));
+      success(t("usersAssignedSuccessfully"));
       fetchProcessesWithUsers(selectedProject); // Refresh the process list
     } catch (error) {
       console.error("Failed to assign users", error);
-      message.error(t("failedToAssignUsers"));
+      err(t("failedToAssignUsers"));
     }
   };
 

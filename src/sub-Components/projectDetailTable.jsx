@@ -37,6 +37,8 @@ import API from "../CustomHooks/MasterApiHooks/api";
 import { hasPermission } from "../CustomHooks/Services/permissionUtils";
 import { useTranslation } from "react-i18next";
 import Tippy from "@tippyjs/react";
+import InputPages from "../menus/InputPages";
+import { success } from "../CustomHooks/Services/AlertMessageService";
 
 const { Option } = Select;
 
@@ -102,6 +104,11 @@ const ProjectDetailsTable = ({
   const [selectMachineModalData, setSelectMachineModalData] = useState(null);
   const [assignTeamModalData, setAssignTeamModalData] = useState(null);
   const [showOnlyAlerts, setShowOnlyAlerts] = useState(false);
+  // Update pages in qtysheet modal
+  const [inputPagesModalData, setInputPagesModalData] = useState(null);
+  const [inputPagesModalShow, setInputPagesModalShow] = useState(false);
+  const [examDateData, setExamDateData] = useState([]);
+
   const [
     showOnlyCompletedPreviousProcess,
     setShowOnlyCompletedPreviousProcess,
@@ -616,19 +623,41 @@ const ProjectDetailsTable = ({
           },
         ]
       : []),
-    ...(columnVisibility["Paper"]
-      ? [
-          {
-            title: t("questionPaper"),
-
-            dataIndex: "paper",
-            width: "20%",
-            align: "center",
-            key: "paper",
-            sorter: (a, b) => a.paper - b.paper,
-          },
-        ]
-      : []),
+      ...(columnVisibility["Paper"] && processId === 8
+        ? [
+            {
+              title: t("questionPaper"),
+              dataIndex: "paper",
+              width: "20%",
+              align: "center",
+              key: "paper",
+              sorter: (a, b) => a.paper - b.paper,
+            },
+          ]
+        : []),
+      
+        ...(columnVisibility["Paper Details"]
+          ? [
+              {
+                title: t("paperDetails"),
+                dataIndex: 'paperDetails',
+                width: "20%",
+                align: "center",
+                key: "paperDetails",
+                render: (_, record) => (
+                  <div className="d-flex flex-column">
+                    <span className="fw-bold">{`Catch: ${record.catchNumber || 'N/A'}`}</span>
+                    <span className="fw-bold">{`Course: ${record.course || 'N/A'}`}</span>
+                    <span className="fw-bold">{`Paper: ${record.paper || 'N/A'}`}</span>
+                    <span className="fw-bold">{`Exam Date: ${formatDate(record.examDate) || 'N/A'}`}</span>
+                    <span className="fw-bold">{`Exam Time: ${record.examTime || 'N/A'}`}</span>
+                  </div>
+                ),
+                sorter: (a, b) => a.catchNumber.localeCompare(b.catchNumber)
+              }
+            ]
+          : []),
+        
     {
       title: t("status"),
       dataIndex: "status",
@@ -1087,6 +1116,10 @@ const ProjectDetailsTable = ({
         setAssignTeamModalShow(true);
         setAssignTeamModalData(selectedRows); // Pass array of all selected rows
       }
+      else if (action === "Pages" && hasFeaturePermission(7)) {
+        setInputPagesModalShow(true);
+        setInputPagesModalData(selectedRows);
+      }
     } else {
       alert("Please select at least one row.");
     }
@@ -1336,6 +1369,14 @@ const ProjectDetailsTable = ({
           {t("assignTeam")}
         </Menu.Item>
       )}
+      {hasFeaturePermission(7) && allStatusZero && (
+        <Menu.Item
+          onClick={() => handleDropdownSelect("Pages")}
+          disabled={selectedRowKeys.length === 0}
+        >
+          {t("Pages")}
+        </Menu.Item>
+      )}
     </Menu>
   );
 
@@ -1398,6 +1439,19 @@ const ProjectDetailsTable = ({
       "Failed to assign team. Please try again."
     );
     console.error("Error assigning team:", error);
+  };
+
+
+  const handleInputPagesSuccess = () => {
+    success("Pages updated successfully");
+    setSelectedRowKeys([]);
+    setSelectAll(false);
+    setShowOptions(false);
+  };
+
+  const handleInputPagesError = (error) => {
+    error("Failed to update pages");
+    console.error("Error updating pages:", error);
   };
 
   return (
@@ -1728,6 +1782,7 @@ const ProjectDetailsTable = ({
         setColumnVisibility={setColumnVisibility}
         featureData={featureData}
         hasFeaturePermission={hasFeaturePermission}
+        processId={processId}
       />
       <AlarmModal
         show={alarmModalShow}
@@ -1779,6 +1834,19 @@ const ProjectDetailsTable = ({
         processId={processId}
         onSuccess={handleAssignTeamSuccess}
         onError={handleAssignTeamError}
+      />
+
+      <InputPages
+        show={inputPagesModalShow}
+        onClose={() => {
+          setInputPagesModalShow(false);
+          setSelectedRowKeys([]);
+        }}
+        data={inputPagesModalData}
+        processId={processId}
+        fetchTransactions={fetchTransactions}
+        onSuccess={handleInputPagesSuccess}
+        onError={handleInputPagesError}
       />
     </>
   );
