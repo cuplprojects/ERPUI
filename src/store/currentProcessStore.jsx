@@ -10,6 +10,13 @@ const useCurrentProcessStore = create((set, get) => ({
     setProcess: (processId, name) => {
       set({ processId, processName: name });
       localStorage.setItem(CURRENT_PROCESS_KEY, JSON.stringify({ processId, processName: name }));
+      
+      // Handle Paper Details column visibility
+      const columnVisibility = JSON.parse(localStorage.getItem('columnVisibility') || '{}');
+      if (processId !== 8) {
+        columnVisibility['Paper Details'] = false;
+        localStorage.setItem('columnVisibility', JSON.stringify(columnVisibility));
+      }
     },
 
     clearProcess: () => {
