@@ -649,9 +649,42 @@ const ProjectDetailsTable = ({
             align: "center",
             key: "envelopes",
             sorter: (a, b) => a.envelopes - b.envelopes,
+            children: [
+              {
+                title: "E10",
+                align: "center",
+                dataIndex: "",
+                key: "",
+              },
+              {
+                title: "E20",
+                align: "center",
+                dataIndex: "",
+                key: "",
+              },
+              {
+                title: "E30",
+                align: "center",
+                dataIndex: "",
+                key: "",
+              },
+              {
+                title: "E40",
+                align: "center",
+                dataIndex: "",
+                key: "",
+              },
+              {
+                title: "E50",
+                align: "center",
+                dataIndex: "",
+                key: "",
+              },
+            ],
           },
         ]
       : []),
+
     ...(columnVisibility["Paper Details"]
       ? [
           {
@@ -859,72 +892,6 @@ const ProjectDetailsTable = ({
             )}
           </div>
         );
-        // return (
-        //   <div className="d-flex justify-content-center">
-        //     {!(record.alerts === "0" || !record.alerts?.trim()) ? (
-        //       <Tooltip
-        //         title={requirements.map((req, index) => (
-        //           <div key={index}>{req}</div>
-        //         ))}
-        //         placement="top"
-        //         trigger={['hover', 'click']}
-        //         defaultVisible={false}
-        //         overlayClassName="custom-tooltip"
-        //         overlayStyle={{
-        //           maxWidth: '250px',
-        //           wordWrap: 'break-word'
-        //         }}
-        //         destroyTooltipOnHide
-        //       >
-        //         <span className="text-danger tooltip-trigger">
-        //           <StatusToggle
-        //             initialStatusIndex={initialStatusIndex}
-        //             statusSteps={statusSteps.map((status, index) => ({
-        //               status,
-        //               color:
-        //                 index === 0 ? "red" : index === 1 ? "blue" : "green",
-        //             }))}
-        //             disabled // Disable the toggle due to alerts
-        //           />
-        //         </span>
-        //       </Tooltip>
-        //     ) : (
-        //       <Tooltip
-        //         title={
-        //           isDisabled
-        //             ? requirements.map((req, index) => (
-        //                 <div key={index}>{req}</div>
-        //               ))
-        //             : ""
-        //         }
-        //         placement="top"
-        //         trigger={['hover', 'click']}
-        //         defaultVisible={false}
-        //         overlayClassName="custom-tooltip"
-        //         overlayStyle={{
-        //           maxWidth: '250px',
-        //           wordWrap: 'break-word'
-        //         }}
-        //         destroyTooltipOnHide
-        //       >
-        //         <span className="tooltip-trigger">
-        //           <StatusToggle
-        //             initialStatusIndex={initialStatusIndex}
-        //             onStatusChange={(newIndex) =>
-        //               handleRowStatusChange(record.srNo, newIndex)
-        //             }
-        //             statusSteps={statusSteps.map((status, index) => ({
-        //               status,
-        //               color:
-        //                 index === 0 ? "red" : index === 1 ? "blue" : "green",
-        //             }))}
-        //             disabled={isDisabled} // Disable the toggle if status can't be changed
-        //           />
-        //         </span>
-        //       </Tooltip>
-        //     )}
-        //   </div>
-        // );
       },
 
       sorter: (a, b) => {
