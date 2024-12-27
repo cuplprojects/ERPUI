@@ -74,10 +74,10 @@ const ProjectDetailsTable = ({
     Alerts: false,
     "Interim Quantity": false,
     Remarks: false,
-    "Envelopes": false,
-    Paper: false ,//window.innerWidth >= 992,
-    Course: false ,//window.innerWidth >= 992,
-    Subject: false ,//window.innerWidth >= 992,
+    Envelopes: false,
+    Paper: false, //window.innerWidth >= 992,
+    Course: false, //window.innerWidth >= 992,
+    Subject: false, //window.innerWidth >= 992,
     Zone: false, // Add Zone visibility
     Machine: false, // Add Machine visibility
   });
@@ -112,7 +112,7 @@ const ProjectDetailsTable = ({
   const [inputPagesModalData, setInputPagesModalData] = useState(null);
   const [inputPagesModalShow, setInputPagesModalShow] = useState(false);
   const [examDateData, setExamDateData] = useState([]);
-
+  const [envelopeData, setEnvelopeData] = useState({});
   const [
     showOnlyCompletedPreviousProcess,
     setShowOnlyCompletedPreviousProcess,
@@ -155,6 +155,22 @@ const ProjectDetailsTable = ({
             `/QuantitySheet/Catch?ProjectId=${projectId}&lotNo=${lotNo}`
           );
           const data = response.data || [];
+          console.log(data);
+
+          // Parse envelope data
+          const envelopeMap = {};
+          data.forEach((item) => {
+            if (item.innerEnvelope) {
+              const envelopes = {};
+              item.innerEnvelope.split(", ").forEach((env) => {
+                const [key, value] = env.split(": ");
+                envelopes[key] = value || "";
+              });
+              envelopeMap[item.catchNo] = envelopes;
+            }
+          });
+          setEnvelopeData(envelopeMap);
+
           setPaperData(
             data.filter((item) => item.paper).map((item) => item.paper)
           );
@@ -640,50 +656,34 @@ const ProjectDetailsTable = ({
           },
         ]
       : []),
-    ...(columnVisibility["Envelopes"] && processId === 8
-      ? [
-          {
-            title: t("envelopes"),
-            dataIndex: "envelopes",
-            width: "20%",
-            align: "center",
-            key: "envelopes",
-            sorter: (a, b) => a.envelopes - b.envelopes,
-            children: [
-              {
-                title: "E10",
+      ...(columnVisibility["Envelopes"] && processId === 8
+        ? [
+            {
+              title: t("envelopes"),
+              dataIndex: "envelopes",
+              width: "20%",
+              align: "center",
+              key: "envelopes",
+              children: Object.keys(
+                Object.values(envelopeData)[0] || {}
+              ).map((envKey) => ({
+                title: envKey,
                 align: "center",
-                dataIndex: "",
-                key: "",
-              },
-              {
-                title: "E20",
-                align: "center",
-                dataIndex: "",
-                key: "",
-              },
-              {
-                title: "E30",
-                align: "center",
-                dataIndex: "",
-                key: "",
-              },
-              {
-                title: "E40",
-                align: "center",
-                dataIndex: "",
-                key: "",
-              },
-              {
-                title: "E50",
-                align: "center",
-                dataIndex: "",
-                key: "",
-              },
-            ],
-          },
-        ]
-      : []),
+                dataIndex: "catchNo",
+                key: envKey,
+                render: (_, record) => {
+                  // Log to debug
+                  console.log('Record:', record);
+                  console.log('Envelope Data:', envelopeData);
+                  console.log('Specific Envelope:', envelopeData[record.catchNumber]);
+                  
+                  return envelopeData[record.catchNumber]?.[envKey] || 
+                         envelopeData[record.catchNo]?.[envKey] || ''
+                }
+              }))
+            }
+          ]
+        : []),
 
     ...(columnVisibility["Paper Details"]
       ? [
