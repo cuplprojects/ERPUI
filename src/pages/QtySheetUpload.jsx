@@ -221,6 +221,7 @@ const QtySheetUpload = () => {
       // Debugging lotNo value before sending it
       console.log(`lotNo before payload:`, lotNo, `Type:`, typeof lotNo);
       console.log(`catchNo before payload:`, catchNo, `Type:`, typeof catchNo);
+
       return {
         catchNo: item.CatchNo || "",
         paper: item.Paper || "",
@@ -276,26 +277,27 @@ const QtySheetUpload = () => {
   
         // Convert the sheet to JSON with the first row as headers
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-  
+
         // Ensure that jsonData[0] is an array (header row)
         if (!Array.isArray(jsonData[0])) {
           console.error('The first row (headers) is not an array.', jsonData[0]);
           resolve([]);  // Resolve with an empty array if the headers are malformed
           return;
         }
-  
         const rows = jsonData.slice(1); // Skip the header row
         const mappedData = rows.map((row) => {
           const rowData = {};
   
           // Iterate over each field in fieldMappings
           for (let property in fieldMappings) {
+
             let headers = fieldMappings[property]; // Array of headers for this field
   
             // Ensure headers is an array
             if (!Array.isArray(headers)) {
               headers = [headers]; // Convert to array if it's a single value
             }
+
   
             // If there are multiple headers for the property, create a string value
             if (headers.length > 1) {
@@ -303,8 +305,8 @@ const QtySheetUpload = () => {
                 .map((header) => {
                   const index = jsonData[0].indexOf(header); // Find the index of the header
                   if (index !== -1) {
-                    const value = row[index] || ""; // Get the value for that header
-                    return `${header}: ${value}`; // Format as "header: value"
+                    const value = row[index] || "";  // Get the value for that header
+                    return `${header}: ${value}`;  // Format as "header: value"
                   }
                   return null;
                 })
@@ -325,7 +327,7 @@ const QtySheetUpload = () => {
                   value = String(value).trim(); // Ensure 'LotNo' and 'CatchNo' are treated as strings
                   console.log(`${property} value before sending:`, value, `Type:`, typeof value);
                 }
-  
+
                 // Add the value directly to the rowData
                 rowData[property] = value || ""; // Default to empty string if no value found
               }
@@ -335,7 +337,7 @@ const QtySheetUpload = () => {
           // Add additional fields like projectId or percentageCatch
           rowData["projectId"] = projectId;
           rowData["percentageCatch"] = "0";
-  
+
           return rowData; // Return the mapped row data
         });
   
@@ -348,11 +350,6 @@ const QtySheetUpload = () => {
     });
   };
   
-
-
-
-
-
 
   const handleUpdate = async () => {
     setIsLoading(true);
@@ -448,20 +445,20 @@ const QtySheetUpload = () => {
       const workbook = XLSX.read(data, { type: "array" });
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[firstSheetName];
-
       // Convert the sheet to JSON with the first row as headers
       const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
+  
       // Filter out rows where all cells are empty
       const filteredData = jsonData.filter((row) =>
         row.some((cell) => cell !== null && cell !== "")
       );
-
+  
       if (filteredData.length === 0) {
         console.warn(t("noValidDataFoundInFile"));
         setIsProcessingFile(false); // Hide loader if no valid data
         return;
       }
+
 
       // Extract the headers (first row of the data)
       const excelHeaders = filteredData[0];
@@ -472,23 +469,22 @@ const QtySheetUpload = () => {
 
       // Dynamically build the field mappings based on multiple headers per field
       const autoMappings = {};
-
       // Adjust this to support multiple headers per field
       columns.forEach((col) => {
         // Create an array to hold all matching headers for the current field
         const matchingHeaders = excelHeaders.filter(
           (header) => header?.toLowerCase() === col?.toLowerCase()
         );
-
         // Assign the matching headers (or empty array if no match found)
         autoMappings[col] = matchingHeaders.length > 0 ? matchingHeaders : [];
       });
-
+  
       setFieldMappings(autoMappings);
       setIsProcessingFile(false); // Hide loader when processing is complete
     };
     reader.readAsArrayBuffer(file);
   };
+  
 
 
   const handleMappingChange = (property, value) => {
@@ -498,6 +494,8 @@ const QtySheetUpload = () => {
       return newMappings;
     });
   };
+  
+  
 
 
 
