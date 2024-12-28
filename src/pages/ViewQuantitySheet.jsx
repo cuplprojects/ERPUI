@@ -80,7 +80,24 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
   const [dates, setDates] = useState([]);
   const [minDate, setMinDate] = useState(null);
   const [maxDate, setMaxDate] = useState(null);
+  const [disabledCatches, setDisabledCatches] = useState([]);
+  useEffect(() => {
+    const fetchDisabledCatches = async () => {
+      try {
+        const projectId = decrypt(encryptedProjectId);
+        const response = await API.get(
+          `/Transactions/CheckTransaction?projectId=${projectId}&lotNo=${selectedLotNo}`
+        );
+        setDisabledCatches(response.data);
+      } catch (error) {
+        console.error("Failed to fetch disabled catches:", error);
+      }
+    };
 
+    if (selectedLotNo) {
+      fetchDisabledCatches();
+    }
+  }, [selectedLotNo, encryptedProjectId]);
   const columns = [
     {
       title: t("select"),
@@ -102,7 +119,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
                   {
                     id: record.quantitySheetId,
                     catchNo: record.catchNo,
-                    processId: record.processId
+                    processId: record.processId,
                   },
                 ]);
               } else {
@@ -234,24 +251,34 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
         const isDispatched = dispatchedLots.includes(selectedLotNo);
         return (
           <>
-            {/* <Button
-              icon={<EditOutlined />}
-              onClick={() => handleEditButtonClick(record.key)}
-              style={{ marginRight: 8 }}
-              disabled={isDispatched}
-            /> */}
             <Button
-              icon={<DeleteOutlined />}
-              onClick={() => handleRemoveButtonClick(record.key)}
-              style={{ marginRight: 8 }}
+              type="primary"
+              icon={<EditOutlined />}
+              onClick={() => handleEdit(record)}
+              disabled={disabledCatches.includes(record.catchNo)}
+              title={
+                disabledCatches.includes(record.catchNo)
+                  ? t("This catch has an existing transaction")
+                  : ""
+              }
+            />
+            <Button
+              type="primary"
               danger
-              disabled={isDispatched}
+              icon={<DeleteOutlined />}
+              onClick={() => handleDelete(record)}
+              disabled={disabledCatches.includes(record.catchNo)}
+              title={
+                disabledCatches.includes(record.catchNo)
+                  ? t("This catch has an existing transaction")
+                  : ""
+              }
             />
             <Button
               icon={<StopOutlined />}
               onClick={() => handleStopButtonClick(record.key)}
               danger
-              disabled={isDispatched}
+              disabled={disabledCatches.includes(record.catchNo)}
             />
           </>
         );
@@ -383,7 +410,9 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
     try {
       // Process all selected catches
       const updatePromises = selectedCatches.map(async (selectedCatch) => {
-        const catchToUpdate = dataSource.find((item) => item.key === selectedCatch.id);
+        const catchToUpdate = dataSource.find(
+          (item) => item.key === selectedCatch.id
+        );
         if (!catchToUpdate) return;
 
         let updatedProcessIds = [...catchToUpdate.processId];
@@ -450,7 +479,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
     setSelectedProcessIds([]);
     setIsConfirmed(false);
     setSelectedCatches([]);
-    setModalMessage("")
+    setModalMessage("");
   };
 
   const handleEditButtonClick = (key) => {
@@ -496,16 +525,17 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
     }));
   };
 
-    const validateForm = () => {
-        const errors = {};
-        if (!newRowData.catchNo) errors.catchNo = t('catchNoRequired');
-        if (!newRowData.examDate) errors.examDate = t('examDateRequired');
-        if (!newRowData.examTime) errors.examTime = t('examTimeRequired');
-        if (!newRowData.quantity || newRowData.quantity <= 0) errors.quantity = t('validQuantityRequired');
-        
-        setFormErrors(errors);
-        return Object.keys(errors).length === 0;
-    };
+  const validateForm = () => {
+    const errors = {};
+    if (!newRowData.catchNo) errors.catchNo = t("catchNoRequired");
+    if (!newRowData.examDate) errors.examDate = t("examDateRequired");
+    if (!newRowData.examTime) errors.examTime = t("examTimeRequired");
+    if (!newRowData.quantity || newRowData.quantity <= 0)
+      errors.quantity = t("validQuantityRequired");
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleAddRow = async () => {
     if (!selectedLotNo) {
@@ -579,26 +609,34 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
 
   const isProcessSwitchingAllowed = (selectedCatches) => {
     // Get first catch record
-    const firstCatch = dataSource.find(item => item.quantitySheetId === selectedCatches[0]?.id);
+    const firstCatch = dataSource.find(
+      (item) => item.quantitySheetId === selectedCatches[0]?.id
+    );
     if (!firstCatch) return false;
 
     // Check if first catch has process ID 3
     if (firstCatch.processId.includes(3)) {
       // Return true only if all catches have process ID 3
-      return selectedCatches.every(catch_ => {
-        const catchRecord = dataSource.find(item => item.quantitySheetId === catch_.id);
+      return selectedCatches.every((catch_) => {
+        const catchRecord = dataSource.find(
+          (item) => item.quantitySheetId === catch_.id
+        );
         return catchRecord && catchRecord.processId.includes(3);
       });
     }
-    
+
     // Check if first catch has process IDs 1 and 2
     if (firstCatch.processId.includes(1) && firstCatch.processId.includes(2)) {
       // Return true only if all catches have process IDs 1 and 2
-      return selectedCatches.every(catch_ => {
-        const catchRecord = dataSource.find(item => item.quantitySheetId === catch_.id);
-        return catchRecord && 
-               catchRecord.processId.includes(1) && 
-               catchRecord.processId.includes(2);
+      return selectedCatches.every((catch_) => {
+        const catchRecord = dataSource.find(
+          (item) => item.quantitySheetId === catch_.id
+        );
+        return (
+          catchRecord &&
+          catchRecord.processId.includes(1) &&
+          catchRecord.processId.includes(2)
+        );
       });
     }
 
@@ -872,49 +910,58 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
         />
       )}
 
-            {editingRow !== null && (
-                <BootstrapModal show={true} onHide={handleModalClose}>
-                    <BootstrapModal.Header closeButton>
-                        <BootstrapModal.Title>{t('editProcess')}</BootstrapModal.Title>
-                    </BootstrapModal.Header>
-                    <BootstrapModal.Body>
-                        <div className="mb-3">
-                            <strong>{t('selectedCatches')}:</strong>
-                            <ul>
-                                {selectedCatches.map((catch_, index) => (
-                                    <li key={index}>{catch_.catchNo}</li>
-                                ))}
-                            </ul>
-                        </div>
-                        {!isProcessSwitchingAllowed(selectedCatches) ? (
-                            <div className="alert alert-danger">
-                                <WarningOutlined /> {t('processSwitchingNotAllowed')}
-                            </div>
-                        ) : (
-                            <>
-                                {t(modalMessage)}
-                                <div className="mt-3">
-                                    <Checkbox checked={isConfirmed} onChange={(e) => setIsConfirmed(e.target.checked)}>
-                                        {modalMessage === "switchToDigitalPrintingQuestion" ? t('switchFromOffsetToDigital') :
-                                            modalMessage === "switchToOffsetPrintingQuestion" ? t('switchFromDigitalToOffset') :
-                                                t('confirmThisChange')}
-                                    </Checkbox>
-                                </div>
-                            </>
-                        )}
-                    </BootstrapModal.Body>
-                    <BootstrapModal.Footer>
-                        <Button variant="secondary" onClick={handleModalClose}>{t('close')}</Button>
-                        <Button 
-                            variant="primary" 
-                            onClick={handleSaveEdit} 
-                            disabled={!isConfirmed || !isProcessSwitchingAllowed(selectedCatches)}
-                        >
-                            {t('saveChanges')}
-                        </Button>
-                    </BootstrapModal.Footer>
-                </BootstrapModal>
+      {editingRow !== null && (
+        <BootstrapModal show={true} onHide={handleModalClose}>
+          <BootstrapModal.Header closeButton>
+            <BootstrapModal.Title>{t("editProcess")}</BootstrapModal.Title>
+          </BootstrapModal.Header>
+          <BootstrapModal.Body>
+            <div className="mb-3">
+              <strong>{t("selectedCatches")}:</strong>
+              <ul>
+                {selectedCatches.map((catch_, index) => (
+                  <li key={index}>{catch_.catchNo}</li>
+                ))}
+              </ul>
+            </div>
+            {!isProcessSwitchingAllowed(selectedCatches) ? (
+              <div className="alert alert-danger">
+                <WarningOutlined /> {t("processSwitchingNotAllowed")}
+              </div>
+            ) : (
+              <>
+                {t(modalMessage)}
+                <div className="mt-3">
+                  <Checkbox
+                    checked={isConfirmed}
+                    onChange={(e) => setIsConfirmed(e.target.checked)}
+                  >
+                    {modalMessage === "switchToDigitalPrintingQuestion"
+                      ? t("switchFromOffsetToDigital")
+                      : modalMessage === "switchToOffsetPrintingQuestion"
+                      ? t("switchFromDigitalToOffset")
+                      : t("confirmThisChange")}
+                  </Checkbox>
+                </div>
+              </>
             )}
+          </BootstrapModal.Body>
+          <BootstrapModal.Footer>
+            <Button variant="secondary" onClick={handleModalClose}>
+              {t("close")}
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleSaveEdit}
+              disabled={
+                !isConfirmed || !isProcessSwitchingAllowed(selectedCatches)
+              }
+            >
+              {t("saveChanges")}
+            </Button>
+          </BootstrapModal.Footer>
+        </BootstrapModal>
+      )}
 
       {showDeleteModal && (
         <BootstrapModal show={true} onHide={handleModalClose}>
