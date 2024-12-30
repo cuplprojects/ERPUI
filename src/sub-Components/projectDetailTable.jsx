@@ -720,6 +720,7 @@ const ProjectDetailsTable = ({
     {
       title: t("status"),
       dataIndex: "status",
+      fixed:'right',
       key: "status",
       align: "center",
       render: (text, record) => {
