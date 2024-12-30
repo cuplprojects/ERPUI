@@ -68,16 +68,20 @@ const ProjectDetailsTable = ({
   ] = getCssClasses();
   const [initialTableData, setInitialTableData] = useState(tableData);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+
+  //default hide and unhide
   const [columnVisibility, setColumnVisibility] = useState({
     Alerts: false,
     "Interim Quantity": false,
     Remarks: false,
-    Paper: window.innerWidth >= 992, // Enable by default on large screens
-    Course: window.innerWidth >= 992,
-    Subject: window.innerWidth >= 992,
+    Envelopes: false,
+    Paper: false, //window.innerWidth >= 992,
+    Course: false, //window.innerWidth >= 992,
+    Subject: false, //window.innerWidth >= 992,
     Zone: false, // Add Zone visibility
     Machine: false, // Add Machine visibility
   });
+
   const [hideCompleted, setHideCompleted] = useState(false);
   const [columnModalShow, setColumnModalShow] = useState(false);
   const [alarmModalShow, setAlarmModalShow] = useState(false);
@@ -108,7 +112,7 @@ const ProjectDetailsTable = ({
   const [inputPagesModalData, setInputPagesModalData] = useState(null);
   const [inputPagesModalShow, setInputPagesModalShow] = useState(false);
   const [examDateData, setExamDateData] = useState([]);
-
+  const [envelopeData, setEnvelopeData] = useState({});
   const [
     showOnlyCompletedPreviousProcess,
     setShowOnlyCompletedPreviousProcess,
@@ -151,6 +155,22 @@ const ProjectDetailsTable = ({
             `/QuantitySheet/Catch?ProjectId=${projectId}&lotNo=${lotNo}`
           );
           const data = response.data || [];
+          console.log(data);
+
+          // Parse envelope data
+          const envelopeMap = {};
+          data.forEach((item) => {
+            if (item.innerEnvelope) {
+              const envelopes = {};
+              item.innerEnvelope.split(", ").forEach((env) => {
+                const [key, value] = env.split(": ");
+                envelopes[key] = value || "";
+              });
+              envelopeMap[item.catchNo] = envelopes;
+            }
+          });
+          setEnvelopeData(envelopeMap);
+
           setPaperData(
             data.filter((item) => item.paper).map((item) => item.paper)
           );
@@ -224,11 +244,11 @@ const ProjectDetailsTable = ({
     const visibleRows = filteredData
       .slice((currentPage - 1) * pageSize, currentPage * pageSize)
       .map((row) => row.srNo);
-  
+
     // If all visible rows are selected, mark "Select All" as checked
     setSelectAll(
-      visibleRows.length > 0 && 
-      visibleRows.every((key) => selectedRowKeys.includes(key))
+      visibleRows.length > 0 &&
+        visibleRows.every((key) => selectedRowKeys.includes(key))
     );
   }, [selectedRowKeys, currentPage, pageSize, filteredData, hideCompleted]);
 
@@ -361,6 +381,7 @@ const ProjectDetailsTable = ({
       year: "numeric",
     });
   };
+
   const columns = [
     {
       title: (
@@ -370,7 +391,7 @@ const ProjectDetailsTable = ({
           onChange={(e) => {
             const checked = e.target.checked;
             setSelectAll(checked);
-    
+
             if (checked) {
               // Select only visible rows on the current page of filtered data
               const visibleRowKeys = filteredData
@@ -623,44 +644,83 @@ const ProjectDetailsTable = ({
           },
         ]
       : []),
-      ...(columnVisibility["Paper"] && processId === 8
+    ...(columnVisibility["Paper"] && processId === 8
+      ? [
+          {
+            title: t("questionPaper"),
+            dataIndex: "paper",
+            width: "20%",
+            align: "center",
+            key: "paper",
+            sorter: (a, b) => a.paper - b.paper,
+          },
+        ]
+      : []),
+      ...(columnVisibility["Envelopes"] && processId === 8
         ? [
             {
-              title: t("questionPaper"),
-              dataIndex: "paper",
+              title: t("envelopes"),
+              dataIndex: "envelopes",
               width: "20%",
               align: "center",
-              key: "paper",
-              sorter: (a, b) => a.paper - b.paper,
-            },
+              key: "envelopes",
+              children: Object.keys(
+                Object.values(envelopeData)[0] || {}
+              ).map((envKey) => ({
+                title: envKey,
+                align: "center",
+                dataIndex: "catchNo",
+                key: envKey,
+                render: (_, record) => {
+                  // Log to debug
+                  console.log('Record:', record);
+                  console.log('Envelope Data:', envelopeData);
+                  console.log('Specific Envelope:', envelopeData[record.catchNumber]);
+                  
+                  return envelopeData[record.catchNumber]?.[envKey] || 
+                         envelopeData[record.catchNo]?.[envKey] || ''
+                }
+              }))
+            }
           ]
         : []),
-      
-        ...(columnVisibility["Paper Details"]
-          ? [
-              {
-                title: t("paperDetails"),
-                dataIndex: 'paperDetails',
-                width: "20%",
-                align: "center",
-                key: "paperDetails",
-                render: (_, record) => (
-                  <div className="d-flex flex-column">
-                    <span className="fw-bold">{`Catch: ${record.catchNumber || 'N/A'}`}</span>
-                    <span className="fw-bold">{`Course: ${record.course || 'N/A'}`}</span>
-                    <span className="fw-bold">{`Paper: ${record.paper || 'N/A'}`}</span>
-                    <span className="fw-bold">{`Exam Date: ${formatDate(record.examDate) || 'N/A'}`}</span>
-                    <span className="fw-bold">{`Exam Time: ${record.examTime || 'N/A'}`}</span>
-                  </div>
-                ),
-                sorter: (a, b) => a.catchNumber.localeCompare(b.catchNumber)
-              }
-            ]
-          : []),
-        
+
+    ...(columnVisibility["Paper Details"]
+      ? [
+          {
+            title: t("paperDetails"),
+            dataIndex: "paperDetails",
+            width: "20%",
+            align: "center",
+            key: "paperDetails",
+            render: (_, record) => (
+              <div className="d-flex flex-column">
+                <span className="fw-bold">{`Catch: ${
+                  record.catchNumber || "N/A"
+                }`}</span>
+                <span className="fw-bold">{`Course: ${
+                  record.course || "N/A"
+                }`}</span>
+                <span className="fw-bold">{`Paper: ${
+                  record.paper || "N/A"
+                }`}</span>
+                <span className="fw-bold">{`Exam Date: ${
+                  formatDate(record.examDate) || "N/A"
+                }`}</span>
+                <span className="fw-bold">{`Exam Time: ${
+                  record.examTime || "N/A"
+                }`}</span>
+              </div>
+            ),
+            sorter: (a, b) => a.catchNumber.localeCompare(b.catchNumber),
+          },
+        ]
+      : []),
+
     {
       title: t("status"),
       dataIndex: "status",
+      fixed:'right',
       key: "status",
       align: "center",
       render: (text, record) => {
@@ -783,9 +843,9 @@ const ProjectDetailsTable = ({
           <div className="d-flex justify-content-center">
             {!(record.alerts === "0" || !record.alerts?.trim()) ? (
               <Tippy
-              duration={[300, 1]}
-              delay={10}
-              className={`${customMid} ${customLightText} ${customDarkBorder} p-2 rounded-3`}
+                duration={[300, 1]}
+                delay={10}
+                className={`${customMid} ${customLightText} ${customDarkBorder} p-2 rounded-3`}
                 content={requirements.map((req, index) => (
                   <div key={index}>{req}</div>
                 ))}
@@ -804,9 +864,9 @@ const ProjectDetailsTable = ({
               </Tippy>
             ) : (
               <Tippy
-              duration={[300, 1]}
-              delay={10}
-              className={`${customMid} ${customLightText} p-2 border border-dark rounded-3`}
+                duration={[300, 1]}
+                delay={10}
+                className={`${customMid} ${customLightText} p-2 border border-dark rounded-3`}
                 content={
                   isDisabled
                     ? requirements.map((req, index) => (
@@ -833,72 +893,6 @@ const ProjectDetailsTable = ({
             )}
           </div>
         );
-        // return (
-        //   <div className="d-flex justify-content-center">
-        //     {!(record.alerts === "0" || !record.alerts?.trim()) ? (
-        //       <Tooltip
-        //         title={requirements.map((req, index) => (
-        //           <div key={index}>{req}</div>
-        //         ))}
-        //         placement="top"
-        //         trigger={['hover', 'click']}
-        //         defaultVisible={false}
-        //         overlayClassName="custom-tooltip"
-        //         overlayStyle={{
-        //           maxWidth: '250px',
-        //           wordWrap: 'break-word'
-        //         }}
-        //         destroyTooltipOnHide
-        //       >
-        //         <span className="text-danger tooltip-trigger">
-        //           <StatusToggle
-        //             initialStatusIndex={initialStatusIndex}
-        //             statusSteps={statusSteps.map((status, index) => ({
-        //               status,
-        //               color:
-        //                 index === 0 ? "red" : index === 1 ? "blue" : "green",
-        //             }))}
-        //             disabled // Disable the toggle due to alerts
-        //           />
-        //         </span>
-        //       </Tooltip>
-        //     ) : (
-        //       <Tooltip
-        //         title={
-        //           isDisabled
-        //             ? requirements.map((req, index) => (
-        //                 <div key={index}>{req}</div>
-        //               ))
-        //             : ""
-        //         }
-        //         placement="top"
-        //         trigger={['hover', 'click']}
-        //         defaultVisible={false}
-        //         overlayClassName="custom-tooltip"
-        //         overlayStyle={{
-        //           maxWidth: '250px',
-        //           wordWrap: 'break-word'
-        //         }}
-        //         destroyTooltipOnHide
-        //       >
-        //         <span className="tooltip-trigger">
-        //           <StatusToggle
-        //             initialStatusIndex={initialStatusIndex}
-        //             onStatusChange={(newIndex) =>
-        //               handleRowStatusChange(record.srNo, newIndex)
-        //             }
-        //             statusSteps={statusSteps.map((status, index) => ({
-        //               status,
-        //               color:
-        //                 index === 0 ? "red" : index === 1 ? "blue" : "green",
-        //             }))}
-        //             disabled={isDisabled} // Disable the toggle if status can't be changed
-        //           />
-        //         </span>
-        //       </Tooltip>
-        //     )}
-        //   </div>
-        // );
       },
 
       sorter: (a, b) => {
@@ -1115,8 +1109,7 @@ const ProjectDetailsTable = ({
       } else if (action === "Assign Team" && hasFeaturePermission(2)) {
         setAssignTeamModalShow(true);
         setAssignTeamModalData(selectedRows); // Pass array of all selected rows
-      }
-      else if (action === "Pages" && hasFeaturePermission(7)) {
+      } else if (action === "Pages" && hasFeaturePermission(7)) {
         setInputPagesModalShow(true);
         setInputPagesModalData(selectedRows);
       }
@@ -1318,7 +1311,7 @@ const ProjectDetailsTable = ({
 
   const isCompleted = selectedRows.every((row) => row.status === 2);
   const isStarted = selectedRows.every((row) => row.status == 1);
-   const allStatusZero = selectedRows.every((row) => row.status === 0);
+  const allStatusZero = selectedRows.every((row) => row.status === 0);
 
   const menu = (
     <Menu>
@@ -1361,7 +1354,7 @@ const ProjectDetailsTable = ({
           {t("selectMachine")}
         </Menu.Item>
       )}
-      {hasFeaturePermission(2) && allStatusZero &&  (
+      {hasFeaturePermission(2) && allStatusZero && (
         <Menu.Item
           onClick={() => handleDropdownSelect("Assign Team")}
           disabled={selectedRowKeys.length === 0}
@@ -1440,7 +1433,6 @@ const ProjectDetailsTable = ({
     );
     console.error("Error assigning team:", error);
   };
-
 
   const handleInputPagesSuccess = () => {
     success("Pages updated successfully");

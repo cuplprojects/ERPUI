@@ -65,6 +65,32 @@
     }
   }
   
+  .enhanced-table {
+    border: 1px solid rgba(0, 0, 0, 0.2) !important;
+  }
+  
+  .enhanced-table-header {
+    background-color: #f0f0f0 !important;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.3) !important;
+  }
+  
+  .enhanced-table-row {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.2) !important;
+    transition: background-color 0.3s;
+  }
+  
+  .enhanced-table-row:hover {
+    background-color: rgba(0, 0, 0, 0.05) !important;
+  }
+  
+  .striped-table-row:nth-child(even) {
+    background-color: rgba(0, 0, 0, 0.03) !important;
+  }
+  
+  .dense-table-row {
+    padding: 8px !important;
+  }
+  
   table {
     -webkit-touch-callout: none;
     -webkit-user-select: none;
