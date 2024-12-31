@@ -49,10 +49,11 @@ const ColumnToggleModal = ({ show, handleClose, columnVisibility, setColumnVisib
             ? [{ key: 'Envelopes', label: 'envelopes' }]
             : []),
         { key: 'Course', label: 'course' },
-        { key: 'Machine', label: 'machine' },
+        { key: 'Machine', label: 'Machine' },
         { key: 'Zone', label: 'zone' },
         { key: 'Subject', label: 'subject' },
-        { key: 'Exam Date', label: 'examDate' }
+        { key: 'Exam Date', label: 'examDate' },
+        { key: 'Pages', label: 'Pages' }
     ];
 
     return (
