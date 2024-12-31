@@ -77,6 +77,7 @@ const ProjectDetailsTable = ({
     Subject: window.innerWidth >= 992,
     Zone: false, // Add Zone visibility
     Machine: false, // Add Machine visibility
+    Pages: false,
   });
   const [hideCompleted, setHideCompleted] = useState(false);
   const [columnModalShow, setColumnModalShow] = useState(false);
@@ -107,8 +108,6 @@ const ProjectDetailsTable = ({
   // Update pages in qtysheet modal
   const [inputPagesModalData, setInputPagesModalData] = useState(null);
   const [inputPagesModalShow, setInputPagesModalShow] = useState(false);
-  const [examDateData, setExamDateData] = useState([]);
-
   const [
     showOnlyCompletedPreviousProcess,
     setShowOnlyCompletedPreviousProcess,
@@ -118,6 +117,7 @@ const ProjectDetailsTable = ({
   const [courseData, setCourseData] = useState([]);
   const [subjectData, setSubjectData] = useState([]);
   const [examDate, setExamDate] = useState([]);
+
 
   const showNotification = (type, messageKey, descriptionKey, details = "") => {
     notification[type]({
@@ -532,6 +532,17 @@ const ProjectDetailsTable = ({
             key: "examDate",
             sorter: (a, b) => a.examDate - b.examDate,
             render: (text) => formatDate(text), // Apply formatDate here
+          },
+        ]
+      : []),
+    ...(columnVisibility["Pages"]
+      ? [
+          {
+            title: t("Pages"),
+            dataIndex: "pages",
+            align: "center",
+            key: "pages",
+            sorter: (a, b) => a.pages - b.pages,
           },
         ]
       : []),
