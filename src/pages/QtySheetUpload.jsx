@@ -240,6 +240,7 @@ const QtySheetUpload = () => {
         processId: [0],
         status: 0,
         pages: item.Pages || 0,
+        stopCatch : 0,
       };
     });
 
