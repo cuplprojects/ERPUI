@@ -484,7 +484,7 @@ const ProcessTable = () => {
   
             if (selectedProcess.processId === 3 && 
                (previousProcessData.processId === 2 || previousProcessData.processId === 1)) {
-              previousSequence = 0;  // Prevent infinite loop and avoid fetching invalid previous process
+              previousSequence--;  // Prevent infinite loop and avoid fetching invalid previous process
               continue;
             }
   
