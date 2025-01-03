@@ -217,10 +217,12 @@ const QtySheetUpload = () => {
       const examDate = item.ExamDate ? convertExcelDate(item.ExamDate) : null;
       const lotNo = String(item.LotNo || "").trim();
       const catchNo = String(item.CatchNo || "").trim();
+      const innerEnvelope = String(item.InnerEnvelope || "").trim();
 
       // Debugging lotNo value before sending it
       console.log(`lotNo before payload:`, lotNo, `Type:`, typeof lotNo);
       console.log(`catchNo before payload:`, catchNo, `Type:`, typeof catchNo);
+      console.log(`innerEnvelope before payload:`, innerEnvelope, `Type:`, typeof innerEnvelope);
 
       return {
         catchNo: item.CatchNo || "",
@@ -238,10 +240,9 @@ const QtySheetUpload = () => {
         processId: [0],
         status: 0,
         pages: item.Pages || 0,
+        stopCatch : 0,
       };
     });
-
-
 
     try {
       const response = await API.post("/QuantitySheet", finalPayload, {
@@ -323,7 +324,7 @@ const QtySheetUpload = () => {
                 let value = row[index] || ""; // Get the value for that header
   
                 // Explicitly convert 'LotNo' and 'CatchNo' to strings
-                if (property === "LotNo" || property === "CatchNo") {
+                if (property === "LotNo" || property === "CatchNo" || property === "InnerEnvelope") {
                   value = String(value).trim(); // Ensure 'LotNo' and 'CatchNo' are treated as strings
                   console.log(`${property} value before sending:`, value, `Type:`, typeof value);
                 }
