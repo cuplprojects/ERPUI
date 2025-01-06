@@ -596,6 +596,7 @@ const ProcessTable = () => {
               outerEnvelope: item.outerEnvelope,
               quantity: item.quantity,
               percentageCatch: item.percentageCatch,
+              pages: item.pages,
               projectId: selectedProject?.value || id,
               processId: processId,
               status: item.transactions[0]?.status || 0,
