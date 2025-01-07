@@ -1,432 +1,376 @@
-import React, { useState, useEffect } from 'react';
-import { Select, Button, Table, Spin, Input, Space, Dropdown, Menu, notification } from 'antd';
-import { DownOutlined, SaveOutlined } from '@ant-design/icons';
+import React, { useState, useEffect } from "react";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Button,
+  Modal,
+  Form,
+  InputGroup,
+  Table,
+} from "react-bootstrap";
+import { FaInfoCircle, FaFileExcel, FaChevronUp, FaChevronDown, FaSearch } from "react-icons/fa";
+import API from "./../CustomHooks/MasterApiHooks/api";
+import * as XLSX from "xlsx";
 
-import * as XLSX from 'xlsx';
-import axios from 'axios';
-import { useStore } from 'zustand';
-import themeStore from './../store/themeStore';
-
-const { Option } = Select;
-const apiUrl = import.meta.env.VITE_API_URL;
-
-const fieldTitleMapping = {
-  rollNumber: 'Roll Number',
-  candidateName: 'Candidate Name',
-  fathersName: "Father's Name",
-  courseName: 'Course Name',
-  omrDataBarCode: 'OMR Data Bar Code',
-  marksObtained: 'Marks Obtained',
-  // Add more mappings as needed
-};
-
-const Reports = () => {
-  const { getCssClasses } = useStore(themeStore);
-  const [customDark, customMid, customLight, , customDarkText, customLightText] = getCssClasses();
-
-  const [userId, setUserId] = useState('');
-  const [database, setDatabase] = useState('');
-  const [projectId, setProjectId] = useState('');
-  const [projectName, setProjectName] = useState('');
-  const [reportData, setReportData] = useState([]);
-  const [selectedFields, setSelectedFields] = useState([]);
-  const [fieldOrder, setFieldOrder] = useState([]);
-  const [sortableFields, setSortableFields] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [columns, setColumns] = useState([]);
-  const [dataKeys, setDataKeys] = useState([]);
-  const [showData, setShowData] = useState(false);
-  const [assignedUsers, setAssignedUsers] = useState([]);
-  const [isOrderAlready, setIsOrderAlready] = useState(false);
-  const [existingReportId, setExistingReportId] = useState(0);
-  const [token, setToken] = useState('');
+const ProjectReport = () => {
+  const [projectData, setProjectData] = useState([]);
+  const [activeProjects, setActiveProjects] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedProjectId, setSelectedProjectId] = useState(null);
+  const [quantitySheetData, setQuantitySheetData] = useState([]);
+  const [showAll, setShowAll] = useState(true);
+  const [projectDetails, setProjectDetails] = useState({});
+  const [searchInput, setSearchInput] = useState("");
+  const [filters, setFilters] = useState({
+    examDate: "",
+    catchNo: "",
+    paper: "",
+    lotNo: "",
+    subject: "",
+    course: "",
+  });
 
   useEffect(() => {
-    if (selectedFields.length > 0 || fieldOrder.length > 0) {
-      handleFieldChange(selectedFields.length > 0 ? selectedFields : fieldOrder);
-    }
-  }, [selectedFields]);
+    const fetchData = async () => {
+      try {
+        const projectDataResponse = await API.get("/Transactions/all-project-completion-percentages");
+        setProjectData(projectDataResponse.data);
 
-  useEffect(() => {
-    if (projectId) {
-      const fetchAssignedUsers = async () => {
-        try {
-          const response = await axios.get(`${apiUrl}/Projects/users/${projectId}?WhichDatabase=Local`, {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          });
-          setAssignedUsers(response.data);
-        } catch (error) {
-          console.error('Error fetching assigned users:', error);
-          setAssignedUsers([]);
-        }
-      };
+        const activeProjectsResponse = await API.get("/Project/GetActiveProjects");
+        setActiveProjects(activeProjectsResponse.data);
+
+        const projectDetailsPromises = projectDataResponse.data.map(project =>
+          API.get(`/Project/${project.projectId}`)
+        );
+
+        const projectDetailsResponses = await Promise.all(projectDetailsPromises);
+        const projectDetailsMap = {};
+        projectDetailsResponses.forEach(response => {
+          projectDetailsMap[response.data.projectId] = response.data;
+        });
+        setProjectDetails(projectDetailsMap);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const openModal = async (projectId) => {
+    setSelectedProjectId(projectId);
+    setShowModal(true);
   
-      fetchAssignedUsers();
-    }
-  }, [projectId, token]);
-
-  useEffect(() => {
-    fetchSortOrder();
-  }, [database, userId]);
-
-  const fetchSortOrder = async () => {
     try {
-      const response = await axios.get(
-        `${apiUrl}/Report?WhichDatabase=${database}&UserId=${userId}`,{
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      );
-      if (response.data.length > 0) {
-        const savedSortOrder = JSON.parse(JSON.parse(response?.data[0]?.reportData));
-        setExistingReportId(response?.data[0]?.reportId);
-        setFieldOrder(savedSortOrder);
-        setSelectedFields(savedSortOrder);
-        setIsOrderAlready(true);
-        fetchReportData();
-      }
+      const response = await API.get(`/Transactions/${projectId}/withlogs`);
+      const data = response.data.map((entry) => ({
+        ...entry.quantitySheet,
+        ...entry.transaction, // Merge transaction fields into the quantity sheet object
+      }));
+      setQuantitySheetData(data);
     } catch (error) {
-      console.error('Error fetching saved sort order:', error);
+      console.error("Error fetching quantity sheet data:", error);
     }
   };
+  
 
-  const fetchReportData = async () => {
-    setLoading(true);
-    try {
-      const postdata = {
-        fields: ['registrationData', 'score'],
-      };
-      const response = await axios.post(
-        `${apiUrl}/Report/GetFilteredData?WhichDatabase=${database}&ProjectId=${projectId}`,
-        postdata, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      );
-
-      const structuredData = response.data.map((item) => {
-        const { omrData, registrationData, ...rest } = item;
-        return {
-          ...rest,
-          ...registrationData
-        };
-      });
-      setReportData(structuredData);
-      setDataKeys(Object.keys(structuredData[0] || {}));
-    } catch (error) {
-      console.error('Error fetching report data:', error);
-    }
-    setLoading(false);
+  const closeModal = () => {
+    setShowModal(false);
+    setSelectedProjectId(null);
+    setQuantitySheetData([]);
   };
 
-  const handleFieldChange = (fields) => {
-    const updatedFieldOrder = fieldOrder.filter(field => fields.includes(field));
-    setFieldOrder(updatedFieldOrder);
-
-    const orderedFields = updatedFieldOrder.length > 0 ? updatedFieldOrder : fields;
-    const dynamicColumns = orderedFields.map((field) => ({
-      title: fieldTitleMapping[field] || field,
-      dataIndex: field,
-      key: field,
-      sorter: (a, b) => {
-        if (typeof a[field] === 'string' && typeof b[field] === 'string') {
-          return a[field].localeCompare(b[field]);
-        } else if (typeof a[field] === 'number' && typeof b[field] === 'number') {
-          return a[field] - b[field];
-        }
-        return 0;
-      },
-      filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
-        <div style={{ padding: 8 }}>
-          <Input
-            placeholder={`Search ${fieldTitleMapping[field] || field}`}
-            value={selectedKeys[0]}
-            onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
-            onPressEnter={() => confirm()}
-            style={{ marginBottom: 8, display: 'block' }}
-          />
-          <Space>
-            <Button
-              type="primary"
-              onClick={() => confirm()}
-              icon="search"
-              size="small"
-              style={{ width: 90 }}
-            >
-              Search
-            </Button>
-            <Button onClick={() => clearFilters()} size="small" style={{ width: 90 }}>
-              Reset
-            </Button>
-          </Space>
-        </div>
-      ),
-      filterIcon: (filtered) => <span style={{ color: filtered ? '#1890ff' : undefined }} />,
-      onFilter: (value, record) =>
-        record[field].toString().toLowerCase().includes(value.toLowerCase()),
-    }));
-    setColumns(dynamicColumns);
-    setSortableFields(fields);
+  const toggleShowAll = () => {
+    setShowAll(!showAll);
   };
 
-  const handleFieldOrderChange = (order) => {
-    setFieldOrder(order);
-  };
-
-  const handleSaveOrder = async () => {
-    try {
-      let response;
-
-      if (isOrderAlready) {
-        response = await axios.put(`${apiUrl}/Report?WhichDatabase=${database}&UserId=${userId}&ReportId=${existingReportId}`, {
-          reportId: existingReportId,
-          reportData: JSON.stringify(fieldOrder),
-          userId: userId,
-        },{
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-      } else {
-        response = await axios.post(`${apiUrl}/Report?WhichDatabase=${database}&UserId=${userId}`, {
-          reportId: 0,
-          reportData: JSON.stringify(fieldOrder),
-          userId: userId,
-        },{
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-      }
-
-      if (response.status === 201 || response.status === 204) {
-        fetchSortOrder();
-        notification.success({
-          message: 'Success',
-          description: 'Field order saved successfully!',
-        });
-      } else {
-        notification.error({
-          message: 'Error',
-          description: 'Failed to save field order. Please try again.',
-        });
-      }
-    } catch (error) {
-      console.error('Error saving field order:', error);
-      notification.error({
-        message: 'Error',
-        description: 'An error occurred while saving the field order.',
-      });
+  const exportTableToExcel = () => {
+    if (quantitySheetData.length > 0) {
+      // Remove unnecessary fields including quantitySheetId, projectId, and processId
+      const cleanedData = quantitySheetData.map(({ quantitySheetId, projectId, processId, status, ...rest }) => rest);
+  
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(cleanedData);
+      XLSX.utils.book_append_sheet(wb, ws, `Project_${selectedProjectId}_Details`);
+      XLSX.writeFile(wb, `Project_${selectedProjectId}_Details.xlsx`);
     }
   };
+  
 
-  const sortData = (data) => {
-    if (fieldOrder.length === 0) return data;
-
-    return [...data].sort((a, b) => {
-      for (const field of fieldOrder) {
-        if (a[field] < b[field]) return -1;
-        if (a[field] > b[field]) return 1;
-      }
-      return 0;
+  const handleFilterChange = (e) => {
+    setFilters({
+      ...filters,
+      [e.target.name]: e.target.value,
     });
   };
 
-  const downloadPDF = () => {
-    const doc = new jsPDF();
-    const totalPagesExp = '{total_pages_count_string}';
-
-    doc.setFontSize(12);
-    doc.setFont('Helvetica', 'normal');
-
-    const text = `Report For Group ${projectName}`;
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const textWidth = doc.getStringUnitWidth(text) * doc.internal.scaleFactor;
-    const xPosition = (pageWidth - textWidth) / 2;
-
-    doc.text(text, xPosition, 20);
-
-    const sortedData = sortData(reportData);
-
-    const tableColumn = ['Serial No.', ...columns.map((col) => col.title)];
-    const tableRows = sortedData.map((data, index) => [
-      index + 1,
-      ...selectedFields.map((field) => data[field]),
-    ]);
-
-    doc.autoTable({
-      head: [tableColumn],
-      body: tableRows,
-      startY: 30,
-      styles: {
-        fontSize: 6,
-        cellPadding: 2,
-        lineColor: [44, 62, 80],
-        lineWidth: 0.2,
-        textColor: [0, 0, 0],
-      },
-      headStyles: {
-        fontSize: 8,
-        fillColor: [22, 160, 133],
-        textColor: [255, 255, 255],
-        lineColor: [44, 62, 80],
-        lineWidth: 0.2,
-        halign: 'center',
-        valign: 'middle',
-      },
-      theme: 'striped',
-      margin: { top: 20 },
-      didDrawPage: (data) => {
-        const pageCount = doc.internal.getNumberOfPages();
-        const pageSize = doc.internal.pageSize;
-        const pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight();
-        const pageWidth = pageSize.width ? pageSize.width : pageSize.getWidth();
-
-        doc.setFontSize(8);
-        const pageNumberText = `Page ${data.pageNumber} of ${totalPagesExp}`;
-        const textWidth = doc.getStringUnitWidth(pageNumberText) * doc.internal.scaleFactor;
-        const xPosition = pageWidth - textWidth - 10;
-        const yPosition = pageHeight - 10;
-
-        doc.text(pageNumberText, xPosition, yPosition);
-      },
-    });
-
-    if (typeof doc.putTotalPages === 'function') {
-      doc.putTotalPages(totalPagesExp);
-    }
-
-    doc.save(`report_${projectName}.pdf`);
+  const handleSearchChange = (e) => {
+    setSearchInput(e.target.value);
   };
 
-  const downloadExcel = () => {
-    const sortedData = sortData(reportData);
-
-    const filteredData = sortedData.map((data) => {
-      const rowData = {};
-      selectedFields.forEach((field) => {
-        rowData[fieldTitleMapping[field] || field] = data[field];
-      });
-      return rowData;
-    });
-
-    const ws = XLSX.utils.json_to_sheet(filteredData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Report');
-    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-    const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `report_${projectName}.xlsx`;
-    link.click();
-  };
-
-  const menu = (
-    <Menu>
-      <Menu.Item key="1">
-        <Button type="primary" onClick={downloadPDF} style={{ width: '100%' }}>
-          Download PDF
-        </Button>
-      </Menu.Item>
-      <Menu.Item key="2">
-        <Button type="primary" onClick={downloadExcel} style={{ width: '100%' }}>
-          Download Excel
-        </Button>
-      </Menu.Item>
-    </Menu>
+  const filteredData = quantitySheetData.filter((sheet) => {
+  return (
+    (filters.examDate
+      ? new Date(sheet.examDate).toLocaleDateString().includes(filters.examDate)
+      : true) &&
+    (filters.catchNo
+      ? String(sheet.catchNo).toLowerCase().includes(filters.catchNo.toLowerCase())
+      : true) &&
+    (filters.paper
+      ? String(sheet.paper).toLowerCase().includes(filters.paper.toLowerCase())
+      : true) &&
+    (filters.lotNo
+      ? String(sheet.lotNo).toLowerCase().includes(filters.lotNo.toLowerCase())
+      : true) &&
+    (filters.subject
+      ? String(sheet.subject).toLowerCase().includes(filters.subject.toLowerCase())
+      : true) &&
+    (filters.course
+      ? String(sheet.course).toLowerCase().includes(filters.course.toLowerCase())
+      : true)
   );
+});
+
+
+  const filteredProjects = projectData.filter(project =>
+    projectDetails[project.projectId]?.name.toLowerCase().includes(searchInput.toLowerCase())
+  );
+
+  const projectsToDisplay = showAll ? filteredProjects : filteredProjects.slice(0, 6);
 
   return (
-    <div className={`${customDark === 'dark-dark' ? 'text-white' : customDarkText}`} style={{ padding: '20px' }}>
-      <h1>Project Reports</h1>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <Button type="primary" onClick={fetchReportData} style={{ marginRight: '10px' }}>
-          Fetch Report Data
-        </Button>
-
-        <Button
-          type="primary"
-          onClick={() => setShowData(!showData)}
+    <Container className="mt-4">
+      <h3>Project Report</h3>
+      <InputGroup className="mb-4" style={{ maxWidth: "450px", margin: "0 auto", boxShadow: "0 4px 8px rgba(0, 123, 255, 0.1)", borderRadius: "20px" }}>
+        <InputGroup.Text
+          style={{
+            backgroundColor: "#007bff",
+            borderRadius: "12px 0 0 12px",
+            fontSize: "18px",
+            padding: "12px 18px",
+            color: "#fff",
+            border: "none",
+          }}
         >
-          {showData ? 'Hide Data' : 'Show Data'}
-        </Button>
+          <FaSearch />
+        </InputGroup.Text>
+        <Form.Control
+          type="text"
+          placeholder="Search Projects"
+          value={searchInput}
+          onChange={handleSearchChange}
+          style={{
+            borderRadius: "0 12px 12px 0",
+            padding: "15px 20px",
+            fontSize: "16px",
+            border: "2px solid #007bff",
+            transition: "all 0.3s ease",
+            outline: "none",
+          }}
+        />
+      </InputGroup>
 
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexGrow: 1 }}>
-          {
-            assignedUsers.length > 0 && (
-              <>
-                <div style={{ marginRight: '8px', fontWeight: 'bold' }}>Worked by:</div>
-                <p>{assignedUsers.map(user => user.fullName).join(', ')}</p>
-              </>
-            )
-          }
-        </div>
+      <Button
+        variant="outline-info"
+        onClick={toggleShowAll}
+        className="mb-3"
+        style={{
+          fontWeight: "bold",
+          padding: "6px 12px",
+          borderRadius: "20px",
+        }}
+      >
+        {showAll ? (
+          <>
+            <FaChevronUp className="me-2" /> Show Less
+          </>
+        ) : (
+          <>
+            <FaChevronDown className="me-2" /> Show All Projects
+          </>
+        )}
+      </Button>
 
-        <Dropdown overlay={menu} trigger={['click']} style={{ marginLeft: 'auto' }}>
-          <Button type="primary">
-            Export <DownOutlined />
-          </Button>
-        </Dropdown>
-      </div>
+      <Row className="g-4">
+        {projectsToDisplay.map((project) => (
+          <Col sm={12} md={6} lg={12} key={project.projectId}>
+            <Card
+              className="shadow-lg rounded"
+              style={{
+                backgroundColor: project.completionPercentage > 0.5 ? "#d4edda" : "#f8d7da",
+                borderLeft: `5px solid ${project.completionPercentage > 0.5 ? "#28a745" : "#dc3545"}`,
+              }}
+            >
+              <Card.Body>
+                <Card.Header className="bg-light text-center">
+                  <Card.Title>
+                    {projectDetails[project.projectId]?.name || `Project ${project.projectId}`}
+                  </Card.Title>
+                </Card.Header>
+                <Card.Text
+                  className="mt-3"
+                  style={{
+                    color:
+                      project.completionPercentage > 0.75
+                        ? "green"
+                        : project.completionPercentage > 0.5
+                          ? "orange"
+                          : "red",
+                  }}
+                >
+                  Completion Percentage: {(project.completionPercentage * 100).toFixed(2)}%
+                </Card.Text>
+                <Card.Text
+                  style={{
+                    color:
+                      project.projectTotalQuantity > 1000
+                        ? "darkblue"
+                        : project.projectTotalQuantity > 500
+                          ? "teal"
+                          : "gray",
+                  }}
+                >
+                  Total Quantity: {project.projectTotalQuantity}
+                </Card.Text>
+                <Button
+                  variant="outline-primary"
+                  onClick={() => openModal(project.projectId)}
+                  className="d-flex align-items-center"
+                >
+                  <FaInfoCircle className="me-2" /> Show Details
+                </Button>
+              </Card.Body>
+            </Card>
+          </Col>
+        ))}
+      </Row>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-        <Select
-          mode="multiple"
-          style={{ flex: '1 1 300px', minWidth: '300px' }}
-          placeholder="Select fields to show"
-          value={selectedFields}
-          onChange={setSelectedFields}
-        >
-          {dataKeys.map((key) => (
-            <Option key={key} value={key}>
-              {fieldTitleMapping[key] || key}
-            </Option>
-          ))}
-        </Select>
+      <Modal show={showModal} onHide={closeModal} fullscreen={true} centered>
+  <Modal.Header
+    closeButton
+    style={{
+      background: "linear-gradient(45deg, #007bff, #6610f2)",
+      color: "#fff",
+    }}
+  >
+    <Modal.Title className="w-100 text-center">
+      {projectDetails[selectedProjectId]?.name || `Project ${selectedProjectId}`}
+    </Modal.Title>
+  </Modal.Header>
+  <Modal.Body style={{ padding: "20px" }}>
+  <Button
+    variant="success"
+    onClick={exportTableToExcel}
+    style={{
+      fontWeight: "bold",
+      padding: "8px 16px",
+      borderRadius: "8px",
+      position: "absolute",
+      top: "20px",
+      right: "20px",
+      zIndex: 10,
+    }}
+  >
+    <FaFileExcel className="me-2" />
+    Download Excel
+  </Button>
 
-        <Select
-          mode="multiple"
-          style={{ flex: '1 1 300px', minWidth: '300px' }}
-          placeholder="Select fields to order"
-          value={fieldOrder}
-          onChange={handleFieldOrderChange}
-        >
-          {sortableFields.map((key) => (
-            <Option key={key} value={key}>
-              {fieldTitleMapping[key] || key}
-            </Option>
-          ))}
-        </Select>
+  {/* Filter Controls */}
+  <Form className="mb-4 p-4 shadow-sm rounded" style={{ backgroundColor: "#f8f9fa" }}>
+    <Row className="gy-3">
+      {Object.keys(filters).map((filterKey) => (
+        <Col md={4} key={filterKey}>
+          <Form.Group controlId={`filter-${filterKey}`}>
+            <Form.Label
+              style={{
+                fontWeight: "bold",
+                color: "#495057",
+                fontSize: "14px",
+              }}
+            >
+              {filterKey.charAt(0).toUpperCase() + filterKey.slice(1)}
+            </Form.Label>
+            <Form.Control
+              type="text"
+              placeholder={`Enter ${filterKey}`}
+              value={filters[filterKey]}
+              onChange={(e) => handleFilterChange(e)}
+              name={filterKey}
+              style={{
+                borderRadius: "10px",
+                padding: "10px",
+                border: "1px solid #ced4da",
+                fontSize: "14px",
+                backgroundColor: "#fff",
+              }}
+            />
+          </Form.Group>
+        </Col>
+      ))}
+    </Row>
+  </Form>
 
-        <Button
-          type="primary"
-          icon={<SaveOutlined />}
-          onClick={handleSaveOrder}
-          style={{ flex: '1 1 20px', minWidth: '20px' }}
-        >
-          Save as my Report
-        </Button>
-      </div>
+  {/* Data Table */}
+  <Table responsive hover bordered striped>
+  <thead>
+    <tr>
+      
+     
+      <th>Catch No.</th>
+      <th>Paper</th>
+      <th>Subject</th>
+      <th>Course</th>
+      <th>Exam Date</th>
+      <th>Lot No.</th>
+      <th>Quantity</th>
+      <th>Pages</th>
+      <th>Percentage Catch</th>
+      <th>Interim Quantity</th>
+      <th>Remarks</th>
+      <th>Voice Recording</th>
+      <th>Zone</th>
+      <th>Machine</th>
+      
+      <th>Alarm</th>
+      <th>Team</th>
+    </tr>
+  </thead>
+  <tbody>
+    {filteredData.map((sheet, index) => (
+      <tr key={index}>
+       
+       
+        <td>{sheet.catchNo}</td>
+        <td>{sheet.paper}</td>
+        <td>{sheet.subject}</td>
+        <td>{sheet.course}</td>
+        <td>{new Date(sheet.examDate).toLocaleDateString()}</td>
+        <td>{sheet.lotNo}</td>
+        <td>{sheet.quantity}</td>
+        <td>{sheet.pages}</td>
+        <td>{sheet.percentageCatch?.toFixed(2)}%</td>
+        <td>{sheet.interimQuantity}</td>
+        <td>{sheet.remarks }</td>
+        <td>{sheet.voiceRecording }</td>
+        <td>{sheet.zoneId}</td>
+        <td>{sheet.machineId}</td>
+       
+        <td>{sheet.alarmId }</td>
+        <td>{sheet.teamId?.join(", ") }</td>
+      </tr>
+    ))}
+  </tbody>
+</Table>
 
-      {loading ? (
-        <Spin tip="Loading..." style={{ marginTop: '20px' }} />
-      ) : (
-        showData && (
-          <Table
-            columns={columns}
-            dataSource={sortData(reportData)}
-            rowKey="id"
-            style={{ marginTop: '20px' }}
-          />
-        )
-      )}
-    </div>
+</Modal.Body>
+
+</Modal>
+
+    </Container>
   );
 };
 
-export default Reports;
+export default ProjectReport;
+

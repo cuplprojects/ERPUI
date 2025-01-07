@@ -656,7 +656,7 @@ const ProjectDetailsTable = ({
           },
         ]
       : []),
-    ...(columnVisibility["Paper"] && processId === 8
+    ...(columnVisibility["Paper"] 
       ? [
           {
             title: t("questionPaper"),
@@ -668,10 +668,10 @@ const ProjectDetailsTable = ({
           },
         ]
       : []),
-      ...(columnVisibility["Envelopes"] && processId === 8
+      ...(columnVisibility["Envelopes"] 
         ? [
             {
-              title: t("envelopes"),
+              title: t("innerEnvelope"),
               dataIndex: "envelopes",
               width: "20%",
               align: "center",
