@@ -9,6 +9,7 @@ import {
   Form,
   Row,
   Col,
+  message,
 } from "antd";
 import { useStore } from "zustand";
 import { Modal as BootstrapModal } from "react-bootstrap";
@@ -81,6 +82,8 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
   const [minDate, setMinDate] = useState(null);
   const [maxDate, setMaxDate] = useState(null);
   const [isinTransaction, setIsInTransaction] = useState([]);
+  const [editableRowKey, setEditableRowKey] = useState(null); // Track editable row
+  const [editedRow, setEditedRow] = useState({}); // Store edited row data
 
   const columns = [
     {
@@ -131,6 +134,17 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
       key: "paper",
       width: 100,
       sorter: (a, b) => a.paper.localeCompare(b.paper),
+      render: (text, record) => {
+        if (editableRowKey === record.key) {
+          return (
+            <Input
+              value={editedRow.paper}
+              onChange={(e) => handleInputChange("paper", e.target.value)}
+            />
+          );
+        }
+        return text;
+      },
     },
     {
       title: t("course"),
@@ -138,6 +152,17 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
       key: "course",
       width: 100,
       sorter: (a, b) => a.course.localeCompare(b.course),
+      render: (text, record) => {
+        if (editableRowKey === record.key) {
+          return (
+            <Input
+              value={editedRow.course}
+              onChange={(e) => handleInputChange("course", e.target.value)}
+            />
+          );
+        }
+        return text;
+      },
     },
     {
       title: t("subject"),
@@ -145,6 +170,17 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
       key: "subject",
       width: 100,
       sorter: (a, b) => a.subject.localeCompare(b.subject),
+      render: (text, record) => {
+        if (editableRowKey === record.key) {
+          return (
+            <Input
+              value={editedRow.subject}
+              onChange={(e) => handleInputChange("subject", e.target.value)}
+            />
+          );
+        }
+        return text;
+      },
     },
     {
       title: t("examDate"),
@@ -169,6 +205,17 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
           )}
         </span>
       ),
+      render: (text, record) => {
+        if (editableRowKey === record.key) {
+          return (
+            <Input
+              value={editedRow.examDate}
+              onChange={(e) => handleInputChange("examDate", e.target.value)}
+            />
+          );
+        }
+        return text;
+      },
     },
     {
       title: t("examTime"),
@@ -176,6 +223,17 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
       key: "examTime",
       width: 100,
       sorter: (a, b) => a.examTime.localeCompare(b.examTime),
+      render: (text, record) => {
+        if (editableRowKey === record.key) {
+          return (
+            <Input
+              value={editedRow.examTime}
+              onChange={(e) => handleInputChange("examTime", e.target.value)}
+            />
+          );
+        }
+        return text;
+      },
     },
     {
       title: t("innerEnvelope"),
@@ -228,6 +286,19 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
         const isDispatched = dispatchedLots.includes(selectedLotNo);
         return (
           <>
+            {editableRowKey === record.key ? (
+              <>
+                <Button
+                  type="primary"
+                  onClick={handleSave}
+                  style={{ marginRight: 8 }}
+                >
+                  {t("save")}
+                </Button>
+                <Button onClick={handleCancel}>{t("cancel")}</Button>
+              </>
+            ) : (
+          <>
             <Button
               icon={<DeleteOutlined />}
               onClick={() => handleRemoveButtonClick(record.key)}
@@ -238,10 +309,19 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
             <Button
               icon={<StopOutlined />}
               onClick={() => handleStopButtonClick(record.key)}
+              style={{ marginRight: 8 }}
               danger
               disabled={isDispatched}
             />
+            <Button
+            icon= {<EditOutlined/>}
+            onClick={() => handleCatchEditButton(record)}
+            danger
+            disabled= {isDispatched}
+            />
           </>
+            )}
+            </>
         );
       },
     },
@@ -574,8 +654,39 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
     }
   };
 
- 
-  
+
+  const handleCatchEditButton = (key) => {
+    setEditableRowKey(key?.quantitySheetId); // Set the row key to editable
+    setEditedRow(key); // Initialize with the existing row data
+  };
+
+  const handleInputChange = (field, value) => {
+    setEditedRow({ ...editedRow, [field]: value }); // Update edited row data
+  };
+  const handleSave = async () => {
+    try {
+      const response = await API.put(
+        `/QuantitySheet/update/${editedRow.quantitySheetId}`,
+        editedRow
+      );
+
+      if (response.status === 200) {
+        message.success(t("updateSuccess"));
+        setEditableRowKey(null); // Exit edit mode
+        fetchQuantity()
+      } else {
+        message.error(t("updateFailed"));
+      }
+    } catch (error) {
+      console.error(error);
+      message.error(t("updateFailed"));
+    }
+  };
+
+  const handleCancel = () => {
+    setEditableRowKey(null); // Exit edit mode
+    setEditedRow({}); // Reset edited row
+  };
   const handlePageSizeChange = (current, size) => {
     setPageSize(size);
   };
