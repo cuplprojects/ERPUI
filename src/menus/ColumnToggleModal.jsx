@@ -40,11 +40,15 @@ const ColumnToggleModal = ({ show, handleClose, columnVisibility, setColumnVisib
         { key: 'Remarks', label: 'remarks' },
         { key: 'Team Assigned', label: 'teamAssigned' },
         { key: 'Paper', label: 'paper' },
+        { key: 'Paper Details', label: 'paperDetails' },
+        { key: 'Envelopes', label: 'envelopes' },
         { key: 'Course', label: 'course' },
         { key: 'Machine', label: 'machine' },
         { key: 'Zone', label: 'zone' },
         { key: 'Subject', label: 'subject' },
-        { key: 'Exam Date', label: 'examDate' }
+        { key: 'Exam Date', label: 'examDate' },
+        { key: 'Exam Time', label: 'examTime' },
+        { key: 'Pages', label: 'Pages' }
     ];
 
     return (
