@@ -80,6 +80,7 @@ const ProjectDetailsTable = ({
     Subject: false, //window.innerWidth >= 992,
     Zone: false, // Add Zone visibility
     Machine: false, // Add Machine visibility
+    Pages: false,
   });
 
   const [hideCompleted, setHideCompleted] = useState(false);
@@ -111,7 +112,6 @@ const ProjectDetailsTable = ({
   // Update pages in qtysheet modal
   const [inputPagesModalData, setInputPagesModalData] = useState(null);
   const [inputPagesModalShow, setInputPagesModalShow] = useState(false);
-  const [examDateData, setExamDateData] = useState([]);
   const [envelopeData, setEnvelopeData] = useState({});
   const [
     showOnlyCompletedPreviousProcess,
@@ -122,6 +122,7 @@ const ProjectDetailsTable = ({
   const [courseData, setCourseData] = useState([]);
   const [subjectData, setSubjectData] = useState([]);
   const [examDate, setExamDate] = useState([]);
+
 
   const showNotification = (type, messageKey, descriptionKey, details = "") => {
     notification[type]({
@@ -559,6 +560,17 @@ const ProjectDetailsTable = ({
           },
         ]
       : []),
+    ...(columnVisibility["Pages"]
+      ? [
+          {
+            title: t("Pages"),
+            dataIndex: "pages",
+            align: "center",
+            key: "pages",
+            sorter: (a, b) => a.pages - b.pages,
+          },
+        ]
+      : []),
     ...(columnVisibility["Interim Quantity"]
       ? [
           {
@@ -647,7 +659,7 @@ const ProjectDetailsTable = ({
           },
         ]
       : []),
-    ...(columnVisibility["Paper"] && processId === 8
+    ...(columnVisibility["Paper"] 
       ? [
           {
             title: t("questionPaper"),
@@ -659,10 +671,10 @@ const ProjectDetailsTable = ({
           },
         ]
       : []),
-      ...(columnVisibility["Envelopes"] && processId === 8
+      ...(columnVisibility["Envelopes"] 
         ? [
             {
-              title: t("envelopes"),
+              title: t("innerEnvelope"),
               dataIndex: "envelopes",
               width: "20%",
               align: "center",
