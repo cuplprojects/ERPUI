@@ -384,6 +384,7 @@ const ProjectDetailsTable = ({
 
   const columns = [
     {
+      fixed:'left',
       title: (
         <input
           type="checkbox"
@@ -428,6 +429,7 @@ const ProjectDetailsTable = ({
     },
     {
       title: t("srNo"),
+      fixed:'left',
       key: "srNo",
       align: "center",
       render: (_, __, index) => (currentPage - 1) * pageSize + index + 1,
@@ -435,6 +437,7 @@ const ProjectDetailsTable = ({
     },
     {
       title: t("catchNo"),
+      fixed:'left',
       dataIndex: "catchNumber",
       key: "catchNumber",
       align: "center",
