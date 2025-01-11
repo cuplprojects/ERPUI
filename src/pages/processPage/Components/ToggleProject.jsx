@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { Col } from "react-bootstrap";
 import { useTranslation } from "react-i18next";
 import { Dropdown, Menu } from "antd";
 import API from "../../../CustomHooks/MasterApiHooks/api";
@@ -39,24 +38,33 @@ const ToggleProject = ({ projectName, selectedLot, onChange }) => {
   };
 
   const menu = (
-    <Menu>
-      {projects.map((project) => (
-        <Menu.Item
-          key={project.projectId}
-          onClick={() => handleMenuClick(project)}
-          style={{
-            fontSize: "14px",
-            padding: "8px 12px",
-            whiteSpace: "normal",
-            lineHeight: "1.2",
-            wordBreak: "break-word",
-          }}
-        >
-          {project.name}
-          {project.noOfSeries > 0 ? ` (${project.seriesName})` : ""}
-        </Menu.Item>
-      ))}
-    </Menu>
+    <div
+      style={{
+        maxHeight: "300px",
+        overflowY: "auto",
+        borderRadius: "4px",
+      }}
+    >
+      <Menu>
+        {projects.map((project) => (
+          <Menu.Item
+            key={project.projectId}
+            onClick={() => handleMenuClick(project)}
+            style={{
+              fontSize: "14px",
+              padding: "8px 12px",
+              whiteSpace: "normal",
+              lineHeight: "1.2",
+              wordBreak: "break-word",
+              borderRadius: "4px",
+            }}
+          >
+            {project.name}
+            {project.noOfSeries > 0 ? ` (${project.seriesName})` : ""}
+          </Menu.Item>
+        ))}
+      </Menu>
+    </div>
   );
 
   const selectedProject = projects.find((p) => p.name === projectName);
