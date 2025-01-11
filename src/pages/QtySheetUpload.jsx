@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {Form,Upload,Button,Select,message,Menu,Spin} from "antd";
+import { Form, Upload, Button, Select, message, Menu, Spin } from "antd";
 import { Row, Col, Modal } from "react-bootstrap";
 import { UploadOutlined, DeleteOutlined } from "@ant-design/icons";
 import * as XLSX from "xlsx";
@@ -12,7 +12,7 @@ import API from "../CustomHooks/MasterApiHooks/api";
 import { useTranslation } from "react-i18next";
 import { decrypt } from "../Security/Security";
 import { BsCheckCircleFill } from "react-icons/bs";
-import {success,error,warning} from "../CustomHooks/Services/AlertMessageService";
+import { success, error, warning } from "../CustomHooks/Services/AlertMessageService";
 
 // Helper function to convert Excel date number to JS Date
 const convertExcelDate = (excelDate) => {
@@ -71,7 +71,7 @@ const QtySheetUpload = () => {
   const [isProcessingFile, setIsProcessingFile] = useState(false);
   const [showDeleteButton, setShowDeleteButton] = useState(false);
   const [hasUploadedFile, setHasUploadedFile] = useState(false);
- const [rightClickLotNo, setRightClickLotNo] = useState(null);
+  const [rightClickLotNo, setRightClickLotNo] = useState(null);
   const [isUpdateMode, setIsUpdateMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -108,7 +108,7 @@ const QtySheetUpload = () => {
     };
 
     checkTransactionExistence();
-  }, [hasUploadedFile, isLotsFetched,selectedLotNo]); // Run when hasUploadedFile changes
+  }, [hasUploadedFile, isLotsFetched, selectedLotNo]); // Run when hasUploadedFile changes
 
   useEffect(() => {
     const fetchProjectName = async () => {
@@ -216,9 +216,14 @@ const QtySheetUpload = () => {
       // Convert Excel date to proper date format
       const examDate = item.ExamDate ? convertExcelDate(item.ExamDate) : null;
       const lotNo = String(item.LotNo || "").trim();
+      const catchNo = String(item.CatchNo || "").trim();
+      const innerEnvelope = String(item.InnerEnvelope || "").trim();
 
       // Debugging lotNo value before sending it
       console.log(`lotNo before payload:`, lotNo, `Type:`, typeof lotNo);
+      console.log(`catchNo before payload:`, catchNo, `Type:`, typeof catchNo);
+      console.log(`innerEnvelope before payload:`, innerEnvelope, `Type:`, typeof innerEnvelope);
+
       return {
         catchNo: item.CatchNo || "",
         paper: item.Paper || "",
@@ -235,10 +240,9 @@ const QtySheetUpload = () => {
         processId: [0],
         status: 0,
         pages: item.Pages || 0,
+        stopCatch : 0,
       };
     });
-
-
 
     try {
       const response = await API.post("/QuantitySheet", finalPayload, {
@@ -271,15 +275,30 @@ const QtySheetUpload = () => {
         const workbook = XLSX.read(data, { type: "array" });
         const firstSheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[firstSheetName];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
   
+        // Convert the sheet to JSON with the first row as headers
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+        // Ensure that jsonData[0] is an array (header row)
+        if (!Array.isArray(jsonData[0])) {
+          console.error('The first row (headers) is not an array.', jsonData[0]);
+          resolve([]);  // Resolve with an empty array if the headers are malformed
+          return;
+        }
         const rows = jsonData.slice(1); // Skip the header row
         const mappedData = rows.map((row) => {
           const rowData = {};
   
           // Iterate over each field in fieldMappings
           for (let property in fieldMappings) {
-            const headers = fieldMappings[property]; // Array of headers for this field
+
+            let headers = fieldMappings[property]; // Array of headers for this field
+  
+            // Ensure headers is an array
+            if (!Array.isArray(headers)) {
+              headers = [headers]; // Convert to array if it's a single value
+            }
+
   
             // If there are multiple headers for the property, create a string value
             if (headers.length > 1) {
@@ -302,17 +321,14 @@ const QtySheetUpload = () => {
               const header = headers[0]; // Only one header for this property
               const index = jsonData[0].indexOf(header);
               if (index !== -1) {
-                let value = row[index] || "";  // Get the value for that header
+                let value = row[index] || ""; // Get the value for that header
   
-                // Explicitly convert 'lotNo' field to string
-                if (property === "LotNo") {
-                  value = String(value).trim();  // Ensure 'lotNo' is treated as a string
-                   console.log(`lotNo value before sending:`, value, `Type:`, typeof value);
+                // Explicitly convert 'LotNo' and 'CatchNo' to strings
+                if (property === "LotNo" || property === "CatchNo" || property === "InnerEnvelope") {
+                  value = String(value).trim(); // Ensure 'LotNo' and 'CatchNo' are treated as strings
+                  console.log(`${property} value before sending:`, value, `Type:`, typeof value);
                 }
-  
-                // Log the value of lotNo before returning it
-               
-  
+
                 // Add the value directly to the rowData
                 rowData[property] = value || ""; // Default to empty string if no value found
               }
@@ -322,22 +338,18 @@ const QtySheetUpload = () => {
           // Add additional fields like projectId or percentageCatch
           rowData["projectId"] = projectId;
           rowData["percentageCatch"] = "0";
-  
-          // If the rowData has only single field data and no complex mappings, exclude that property.
-          // In other words, only return rowData if it contains multiple fields after processing.
-          return rowData;
+
+          return rowData; // Return the mapped row data
         });
   
-        setMappeddata(mappedData);  // Set the processed data
-        resolve(mappedData);
+        setMappeddata(mappedData); // Set the processed data
+        resolve(mappedData); // Resolve with the mapped data
       };
-      reader.readAsArrayBuffer(selectedFile); // Read the file
+  
+      // Read the file as an ArrayBuffer
+      reader.readAsArrayBuffer(selectedFile);
     });
   };
-  
-  
-  
-  
   
 
   const handleUpdate = async () => {
@@ -434,7 +446,6 @@ const QtySheetUpload = () => {
       const workbook = XLSX.read(data, { type: "array" });
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[firstSheetName];
-  
       // Convert the sheet to JSON with the first row as headers
       const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
   
@@ -448,24 +459,23 @@ const QtySheetUpload = () => {
         setIsProcessingFile(false); // Hide loader if no valid data
         return;
       }
-  
+
+
       // Extract the headers (first row of the data)
       const excelHeaders = filteredData[0];
       setHeaders(excelHeaders);
-  
+
       setShowMappingFields(true);
       setShowDisclaimer(true);
-  
+
       // Dynamically build the field mappings based on multiple headers per field
       const autoMappings = {};
-  
       // Adjust this to support multiple headers per field
       columns.forEach((col) => {
         // Create an array to hold all matching headers for the current field
         const matchingHeaders = excelHeaders.filter(
           (header) => header?.toLowerCase() === col?.toLowerCase()
         );
-  
         // Assign the matching headers (or empty array if no match found)
         autoMappings[col] = matchingHeaders.length > 0 ? matchingHeaders : [];
       });
@@ -477,6 +487,7 @@ const QtySheetUpload = () => {
   };
   
 
+
   const handleMappingChange = (property, value) => {
     setFieldMappings((prev) => {
       const newMappings = { ...prev };
@@ -486,6 +497,8 @@ const QtySheetUpload = () => {
   };
   
   
+
+
 
   const getAvailableOptions = (property) => {
     const selectedValues = Object.values(fieldMappings).flat();
@@ -678,8 +691,8 @@ const QtySheetUpload = () => {
                   {isUpdateMode
                     ? t("updateLots")
                     : isLotsFetched
-                    ? t("updateLots")
-                    : t("uploadLots")}
+                      ? t("updateLots")
+                      : t("uploadLots")}
                 </Button>
               )}
             </Form.Item>
@@ -690,11 +703,10 @@ const QtySheetUpload = () => {
                   return (
                     <Button
                       key={index}
-                      className={`${
-                        selectedLotNo === lotNo
+                      className={`${selectedLotNo === lotNo
                           ? "bg-white text-dark border-dark"
                           : customBtn
-                      } d-flex align-items-center justify-content-center p-2`}
+                        } d-flex align-items-center justify-content-center p-2`}
                       type="primary"
                       onClick={() => handleLotClick(lotNo)}
                       onContextMenu={(e) => handleRightClick(e, lotNo)}
@@ -704,9 +716,8 @@ const QtySheetUpload = () => {
                         <BsCheckCircleFill className="ms-1 text-success" />
                       ) : (
                         <IoMdEye
-                          className={`ms-1 ${
-                            selectedLotNo === lotNo ? "" : ""
-                          }`}
+                          className={`ms-1 ${selectedLotNo === lotNo ? "" : ""
+                            }`}
                         />
                       )}
                     </Button>
@@ -808,8 +819,8 @@ const QtySheetUpload = () => {
                     <td>{property} </td>
                     <td>
                       <Select
-                       mode="multiple"
-                       allowClear
+                        mode={property === "InnerEnvelope" ? "multiple" : "default"}
+                        allowClear
                         value={fieldMappings[property]}
                         onChange={(value) =>
                           handleMappingChange(property, value)

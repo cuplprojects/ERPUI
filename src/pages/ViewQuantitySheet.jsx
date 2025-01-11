@@ -9,6 +9,7 @@ import {
   Form,
   Row,
   Col,
+  message,
 } from "antd";
 import { useStore } from "zustand";
 import { Modal as BootstrapModal } from "react-bootstrap";
@@ -42,7 +43,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
     course: "",
     subject: "",
     innerEnvelope: "",
-    outerEnvelope: 0,
+    outerEnvelope: "",
     examDate: "",
     examTime: "",
     quantity: 0,
@@ -50,17 +51,17 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
     status: 0,
     projectId: projectId,
     quantitySheetId: quantitySheetId,
-    pages: 0,
   });
   const [formErrors, setFormErrors] = useState({});
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showStopModal, setShowStopModal] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
+  const [itemToStop, setItemToStop] = useState(null);
   const [showNewRow, setShowNewRow] = useState(false);
   const [CTP_ID, setCTP_ID] = useState(null);
   const [OFFSET_PRINTING_ID, setOFFSET_PRINTING_ID] = useState(null);
   const [DIGITAL_PRINTING_ID, setDIGITAL_PRINTING_ID] = useState(null);
-  const [CUTTING_ID, setCUTTING_ID] = useState(null);
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
   const [
@@ -80,6 +81,9 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
   const [dates, setDates] = useState([]);
   const [minDate, setMinDate] = useState(null);
   const [maxDate, setMaxDate] = useState(null);
+  const [isinTransaction, setIsInTransaction] = useState([]);
+  const [editableRowKey, setEditableRowKey] = useState(null); // Track editable row
+  const [editedRow, setEditedRow] = useState({}); // Store edited row data
 
   const columns = [
     {
@@ -130,6 +134,17 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
       key: "paper",
       width: 100,
       sorter: (a, b) => a.paper.localeCompare(b.paper),
+      render: (text, record) => {
+        if (editableRowKey === record.key) {
+          return (
+            <Input
+              value={editedRow.paper}
+              onChange={(e) => handleInputChange("paper", e.target.value)}
+            />
+          );
+        }
+        return text;
+      },
     },
     {
       title: t("course"),
@@ -137,6 +152,17 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
       key: "course",
       width: 100,
       sorter: (a, b) => a.course.localeCompare(b.course),
+      render: (text, record) => {
+        if (editableRowKey === record.key) {
+          return (
+            <Input
+              value={editedRow.course}
+              onChange={(e) => handleInputChange("course", e.target.value)}
+            />
+          );
+        }
+        return text;
+      },
     },
     {
       title: t("subject"),
@@ -144,6 +170,17 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
       key: "subject",
       width: 100,
       sorter: (a, b) => a.subject.localeCompare(b.subject),
+      render: (text, record) => {
+        if (editableRowKey === record.key) {
+          return (
+            <Input
+              value={editedRow.subject}
+              onChange={(e) => handleInputChange("subject", e.target.value)}
+            />
+          );
+        }
+        return text;
+      },
     },
     {
       title: t("examDate"),
@@ -168,6 +205,17 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
           )}
         </span>
       ),
+      render: (text, record) => {
+        if (editableRowKey === record.key) {
+          return (
+            <Input
+              value={editedRow.examDate}
+              onChange={(e) => handleInputChange("examDate", e.target.value)}
+            />
+          );
+        }
+        return text;
+      },
     },
     {
       title: t("examTime"),
@@ -175,6 +223,17 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
       key: "examTime",
       width: 100,
       sorter: (a, b) => a.examTime.localeCompare(b.examTime),
+      render: (text, record) => {
+        if (editableRowKey === record.key) {
+          return (
+            <Input
+              value={editedRow.examTime}
+              onChange={(e) => handleInputChange("examTime", e.target.value)}
+            />
+          );
+        }
+        return text;
+      },
     },
     {
       title: t("innerEnvelope"),
@@ -198,13 +257,6 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
       sorter: (a, b) => a.quantity - b.quantity,
     },
     {
-      title: t("pages"),
-      dataIndex: "pages",
-      key: "pages",
-      width: 100,
-      sorter: (a, b) => a.pages - b.pages,
-    },
-    {
       title: t("Process"),
       dataIndex: "processId",
       key: "processId",
@@ -212,8 +264,8 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
       render: (text) =>
         Array.isArray(text)
           ? text
-              .map((id) => process.find((proc) => proc.id === id)?.name)
-              .join(", ") || t("notApplicable")
+            .map((id) => process.find((proc) => proc.id === id)?.name)
+            .join(", ") || t("notApplicable")
           : t("notApplicable"),
       sorter: (a, b) => {
         const aProcesses = a.processId
@@ -234,12 +286,19 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
         const isDispatched = dispatchedLots.includes(selectedLotNo);
         return (
           <>
-            {/* <Button
-              icon={<EditOutlined />}
-              onClick={() => handleEditButtonClick(record.key)}
-              style={{ marginRight: 8 }}
-              disabled={isDispatched}
-            /> */}
+            {editableRowKey === record.key ? (
+              <>
+                <Button
+                  type="primary"
+                  onClick={handleSave}
+                  style={{ marginRight: 8 }}
+                >
+                  {t("save")}
+                </Button>
+                <Button onClick={handleCancel}>{t("cancel")}</Button>
+              </>
+            ) : (
+          <>
             <Button
               icon={<DeleteOutlined />}
               onClick={() => handleRemoveButtonClick(record.key)}
@@ -250,10 +309,19 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
             <Button
               icon={<StopOutlined />}
               onClick={() => handleStopButtonClick(record.key)}
+              style={{ marginRight: 8 }}
               danger
               disabled={isDispatched}
             />
+            <Button
+            icon= {<EditOutlined/>}
+            onClick={() => handleCatchEditButton(record)}
+            danger
+            disabled= {isDispatched}
+            />
           </>
+            )}
+            </>
         );
       },
     },
@@ -343,7 +411,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
     const fetchDispatchedLots = async () => {
       try {
         const response = await API.get(`/Dispatch/project/${projectId}`);
-        const dispatchedLotNos = response.data.filter((dispatch) => dispatch.status).map(
+        const dispatchedLotNos = response.data.map(
           (dispatch) => dispatch.lotNo
         );
         setDispatchedLots(dispatchedLotNos);
@@ -366,14 +434,10 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
       const digitalProcess = response.data.find(
         (proc) => proc.name === "Digital Printing"
       );
-      const cutting = response.data.find(
-        (proc) => proc.name === "Cutting"
-      );
 
       setCTP_ID(ctpProcess ? ctpProcess.id : null);
       setOFFSET_PRINTING_ID(offsetProcess ? offsetProcess.id : null);
       setDIGITAL_PRINTING_ID(digitalProcess ? digitalProcess.id : null);
-      setCUTTING_ID(cutting ? cutting.id : null);
     } catch (error) {
       console.error(t("failedToFetchProcesses"), error);
     }
@@ -390,7 +454,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
 
         if (modalMessage === "switchToDigitalPrintingQuestion") {
           updatedProcessIds = updatedProcessIds.filter(
-            (id) => id !== CTP_ID && id !== OFFSET_PRINTING_ID && id!== CUTTING_ID
+            (id) => id !== CTP_ID && id !== OFFSET_PRINTING_ID
           );
           updatedProcessIds.push(DIGITAL_PRINTING_ID);
         } else if (modalMessage === "switchToOffsetPrintingQuestion") {
@@ -399,7 +463,6 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
           );
           updatedProcessIds.push(CTP_ID);
           updatedProcessIds.push(OFFSET_PRINTING_ID);
-          updatedProcessIds.push(CUTTING_ID);
         }
 
         const payload = {
@@ -442,6 +505,23 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
     }
   };
 
+  const handleConfirmStop = async () => {
+    console.log("handleconfirmclose is called")
+    if (itemToStop) {
+      console.log("handleconfirmclose is called",itemToStop)
+      try {
+        await API.post(`/QuantitySheet/StopCatch?id=${itemToStop.quantitySheetId}`);
+        setDataSource((prevData) =>
+          prevData.filter((item) => item.key !== itemToStop.key)
+        );
+        setShowStopModal(false);
+        setItemToStop(null);
+      } catch (error) {
+        console.error(t("failedToStopItem"), error);
+      }
+    }
+  };
+
   const handleModalClose = () => {
     setShowTransferModal(false);
     setShowDeleteModal(false);
@@ -471,9 +551,8 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
       const hasCTP = record.processId.includes(CTP_ID);
       const hasOffsetPrinting = record.processId.includes(OFFSET_PRINTING_ID);
       const hasDigitalPrinting = record.processId.includes(DIGITAL_PRINTING_ID);
-      const hasCutting = record.processId.includes(CUTTING_ID);
 
-      if (hasCTP && hasOffsetPrinting && hasCutting) {
+      if (hasCTP && hasOffsetPrinting) {
         setModalMessage("switchToDigitalPrintingQuestion");
       } else if (hasDigitalPrinting) {
         setModalMessage("switchToOffsetPrintingQuestion");
@@ -496,16 +575,16 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
     }));
   };
 
-    const validateForm = () => {
-        const errors = {};
-        if (!newRowData.catchNo) errors.catchNo = t('catchNoRequired');
-        if (!newRowData.examDate) errors.examDate = t('examDateRequired');
-        if (!newRowData.examTime) errors.examTime = t('examTimeRequired');
-        if (!newRowData.quantity || newRowData.quantity <= 0) errors.quantity = t('validQuantityRequired');
-        
-        setFormErrors(errors);
-        return Object.keys(errors).length === 0;
-    };
+  const validateForm = () => {
+    const errors = {};
+    if (!newRowData.catchNo) errors.catchNo = t('catchNoRequired');
+    if (!newRowData.examDate) errors.examDate = t('examDateRequired');
+    if (!newRowData.examTime) errors.examTime = t('examTimeRequired');
+    if (!newRowData.quantity || newRowData.quantity <= 0) errors.quantity = t('validQuantityRequired');
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleAddRow = async () => {
     if (!selectedLotNo) {
@@ -533,7 +612,6 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
         examTime: newRowData.examTime,
         processId: [],
         status: 0,
-        pages: newRowData.pages,
       },
     ];
 
@@ -555,9 +633,8 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
         examDate: "",
         examTime: "",
         innerEnvelope: "",
-        outerEnvelope: 0,
+        outerEnvelope: "",
         quantity: 0,
-        pages: 0,
         percentageCatch: 0,
         projectId: projectId,
         status: 0,
@@ -570,9 +647,46 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
   };
 
   const handleStopButtonClick = (key) => {
-    console.log(t("stopButtonClicked"), key);
+    const record = dataSource.find((item) => item.key === key);
+    if (record) {
+      setItemToStop(record);
+      setShowStopModal(true);
+    }
   };
 
+
+  const handleCatchEditButton = (key) => {
+    setEditableRowKey(key?.quantitySheetId); // Set the row key to editable
+    setEditedRow(key); // Initialize with the existing row data
+  };
+
+  const handleInputChange = (field, value) => {
+    setEditedRow({ ...editedRow, [field]: value }); // Update edited row data
+  };
+  const handleSave = async () => {
+    try {
+      const response = await API.put(
+        `/QuantitySheet/update/${editedRow.quantitySheetId}`,
+        editedRow
+      );
+
+      if (response.status === 200) {
+        message.success(t("updateSuccess"));
+        setEditableRowKey(null); // Exit edit mode
+        fetchQuantity()
+      } else {
+        message.error(t("updateFailed"));
+      }
+    } catch (error) {
+      console.error(error);
+      message.error(t("updateFailed"));
+    }
+  };
+
+  const handleCancel = () => {
+    setEditableRowKey(null); // Exit edit mode
+    setEditedRow({}); // Reset edited row
+  };
   const handlePageSizeChange = (current, size) => {
     setPageSize(size);
   };
@@ -590,15 +704,15 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
         return catchRecord && catchRecord.processId.includes(3);
       });
     }
-    
+
     // Check if first catch has process IDs 1 and 2
     if (firstCatch.processId.includes(1) && firstCatch.processId.includes(2)) {
       // Return true only if all catches have process IDs 1 and 2
       return selectedCatches.every(catch_ => {
         const catchRecord = dataSource.find(item => item.quantitySheetId === catch_.id);
-        return catchRecord && 
-               catchRecord.processId.includes(1) && 
-               catchRecord.processId.includes(2);
+        return catchRecord &&
+          catchRecord.processId.includes(1) &&
+          catchRecord.processId.includes(2);
       });
     }
 
@@ -609,224 +723,204 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
     setSelectedCatches(updatedCatches);
   };
 
-    return (
-        <div className='mt-'>
-            {showBtn && (
-                <>
-                    <div className="d-flex justify-content-between align-items-center mb-3 mt-3">
-                        <Input.Search
-                            placeholder={t('searchAllFields')}
-                            onChange={(e) => setSearchText(e.target.value)}
-                            style={{ width: '250px' }}
-                            allowClear
-                        />
-    
-                        <div>
-                            {selectedCatches.length > 0 && !dispatchedLots.includes(selectedLotNo) && (
-                                <>
-                                    <Button
-                                        type="primary"
-                                        className={`${customBtn} ${customDark === "dark-dark" ? `border` : `border-0`} me-2`}
-                                        onClick={() => handleEditButtonClick(selectedCatches[0].id)}
-                                    >
-                                        {t('editProcess')}
-                                    </Button>
-                                    <Button
-                                        type="primary"
-                                        className={`${customBtn} ${customDark === "dark-dark" ? `border` : `border-0`} me-2`}
-                                        onClick={() => setShowTransferModal(true)}
-                                    >
-                                        {t('transferCatch')}
-                                    </Button>
-                                </>
-                            )}
-                           
-                            
-                            <Button 
-                                onClick={() => setShowNewRow(prev => !prev)} 
-                                type="primary" 
-                                className={`${customBtn} ${customDark === "dark-dark" ? `border` : `border-0`}`}
-                                disabled={dispatchedLots.includes(selectedLotNo)}
-                            >
-                                {showNewRow ? t('cancel') : t('addNewCatch')}
-                            </Button>
-                        </div>
-                    </div>
-                    {showNewRow && (
-                        <Form layout="vertical" className="mb-3">
-                            <Row gutter={16}>
-                                <Col span={6}>
-                                    <Form.Item label={<>
-                                            {t('catchNo')} <span style={{ color: 'red' }}>*</span>
-                                        </>}
-                                        validateStatus={formErrors.catchNo ? "error" : ""}
-                                        help={formErrors.catchNo}
-                                    >
-                                        <Input 
-                                            size="small" 
-                                            name="catchNo" 
-                                            value={newRowData.catchNo} 
-                                            onChange={handleNewRowChange}
-                                            placeholder={t('enterCatchNo')}
-                                        />
-                                    </Form.Item>
-                                </Col>
-                                <Col span={6}>
-                                    <Form.Item 
-                                        label={<>
-                                            {t('paperCode')}
-                                        </>}
-                                        help={formErrors.paper}
-                                    >
-                                        <Input 
-                                            size="small" 
-                                            name="paper" 
-                                            value={newRowData.paper} 
-                                            onChange={handleNewRowChange}
-                                            placeholder={t('enterPaperCode')}
-                                        />
-                                    </Form.Item>
-                                </Col>
-                                <Col span={6}>
-                                    <Form.Item 
-                                        label={<>
-                                            {t('course')} 
-                                        </>}
-                                        help={formErrors.course}
-                                    >
-                                        <Input 
-                                            size="small" 
-                                            name="course" 
-                                            value={newRowData.course} 
-                                            onChange={handleNewRowChange}
-                                            placeholder={t('enterCourse')}
-                                        />
-                                    </Form.Item>
-                                </Col>
-                                <Col span={6}>
-                                    <Form.Item label={t('subject')}>
-                                        <Input 
-                                            size="small" 
-                                            name="subject" 
-                                            value={newRowData.subject} 
-                                            onChange={handleNewRowChange}
-                                            placeholder={t('enterSubject')}
-                                        />
-                                    </Form.Item>
-                                </Col>
-                            </Row>
-                            <Row gutter={16}>
-                                <Col span={6}>
-                                    <Form.Item 
-                                        label={<>
-                                            {t('examDate')} <span style={{ color: 'red' }}>*</span>
-                                        </>}
-                                        validateStatus={formErrors.examDate ? "error" : ""}
-                                        help={formErrors.examDate}
-                                    >
-                                        <Input
-                                            size="small"
-                                            type="date"
-                                            name="examDate"
-                                            value={newRowData.examDate}
-                                            onChange={handleNewRowChange}
-                                            min={minDate}
-                                            max={maxDate}
-                                            disabled={dates.length === 0}
-                                            placeholder={t('selectExamDate')}
-                                        />
-                                    </Form.Item>
-                                </Col>
-                                <Col span={6}>
-                                    <Form.Item 
-                                        label={<>
-                                            {t('examTime')}  <span style={{ color: 'red' }}>*</span>
-                                        </>}
-                                        validateStatus={formErrors.examTime ? "error" : ""}
-                                        help={formErrors.examTime || "Please enter the time in this format: 03:00 PM to 05:00 PM"}
-                                    >
-                                        <Input 
-                                            size="small" 
-                                            name="examTime" 
-                                            value={newRowData.examTime} 
-                                            onChange={handleNewRowChange}
-                                            placeholder={t('enterExamTime')}
-                                        />
-                                    </Form.Item>
-                                </Col>
-                                <Col span={6}>
-                                    <Form.Item label={t('innerEnvelope')}>
-                                        <Input 
-                                            size="small" 
-                                            name="innerEnvelope" 
-                                            value={newRowData.innerEnvelope} 
-                                            onChange={handleNewRowChange}
-                                            placeholder={t('enterInnerEnvelope')}
-                                        />
-                                    </Form.Item>
-                                </Col>
-                                <Col span={6}>
-                                    <Form.Item label={t('outerEnvelope')}>
-                                        <Input 
-                                            size="small" 
-                                            name="outerEnvelope" 
-                                            value={newRowData.outerEnvelope} 
-                                            onChange={handleNewRowChange}
-                                            placeholder={t('enterOuterEnvelope')}
-                                        />
-                                    </Form.Item>
-                                </Col>
-                            </Row>
-                            <Row gutter={16}>
-                              
-                                <Col span={6}>
-                                    <Form.Item 
-                                        label={<>
-                                            {t('pages')} 
-                                        </>}
+  return (
+    <div className='mt-'>
+      {showBtn && (
+        <>
+          <div className="d-flex justify-content-between align-items-center mb-3 mt-3">
+            <Input.Search
+              placeholder={t('searchAllFields')}
+              onChange={(e) => setSearchText(e.target.value)}
+              style={{ width: '250px' }}
+              allowClear
+            />
 
-                                        help={formErrors.pages}
-                                    >
-                                        <Input 
-                                            size="small" 
-                                            type="number" 
-                                            name="pages" 
-                                            value={newRowData.pages} 
-                                            onChange={handleNewRowChange}
-                                            placeholder={t('enterPages')}
-                                        />
-                                    </Form.Item>
-                                </Col>
-                                <Col span={6}>
-                                    <Form.Item 
-                                        label={<>
-                                            {t('quantity')} <span style={{ color: 'red' }}>*</span>
-                                        </>}
-                                        validateStatus={formErrors.quantity ? "error" : ""}
-                                        help={formErrors.quantity}
-                                    >
-                                        <Input 
-                                            size="small" 
-                                            type="number" 
-                                            name="quantity" 
-                                            value={newRowData.quantity} 
-                                            onChange={handleNewRowChange}
-                                            placeholder={t('enterQuantity')}
-                                        />
-                                    </Form.Item>
-                                </Col>
-                                <Col span={6}>
-                                    <Form.Item label=" ">
-                                        <Button size="small" onClick={handleAddRow} className={`${customDark === "dark-dark" ? `border` : ``}`}>
-                                            {t('add')}
-                                        </Button>
-                                    </Form.Item>
-                                </Col>
-                            </Row>
-                        </Form>
-                    )}
+            <div>
+              {selectedCatches.length > 0 && !dispatchedLots.includes(selectedLotNo) && (
+                <>
+                  <Button
+                    type="primary"
+                    className={`${customBtn} ${customDark === "dark-dark" ? `border` : `border-0`} me-2`}
+                    onClick={() => handleEditButtonClick(selectedCatches[0].id)}
+                  >
+                    {t('editProcess')}
+                  </Button>
+                  <Button
+                    type="primary"
+                    className={`${customBtn} ${customDark === "dark-dark" ? `border` : `border-0`} me-2`}
+                    onClick={() => setShowTransferModal(true)}
+                  >
+                    {t('transferCatch')}
+                  </Button>
                 </>
-            )}
+              )}
+
+              <Button
+                onClick={() => setShowNewRow(prev => !prev)}
+                type="primary"
+                className={`${customBtn} ${customDark === "dark-dark" ? `border` : `border-0`}`}
+                disabled={dispatchedLots.includes(selectedLotNo)}
+              >
+                {showNewRow ? t('cancel') : t('addNewCatch')}
+              </Button>
+            </div>
+          </div>
+          {showNewRow && (
+            <Form layout="vertical" className="mb-3">
+              <Row gutter={16}>
+                <Col span={6}>
+                  <Form.Item label={<>
+                    {t('catchNo')} <span style={{ color: 'red' }}>*</span>
+                  </>}
+                    validateStatus={formErrors.catchNo ? "error" : ""}
+                    help={formErrors.catchNo}
+                  >
+                    <Input
+                      size="small"
+                      name="catchNo"
+                      value={newRowData.catchNo}
+                      onChange={handleNewRowChange}
+                      placeholder={t('enterCatchNo')}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Form.Item
+                    label={<>
+                      {t('paperCode')}
+                    </>}
+                    help={formErrors.paper}
+                  >
+                    <Input
+                      size="small"
+                      name="paper"
+                      value={newRowData.paper}
+                      onChange={handleNewRowChange}
+                      placeholder={t('enterPaperCode')}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Form.Item
+                    label={<>
+                      {t('course')}
+                    </>}
+                    help={formErrors.course}
+                  >
+                    <Input
+                      size="small"
+                      name="course"
+                      value={newRowData.course}
+                      onChange={handleNewRowChange}
+                      placeholder={t('enterCourse')}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Form.Item label={t('subject')}>
+                    <Input
+                      size="small"
+                      name="subject"
+                      value={newRowData.subject}
+                      onChange={handleNewRowChange}
+                      placeholder={t('enterSubject')}
+                    />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Row gutter={16}>
+                <Col span={6}>
+                  <Form.Item
+                    label={<>
+                      {t('examDate')} <span style={{ color: 'red' }}>*</span>
+                    </>}
+                    validateStatus={formErrors.examDate ? "error" : ""}
+                    help={formErrors.examDate}
+                  >
+                    <Input
+                      size="small"
+                      type="date"
+                      name="examDate"
+                      value={newRowData.examDate}
+                      onChange={handleNewRowChange}
+                      min={minDate}
+                      max={maxDate}
+                      disabled={dates.length === 0}
+                      placeholder={t('selectExamDate')}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Form.Item
+                    label={<>
+                      {t('examTime')}  <span style={{ color: 'red' }}>*</span>
+                    </>}
+                    validateStatus={formErrors.examTime ? "error" : ""}
+                    help={formErrors.examTime || "Please enter the time in this format: 03:00 PM to 05:00 PM"}
+                  >
+                    <Input
+                      size="small"
+                      name="examTime"
+                      value={newRowData.examTime}
+                      onChange={handleNewRowChange}
+                      placeholder={t('enterExamTime')}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Form.Item label={t('innerEnvelope')}>
+                    <Input
+                      size="small"
+                      name="innerEnvelope"
+                      value={newRowData.innerEnvelope}
+                      onChange={handleNewRowChange}
+                      placeholder={t('enterInnerEnvelope')}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Form.Item label={t('outerEnvelope')}>
+                    <Input
+                      size="small"
+                      name="outerEnvelope"
+                      value={newRowData.outerEnvelope}
+                      onChange={handleNewRowChange}
+                      placeholder={t('enterOuterEnvelope')}
+                    />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Row gutter={16}>
+                <Col span={6}>
+                  <Form.Item
+                    label={<>
+                      {t('quantity')} <span style={{ color: 'red' }}>*</span>
+                    </>}
+                    validateStatus={formErrors.quantity ? "error" : ""}
+                    help={formErrors.quantity}
+                  >
+                    <Input
+                      size="small"
+                      type="number"
+                      name="quantity"
+                      value={newRowData.quantity}
+                      onChange={handleNewRowChange}
+                      placeholder={t('enterQuantity')}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Form.Item label=" ">
+                    <Button size="small" onClick={handleAddRow} className={`${customDark === "dark-dark" ? `border` : ``}`}>
+                      {t('add')}
+                    </Button>
+                  </Form.Item>
+                </Col>
+              </Row>
+            </Form>
+          )}
+        </>
+      )}
 
       {showTable && (
         <Table
@@ -840,81 +934,79 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
             showTotal: (total, range) =>
               `${range[0]}-${range[1]} ${t("of")} ${total} ${t("items")}`,
             onShowSizeChange: handlePageSizeChange,
-            className: `p-2 rounded rounded-top-0 ${
-              customDark === "dark-dark" ? `bg-white` : ``
-            } mt`,
+            className: `p-2 rounded rounded-top-0 ${customDark === "dark-dark" ? `bg-white` : ``
+              } mt`,
           }}
           scroll={{ x: true }}
-          className={`${
-            customDark === "default-dark"
+          className={`${customDark === "default-dark"
               ? "thead-default"
               : customDark === "red-dark"
-              ? "thead-red"
-              : customDark === "green-dark"
-              ? "thead-green"
-              : customDark === "blue-dark"
-              ? "thead-blue"
-              : customDark === "dark-dark"
-              ? "thead-dark"
-              : customDark === "pink-dark"
-              ? "thead-pink"
-              : customDark === "purple-dark"
-              ? "thead-purple"
-              : customDark === "light-dark"
-              ? "thead-light"
-              : customDark === "brown-dark"
-              ? "thead-brown"
-              : ""
-          }`}
+                ? "thead-red"
+                : customDark === "green-dark"
+                  ? "thead-green"
+                  : customDark === "blue-dark"
+                    ? "thead-blue"
+                    : customDark === "dark-dark"
+                      ? "thead-dark"
+                      : customDark === "pink-dark"
+                        ? "thead-pink"
+                        : customDark === "purple-dark"
+                          ? "thead-purple"
+                          : customDark === "light-dark"
+                            ? "thead-light"
+                            : customDark === "brown-dark"
+                              ? "thead-brown"
+                              : ""
+            }`}
           size="small"
           tableLayout="auto"
           responsive={["sm", "md", "lg", "xl"]}
         />
       )}
 
-            {editingRow !== null && (
-                <BootstrapModal show={true} onHide={handleModalClose}>
-                    <BootstrapModal.Header closeButton>
-                        <BootstrapModal.Title>{t('editProcess')}</BootstrapModal.Title>
-                    </BootstrapModal.Header>
-                    <BootstrapModal.Body>
-                        <div className="mb-3">
-                            <strong>{t('selectedCatches')}:</strong>
-                            <ul>
-                                {selectedCatches.map((catch_, index) => (
-                                    <li key={index}>{catch_.catchNo}</li>
-                                ))}
-                            </ul>
-                        </div>
-                        {!isProcessSwitchingAllowed(selectedCatches) ? (
-                            <div className="alert alert-danger">
-                                <WarningOutlined /> {t('processSwitchingNotAllowed')}
-                            </div>
-                        ) : (
-                            <>
-                                {t(modalMessage)}
-                                <div className="mt-3">
-                                    <Checkbox checked={isConfirmed} onChange={(e) => setIsConfirmed(e.target.checked)}>
-                                        {modalMessage === "switchToDigitalPrintingQuestion" ? t('switchFromOffsetToDigital') :
-                                            modalMessage === "switchToOffsetPrintingQuestion" ? t('switchFromDigitalToOffset') :
-                                                t('confirmThisChange')}
-                                    </Checkbox>
-                                </div>
-                            </>
-                        )}
-                    </BootstrapModal.Body>
-                    <BootstrapModal.Footer>
-                        <Button variant="secondary" onClick={handleModalClose}>{t('close')}</Button>
-                        <Button 
-                            variant="primary" 
-                            onClick={handleSaveEdit} 
-                            disabled={!isConfirmed || !isProcessSwitchingAllowed(selectedCatches)}
-                        >
-                            {t('saveChanges')}
-                        </Button>
-                    </BootstrapModal.Footer>
-                </BootstrapModal>
+      {editingRow !== null && (
+        <BootstrapModal show={true} onHide={handleModalClose}>
+          <BootstrapModal.Header closeButton>
+            <BootstrapModal.Title>{t('editProcess')}</BootstrapModal.Title>
+          </BootstrapModal.Header>
+          <BootstrapModal.Body>
+            <div className="mb-3">
+              <strong>{t('selectedCatches')}:</strong>
+              <ul>
+                {selectedCatches.map((catch_, index) => (
+                  <li key={index}>{catch_.catchNo}</li>
+                ))}
+              </ul>
+            </div>
+            {!isProcessSwitchingAllowed(selectedCatches) ? (
+              <div className="alert alert-danger">
+                <WarningOutlined /> {t('processSwitchingNotAllowed')}
+              </div>
+            ) : (
+              <>
+                {t(modalMessage)}
+                <div className="mt-3">
+                  <Checkbox checked={isConfirmed} onChange={(e) => setIsConfirmed(e.target.checked)}>
+                    {modalMessage === "switchToDigitalPrintingQuestion" ? t('switchFromOffsetToDigital') :
+                      modalMessage === "switchToOffsetPrintingQuestion" ? t('switchFromDigitalToOffset') :
+                        t('confirmThisChange')}
+                  </Checkbox>
+                </div>
+              </>
             )}
+          </BootstrapModal.Body>
+          <BootstrapModal.Footer>
+            <Button variant="secondary" onClick={handleModalClose}>{t('close')}</Button>
+            <Button
+              variant="primary"
+              onClick={handleSaveEdit}
+              disabled={!isConfirmed || !isProcessSwitchingAllowed(selectedCatches)}
+            >
+              {t('saveChanges')}
+            </Button>
+          </BootstrapModal.Footer>
+        </BootstrapModal>
+      )}
 
       {showDeleteModal && (
         <BootstrapModal show={true} onHide={handleModalClose}>
@@ -932,6 +1024,27 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
             </Button>
             <Button variant="danger" onClick={handleConfirmDelete}>
               {t("delete")}
+            </Button>
+          </BootstrapModal.Footer>
+        </BootstrapModal>
+      )}
+
+      {showStopModal && (
+        <BootstrapModal show={true} onHide={handleModalClose}>
+          <BootstrapModal.Header closeButton>
+            <BootstrapModal.Title>
+              {t("confirmStop")} {itemToStop?.catchNo}
+            </BootstrapModal.Title>
+          </BootstrapModal.Header>
+          <BootstrapModal.Body>
+            {t("areYouSureStopCatchNo")} ?
+          </BootstrapModal.Body>
+          <BootstrapModal.Footer>
+            <Button variant="secondary" onClick={handleModalClose}>
+              {t("cancel")}
+            </Button>
+            <Button variant="danger" onClick={handleConfirmStop}>
+              {t("stop")}
             </Button>
           </BootstrapModal.Footer>
         </BootstrapModal>
