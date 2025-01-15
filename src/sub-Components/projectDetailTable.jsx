@@ -225,11 +225,11 @@ const ProjectDetailsTable = ({
       : true;
     const previousProcessCondition = showOnlyCompletedPreviousProcess
       ? !item.previousProcessData ||
-        item.previousProcessData.status === 2 ||
-        (item.previousProcessData.thresholdQty != null &&
-          item.previousProcessData.thresholdQty > 0 &&
-          item.previousProcessData.interimQuantity >=
-            item.previousProcessData.thresholdQty)
+      item.previousProcessData.status === 2 ||
+      (item.previousProcessData.thresholdQty != null &&
+        item.previousProcessData.thresholdQty > 0 &&
+        item.previousProcessData.interimQuantity >=
+        item.previousProcessData.thresholdQty)
       : true;
 
     return (
@@ -249,7 +249,7 @@ const ProjectDetailsTable = ({
     // If all visible rows are selected, mark "Select All" as checked
     setSelectAll(
       visibleRows.length > 0 &&
-        visibleRows.every((key) => selectedRowKeys.includes(key))
+      visibleRows.every((key) => selectedRowKeys.includes(key))
     );
   }, [selectedRowKeys, currentPage, pageSize, filteredData, hideCompleted]);
 
@@ -275,7 +275,7 @@ const ProjectDetailsTable = ({
         updatedRow.previousProcessData.thresholdQty != null &&
         updatedRow.previousProcessData.thresholdQty > 0 &&
         updatedRow.previousProcessData.interimQuantity >=
-          updatedRow.previousProcessData.thresholdQty
+        updatedRow.previousProcessData.thresholdQty
       )
     ) {
       showNotification(
@@ -456,22 +456,22 @@ const ProjectDetailsTable = ({
                       className=""
                     />
                   ) : // If threshold quantity is met, show blue checkmark
-                  record.previousProcessData.thresholdQty != null &&
-                    record.previousProcessData.thresholdQty > 0 &&
-                    record.previousProcessData.interimQuantity >=
+                    record.previousProcessData.thresholdQty != null &&
+                      record.previousProcessData.thresholdQty > 0 &&
+                      record.previousProcessData.interimQuantity >=
                       record.previousProcessData.thresholdQty ? (
-                    <IoCheckmarkDoneCircleSharp
-                      size={20}
-                      color="blue"
-                      className=""
-                    />
-                  ) : // If status is pending (0), show orange pending icon
-                  record.previousProcessData.status === 0 ? (
-                    <MdPending size={20} color="orange" className="" />
-                  ) : (
-                    // Otherwise show orange dots for in progress
-                    <MdPending size={20} color="orange" className="" />
-                  )
+                      <IoCheckmarkDoneCircleSharp
+                        size={20}
+                        color="blue"
+                        className=""
+                      />
+                    ) : // If status is pending (0), show orange pending icon
+                      record.previousProcessData.status === 0 ? (
+                        <MdPending size={20} color="orange" className="" />
+                      ) : (
+                        // Otherwise show orange dots for in progress
+                        <MdPending size={20} color="orange" className="" />
+                      )
                 ) : (
                   // If no previous process, show orange checkmark
                   <IoCheckmarkDoneCircleSharp
@@ -547,192 +547,187 @@ const ProjectDetailsTable = ({
     },
     ...(columnVisibility["Exam Date"]
       ? [
-          {
-            title: t("examDate"),
-            dataIndex: "examDate",
-            align: "center",
-            key: "examDate",
-            sorter: (a, b) => a.examDate - b.examDate,
-            render: (text) => formatDate(text), // Apply formatDate here
-          },
-        ]
+        {
+          title: t("examDate"),
+          dataIndex: "examDate",
+          align: "center",
+          key: "examDate",
+          sorter: (a, b) => a.examDate - b.examDate,
+          render: (text) => formatDate(text), // Apply formatDate here
+        },
+      ]
       : []),
     ...(columnVisibility["Pages"]
       ? [
-          {
-            title: t("Pages"),
-            dataIndex: "pages",
-            align: "center",
-            key: "pages",
-            sorter: (a, b) => a.pages - b.pages,
-          },
-        ]
+        {
+          title: t("Pages"),
+          dataIndex: "pages",
+          align: "center",
+          key: "pages",
+          sorter: (a, b) => a.pages - b.pages,
+        },
+      ]
       : []),
     ...(columnVisibility["Interim Quantity"]
       ? [
-          {
-            title: t("interimQuantity"),
-            dataIndex: "interimQuantity",
-            align: "center",
-            key: "interimQuantity",
-            sorter: (a, b) => a.interimQuantity - b.interimQuantity,
-          },
-        ]
+        {
+          title: t("interimQuantity"),
+          dataIndex: "interimQuantity",
+          align: "center",
+          key: "interimQuantity",
+          sorter: (a, b) => a.interimQuantity - b.interimQuantity,
+        },
+      ]
       : []),
     ...(columnVisibility.Remarks
       ? [
-          {
-            title: t("remarks"),
-            dataIndex: "remarks",
-            key: "remarks",
-            align: "center",
-            sorter: (a, b) => a.remarks.localeCompare(b.remarks),
-          },
-        ]
+        {
+          title: t("remarks"),
+          dataIndex: "remarks",
+          key: "remarks",
+          align: "center",
+          sorter: (a, b) => a.remarks.localeCompare(b.remarks),
+        },
+      ]
       : []),
     ...(columnVisibility["Team Assigned"]
       ? [
-          {
-            title: t("teamAssigned"),
-            dataIndex: "teamUserNames",
-            align: "center",
-            key: "teamUserNames",
-            render: (teamUserNames) => teamUserNames?.join(", "),
-            sorter: (a, b) => {
-              const aNames = a.teamUserNames?.join(", ") || "";
-              const bNames = b.teamUserNames?.join(", ") || "";
-              return aNames.localeCompare(bNames);
-            },
+        {
+          title: t("teamAssigned"),
+          dataIndex: "teamUserNames",
+          align: "center",
+          key: "teamUserNames",
+          render: (teamUserNames) => teamUserNames?.join(", "),
+          sorter: (a, b) => {
+            const aNames = a.teamUserNames?.join(", ") || "";
+            const bNames = b.teamUserNames?.join(", ") || "";
+            return aNames.localeCompare(bNames);
           },
-        ]
+        },
+      ]
       : []),
     ...(columnVisibility["Zone"]
       ? [
-          {
-            title: t("zone"),
-            dataIndex: "zoneNo",
-            align: "center",
-            key: "zoneNo",
-            sorter: (a, b) => (a.zoneNo || "").localeCompare(b.zoneNo || ""),
-          },
-        ]
+        {
+          title: t("zone"),
+          dataIndex: "zoneNo",
+          align: "center",
+          key: "zoneNo",
+          sorter: (a, b) => (a.zoneNo || "").localeCompare(b.zoneNo || ""),
+        },
+      ]
       : []),
     ...(columnVisibility["Machine"]
       ? [
-          {
-            title: t("machine"),
-            dataIndex: "machinename",
-            align: "center",
-            key: "machinename",
-            sorter: (a, b) =>
-              (a.machinename || "").localeCompare(b.machinename || ""),
-          },
-        ]
+        {
+          title: t("machine"),
+          dataIndex: "machinename",
+          align: "center",
+          key: "machinename",
+          sorter: (a, b) =>
+            (a.machinename || "").localeCompare(b.machinename || ""),
+        },
+      ]
       : []),
     ...(columnVisibility["Course"]
       ? [
-          {
-            title: t("course"),
+        {
+          title: t("course"),
 
-            dataIndex: "course",
-            // width: '20%',
-            align: "center",
-            key: "course",
+          dataIndex: "course",
+          // width: '20%',
+          align: "center",
+          key: "course",
 
-            sorter: (a, b) => a.course - b.course,
-          },
-        ]
+          sorter: (a, b) => a.course - b.course,
+        },
+      ]
       : []),
     ...(columnVisibility["Subject"]
       ? [
-          {
-            title: t("subject"),
-            dataIndex: "subject",
-            width: "20%",
-            align: "center",
-            key: "subject",
+        {
+          title: t("subject"),
+          dataIndex: "subject",
+          width: "20%",
+          align: "center",
+          key: "subject",
 
-            sorter: (a, b) => a.subject - b.subject,
-          },
-        ]
+          sorter: (a, b) => a.subject - b.subject,
+        },
+      ]
       : []),
     ...(columnVisibility["Paper"] && processId === 8
       ? [
-          {
-            title: t("questionPaper"),
-            dataIndex: "paper",
-            width: "20%",
-            align: "center",
-            key: "paper",
-            sorter: (a, b) => a.paper - b.paper,
-          },
-        ]
+        {
+          title: t("questionPaper"),
+          dataIndex: "paper",
+          width: "20%",
+          align: "center",
+          key: "paper",
+          sorter: (a, b) => a.paper - b.paper,
+        },
+      ]
       : []),
-      ...(columnVisibility["Envelopes"] && processId === 8
-        ? [
-            {
-              title: t("envelopes"),
-              dataIndex: "envelopes",
-              width: "20%",
-              align: "center",
-              key: "envelopes",
-              children: Object.keys(
-                Object.values(envelopeData)[0] || {}
-              ).map((envKey) => ({
-                title: envKey,
-                align: "center",
-                dataIndex: "catchNo",
-                key: envKey,
-                render: (_, record) => {
-                  // Log to debug
-                  console.log('Record:', record);
-                  console.log('Envelope Data:', envelopeData);
-                  console.log('Specific Envelope:', envelopeData[record.catchNumber]);
-                  
-                  return envelopeData[record.catchNumber]?.[envKey] || 
-                         envelopeData[record.catchNo]?.[envKey] || ''
-                }
-              }))
+    ...(columnVisibility["Envelopes"] && processId === 8
+      ? [
+        {
+          title: t("envelopes"),
+          dataIndex: "envelopes",
+          width: "20%",
+          align: "center",
+          key: "envelopes",
+          children: Object.keys(
+            Object.values(envelopeData)[0] || {}
+          ).map((envKey) => ({
+            title: envKey,
+            align: "center",
+            dataIndex: "catchNo",
+            key: envKey,
+            render: (_, record) => {
+              // Log to debug
+              console.log('Record:', record);
+              console.log('Envelope Data:', envelopeData);
+              console.log('Specific Envelope:', envelopeData[record.catchNumber]);
+
+              return envelopeData[record.catchNumber]?.[envKey] ||
+                envelopeData[record.catchNo]?.[envKey] || ''
             }
-          ]
-        : []),
+          }))
+        }
+      ]
+      : []),
 
     ...(columnVisibility["Paper Details"]
       ? [
-          {
-            title: t("paperDetails"),
-            dataIndex: "paperDetails",
-            width: "20%",
-            align: "center",
-            key: "paperDetails",
-            render: (_, record) => (
-              <div className="d-flex flex-column">
-                <span className="fw-bold">{`Catch: ${
-                  record.catchNumber || "N/A"
+        {
+          title: t("paperDetails"),
+          dataIndex: "paperDetails",
+          width: "20%",
+          align: "center",
+          key: "paperDetails",
+          render: (_, record) => (
+            <div className="d-flex flex-column">
+              <span className="fw-bold">{`Catch: ${record.catchNumber || "N/A"
                 }`}</span>
-                <span className="fw-bold">{`Course: ${
-                  record.course || "N/A"
+              <span className="fw-bold">{`Course: ${record.course || "N/A"
                 }`}</span>
-                <span className="fw-bold">{`Paper: ${
-                  record.paper || "N/A"
+              <span className="fw-bold">{`Paper: ${record.paper || "N/A"
                 }`}</span>
-                <span className="fw-bold">{`Exam Date: ${
-                  formatDate(record.examDate) || "N/A"
+              <span className="fw-bold">{`Exam Date: ${formatDate(record.examDate) || "N/A"
                 }`}</span>
-                <span className="fw-bold">{`Exam Time: ${
-                  record.examTime || "N/A"
+              <span className="fw-bold">{`Exam Time: ${record.examTime || "N/A"
                 }`}</span>
-              </div>
-            ),
-            sorter: (a, b) => a.catchNumber.localeCompare(b.catchNumber),
-          },
-        ]
+            </div>
+          ),
+          sorter: (a, b) => a.catchNumber.localeCompare(b.catchNumber),
+        },
+      ]
       : []),
 
     {
       title: t("status"),
       dataIndex: "status",
-      fixed:'right',
+      fixed: 'right',
       key: "status",
       align: "center",
       render: (text, record) => {
@@ -756,7 +751,7 @@ const ProjectDetailsTable = ({
             ((record.previousProcessData.thresholdQty != null &&
               record.previousProcessData.thresholdQty > 0 &&
               record.previousProcessData.interimQuantity >=
-                record.previousProcessData.thresholdQty) ||
+              record.previousProcessData.thresholdQty) ||
               record.previousProcessData.status === 2)) ||
           // 3. If current process status is 1 and previous process status is 2, return true
           (record.status === 1 && record.previousProcessData?.status === 2) ||
@@ -782,9 +777,9 @@ const ProjectDetailsTable = ({
           isIndependentProcessCompleted &&
           (hasSelectMachinePermission
             ? record.machineId !== 0 &&
-              record.machineId !== null &&
-              isZoneAssigned &&
-              isTeamAssigned
+            record.machineId !== null &&
+            isZoneAssigned &&
+            isTeamAssigned
             : isZoneAssigned && isTeamAssigned);
 
         // Only check interim quantity if hasFeaturePermission(7) is true and interimQuantity is not 0
@@ -882,8 +877,8 @@ const ProjectDetailsTable = ({
                 content={
                   isDisabled
                     ? requirements.map((req, index) => (
-                        <div key={index}>{req}</div>
-                      ))
+                      <div key={index}>{req}</div>
+                    ))
                     : ""
                 }
               >
@@ -935,7 +930,7 @@ const ProjectDetailsTable = ({
         (row.previousProcessData.thresholdQty != null &&
           row.previousProcessData.thresholdQty > 0 &&
           row.previousProcessData.interimQuantity >=
-            row.previousProcessData.thresholdQty)
+          row.previousProcessData.thresholdQty)
       );
     });
 
@@ -1386,9 +1381,8 @@ const ProjectDetailsTable = ({
   );
 
   const customPagination = {
-    className: `bg-white p-3 rounded rounded-top-0 mt-0  ${
-      customDark === "dark-dark" ? `` : ``
-    }`,
+    className: `bg-white p-3 rounded rounded-top-0 mt-0  ${customDark === "dark-dark" ? `` : ``
+      }`,
     current: currentPage,
     pageSize,
     pageSizeOptions: [5, 10, 25, 50, 100],
@@ -1543,11 +1537,10 @@ const ProjectDetailsTable = ({
                     padding: 0,
                     width: "30px",
                   }}
-                  className={`p- border ${
-                    customDark === "dark-dark"
+                  className={`p- border ${customDark === "dark-dark"
                       ? `${customDark} text-white`
                       : "bg-white"
-                  }`}
+                    }`}
                 >
                   <FaFilter size={20} className={`${customDarkText}`} />
                 </Button>
@@ -1557,14 +1550,13 @@ const ProjectDetailsTable = ({
 
           {/* update status button */}
           <Col lg={5} md={4} sx={2} className="mt-md-1 mt-xs-1">
-            {selectedRowKeys.length > 1 && getSelectedStatus() !== null && (
+            {selectedRowKeys.length > 1 && getSelectedStatus() !== null && hasFeaturePermission(8) && (
               <div className="mt-1 d-flex align-items-center">
                 <span
-                  className={`me-2 ${
-                    customDark === "dark-dark"
+                  className={`me-2 ${customDark === "dark-dark"
                       ? "text-white"
                       : "custom-theme-dark-text"
-                  } fs-6 fw-bold`}
+                    } fs-6 fw-bold`}
                 >
                   {t("updateStatus")}
                 </span>
@@ -1581,7 +1573,7 @@ const ProjectDetailsTable = ({
                   if (hasAlertsRow) {
                     requirements.push(t("statusCannotBeChangedDueToAlerts"));
                   }
-
+                  const updateall = hasFeaturePermission(8)
                   // Check previous process completion
                   const hasIncompletePrevious = selectedRows.find((row) => {
                     return (
@@ -1590,7 +1582,7 @@ const ProjectDetailsTable = ({
                       !(
                         row.previousProcessData.thresholdQty != null &&
                         row.previousProcessData.thresholdQty >
-                          row.previousProcessData.interimQuantity
+                        row.previousProcessData.interimQuantity
                       )
                     );
                   });
@@ -1642,7 +1634,10 @@ const ProjectDetailsTable = ({
                       );
                     }
                   }
-
+                  console.log(updateall)
+                  if (!updateall) {
+                    return null; // Return null if permission is not granted
+                  }
                   const StatusToggleComponent = (
                     <StatusToggle
                       initialStatusIndex={getSelectedStatus()}
@@ -1738,9 +1733,8 @@ const ProjectDetailsTable = ({
                 >
                   <PiDotsNineBold
                     size={30}
-                    className={` ${
-                      customDark === "dark-dark" ? "text-white" : customDarkText
-                    }`}
+                    className={` ${customDark === "dark-dark" ? "text-white" : customDarkText
+                      }`}
                   />
                 </Button>
               </Dropdown>
@@ -1753,9 +1747,8 @@ const ProjectDetailsTable = ({
           <Col lg={12} md={12}>
             <Table
               rowClassName={rowClassName}
-              className={`${
-                customDark === "default-dark" ? "thead-default" : ""
-              }
+              className={`${customDark === "default-dark" ? "thead-default" : ""
+                }
             ${customDark === "red-dark" ? "thead-red" : ""}
             ${customDark === "green-dark" ? "thead-green" : ""}
             ${customDark === "blue-dark" ? "thead-blue" : ""}
