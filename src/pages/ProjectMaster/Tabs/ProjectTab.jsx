@@ -7,6 +7,7 @@ import API from '../../../CustomHooks/MasterApiHooks/api';
 import themeStore from '../../../store/themeStore';
 import EditProjectModal from '../components/EditProjectModal';
 import AddProjectModal from '../components/AddProjectModal';
+import { error, success } from '../../../CustomHooks/Services/AlertMessageService';
 
 const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
   const { t } = useTranslation();
@@ -45,9 +46,9 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
       const response = await API.get('/Project');
       setProjects(response.data);
       setTotal(response.data.length);
-    } catch (error) {
-      console.error('Failed to fetch projects', error);
-      message.error(t('unableToFetchProjects'));
+    } catch (err) {
+      console.error('Failed to fetch projects', err);
+      error(t('unableToFetchProjects'));
     }
   };
 
@@ -55,9 +56,9 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
     try {
       const response = await API.get('/Groups');
       setGroups(response.data);
-    } catch (error) {
-      console.error('Failed to fetch groups', error);
-      message.error(t('unableToFetchGroups'));
+    } catch (err) {
+      console.error('Failed to fetch groups', err);
+      error(t('unableToFetchGroups'));
     }
   };
 
@@ -65,15 +66,15 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
     try {
       const response = await API.get('/PaperTypes');
       setTypes(response.data);
-    } catch (error) {
-      console.error('Failed to fetch types', error);
-      message.error(t('unableToFetchTypes'));
+    } catch (err) {
+      console.error('Failed to fetch types', err);
+      error(t('unableToFetchTypes'));
     }
   };
 
   const handleAddProject = async (values) => {
     if (!selectedGroup || !selectedType) {
-      message.error(t('pleaseSelectGroupAndType'));
+      error(t('pleaseSelectGroupAndType'));
       return;
     }
     console.log(values)
@@ -99,13 +100,13 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
       setSelectedType(null);
       setNumberOfSeries(0); // Reset numberOfSeries
       setSeriesNames('');
-      message.success(t('projectAddedSuccessfully'));
+      success(t('projectAddedSuccessfully'));
       setActiveTabKey("2");
       setSelectedProject(response.data.projectId);
-    } catch (error) {
+    } catch (err) {
       console.error('Error adding project:', error);
-      const errorMessage = error.response?.data || t('errorAddingProject');
-      message.error(errorMessage);
+      const errorMessage = err.response?.data || t('errorAddingProject');
+      error(errorMessage);
     }
   };
 
@@ -135,10 +136,10 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
       setEditingProject(null);
       setNumberOfSeries(0); // Reset numberOfSeries
       setNumberOfSeries('');
-      message.success(t('projectUpdatedSuccessfully'));
-    } catch (error) {
-      console.error('Failed to update project:', error);
-      message.error(t('failedToUpdateProject'));
+      success(t('projectUpdatedSuccessfully'));
+    } catch (err) {
+      console.error('Failed to update project:', err);
+      error(t('failedToUpdateProject'));
     }
   };
 

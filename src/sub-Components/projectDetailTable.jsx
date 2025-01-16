@@ -68,6 +68,8 @@ const ProjectDetailsTable = ({
   ] = getCssClasses();
   const [initialTableData, setInitialTableData] = useState(tableData);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+
+  //default hide and unhide
   const [columnVisibility, setColumnVisibility] = useState({
     Alerts: false,
     "Interim Quantity": false,
@@ -80,6 +82,7 @@ const ProjectDetailsTable = ({
     Machine: false, // Add Machine visibility
     Pages: false,
   });
+
   const [hideCompleted, setHideCompleted] = useState(false);
   const [columnModalShow, setColumnModalShow] = useState(false);
   const [alarmModalShow, setAlarmModalShow] = useState(false);
@@ -106,6 +109,10 @@ const ProjectDetailsTable = ({
   const [selectMachineModalData, setSelectMachineModalData] = useState(null);
   const [assignTeamModalData, setAssignTeamModalData] = useState(null);
   const [showOnlyAlerts, setShowOnlyAlerts] = useState(false);
+  // Update pages in qtysheet modal
+  const [inputPagesModalData, setInputPagesModalData] = useState(null);
+  const [inputPagesModalShow, setInputPagesModalShow] = useState(false);
+  const [envelopeData, setEnvelopeData] = useState({});
   const [
     showOnlyCompletedPreviousProcess,
     setShowOnlyCompletedPreviousProcess,
@@ -152,19 +159,21 @@ console.log(tableData)
             `/QuantitySheet/Catch?ProjectId=${projectId}&lotNo=${lotNo}`
           );
           const data = response.data || [];
-           // Parse envelope data
-           const envelopeMap = {};
-           data.forEach((item) => {
-             if (item.innerEnvelope) {
-               const envelopes = {};
-               item.innerEnvelope.split(", ").forEach((env) => {
-                 const [key, value] = env.split(": ");
-                 envelopes[key] = value || "";
-               });
-               envelopeMap[item.catchNo] = envelopes;
-             }
-           });
-           setEnvelopeData(envelopeMap);
+          console.log(data);
+
+          // Parse envelope data
+          const envelopeMap = {};
+          data.forEach((item) => {
+            if (item.innerEnvelope) {
+              const envelopes = {};
+              item.innerEnvelope.split(", ").forEach((env) => {
+                const [key, value] = env.split(": ");
+                envelopes[key] = value || "";
+              });
+              envelopeMap[item.catchNo] = envelopes;
+            }
+          });
+          setEnvelopeData(envelopeMap);
           setPaperData(
             data.filter((item) => item.paper).map((item) => item.paper)
           );
@@ -238,13 +247,16 @@ console.log(tableData)
   });
 
   useEffect(() => {
-    const visibleRows = tableData
+    const visibleRows = filteredData
       .slice((currentPage - 1) * pageSize, currentPage * pageSize)
       .map((row) => row.srNo);
 
     // If all visible rows are selected, mark "Select All" as checked
-    setSelectAll(visibleRows.every((key) => selectedRowKeys.includes(key)));
-  }, [selectedRowKeys, currentPage, pageSize, tableData]);
+    setSelectAll(
+      visibleRows.length > 0 &&
+        visibleRows.every((key) => selectedRowKeys.includes(key))
+    );
+  }, [selectedRowKeys, currentPage, pageSize, filteredData, hideCompleted]);
 
   // Update useEffect to immediately fetch data when lotNo changes
   useEffect(() => {
@@ -387,6 +399,7 @@ console.log(tableData)
       year: "numeric",
     });
   };
+
   const columns = [
     {
       title: (
@@ -398,9 +411,9 @@ console.log(tableData)
             setSelectAll(checked);
 
             if (checked) {
-              // Select only visible rows on the current page
-              const visibleRowKeys = tableData
-                .slice((currentPage - 1) * pageSize, currentPage * pageSize) // Get rows for the current page
+              // Select only visible rows on the current page of filtered data
+              const visibleRowKeys = filteredData
+                .slice((currentPage - 1) * pageSize, currentPage * pageSize)
                 .map((row) => row.srNo);
               setSelectedRowKeys(visibleRowKeys);
             } else {
@@ -675,8 +688,9 @@ console.log(tableData)
         },
       ]
       : []),
-    ...(columnVisibility["Paper"]
+    ...(columnVisibility["Paper"] 
       ? [
+
         {
           title: t("questionPaper"),
 
@@ -747,10 +761,10 @@ console.log(tableData)
             }
           ]
         : []),
-     
     {
       title: t("status"),
       dataIndex: "status",
+      fixed:'right',
       key: "status",
       fixed:"right",
       align: "center",
@@ -924,72 +938,6 @@ console.log(tableData)
             )}
           </div>
         );
-        // return (
-        //   <div className="d-flex justify-content-center">
-        //     {!(record.alerts === "0" || !record.alerts?.trim()) ? (
-        //       <Tooltip
-        //         title={requirements.map((req, index) => (
-        //           <div key={index}>{req}</div>
-        //         ))}
-        //         placement="top"
-        //         trigger={['hover', 'click']}
-        //         defaultVisible={false}
-        //         overlayClassName="custom-tooltip"
-        //         overlayStyle={{
-        //           maxWidth: '250px',
-        //           wordWrap: 'break-word'
-        //         }}
-        //         destroyTooltipOnHide
-        //       >
-        //         <span className="text-danger tooltip-trigger">
-        //           <StatusToggle
-        //             initialStatusIndex={initialStatusIndex}
-        //             statusSteps={statusSteps.map((status, index) => ({
-        //               status,
-        //               color:
-        //                 index === 0 ? "red" : index === 1 ? "blue" : "green",
-        //             }))}
-        //             disabled // Disable the toggle due to alerts
-        //           />
-        //         </span>
-        //       </Tooltip>
-        //     ) : (
-        //       <Tooltip
-        //         title={
-        //           isDisabled
-        //             ? requirements.map((req, index) => (
-        //                 <div key={index}>{req}</div>
-        //               ))
-        //             : ""
-        //         }
-        //         placement="top"
-        //         trigger={['hover', 'click']}
-        //         defaultVisible={false}
-        //         overlayClassName="custom-tooltip"
-        //         overlayStyle={{
-        //           maxWidth: '250px',
-        //           wordWrap: 'break-word'
-        //         }}
-        //         destroyTooltipOnHide
-        //       >
-        //         <span className="tooltip-trigger">
-        //           <StatusToggle
-        //             initialStatusIndex={initialStatusIndex}
-        //             onStatusChange={(newIndex) =>
-        //               handleRowStatusChange(record.srNo, newIndex)
-        //             }
-        //             statusSteps={statusSteps.map((status, index) => ({
-        //               status,
-        //               color:
-        //                 index === 0 ? "red" : index === 1 ? "blue" : "green",
-        //             }))}
-        //             disabled={isDisabled} // Disable the toggle if status can't be changed
-        //           />
-        //         </span>
-        //       </Tooltip>
-        //     )}
-        //   </div>
-        // );
       },
 
       sorter: (a, b) => {
@@ -1206,6 +1154,9 @@ console.log(tableData)
       } else if (action === "Assign Team" && hasFeaturePermission(2)) {
         setAssignTeamModalShow(true);
         setAssignTeamModalData(selectedRows); // Pass array of all selected rows
+      } else if (action === "Pages" && hasFeaturePermission(7)) {
+        setInputPagesModalShow(true);
+        setInputPagesModalData(selectedRows);
       }
       else if (action === "Pages" && hasFeaturePermission(7)) {
         setInputPagesModalShow(true);
@@ -1529,6 +1480,18 @@ console.log(tableData)
       "Failed to assign team. Please try again."
     );
     console.error("Error assigning team:", error);
+  };
+
+  const handleInputPagesSuccess = () => {
+    success("Pages updated successfully");
+    setSelectedRowKeys([]);
+    setSelectAll(false);
+    setShowOptions(false);
+  };
+
+  const handleInputPagesError = (error) => {
+    error("Failed to update pages");
+    console.error("Error updating pages:", error);
   };
 
   return (
@@ -1856,6 +1819,7 @@ console.log(tableData)
         setColumnVisibility={setColumnVisibility}
         featureData={featureData}
         hasFeaturePermission={hasFeaturePermission}
+        processId={processId}
       />
       <AlarmModal
         show={alarmModalShow}
