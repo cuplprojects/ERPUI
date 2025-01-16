@@ -820,7 +820,7 @@ const ProcessTable = () => {
 
   return (
     <div className="container-fluid">
-    <div className="d-flex align-items-center mb-2">
+    <div className="d-flex align-items-center mb-">
       <IoIosArrowDropdownCircle 
         className={`me-2 ${customDarkText}`}
         size={24}
