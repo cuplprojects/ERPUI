@@ -254,7 +254,7 @@ console.log(tableData)
     // If all visible rows are selected, mark "Select All" as checked
     setSelectAll(
       visibleRows.length > 0 &&
-        visibleRows.every((key) => selectedRowKeys.includes(key))
+      visibleRows.every((key) => selectedRowKeys.includes(key))
     );
   }, [selectedRowKeys, currentPage, pageSize, filteredData, hideCompleted]);
 
@@ -690,10 +690,8 @@ console.log(tableData)
       : []),
     ...(columnVisibility["Paper"] 
       ? [
-
         {
           title: t("questionPaper"),
-
           dataIndex: "paper",
           width: "20%",
           align: "center",
@@ -764,7 +762,7 @@ console.log(tableData)
     {
       title: t("status"),
       dataIndex: "status",
-      fixed:'right',
+      fixed: 'right',
       key: "status",
       fixed:"right",
       align: "center",
@@ -1593,7 +1591,7 @@ console.log(tableData)
 
           {/* update status button */}
           <Col lg={5} md={4} sx={2} className="mt-md-1 mt-xs-1">
-            {selectedRowKeys.length > 1 && getSelectedStatus() !== null && (
+            {selectedRowKeys.length > 1 && getSelectedStatus() !== null && hasFeaturePermission(8) && (
               <div className="mt-1 d-flex align-items-center">
                 <span
                   className={`me-2 ${customDark === "dark-dark"
@@ -1616,7 +1614,7 @@ console.log(tableData)
                   if (hasAlertsRow) {
                     requirements.push(t("statusCannotBeChangedDueToAlerts"));
                   }
-
+                  const updateall = hasFeaturePermission(8)
                   // Check previous process completion
                   const hasIncompletePrevious = selectedRows.find((row) => {
                     return (
@@ -1677,7 +1675,10 @@ console.log(tableData)
                       );
                     }
                   }
-
+                  console.log(updateall)
+                  if (!updateall) {
+                    return null; // Return null if permission is not granted
+                  }
                   const StatusToggleComponent = (
                     <StatusToggle
                       initialStatusIndex={getSelectedStatus()}
