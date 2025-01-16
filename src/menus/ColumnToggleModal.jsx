@@ -4,7 +4,7 @@ import themeStore from '../store/themeStore';
 import { useStore } from 'zustand';
 import { useTranslation } from 'react-i18next';
 
-const ColumnToggleModal = ({ show, handleClose, columnVisibility, setColumnVisibility, featureData, hasFeaturePermission , processId }) => {
+const ColumnToggleModal = ({ show, handleClose, columnVisibility, setColumnVisibility, featureData, hasFeaturePermission, processId }) => {
     const themeState = useStore(themeStore);
     const cssClasses = themeState.getCssClasses();
     const { t } = useTranslation();
@@ -39,20 +39,15 @@ const ColumnToggleModal = ({ show, handleClose, columnVisibility, setColumnVisib
         { key: 'Interim Quantity', label: 'interimQuantity' },
         { key: 'Remarks', label: 'remarks' },
         { key: 'Team Assigned', label: 'teamAssigned' },
-        ...(processId === 8
-            ? [{ key: 'Paper', label: 'paper' }]
-            : []),
-        ...(processId === 8
-            ? [{ key: 'Paper Details', label: 'paperDetails' }]
-            : []),
-        ...(processId === 8
-            ? [{ key: 'Envelopes', label: 'envelopes' }]
-            : []),
+        { key: 'Paper', label: 'paper' },
+        { key: 'Paper Details', label: 'paperDetails' },
+        { key: 'Envelopes', label: 'envelopes' },
         { key: 'Course', label: 'course' },
         { key: 'Machine', label: 'Machine' },
         { key: 'Zone', label: 'zone' },
         { key: 'Subject', label: 'subject' },
         { key: 'Exam Date', label: 'examDate' },
+        { key: 'Exam Time', label: 'examTime' },
         { key: 'Pages', label: 'Pages' }
     ];
 
@@ -77,8 +72,8 @@ const ColumnToggleModal = ({ show, handleClose, columnVisibility, setColumnVisib
                 </Form>
             </Modal.Body>
             <Modal.Footer className={`${customLight} justify-content-center`}>
-                <Button 
-                    className={`${customBtn} border-0 px-4 py-2 fs-5`} 
+                <Button
+                    className={`${customBtn} border-0 px-4 py-2 fs-5`}
                     onClick={handleClose}
                 >
                     {t('close')}

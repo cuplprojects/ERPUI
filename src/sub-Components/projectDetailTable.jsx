@@ -75,9 +75,9 @@ const ProjectDetailsTable = ({
     "Interim Quantity": false,
     Remarks: false,
     Envelopes: false,
-    Paper: false, //window.innerWidth >= 992,
-    Course: false, //window.innerWidth >= 992,
-    Subject: false, //window.innerWidth >= 992,
+    Paper: false, // Enable by default on large screens
+    Course: false,
+    Subject: false,
     Zone: false, // Add Zone visibility
     Machine: false, // Add Machine visibility
     Pages: false,
@@ -122,8 +122,11 @@ const ProjectDetailsTable = ({
   const [courseData, setCourseData] = useState([]);
   const [subjectData, setSubjectData] = useState([]);
   const [examDate, setExamDate] = useState([]);
-
-
+  const [examTime,setExamTime] = useState([]);
+  const [inputPagesModalData, setInputPagesModalData] = useState(null);
+  const [inputPagesModalShow, setInputPagesModalShow] = useState(false);
+  const [envelopeData, setEnvelopeData] = useState({});
+console.log(tableData)
   const showNotification = (type, messageKey, descriptionKey, details = "") => {
     notification[type]({
       message: t(messageKey),
@@ -171,7 +174,6 @@ const ProjectDetailsTable = ({
             }
           });
           setEnvelopeData(envelopeMap);
-
           setPaperData(
             data.filter((item) => item.paper).map((item) => item.paper)
           );
@@ -183,6 +185,9 @@ const ProjectDetailsTable = ({
           );
           setExamDate(
             data.filter((item) => item.examDate).map((item) => item.examDate)
+          );
+          setExamTime(
+            data.filter((item) => item.examTime).map((item) => item.examTime)
           );
         }
       } catch (error) {
@@ -369,6 +374,18 @@ const ProjectDetailsTable = ({
     }
   };
 
+  const handleInputPagesSuccess = () => {
+    success("Pages updated successfully");
+    setSelectedRowKeys([]);
+    setSelectAll(false);
+    setShowOptions(false);
+  };
+
+  const handleInputPagesError = (error) => {
+    error("Failed to update pages");
+    console.error("Error updating pages:", error);
+  };
+
   const handleCatchClick = (record) => {
     setCatchDetailModalShow(true);
     setCatchDetailModalData(record);
@@ -406,10 +423,12 @@ const ProjectDetailsTable = ({
         />
       ),
       key: "selectAll",
+      fixed:"left",
       render: (_, record) => (
         <input
           type="checkbox"
           checked={selectedRowKeys.includes(record.srNo)}
+        
           onChange={(e) => {
             const checked = e.target.checked;
             if (checked) {
@@ -430,6 +449,7 @@ const ProjectDetailsTable = ({
     {
       title: t("srNo"),
       key: "srNo",
+      fixed:"left",
       align: "center",
       render: (_, __, index) => (currentPage - 1) * pageSize + index + 1,
       responsive: ["sm"],
@@ -439,6 +459,7 @@ const ProjectDetailsTable = ({
       dataIndex: "catchNumber",
       key: "catchNumber",
       align: "center",
+      fixed:"left",
       width: "15%",
       sorter: (a, b) => a.catchNumber.localeCompare(b.catchNumber),
       render: (text, record) => (
@@ -557,17 +578,28 @@ const ProjectDetailsTable = ({
         },
       ]
       : []),
-    ...(columnVisibility["Pages"]
-      ? [
-        {
-          title: t("Pages"),
-          dataIndex: "pages",
-          align: "center",
-          key: "pages",
-          sorter: (a, b) => a.pages - b.pages,
-        },
-      ]
-      : []),
+      ...(columnVisibility["Exam Time"]
+        ? [
+          {
+            title: t("examTime"),
+            dataIndex: "examTime",
+            align: "center",
+            key: "examTime",
+            sorter: (a, b) => a.examTime - b.examTime,
+          },
+        ]
+        : []),
+      ...(columnVisibility["Pages"]
+        ? [
+            {
+              title: t("Pages"),
+              dataIndex: "pages",
+              align: "center",
+              key: "pages",
+              sorter: (a, b) => a.pages - b.pages,
+            },
+          ]
+        : []),
     ...(columnVisibility["Interim Quantity"]
       ? [
         {
@@ -656,7 +688,7 @@ const ProjectDetailsTable = ({
         },
       ]
       : []),
-    ...(columnVisibility["Paper"] && processId === 8
+    ...(columnVisibility["Paper"] 
       ? [
         {
           title: t("questionPaper"),
@@ -668,67 +700,71 @@ const ProjectDetailsTable = ({
         },
       ]
       : []),
-    ...(columnVisibility["Envelopes"] && processId === 8
-      ? [
-        {
-          title: t("envelopes"),
-          dataIndex: "envelopes",
-          width: "20%",
-          align: "center",
-          key: "envelopes",
-          children: Object.keys(
-            Object.values(envelopeData)[0] || {}
-          ).map((envKey) => ({
-            title: envKey,
-            align: "center",
-            dataIndex: "catchNo",
-            key: envKey,
-            render: (_, record) => {
-              // Log to debug
-              console.log('Record:', record);
-              console.log('Envelope Data:', envelopeData);
-              console.log('Specific Envelope:', envelopeData[record.catchNumber]);
-
-              return envelopeData[record.catchNumber]?.[envKey] ||
-                envelopeData[record.catchNo]?.[envKey] || ''
+      ...(columnVisibility["Paper Details"]
+        ? [
+            {
+              title: t("paperDetails"),
+              dataIndex: "paperDetails",
+              width: "20%",
+              align: "center",
+              key: "paperDetails",
+              render: (_, record) => (
+                <div className="d-flex flex-column">
+                  <span className="fw-bold">{`Catch: ${
+                    record.catchNumber || "N/A"
+                  }`}</span>
+                  <span className="fw-bold">{`Course: ${
+                    record.course || "N/A"
+                  }`}</span>
+                  <span className="fw-bold">{`Paper: ${
+                    record.paper || "N/A"
+                  }`}</span>
+                  <span className="fw-bold">{`Exam Date: ${
+                    formatDate(record.examDate) || "N/A"
+                  }`}</span>
+                  <span className="fw-bold">{`Exam Time: ${
+                    record.examTime || "N/A"
+                  }`}</span>
+                </div>
+              ),
+              sorter: (a, b) => a.catchNumber.localeCompare(b.catchNumber),
+            },
+          ]
+        : []),
+      ...(columnVisibility["Envelopes"] 
+        ? [
+            {
+              title: t("innerEnvelope"),
+              dataIndex: "envelopes",
+              width: "20%",
+              align: "center",
+              key: "envelopes",
+              children: Object.keys(
+                Object.values(envelopeData)[0] || {}
+              ).map((envKey) => ({
+                title: envKey,
+                align: "center",
+                dataIndex: "catchNo",
+                key: envKey,
+                render: (_, record) => {
+                  // Log to debug
+                  console.log('Record:', record);
+                  console.log('Envelope Data:', envelopeData);
+                  console.log('Specific Envelope:', envelopeData[record.catchNumber]);
+                  
+                  return envelopeData[record.catchNumber]?.[envKey] || 
+                         envelopeData[record.catchNo]?.[envKey] || ''
+                }
+              }))
             }
-          }))
-        }
-      ]
-      : []),
-
-    ...(columnVisibility["Paper Details"]
-      ? [
-        {
-          title: t("paperDetails"),
-          dataIndex: "paperDetails",
-          width: "20%",
-          align: "center",
-          key: "paperDetails",
-          render: (_, record) => (
-            <div className="d-flex flex-column">
-              <span className="fw-bold">{`Catch: ${record.catchNumber || "N/A"
-                }`}</span>
-              <span className="fw-bold">{`Course: ${record.course || "N/A"
-                }`}</span>
-              <span className="fw-bold">{`Paper: ${record.paper || "N/A"
-                }`}</span>
-              <span className="fw-bold">{`Exam Date: ${formatDate(record.examDate) || "N/A"
-                }`}</span>
-              <span className="fw-bold">{`Exam Time: ${record.examTime || "N/A"
-                }`}</span>
-            </div>
-          ),
-          sorter: (a, b) => a.catchNumber.localeCompare(b.catchNumber),
-        },
-      ]
-      : []),
-
+          ]
+        : []),
     {
       title: t("status"),
       dataIndex: "status",
       fixed: 'right',
       key: "status",
+      fixed:"right",
       align: "center",
       render: (text, record) => {
         // Add debug logging
@@ -1120,6 +1156,10 @@ const ProjectDetailsTable = ({
         setInputPagesModalShow(true);
         setInputPagesModalData(selectedRows);
       }
+      else if (action === "Pages" && hasFeaturePermission(7)) {
+        setInputPagesModalShow(true);
+        setInputPagesModalData(selectedRows);
+      }
     } else {
       alert("Please select at least one row.");
     }
@@ -1506,6 +1546,7 @@ const ProjectDetailsTable = ({
                       <span className="ms-2">{t("catchesWithRemarks")}</span>
                     </Menu.Item>
 
+
                     <Menu.Divider />
 
                     <Menu.Item onClick={(e) => e.stopPropagation()}>
@@ -1538,8 +1579,8 @@ const ProjectDetailsTable = ({
                     width: "30px",
                   }}
                   className={`p- border ${customDark === "dark-dark"
-                      ? `${customDark} text-white`
-                      : "bg-white"
+                    ? `${customDark} text-white`
+                    : "bg-white"
                     }`}
                 >
                   <FaFilter size={20} className={`${customDarkText}`} />
@@ -1554,8 +1595,8 @@ const ProjectDetailsTable = ({
               <div className="mt-1 d-flex align-items-center">
                 <span
                   className={`me-2 ${customDark === "dark-dark"
-                      ? "text-white"
-                      : "custom-theme-dark-text"
+                    ? "text-white"
+                    : "custom-theme-dark-text"
                     } fs-6 fw-bold`}
                 >
                   {t("updateStatus")}
@@ -1832,7 +1873,6 @@ const ProjectDetailsTable = ({
         onSuccess={handleAssignTeamSuccess}
         onError={handleAssignTeamError}
       />
-
       <InputPages
         show={inputPagesModalShow}
         onClose={() => {
