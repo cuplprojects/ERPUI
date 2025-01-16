@@ -286,7 +286,6 @@ const AddProjectProcess = ({ selectedProject, setIsProcessSubmitted }) => {
   const handleSubmit = async () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
-
     try {
       const projectProcessesToSubmit = projectProcesses.map((process, index) => {
         const matchingProcess = allProcesses.find(p => p.name === process.name);

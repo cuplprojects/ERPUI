@@ -75,7 +75,10 @@ const ProcessTable = () => {
   ] = useState(0);
   const [previousProcessTransactions, setPreviousProcessTransactions] =
     useState([]);
-  const [selectedProject, setSelectedProject] = useState(null);
+  const [selectedProject, setSelectedProject] = useState(() => {
+    const savedProject = localStorage.getItem("selectedProject");
+    return savedProject ? JSON.parse(savedProject) : null;
+  });
   const [showPieChart, setShowPieChart] = useState(false);
   const [digitalandOffsetData, setDigitalandOffsetData] = useState([]);
   const [previousIndependent, setPreviousIndependent] = useState({
@@ -275,6 +278,7 @@ const ProcessTable = () => {
     setProjectLots([]);
     setSelectedLot(null);
     setPreviousProcessCompletionPercentage(0);
+    localStorage.setItem("selectedProject", JSON.stringify(selectedProject));
     setSelectedProject(selectedProject);
     setProjectName(selectedProject.label);
     setIsLoading(true);
