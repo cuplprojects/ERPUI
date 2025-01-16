@@ -219,11 +219,6 @@ const QtySheetUpload = () => {
       const catchNo = String(item.CatchNo || "").trim();
       const innerEnvelope = String(item.InnerEnvelope || "").trim();
 
-      // Debugging lotNo value before sending it
-      console.log(`lotNo before payload:`, lotNo, `Type:`, typeof lotNo);
-      console.log(`catchNo before payload:`, catchNo, `Type:`, typeof catchNo);
-      console.log(`innerEnvelope before payload:`, innerEnvelope, `Type:`, typeof innerEnvelope);
-
       return {
         catchNo: item.CatchNo || "",
         paper: item.Paper || "",

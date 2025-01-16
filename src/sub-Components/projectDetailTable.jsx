@@ -75,9 +75,9 @@ const ProjectDetailsTable = ({
     "Interim Quantity": false,
     Remarks: false,
     Envelopes: false,
-    Paper: false, //window.innerWidth >= 992,
-    Course: false, //window.innerWidth >= 992,
-    Subject: false, //window.innerWidth >= 992,
+    Paper: false, // Enable by default on large screens
+    Course: false,
+    Subject: false,
     Zone: false, // Add Zone visibility
     Machine: false, // Add Machine visibility
     Pages: false,
@@ -122,8 +122,11 @@ const ProjectDetailsTable = ({
   const [courseData, setCourseData] = useState([]);
   const [subjectData, setSubjectData] = useState([]);
   const [examDate, setExamDate] = useState([]);
-
-
+  const [examTime,setExamTime] = useState([]);
+  const [inputPagesModalData, setInputPagesModalData] = useState(null);
+  const [inputPagesModalShow, setInputPagesModalShow] = useState(false);
+  const [envelopeData, setEnvelopeData] = useState({});
+console.log(tableData)
   const showNotification = (type, messageKey, descriptionKey, details = "") => {
     notification[type]({
       message: t(messageKey),
@@ -171,7 +174,6 @@ const ProjectDetailsTable = ({
             }
           });
           setEnvelopeData(envelopeMap);
-
           setPaperData(
             data.filter((item) => item.paper).map((item) => item.paper)
           );
@@ -183,6 +185,9 @@ const ProjectDetailsTable = ({
           );
           setExamDate(
             data.filter((item) => item.examDate).map((item) => item.examDate)
+          );
+          setExamTime(
+            data.filter((item) => item.examTime).map((item) => item.examTime)
           );
         }
       } catch (error) {
@@ -225,11 +230,11 @@ const ProjectDetailsTable = ({
       : true;
     const previousProcessCondition = showOnlyCompletedPreviousProcess
       ? !item.previousProcessData ||
-        item.previousProcessData.status === 2 ||
-        (item.previousProcessData.thresholdQty != null &&
-          item.previousProcessData.thresholdQty > 0 &&
-          item.previousProcessData.interimQuantity >=
-            item.previousProcessData.thresholdQty)
+      item.previousProcessData.status === 2 ||
+      (item.previousProcessData.thresholdQty != null &&
+        item.previousProcessData.thresholdQty > 0 &&
+        item.previousProcessData.interimQuantity >=
+        item.previousProcessData.thresholdQty)
       : true;
 
     return (
@@ -275,7 +280,7 @@ const ProjectDetailsTable = ({
         updatedRow.previousProcessData.thresholdQty != null &&
         updatedRow.previousProcessData.thresholdQty > 0 &&
         updatedRow.previousProcessData.interimQuantity >=
-          updatedRow.previousProcessData.thresholdQty
+        updatedRow.previousProcessData.thresholdQty
       )
     ) {
       showNotification(
@@ -369,6 +374,18 @@ const ProjectDetailsTable = ({
     }
   };
 
+  const handleInputPagesSuccess = () => {
+    success("Pages updated successfully");
+    setSelectedRowKeys([]);
+    setSelectAll(false);
+    setShowOptions(false);
+  };
+
+  const handleInputPagesError = (error) => {
+    error("Failed to update pages");
+    console.error("Error updating pages:", error);
+  };
+
   const handleCatchClick = (record) => {
     setCatchDetailModalShow(true);
     setCatchDetailModalData(record);
@@ -406,10 +423,12 @@ const ProjectDetailsTable = ({
         />
       ),
       key: "selectAll",
+      fixed:"left",
       render: (_, record) => (
         <input
           type="checkbox"
           checked={selectedRowKeys.includes(record.srNo)}
+        
           onChange={(e) => {
             const checked = e.target.checked;
             if (checked) {
@@ -430,6 +449,7 @@ const ProjectDetailsTable = ({
     {
       title: t("srNo"),
       key: "srNo",
+      fixed:"left",
       align: "center",
       render: (_, __, index) => (currentPage - 1) * pageSize + index + 1,
       responsive: ["sm"],
@@ -439,6 +459,7 @@ const ProjectDetailsTable = ({
       dataIndex: "catchNumber",
       key: "catchNumber",
       align: "center",
+      fixed:"left",
       width: "15%",
       sorter: (a, b) => a.catchNumber.localeCompare(b.catchNumber),
       render: (text, record) => (
@@ -456,22 +477,22 @@ const ProjectDetailsTable = ({
                       className=""
                     />
                   ) : // If threshold quantity is met, show blue checkmark
-                  record.previousProcessData.thresholdQty != null &&
-                    record.previousProcessData.thresholdQty > 0 &&
-                    record.previousProcessData.interimQuantity >=
+                    record.previousProcessData.thresholdQty != null &&
+                      record.previousProcessData.thresholdQty > 0 &&
+                      record.previousProcessData.interimQuantity >=
                       record.previousProcessData.thresholdQty ? (
-                    <IoCheckmarkDoneCircleSharp
-                      size={20}
-                      color="blue"
-                      className=""
-                    />
-                  ) : // If status is pending (0), show orange pending icon
-                  record.previousProcessData.status === 0 ? (
-                    <MdPending size={20} color="orange" className="" />
-                  ) : (
-                    // Otherwise show orange dots for in progress
-                    <MdPending size={20} color="orange" className="" />
-                  )
+                      <IoCheckmarkDoneCircleSharp
+                        size={20}
+                        color="blue"
+                        className=""
+                      />
+                    ) : // If status is pending (0), show orange pending icon
+                      record.previousProcessData.status === 0 ? (
+                        <MdPending size={20} color="orange" className="" />
+                      ) : (
+                        // Otherwise show orange dots for in progress
+                        <MdPending size={20} color="orange" className="" />
+                      )
                 ) : (
                   // If no previous process, show orange checkmark
                   <IoCheckmarkDoneCircleSharp
@@ -547,127 +568,171 @@ const ProjectDetailsTable = ({
     },
     ...(columnVisibility["Exam Date"]
       ? [
+        {
+          title: t("examDate"),
+          dataIndex: "examDate",
+          align: "center",
+          key: "examDate",
+          sorter: (a, b) => a.examDate - b.examDate,
+          render: (text) => formatDate(text), // Apply formatDate here
+        },
+      ]
+      : []),
+      ...(columnVisibility["Exam Time"]
+        ? [
           {
-            title: t("examDate"),
-            dataIndex: "examDate",
+            title: t("examTime"),
+            dataIndex: "examTime",
             align: "center",
-            key: "examDate",
-            sorter: (a, b) => a.examDate - b.examDate,
-            render: (text) => formatDate(text), // Apply formatDate here
+            key: "examTime",
+            sorter: (a, b) => a.examTime - b.examTime,
           },
         ]
-      : []),
-    ...(columnVisibility["Pages"]
-      ? [
-          {
-            title: t("Pages"),
-            dataIndex: "pages",
-            align: "center",
-            key: "pages",
-            sorter: (a, b) => a.pages - b.pages,
-          },
-        ]
-      : []),
+        : []),
+      ...(columnVisibility["Pages"]
+        ? [
+            {
+              title: t("Pages"),
+              dataIndex: "pages",
+              align: "center",
+              key: "pages",
+              sorter: (a, b) => a.pages - b.pages,
+            },
+          ]
+        : []),
     ...(columnVisibility["Interim Quantity"]
       ? [
-          {
-            title: t("interimQuantity"),
-            dataIndex: "interimQuantity",
-            align: "center",
-            key: "interimQuantity",
-            sorter: (a, b) => a.interimQuantity - b.interimQuantity,
-          },
-        ]
+        {
+          title: t("interimQuantity"),
+          dataIndex: "interimQuantity",
+          align: "center",
+          key: "interimQuantity",
+          sorter: (a, b) => a.interimQuantity - b.interimQuantity,
+        },
+      ]
       : []),
     ...(columnVisibility.Remarks
       ? [
-          {
-            title: t("remarks"),
-            dataIndex: "remarks",
-            key: "remarks",
-            align: "center",
-            sorter: (a, b) => a.remarks.localeCompare(b.remarks),
-          },
-        ]
+        {
+          title: t("remarks"),
+          dataIndex: "remarks",
+          key: "remarks",
+          align: "center",
+          sorter: (a, b) => a.remarks.localeCompare(b.remarks),
+        },
+      ]
       : []),
     ...(columnVisibility["Team Assigned"]
       ? [
-          {
-            title: t("teamAssigned"),
-            dataIndex: "teamUserNames",
-            align: "center",
-            key: "teamUserNames",
-            render: (teamUserNames) => teamUserNames?.join(", "),
-            sorter: (a, b) => {
-              const aNames = a.teamUserNames?.join(", ") || "";
-              const bNames = b.teamUserNames?.join(", ") || "";
-              return aNames.localeCompare(bNames);
-            },
+        {
+          title: t("teamAssigned"),
+          dataIndex: "teamUserNames",
+          align: "center",
+          key: "teamUserNames",
+          render: (teamUserNames) => teamUserNames?.join(", "),
+          sorter: (a, b) => {
+            const aNames = a.teamUserNames?.join(", ") || "";
+            const bNames = b.teamUserNames?.join(", ") || "";
+            return aNames.localeCompare(bNames);
           },
-        ]
+        },
+      ]
       : []),
     ...(columnVisibility["Zone"]
       ? [
-          {
-            title: t("zone"),
-            dataIndex: "zoneNo",
-            align: "center",
-            key: "zoneNo",
-            sorter: (a, b) => (a.zoneNo || "").localeCompare(b.zoneNo || ""),
-          },
-        ]
+        {
+          title: t("zone"),
+          dataIndex: "zoneNo",
+          align: "center",
+          key: "zoneNo",
+          sorter: (a, b) => (a.zoneNo || "").localeCompare(b.zoneNo || ""),
+        },
+      ]
       : []),
     ...(columnVisibility["Machine"]
       ? [
-          {
-            title: t("machine"),
-            dataIndex: "machinename",
-            align: "center",
-            key: "machinename",
-            sorter: (a, b) =>
-              (a.machinename || "").localeCompare(b.machinename || ""),
-          },
-        ]
+        {
+          title: t("machine"),
+          dataIndex: "machinename",
+          align: "center",
+          key: "machinename",
+          sorter: (a, b) =>
+            (a.machinename || "").localeCompare(b.machinename || ""),
+        },
+      ]
       : []),
     ...(columnVisibility["Course"]
       ? [
-          {
-            title: t("course"),
+        {
+          title: t("course"),
 
-            dataIndex: "course",
-            // width: '20%',
-            align: "center",
-            key: "course",
+          dataIndex: "course",
+          // width: '20%',
+          align: "center",
+          key: "course",
 
-            sorter: (a, b) => a.course - b.course,
-          },
-        ]
+          sorter: (a, b) => a.course - b.course,
+        },
+      ]
       : []),
     ...(columnVisibility["Subject"]
       ? [
-          {
-            title: t("subject"),
-            dataIndex: "subject",
-            width: "20%",
-            align: "center",
-            key: "subject",
+        {
+          title: t("subject"),
+          dataIndex: "subject",
+          width: "20%",
+          align: "center",
+          key: "subject",
 
-            sorter: (a, b) => a.subject - b.subject,
-          },
-        ]
+          sorter: (a, b) => a.subject - b.subject,
+        },
+      ]
       : []),
     ...(columnVisibility["Paper"] 
       ? [
-          {
-            title: t("questionPaper"),
-            dataIndex: "paper",
-            width: "20%",
-            align: "center",
-            key: "paper",
-            sorter: (a, b) => a.paper - b.paper,
-          },
-        ]
+
+        {
+          title: t("questionPaper"),
+
+          dataIndex: "paper",
+          width: "20%",
+          align: "center",
+          key: "paper",
+          sorter: (a, b) => a.paper - b.paper,
+        },
+      ]
       : []),
+      ...(columnVisibility["Paper Details"]
+        ? [
+            {
+              title: t("paperDetails"),
+              dataIndex: "paperDetails",
+              width: "20%",
+              align: "center",
+              key: "paperDetails",
+              render: (_, record) => (
+                <div className="d-flex flex-column">
+                  <span className="fw-bold">{`Catch: ${
+                    record.catchNumber || "N/A"
+                  }`}</span>
+                  <span className="fw-bold">{`Course: ${
+                    record.course || "N/A"
+                  }`}</span>
+                  <span className="fw-bold">{`Paper: ${
+                    record.paper || "N/A"
+                  }`}</span>
+                  <span className="fw-bold">{`Exam Date: ${
+                    formatDate(record.examDate) || "N/A"
+                  }`}</span>
+                  <span className="fw-bold">{`Exam Time: ${
+                    record.examTime || "N/A"
+                  }`}</span>
+                </div>
+              ),
+              sorter: (a, b) => a.catchNumber.localeCompare(b.catchNumber),
+            },
+          ]
+        : []),
       ...(columnVisibility["Envelopes"] 
         ? [
             {
@@ -696,44 +761,12 @@ const ProjectDetailsTable = ({
             }
           ]
         : []),
-
-    ...(columnVisibility["Paper Details"]
-      ? [
-          {
-            title: t("paperDetails"),
-            dataIndex: "paperDetails",
-            width: "20%",
-            align: "center",
-            key: "paperDetails",
-            render: (_, record) => (
-              <div className="d-flex flex-column">
-                <span className="fw-bold">{`Catch: ${
-                  record.catchNumber || "N/A"
-                }`}</span>
-                <span className="fw-bold">{`Course: ${
-                  record.course || "N/A"
-                }`}</span>
-                <span className="fw-bold">{`Paper: ${
-                  record.paper || "N/A"
-                }`}</span>
-                <span className="fw-bold">{`Exam Date: ${
-                  formatDate(record.examDate) || "N/A"
-                }`}</span>
-                <span className="fw-bold">{`Exam Time: ${
-                  record.examTime || "N/A"
-                }`}</span>
-              </div>
-            ),
-            sorter: (a, b) => a.catchNumber.localeCompare(b.catchNumber),
-          },
-        ]
-      : []),
-
     {
       title: t("status"),
       dataIndex: "status",
       fixed:'right',
       key: "status",
+      fixed:"right",
       align: "center",
       render: (text, record) => {
         // Add debug logging
@@ -756,7 +789,7 @@ const ProjectDetailsTable = ({
             ((record.previousProcessData.thresholdQty != null &&
               record.previousProcessData.thresholdQty > 0 &&
               record.previousProcessData.interimQuantity >=
-                record.previousProcessData.thresholdQty) ||
+              record.previousProcessData.thresholdQty) ||
               record.previousProcessData.status === 2)) ||
           // 3. If current process status is 1 and previous process status is 2, return true
           (record.status === 1 && record.previousProcessData?.status === 2) ||
@@ -782,9 +815,9 @@ const ProjectDetailsTable = ({
           isIndependentProcessCompleted &&
           (hasSelectMachinePermission
             ? record.machineId !== 0 &&
-              record.machineId !== null &&
-              isZoneAssigned &&
-              isTeamAssigned
+            record.machineId !== null &&
+            isZoneAssigned &&
+            isTeamAssigned
             : isZoneAssigned && isTeamAssigned);
 
         // Only check interim quantity if hasFeaturePermission(7) is true and interimQuantity is not 0
@@ -882,8 +915,8 @@ const ProjectDetailsTable = ({
                 content={
                   isDisabled
                     ? requirements.map((req, index) => (
-                        <div key={index}>{req}</div>
-                      ))
+                      <div key={index}>{req}</div>
+                    ))
                     : ""
                 }
               >
@@ -935,7 +968,7 @@ const ProjectDetailsTable = ({
         (row.previousProcessData.thresholdQty != null &&
           row.previousProcessData.thresholdQty > 0 &&
           row.previousProcessData.interimQuantity >=
-            row.previousProcessData.thresholdQty)
+          row.previousProcessData.thresholdQty)
       );
     });
 
@@ -1122,6 +1155,10 @@ const ProjectDetailsTable = ({
         setAssignTeamModalShow(true);
         setAssignTeamModalData(selectedRows); // Pass array of all selected rows
       } else if (action === "Pages" && hasFeaturePermission(7)) {
+        setInputPagesModalShow(true);
+        setInputPagesModalData(selectedRows);
+      }
+      else if (action === "Pages" && hasFeaturePermission(7)) {
         setInputPagesModalShow(true);
         setInputPagesModalData(selectedRows);
       }
@@ -1386,9 +1423,8 @@ const ProjectDetailsTable = ({
   );
 
   const customPagination = {
-    className: `bg-white p-3 rounded rounded-top-0 mt-0  ${
-      customDark === "dark-dark" ? `` : ``
-    }`,
+    className: `bg-white p-3 rounded rounded-top-0 mt-0  ${customDark === "dark-dark" ? `` : ``
+      }`,
     current: currentPage,
     pageSize,
     pageSizeOptions: [5, 10, 25, 50, 100],
@@ -1512,6 +1548,7 @@ const ProjectDetailsTable = ({
                       <span className="ms-2">{t("catchesWithRemarks")}</span>
                     </Menu.Item>
 
+
                     <Menu.Divider />
 
                     <Menu.Item onClick={(e) => e.stopPropagation()}>
@@ -1543,11 +1580,10 @@ const ProjectDetailsTable = ({
                     padding: 0,
                     width: "30px",
                   }}
-                  className={`p- border ${
-                    customDark === "dark-dark"
-                      ? `${customDark} text-white`
-                      : "bg-white"
-                  }`}
+                  className={`p- border ${customDark === "dark-dark"
+                    ? `${customDark} text-white`
+                    : "bg-white"
+                    }`}
                 >
                   <FaFilter size={20} className={`${customDarkText}`} />
                 </Button>
@@ -1560,11 +1596,10 @@ const ProjectDetailsTable = ({
             {selectedRowKeys.length > 1 && getSelectedStatus() !== null && (
               <div className="mt-1 d-flex align-items-center">
                 <span
-                  className={`me-2 ${
-                    customDark === "dark-dark"
-                      ? "text-white"
-                      : "custom-theme-dark-text"
-                  } fs-6 fw-bold`}
+                  className={`me-2 ${customDark === "dark-dark"
+                    ? "text-white"
+                    : "custom-theme-dark-text"
+                    } fs-6 fw-bold`}
                 >
                   {t("updateStatus")}
                 </span>
@@ -1590,7 +1625,7 @@ const ProjectDetailsTable = ({
                       !(
                         row.previousProcessData.thresholdQty != null &&
                         row.previousProcessData.thresholdQty >
-                          row.previousProcessData.interimQuantity
+                        row.previousProcessData.interimQuantity
                       )
                     );
                   });
@@ -1738,9 +1773,8 @@ const ProjectDetailsTable = ({
                 >
                   <PiDotsNineBold
                     size={30}
-                    className={` ${
-                      customDark === "dark-dark" ? "text-white" : customDarkText
-                    }`}
+                    className={` ${customDark === "dark-dark" ? "text-white" : customDarkText
+                      }`}
                   />
                 </Button>
               </Dropdown>
@@ -1753,9 +1787,8 @@ const ProjectDetailsTable = ({
           <Col lg={12} md={12}>
             <Table
               rowClassName={rowClassName}
-              className={`${
-                customDark === "default-dark" ? "thead-default" : ""
-              }
+              className={`${customDark === "default-dark" ? "thead-default" : ""
+                }
             ${customDark === "red-dark" ? "thead-red" : ""}
             ${customDark === "green-dark" ? "thead-green" : ""}
             ${customDark === "blue-dark" ? "thead-blue" : ""}
@@ -1839,7 +1872,6 @@ const ProjectDetailsTable = ({
         onSuccess={handleAssignTeamSuccess}
         onError={handleAssignTeamError}
       />
-
       <InputPages
         show={inputPagesModalShow}
         onClose={() => {
