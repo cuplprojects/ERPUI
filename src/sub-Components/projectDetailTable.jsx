@@ -109,10 +109,6 @@ const ProjectDetailsTable = ({
   const [selectMachineModalData, setSelectMachineModalData] = useState(null);
   const [assignTeamModalData, setAssignTeamModalData] = useState(null);
   const [showOnlyAlerts, setShowOnlyAlerts] = useState(false);
-  // Update pages in qtysheet modal
-  const [inputPagesModalData, setInputPagesModalData] = useState(null);
-  const [inputPagesModalShow, setInputPagesModalShow] = useState(false);
-  const [envelopeData, setEnvelopeData] = useState({});
   const [
     showOnlyCompletedPreviousProcess,
     setShowOnlyCompletedPreviousProcess,
@@ -374,17 +370,7 @@ console.log(tableData)
     }
   };
 
-  const handleInputPagesSuccess = () => {
-    success("Pages updated successfully");
-    setSelectedRowKeys([]);
-    setSelectAll(false);
-    setShowOptions(false);
-  };
 
-  const handleInputPagesError = (error) => {
-    error("Failed to update pages");
-    console.error("Error updating pages:", error);
-  };
 
   const handleCatchClick = (record) => {
     setCatchDetailModalShow(true);
