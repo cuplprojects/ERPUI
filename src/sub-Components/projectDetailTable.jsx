@@ -388,6 +388,7 @@ console.log(tableData)
 
   const columns = [
     {
+      fixed:'left',
       title: (
         <input
           type="checkbox"
@@ -434,6 +435,7 @@ console.log(tableData)
     },
     {
       title: t("srNo"),
+      fixed:'left',
       key: "srNo",
       fixed:"left",
       align: "center",
@@ -442,6 +444,7 @@ console.log(tableData)
     },
     {
       title: t("catchNo"),
+      fixed:'left',
       dataIndex: "catchNumber",
       key: "catchNumber",
       align: "center",
