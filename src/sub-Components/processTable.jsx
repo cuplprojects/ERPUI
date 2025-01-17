@@ -85,7 +85,10 @@ const ProcessTable = () => {
   ] = useState(0);
   const [previousProcessTransactions, setPreviousProcessTransactions] =
     useState([]);
-  const [selectedProject, setSelectedProject] = useState(null);
+  const [selectedProject, setSelectedProject] = useState(() => {
+    const savedProject = localStorage.getItem("selectedProject");
+    return savedProject ? JSON.parse(savedProject) : null;
+  });
   const [showPieChart, setShowPieChart] = useState(false);
   const [digitalandOffsetData, setDigitalandOffsetData] = useState([]);
   const [previousIndependent, setPreviousIndependent] = useState({
@@ -285,6 +288,7 @@ const ProcessTable = () => {
     setProjectLots([]);
     setSelectedLot(null);
     setPreviousProcessCompletionPercentage(0);
+    localStorage.setItem("selectedProject", JSON.stringify(selectedProject));
     setSelectedProject(selectedProject);
     setProjectName(selectedProject.label);
     setIsLoading(true);
@@ -390,6 +394,7 @@ const ProcessTable = () => {
     quantity: 0,
     percentageCatch: 0,
     projectId: item.projectId,
+    pages:item.pages,
     processId: processId,
     status: item.transactions[0]?.status || 0,
     alerts: item.transactions[0]?.alarmId || "",
@@ -491,10 +496,10 @@ const ProcessTable = () => {
               previousSequence--;
               continue;
             }
-
-            if (selectedProcess.processId === 3 &&
-              (previousProcessData.processId === 2 || previousProcessData.processId === 1)) {
-              previousSequence = 0;  // Prevent infinite loop and avoid fetching invalid previous process
+  
+            if (selectedProcess.processId === 3 && 
+               (previousProcessData.processId === 2 || previousProcessData.processId === 1)) {
+              previousSequence--;  // Prevent infinite loop and avoid fetching invalid previous process
               continue;
             }
 
@@ -604,6 +609,7 @@ const ProcessTable = () => {
               subject: item.subject,
               innerEnvelope: item.innerEnvelope,
               outerEnvelope: item.outerEnvelope,
+              pages:item.pages,
               quantity: item.quantity,
               percentageCatch: item.percentageCatch,
               pages: item.pages,
