@@ -39,6 +39,7 @@ import { useTranslation } from "react-i18next";
 import Tippy from "@tippyjs/react";
 import InputPages from "../menus/InputPages";
 import { success } from "../CustomHooks/Services/AlertMessageService";
+import { offset } from "highcharts";
 
 const { Option } = Select;
 
@@ -753,7 +754,6 @@ console.log(tableData)
       dataIndex: "status",
       fixed: 'right',
       key: "status",
-      fixed:"right",
       align: "center",
       render: (text, record) => {
         // Add debug logging
@@ -1483,8 +1483,8 @@ console.log(tableData)
 
   return (
     <>
-      <div className="">
-        <Row className={`${customLight} mb-2 p-2 rounded`}>
+      <div className="" style={{ position: "sticky", top: 57, zIndex: 1000}}>
+        <Row className={`${customLight} mb-2 p-2 rounded `}>
           <Col
             lg={1}
             md={1}
