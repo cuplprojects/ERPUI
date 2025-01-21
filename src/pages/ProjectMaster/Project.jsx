@@ -7,6 +7,7 @@ import { Button, Card, Tabs, message } from 'antd';
 import AddProjectProcess from './Tabs/AddProjectProcess';
 import ProjectUserAllocation from './Tabs/ProjectUserAllocation';
 import ProjectTab from './Tabs/ProjectTab';
+import ArchivedProjects from './Tabs/ArchivedProjects';
 
 import themeStore from '../../store/themeStore';
 
@@ -68,6 +69,15 @@ const Project = () => {
       children: (
         <div className="responsive-container">
           <ProjectUserAllocation selectedProject={selectedProject} activeKey={activeTabKey}/>
+        </div>
+      )
+    },
+    {
+      key: "4",
+      label: t('Archived Projects'),
+      children: (
+        <div className="responsive-container">
+          <ArchivedProjects />
         </div>
       )
     }
