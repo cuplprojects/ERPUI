@@ -1,33 +1,37 @@
 import React, { useState } from 'react';
-import { Table, Button, Input, Row, Col } from 'antd';
+import { Table, Input, Row, Col, Button, Divider } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { useStore } from 'zustand';
-import themeStore from '../../../store/themeStore';
+import themeStore from '../store/themeStore';
 import { RollbackOutlined } from '@ant-design/icons';
-import { success } from '../../../CustomHooks/Services/AlertMessageService';
+import { success } from '../CustomHooks/Services/AlertMessageService';
+import { useMediaQuery } from 'react-responsive';
+import { FaSearch } from "react-icons/fa";
 
-const ArchivedProjects = () => {
+const ArchivedGroups = () => {
   const { t } = useTranslation();
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
-  const [customDark, customMid, customLight, customBtn] = cssClasses;
+  const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
 
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchText, setSearchText] = useState('');
   const [sortedInfo, setSortedInfo] = useState({});
 
+  const isMobile = useMediaQuery({ maxWidth: 767 });
+
   // Sample data - replace with actual API call in production
-  const sampleArchivedProjects = [
+  const sampleArchivedGroups = [
     {
       id: 1,
-      name: 'Group H - Booklet',
+      groupName: 'Group H - Booklet',
       archivedBy: 'John Doe',
       archivedDate: '2024-03-20',
     },
     {
       id: 2,
-      name: 'Group Alpha - Paper',
+      groupName: 'Group Alpha - Paper',
       archivedBy: 'Jane Smith',
       archivedDate: '2024-03-19',
     },
@@ -35,7 +39,7 @@ const ArchivedProjects = () => {
 
   const handleUnarchive = (record) => {
     // Implement unarchive logic here
-    success(t('projectUnarchived'));
+    success(t('groupUnarchived'));
   };
 
   const columns = [
@@ -47,16 +51,18 @@ const ArchivedProjects = () => {
       render: (text, record, index) => (currentPage - 1) * pageSize + index + 1,
     },
     {
-      title: t('projectName'),
-      dataIndex: 'name',
-      key: 'name',
-      sorter: (a, b) => a.name.localeCompare(b.name),
-      sortOrder: sortedInfo.columnKey === 'name' && sortedInfo.order,
+      title: t('groupName'),
+      dataIndex: 'groupName',
+      key: 'groupName',
+      sorter: (a, b) => a.groupName.localeCompare(b.groupName),
+      sortOrder: sortedInfo.columnKey === 'groupName' && sortedInfo.order,
     },
     {
       title: t('archivedBy'),
       dataIndex: 'archivedBy',
       key: 'archivedBy',
+      sorter: (a, b) => a.archivedBy.localeCompare(b.archivedBy),
+      sortOrder: sortedInfo.columnKey === 'archivedBy' && sortedInfo.order,
     },
     {
       title: t('archivedDate'),
@@ -67,7 +73,7 @@ const ArchivedProjects = () => {
     },
     {
       title: t('action'),
-      key: 'action', 
+      key: 'action',
       render: (_, record) => (
         <Button
           className={`${customBtn} d-flex align-items-center justify-content-center`}
@@ -75,10 +81,9 @@ const ArchivedProjects = () => {
           icon={<RollbackOutlined />}
           title={t('unarchive')}
         >
-          
         </Button>
       ),
-    },
+    }
   ];
 
   const handleTableChange = (pagination, filters, sorter) => {
@@ -87,34 +92,58 @@ const ArchivedProjects = () => {
     setPageSize(pagination.pageSize);
   };
 
-  const filteredProjects = sampleArchivedProjects.filter(project =>
-    Object.values(project).some(value =>
+  const filteredGroups = sampleArchivedGroups.filter(group =>
+    Object.values(group).some(value =>
       value && value.toString().toLowerCase().includes(searchText.toLowerCase())
     )
   );
 
   return (
-    <>
-      <Row justify="end" align="middle" style={{ marginBottom: '20px' }}>
-        <Col>
-          <Input.Search
-            placeholder={t('searchProjects')}
-            onChange={e => setSearchText(e.target.value)}
-            style={{ width: '300px' }}
+    <div style={{
+      padding: isMobile ? '10px' : '20px',
+      background: '#fff',
+      boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
+      overflowX: 'auto'
+    }}
+    className={`rounded-2 ${customDark === "dark-dark" ? `${customDark} border text-white` : `${customDarkText}`}`}>
+      <Divider className={`fs-3 mt-0 ${customDarkText}`}>
+        {t("archivedGroups")}
+      </Divider>
+
+      <div style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        justifyContent: 'flex-end',
+        alignItems: 'center',
+        marginBottom: isMobile ? '10px' : '20px'
+      }}>
+        <div className="d-flex align-items-center">
+          <Input
+            placeholder={t('searchGroups')}
+            onChange={(e) => setSearchText(e.target.value)}
+            style={{ width: 200, height: 32 }}
+            className={`mb-2 rounded-2 ${customDark === "dark-dark" ? ` ${customLightBorder} text-dark` : `${customDarkText}`} ${customDarkBorder} rounded-end-0`}
+            allowClear
           />
-        </Col>
-      </Row>
+          <Button
+            className={`mb-2 rounded-2 ${customBtn} ${customDark === "dark-dark" ? `border-white` : `border-0`} rounded-start-0`}
+            style={{ height: 32 }}
+          >
+            <FaSearch />
+          </Button>
+        </div>
+      </div>
 
       <div className="table-responsive">
         <Table
           columns={columns}
-          dataSource={filteredProjects}
+          dataSource={filteredGroups}
           onChange={handleTableChange}
           pagination={{
             className: 'p-3 rounded rounded-top-0',
             current: currentPage,
             pageSize: pageSize,
-            total: filteredProjects.length,
+            total: filteredGroups.length,
             showSizeChanger: true,
             showTotal: (total, range) => `${range[0]}-${range[1]} ${t('of')} ${total} ${t('items')}`,
             pageSizeOptions: ['10', '15', '20']
@@ -122,6 +151,7 @@ const ArchivedProjects = () => {
           rowKey="id"
           bordered
           scroll={{ x: 'max-content' }}
+          size={isMobile ? 'small' : 'middle'}
           className={`${customDark === "default-dark" ? "thead-default" : ""}
               ${customDark === "red-dark" ? "thead-red" : ""}
               ${customDark === "green-dark" ? "thead-green" : ""}
@@ -133,8 +163,8 @@ const ArchivedProjects = () => {
               ${customDark === "brown-dark" ? "thead-brown" : ""} custom-pagination`}
         />
       </div>
-    </>
+    </div>
   );
 };
 
-export default ArchivedProjects;
+export default ArchivedGroups;

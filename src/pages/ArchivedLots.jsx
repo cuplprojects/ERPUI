@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { Table, Button, Input, Row, Col } from 'antd';
+import { Table, Input, Row, Col, Button } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { useStore } from 'zustand';
-import themeStore from '../../../store/themeStore';
+import themeStore from '../store/themeStore';
 import { RollbackOutlined } from '@ant-design/icons';
-import { success } from '../../../CustomHooks/Services/AlertMessageService';
+import { success } from '../CustomHooks/Services/AlertMessageService';
 
-const ArchivedProjects = () => {
+const ArchivedLots = () => {
   const { t } = useTranslation();
   const { getCssClasses } = useStore(themeStore);
   const cssClasses = getCssClasses();
@@ -18,24 +18,33 @@ const ArchivedProjects = () => {
   const [sortedInfo, setSortedInfo] = useState({});
 
   // Sample data - replace with actual API call in production
-  const sampleArchivedProjects = [
+  const sampleArchivedLots = [
     {
       id: 1,
-      name: 'Group H - Booklet',
+      lotNumber: 'LOT-2024-001',
+      completedPercentage: 85,
       archivedBy: 'John Doe',
       archivedDate: '2024-03-20',
     },
     {
       id: 2,
-      name: 'Group Alpha - Paper',
+      lotNumber: 'LOT-2024-002',
+      completedPercentage: 92,
       archivedBy: 'Jane Smith',
       archivedDate: '2024-03-19',
+    },
+    {
+      id: 3,
+      lotNumber: 'LOT-2024-003',
+      completedPercentage: 78,
+      archivedBy: 'Mike Johnson',
+      archivedDate: '2024-03-18',
     },
   ];
 
   const handleUnarchive = (record) => {
     // Implement unarchive logic here
-    success(t('projectUnarchived'));
+    success(t('lotUnarchived'));
   };
 
   const columns = [
@@ -47,16 +56,26 @@ const ArchivedProjects = () => {
       render: (text, record, index) => (currentPage - 1) * pageSize + index + 1,
     },
     {
-      title: t('projectName'),
-      dataIndex: 'name',
-      key: 'name',
-      sorter: (a, b) => a.name.localeCompare(b.name),
-      sortOrder: sortedInfo.columnKey === 'name' && sortedInfo.order,
+      title: t('lotNumber'),
+      dataIndex: 'lotNumber',
+      key: 'lotNumber',
+      sorter: (a, b) => a.lotNumber.localeCompare(b.lotNumber),
+      sortOrder: sortedInfo.columnKey === 'lotNumber' && sortedInfo.order,
+    },
+    {
+      title: t('completedPercentage'),
+      dataIndex: 'completedPercentage',
+      key: 'completedPercentage',
+      sorter: (a, b) => a.completedPercentage - b.completedPercentage,
+      sortOrder: sortedInfo.columnKey === 'completedPercentage' && sortedInfo.order,
+      render: (percentage) => `${percentage}%`,
     },
     {
       title: t('archivedBy'),
       dataIndex: 'archivedBy',
       key: 'archivedBy',
+      sorter: (a, b) => a.archivedBy.localeCompare(b.archivedBy),
+      sortOrder: sortedInfo.columnKey === 'archivedBy' && sortedInfo.order,
     },
     {
       title: t('archivedDate'),
@@ -67,18 +86,16 @@ const ArchivedProjects = () => {
     },
     {
       title: t('action'),
-      key: 'action', 
+      key: 'action',
       render: (_, record) => (
         <Button
           className={`${customBtn} d-flex align-items-center justify-content-center`}
           onClick={() => handleUnarchive(record)}
           icon={<RollbackOutlined />}
-          title={t('unarchive')}
         >
-          
         </Button>
       ),
-    },
+    }
   ];
 
   const handleTableChange = (pagination, filters, sorter) => {
@@ -87,8 +104,8 @@ const ArchivedProjects = () => {
     setPageSize(pagination.pageSize);
   };
 
-  const filteredProjects = sampleArchivedProjects.filter(project =>
-    Object.values(project).some(value =>
+  const filteredLots = sampleArchivedLots.filter(lot =>
+    Object.values(lot).some(value =>
       value && value.toString().toLowerCase().includes(searchText.toLowerCase())
     )
   );
@@ -98,7 +115,7 @@ const ArchivedProjects = () => {
       <Row justify="end" align="middle" style={{ marginBottom: '20px' }}>
         <Col>
           <Input.Search
-            placeholder={t('searchProjects')}
+            placeholder={t('searchLots')}
             onChange={e => setSearchText(e.target.value)}
             style={{ width: '300px' }}
           />
@@ -108,13 +125,13 @@ const ArchivedProjects = () => {
       <div className="table-responsive">
         <Table
           columns={columns}
-          dataSource={filteredProjects}
+          dataSource={filteredLots}
           onChange={handleTableChange}
           pagination={{
             className: 'p-3 rounded rounded-top-0',
             current: currentPage,
             pageSize: pageSize,
-            total: filteredProjects.length,
+            total: filteredLots.length,
             showSizeChanger: true,
             showTotal: (total, range) => `${range[0]}-${range[1]} ${t('of')} ${total} ${t('items')}`,
             pageSizeOptions: ['10', '15', '20']
@@ -137,4 +154,4 @@ const ArchivedProjects = () => {
   );
 };
 
-export default ArchivedProjects;
+export default ArchivedLots;

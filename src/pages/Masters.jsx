@@ -12,7 +12,8 @@ import { AiFillCloseSquare } from "react-icons/ai";
 import { FaBookOpenReader, FaScrewdriverWrench } from "react-icons/fa6";
 import { BiSolidCctv } from "react-icons/bi";
 import { BsQuestionSquareFill } from "react-icons/bs";
-import GroupManager from './Group';
+import Group from './Group';
+import ArchivedGroups from './ArchivedGroups';
 import Project from './ProjectMaster/Project';
 import Zone from './Zone';
 import Type from './Type';
@@ -81,7 +82,16 @@ const Sidebar = () => {
       ],
     },
     { key: 'systemSettings', icon: <FaCog />, label: t('processSettings'), permission: '2.10' },
-    { key: 'group', icon: <FaUsers />, label: t('group'), permission: '2.2' },
+    {
+      key: 'groupManagement',
+      icon: <RiUserSettingsFill />,
+      label: t('groupManagement'),
+      permission: '2.1',
+      children: [
+        { key: 'group', icon: <FaUsers />, label: t('group'), permission: '2.2' },
+        { key: 'archivedGroups', icon: <FaUsers />, label: t('archivedGroups'), permission: '2.2' },
+      ],
+    },
     { key: 'type', icon: <FaBookOpenReader />, label: t('projectType'), permission: '2.3' },
     { key: 'project', icon: <FaProjectDiagram />, label: t('project'), permission: '2.4' },
     { key: 'camera', icon: <FaCamera />, label: t('camera'), permission: '2.6' },
@@ -172,7 +182,8 @@ const Sidebar = () => {
           {hasPermission('2.1.2') && selectedMenu === 'addUser' && <AddUsers />}
           {hasPermission('2.1.3') && selectedMenu === 'allUsers' && <AllUsers />}
           {hasPermission('2.1.4') && selectedMenu === 'questions' && <SecurityQuestions />}
-          {hasPermission('2.2') && selectedMenu === 'group' && <GroupManager />}
+          {hasPermission('2.2') && selectedMenu === 'group' && <Group />}
+          {hasPermission('2.2') && selectedMenu === 'archivedGroups' && <ArchivedGroups />}
           {hasPermission('2.3') && selectedMenu === 'type' && <Type />}
           {hasPermission('2.4') && selectedMenu === 'project' && <Project />}
           {hasPermission('2.9') && selectedMenu === 'teams' && <Teams />}

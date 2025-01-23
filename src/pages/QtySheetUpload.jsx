@@ -13,6 +13,7 @@ import { useTranslation } from "react-i18next";
 import { decrypt } from "../Security/Security";
 import { BsCheckCircleFill } from "react-icons/bs";
 import { success, error, warning } from "../CustomHooks/Services/AlertMessageService";
+import ArchivedLots from './ArchivedLots';
 
 // Helper function to convert Excel date number to JS Date
 const convertExcelDate = (excelDate) => {
@@ -75,6 +76,7 @@ const QtySheetUpload = () => {
   const [isUpdateMode, setIsUpdateMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showArchivedLots, setShowArchivedLots] = useState(false);
 
   // Track mouse position for context menu
   const [contextMenuPosition, setContextMenuPosition] = useState({
@@ -565,6 +567,13 @@ const QtySheetUpload = () => {
       >
         {t("releaseForProduction")}
       </Menu.Item>
+      <Menu.Item
+        key="1"
+        onClick={releaseForProduction}
+        className={`w-100 rounded-3 `}
+      >
+        {t("Archive Lot")}
+      </Menu.Item>
     </Menu>
   );
 
@@ -623,57 +632,65 @@ const QtySheetUpload = () => {
               name="file"
               rules={[{ required: true, message: t("pleaseSelectAFile") }]}
             >
-              <div className="d-flex align-items-center">
-                {!isLotsFetched ? (
-                  <Upload
-                    onRemove={(file) => {
-                      const index = fileList.indexOf(file);
-                      const newFileList = fileList.slice();
-                      newFileList.splice(index, 1);
-                      setFileList(newFileList);
-                    }}
-                    beforeUpload={handleFileUpload}
-                    fileList={fileList}
-                    className="flex-grow-1"
-                  >
-                    <Button className="fs-4 custom-zoom-btn w-100 d-flex align-items-center p-2">
-                      <UploadOutlined />
-                      <span className="d-none d-sm-inline">
-                        {" "}
-                        {t("selectFile")}{" "}
-                      </span>
-                      <span className="d-inline d-sm-none">
-                        {" "}
-                        {t("upload")}{" "}
-                      </span>
+              <div className="d-flex align-items-center justify-content-between">
+                <div className="d-flex align-items-center">
+                  {!isLotsFetched ? (
+                    <Upload
+                      onRemove={(file) => {
+                        const index = fileList.indexOf(file);
+                        const newFileList = fileList.slice();
+                        newFileList.splice(index, 1);
+                        setFileList(newFileList);
+                      }}
+                      beforeUpload={handleFileUpload}
+                      fileList={fileList}
+                      className="flex-grow-1"
+                    >
+                      <Button className="fs-4 custom-zoom-btn w-100 d-flex align-items-center p-2">
+                        <UploadOutlined />
+                        <span className="d-none d-sm-inline">
+                          {" "}
+                          {t("selectFile")}{" "}
+                        </span>
+                        <span className="d-inline d-sm-none">
+                          {" "}
+                          {t("upload")}{" "}
+                        </span>
+                      </Button>
+                    </Upload>
+                  ) : (
+                    <Button
+                      className={`${customBtn}`}
+                      type="primary"
+                      onClick={() => {
+                        setIsLotsFetched(false);
+                        setIsUpdateMode(true);
+                        setShowTable(false);
+                        setShowBtn(false);
+                      }}
+                    >
+                      {t("updateFile")}
                     </Button>
-                  </Upload>
-                ) : (
-                  <Button
-                    className={`${customBtn}`}
-                    type="primary"
-                    onClick={() => {
-                      setIsLotsFetched(false);
-                      setIsUpdateMode(true);
-                      setShowTable(false);
-                      setShowBtn(false);
-                    }}
-                  >
-                    {t("updateFile")}
-                  </Button>
-                )}
-                {showDeleteButton && (
-                  <Button
-                    type="primary"
-                    danger
-                    onClick={handleDelete}
-                    className="ms-2"
-                    disabled={transactionExist}
-                  >
-                    <DeleteOutlined />
-                    <span> {t("deleteFile")} </span>
-                  </Button>
-                )}
+                  )}
+                  {showDeleteButton && (
+                    <Button
+                      type="primary"
+                      danger
+                      onClick={handleDelete}
+                      className="ms-2"
+                      disabled={transactionExist}
+                    >
+                      <DeleteOutlined />
+                      <span> {t("deleteFile")} </span>
+                    </Button>
+                  )}
+                </div>
+                <Button
+                  className={`${customBtn}`}
+                  onClick={() => setShowArchivedLots(!showArchivedLots)}
+                >
+                  {showArchivedLots ? t("Active Lots") : t("Archived Lots")}
+                </Button>
               </div>
             </Form.Item>
             <Form.Item>
@@ -692,42 +709,48 @@ const QtySheetUpload = () => {
                 </Button>
               )}
             </Form.Item>
-            <Form.Item>
-              <div className="d-flex flex-wrap gap-2">
-                {lots.map((lotNo, index) => {
-                  const isDispatched = dispatchedLots.includes(lotNo);
-                  return (
-                    <Button
-                      key={index}
-                      className={`${selectedLotNo === lotNo
-                          ? "bg-white text-dark border-dark"
-                          : customBtn
-                        } d-flex align-items-center justify-content-center p-2`}
-                      type="primary"
-                      onClick={() => handleLotClick(lotNo)}
-                      onContextMenu={(e) => handleRightClick(e, lotNo)}
-                    >
-                      {t("lot")} - {lotNo}{" "}
-                      {isDispatched ? (
-                        <BsCheckCircleFill className="ms-1 text-success" />
-                      ) : (
-                        <IoMdEye
-                          className={`ms-1 ${selectedLotNo === lotNo ? "" : ""
-                            }`}
-                        />
-                      )}
-                    </Button>
-                  );
-                })}
-              </div>
-              <ViewQuantitySheet
-                project={projectId}
-                selectedLotNo={selectedLotNo}
-                showBtn={showBtn}
-                showTable={showTable}
-                lots={lots}
-              />
-            </Form.Item>
+            {showArchivedLots ? (
+              <ArchivedLots />
+            ) : (
+              <>
+                <Form.Item>
+                  <div className="d-flex flex-wrap gap-2">
+                    {lots.map((lotNo, index) => {
+                      const isDispatched = dispatchedLots.includes(lotNo);
+                      return (
+                        <Button
+                          key={index}
+                          className={`${selectedLotNo === lotNo
+                              ? "bg-white text-dark border-dark"
+                              : customBtn
+                            } d-flex align-items-center justify-content-center p-2`}
+                          type="primary"
+                          onClick={() => handleLotClick(lotNo)}
+                          onContextMenu={(e) => handleRightClick(e, lotNo)}
+                        >
+                          {t("lot")} - {lotNo}{" "}
+                          {isDispatched ? (
+                            <BsCheckCircleFill className="ms-1 text-success" />
+                          ) : (
+                            <IoMdEye
+                              className={`ms-1 ${selectedLotNo === lotNo ? "" : ""
+                                }`}
+                            />
+                          )}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                  <ViewQuantitySheet
+                    project={projectId}
+                    selectedLotNo={selectedLotNo}
+                    showBtn={showBtn}
+                    showTable={showTable}
+                    lots={lots}
+                  />
+                </Form.Item>
+              </>
+            )}
           </Form>
         </Col>
       </Row>

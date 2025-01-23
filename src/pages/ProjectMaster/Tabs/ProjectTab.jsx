@@ -8,7 +8,7 @@ import themeStore from '../../../store/themeStore';
 import EditProjectModal from '../components/EditProjectModal';
 import AddProjectModal from '../components/AddProjectModal';
 import { error, success } from '../../../CustomHooks/Services/AlertMessageService';
-
+import { FaArchive } from "react-icons/fa";
 const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
   const { t } = useTranslation();
   const { getCssClasses } = useStore(themeStore);
@@ -188,28 +188,35 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
       title: t('action'),
       key: 'action',
       render: (_, record) => (
-        <Button
-          className={`${customBtn} d-flex align-items-center justify-content-center`}
-          onClick={() => {
-            setEditingProject(record);
-            setNumberOfSeries(record.noOfSeries); // Set numberOfSeries when editing
-            setSeriesNames(record.seriesName);
-            editForm.setFieldsValue({
-              name: record.name,
-              description: record.description,
-              status: record.status,
-              group: record.groupId,
-              type: record.typeId,
-              numberOfSeries: record.noOfSeries,
-              seriesNames: record.seriesName,
-              quantityThreshold: record.quantityThreshold
-            });
-            setIsEditModalVisible(true);
-          }}
-          icon={<EditOutlined />}
-        >
-          {t('edit')}
-        </Button>
+        <div className="d-flex gap-2">
+          <Button
+            className={`${customBtn} d-flex align-items-center justify-content-center`}
+            onClick={() => {
+              setEditingProject(record);
+              setNumberOfSeries(record.noOfSeries);
+              setSeriesNames(record.seriesName);
+              editForm.setFieldsValue({
+                name: record.name,
+                description: record.description,
+                status: record.status,
+                group: record.groupId,
+                type: record.typeId,
+                numberOfSeries: record.noOfSeries,
+                seriesNames: record.seriesName,
+                quantityThreshold: record.quantityThreshold
+              });
+              setIsEditModalVisible(true);
+            }}
+            icon={<EditOutlined />}
+            title={t('edit')}
+          />
+          <Button
+            className={`${customBtn} d-flex align-items-center justify-content-center`}
+            onClick={() => handleArchive(record)}
+            icon={<FaArchive />}
+            title={t('archive')}
+          />
+        </div>
       ),
     },
   ];
