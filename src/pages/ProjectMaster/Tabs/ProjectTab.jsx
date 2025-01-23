@@ -44,6 +44,7 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
   const getProjects = async () => {
     try {
       const response = await API.get('/Project');
+      console.log(response.data)
       setProjects(response.data);
       setTotal(response.data.length);
     } catch (err) {
@@ -55,20 +56,23 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
   const getGroups = async () => {
     try {
       const response = await API.get('/Groups');
-      setGroups(response.data);
-    } catch (err) {
-      console.error('Failed to fetch groups', err);
-      error(t('unableToFetchGroups'));
+      // Filter out groups where status is false
+      const activeGroups = response.data.filter(group => group.status === true);
+      setGroups(activeGroups);
+    } catch (error) {
+      console.error('Error fetching groups:', error);
     }
   };
 
   const getTypes = async () => {
     try {
       const response = await API.get('/PaperTypes');
-      setTypes(response.data);
+      // Filter out types where status is false
+      const activeTypes = response.data.filter(type => type.status === true);
+      setTypes(activeTypes);
     } catch (err) {
       console.error('Failed to fetch types', err);
-      error(t('unableToFetchTypes'));
+      error(t('unableToFetchTypes')); 
     }
   };
 
