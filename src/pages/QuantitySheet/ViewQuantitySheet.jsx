@@ -13,8 +13,8 @@ import {
 } from "antd";
 import { useStore } from "zustand";
 import { Modal as BootstrapModal } from "react-bootstrap";
-import themeStore from "./../store/themeStore";
-import API from "../CustomHooks/MasterApiHooks/api";
+import themeStore from "../../store/themeStore";
+import API from "../../CustomHooks/MasterApiHooks/api";
 import {
   EditOutlined,
   DeleteOutlined,
@@ -23,8 +23,8 @@ import {
 } from "@ant-design/icons";
 import { useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { decrypt } from "../Security/Security";
-import CatchTransferModal from "../menus/CatchTransferModal";
+import { decrypt } from "../../Security/Security";
+import CatchTransferModal from "../../menus/CatchTransferModal";
 
 const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
   const { t } = useTranslation();

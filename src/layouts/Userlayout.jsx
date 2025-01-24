@@ -14,7 +14,7 @@ import LockOverlay from './../components/LockOverlay';
 import ProcessTable from './../sub-Components/processTable';
 import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
-import QtySheetUpload from '../pages/QtySheetUpload';
+import QtySheetUpload from '../pages/QuantitySheet/QtySheetUpload';
 import Labels from '../pages/Message/Message';
 import Reports from '../pages/Reports';
 import CuDashboard from '../pages/CuDashboard';

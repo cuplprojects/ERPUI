@@ -1,18 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { Form, Upload, Button, Select, message, Menu, Spin } from "antd";
 import { Row, Col, Modal } from "react-bootstrap";
-import { UploadOutlined, DeleteOutlined } from "@ant-design/icons";
+import { UploadOutlined, DeleteOutlined, CloseOutlined } from "@ant-design/icons";
 import * as XLSX from "xlsx";
-import themeStore from "./../store/themeStore";
+import themeStore from "../../store/themeStore";
 import { useStore } from "zustand";
 import ViewQuantitySheet from "./ViewQuantitySheet";
 import { useParams } from "react-router-dom";
 import { IoMdEye } from "react-icons/io";
-import API from "../CustomHooks/MasterApiHooks/api";
+import API from "../../CustomHooks/MasterApiHooks/api";
 import { useTranslation } from "react-i18next";
-import { decrypt } from "../Security/Security";
+import { decrypt } from "../../Security/Security";
 import { BsCheckCircleFill } from "react-icons/bs";
-import { success, error, warning } from "../CustomHooks/Services/AlertMessageService";
+import { success, error, warning } from "../../CustomHooks/Services/AlertMessageService";
+import UpdateQuantitySheet from "./UpdateQuantitySheet";
 
 // Helper function to convert Excel date number to JS Date
 const convertExcelDate = (excelDate) => {
@@ -236,7 +237,7 @@ const QtySheetUpload = () => {
         processId: [0],
         status: 0,
         pages: item.Pages || 0,
-        stopCatch : 0,
+        stopCatch: 0,
       };
     });
 
@@ -271,7 +272,7 @@ const QtySheetUpload = () => {
         const workbook = XLSX.read(data, { type: "array" });
         const firstSheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[firstSheetName];
-  
+
         // Convert the sheet to JSON with the first row as headers
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
@@ -284,18 +285,18 @@ const QtySheetUpload = () => {
         const rows = jsonData.slice(1); // Skip the header row
         const mappedData = rows.map((row) => {
           const rowData = {};
-  
+
           // Iterate over each field in fieldMappings
           for (let property in fieldMappings) {
 
             let headers = fieldMappings[property]; // Array of headers for this field
-  
+
             // Ensure headers is an array
             if (!Array.isArray(headers)) {
               headers = [headers]; // Convert to array if it's a single value
             }
 
-  
+
             // If there are multiple headers for the property, create a string value
             if (headers.length > 1) {
               const valueString = headers
@@ -309,7 +310,7 @@ const QtySheetUpload = () => {
                 })
                 .filter(Boolean) // Remove any null values
                 .join(", "); // Join all header-value pairs with commas
-  
+
               // Store the formatted string (e.g., "E10: 2, E20: 4")
               rowData[property] = valueString;
             } else {
@@ -318,7 +319,7 @@ const QtySheetUpload = () => {
               const index = jsonData[0].indexOf(header);
               if (index !== -1) {
                 let value = row[index] || ""; // Get the value for that header
-  
+
                 // Explicitly convert 'LotNo' and 'CatchNo' to strings
                 if (property === "LotNo" || property === "CatchNo" || property === "InnerEnvelope") {
                   value = String(value).trim(); // Ensure 'LotNo' and 'CatchNo' are treated as strings
@@ -330,23 +331,23 @@ const QtySheetUpload = () => {
               }
             }
           }
-  
+
           // Add additional fields like projectId or percentageCatch
           rowData["projectId"] = projectId;
           rowData["percentageCatch"] = "0";
 
           return rowData; // Return the mapped row data
         });
-  
+
         setMappeddata(mappedData); // Set the processed data
         resolve(mappedData); // Resolve with the mapped data
       };
-  
+
       // Read the file as an ArrayBuffer
       reader.readAsArrayBuffer(selectedFile);
     });
   };
-  
+
 
   const handleUpdate = async () => {
     setIsLoading(true);
@@ -444,12 +445,12 @@ const QtySheetUpload = () => {
       const worksheet = workbook.Sheets[firstSheetName];
       // Convert the sheet to JSON with the first row as headers
       const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-  
+
       // Filter out rows where all cells are empty
       const filteredData = jsonData.filter((row) =>
         row.some((cell) => cell !== null && cell !== "")
       );
-  
+
       if (filteredData.length === 0) {
         console.warn(t("noValidDataFoundInFile"));
         setIsProcessingFile(false); // Hide loader if no valid data
@@ -475,13 +476,13 @@ const QtySheetUpload = () => {
         // Assign the matching headers (or empty array if no match found)
         autoMappings[col] = matchingHeaders.length > 0 ? matchingHeaders : [];
       });
-  
+
       setFieldMappings(autoMappings);
       setIsProcessingFile(false); // Hide loader when processing is complete
     };
     reader.readAsArrayBuffer(file);
   };
-  
+
 
 
   const handleMappingChange = (property, value) => {
@@ -491,8 +492,8 @@ const QtySheetUpload = () => {
       return newMappings;
     });
   };
-  
-  
+
+
 
 
 
@@ -589,148 +590,180 @@ const QtySheetUpload = () => {
     }
   };
 
+  const resetEditingMode = () => {
+    setIsUpdateMode(false);
+    resetState();
+    setShowDeleteButton(true);
+    setShowTable(false);
+    setShowBtn(false);
+    setSelectedLotNo(null);
+    // Re-fetch lots to refresh the view
+    fetchLots();
+  };
+
   return (
     <div
-      className={`container ${customDarkText} rounded shadow-lg ${customLight} ${customLightBorder}`}
+      className={`container-fluid ${customDarkText} rounded shadow-lg ${customLight} ${customLightBorder}`}
     >
-      <Row className="mt-2 mb-2">
+      {/* Top Headers */}
+      <Row className="mt-2 mb-1">
         <Col lg={12} className="d-flex justify-content-center">
           <div className="text-center p-2">
-            <h1 className={`${customDarkText}`}>
-              {" "}
-              {t("uploadQuantitySheet")}{" "}
-            </h1>
-            <h2 className={`${customDarkText} custom-zoom-btn`}>
-              {" "}
-              {projectName}{" "}
-            </h2>
+            <h4 className={`${customDarkText} fw-bold mb-1 pb-2`}>
+              {t("Quantity Sheet")}
+            </h4>
+            <h5 className={`${customDarkText} custom-zoom-btn  mt-2`}>
+              {projectName}
+            </h5>
           </div>
         </Col>
       </Row>
 
+      {/* Warning Message */}
       {showConfigDisclaimer && (
-        <div className="alert alert-warning text-center mb-3">
-          {t(
-            "Warning: Once you upload the quantity sheet, project configuration cannot be changed."
-          )}
-        </div>
+        <Row className="mb-3">
+          <Col lg={8} className="mx-auto">
+            <div className="alert alert-warning text-center p-1">
+              {t(
+                "Warning: Once you upload the quantity sheet, project configuration cannot be changed."
+              )}
+            </div>
+          </Col>
+        </Row>
       )}
 
+
+      {/* File Upload Section */}
       <Row className="mb-2">
         <Col lg={12}>
           <Form layout="vertical" form={form}>
-            <Form.Item
-              name="file"
-              rules={[{ required: true, message: t("pleaseSelectAFile") }]}
-            >
-              <div className="d-flex align-items-center">
-                {!isLotsFetched ? (
-                  <Upload
-                    onRemove={(file) => {
-                      const index = fileList.indexOf(file);
-                      const newFileList = fileList.slice();
-                      newFileList.splice(index, 1);
-                      setFileList(newFileList);
-                    }}
-                    beforeUpload={handleFileUpload}
-                    fileList={fileList}
-                    className="flex-grow-1"
-                  >
-                    <Button className="fs-4 custom-zoom-btn w-100 d-flex align-items-center p-2">
-                      <UploadOutlined />
-                      <span className="d-none d-sm-inline">
-                        {" "}
-                        {t("selectFile")}{" "}
-                      </span>
-                      <span className="d-inline d-sm-none">
-                        {" "}
-                        {t("upload")}{" "}
-                      </span>
-                    </Button>
-                  </Upload>
-                ) : (
-                  <Button
-                    className={`${customBtn}`}
-                    type="primary"
-                    onClick={() => {
-                      setIsLotsFetched(false);
-                      setIsUpdateMode(true);
-                      setShowTable(false);
-                      setShowBtn(false);
-                    }}
-                  >
-                    {t("updateFile")}
-                  </Button>
-                )}
-                {showDeleteButton && (
-                  <Button
-                    type="primary"
-                    danger
-                    onClick={handleDelete}
-                    className="ms-2"
-                    disabled={transactionExist}
-                  >
-                    <DeleteOutlined />
-                    <span> {t("deleteFile")} </span>
-                  </Button>
-                )}
-              </div>
-            </Form.Item>
-            <Form.Item>
-              {fileList.length > 0 && showDisclaimer && (
-                <Button
-                  className={`${customBtn}`}
-                  type="primary"
-                  onClick={handleUpdate}
-                  loading={isLoading}
+            {/* File Upload */}
+            {!isUpdateMode ? (
+              <>
+                <Form.Item
+                  name="file"
+                  rules={[{ required: true, message: t("pleaseSelectAFile") }]}
                 >
-                  {isUpdateMode
-                    ? t("updateLots")
-                    : isLotsFetched
-                      ? t("updateLots")
-                      : t("uploadLots")}
-                </Button>
-              )}
-            </Form.Item>
-            <Form.Item>
-              <div className="d-flex flex-wrap gap-2">
-                {lots.map((lotNo, index) => {
-                  const isDispatched = dispatchedLots.includes(lotNo);
-                  return (
+                  <div className="d-flex align-items-center">
+                    {!isLotsFetched ? (
+                      <Upload
+                        onRemove={(file) => {
+                          const index = fileList.indexOf(file);
+                          const newFileList = fileList.slice();
+                          newFileList.splice(index, 1);
+                          setFileList(newFileList);
+                        }}
+                        beforeUpload={handleFileUpload}
+                        fileList={fileList}
+                        className="flex-grow-1"
+                      >
+                        <Button className="fs-4 custom-zoom-btn w-100 d-flex align-items-center p-2">
+                          <UploadOutlined />
+                          <span className="d-none d-sm-inline">{t("selectFile")}</span>
+                          <span className="d-inline d-sm-none">{t("upload")}</span>
+                        </Button>
+                      </Upload>
+                    ) : (
+                      <Button
+                        className={customBtn}
+                        type="primary"
+                        onClick={() => {
+                          setIsLotsFetched(false);
+                          setIsUpdateMode(true);
+                          setShowTable(false);
+                          setShowBtn(false);
+                        }}
+                      >
+                        {t("updateFile")}
+                      </Button>
+                    )}
+
+                    {showDeleteButton && (
+                      <Button
+                        type="primary"
+                        danger
+                        onClick={handleDelete}
+                        className="ms-2"
+                        disabled={transactionExist}
+                      >
+                        <DeleteOutlined />
+                        <span>{t("deleteFile")}</span>
+                      </Button>
+                    )}
+                  </div>
+                </Form.Item>
+
+                {/* Upload/Update Button */}
+                {fileList.length > 0 && showDisclaimer && (
+                  <Form.Item>
                     <Button
-                      key={index}
-                      className={`${selectedLotNo === lotNo
-                          ? "bg-white text-dark border-dark"
-                          : customBtn
-                        } d-flex align-items-center justify-content-center p-2`}
+                      className={customBtn}
                       type="primary"
-                      onClick={() => handleLotClick(lotNo)}
-                      onContextMenu={(e) => handleRightClick(e, lotNo)}
+                      onClick={handleUpdate}
+                      loading={isLoading}
                     >
-                      {t("lot")} - {lotNo}{" "}
-                      {isDispatched ? (
-                        <BsCheckCircleFill className="ms-1 text-success" />
-                      ) : (
-                        <IoMdEye
-                          className={`ms-1 ${selectedLotNo === lotNo ? "" : ""
-                            }`}
-                        />
-                      )}
+                      {isUpdateMode ? t("updateLots") : isLotsFetched ? t("updateLots") : t("uploadLots")}
                     </Button>
-                  );
-                })}
+                  </Form.Item>
+                )}
+
+                {/* Lot Buttons */}
+                <Form.Item>
+                  <div className="d-flex flex-wrap gap-2">
+                    {lots.map((lotNo, index) => {
+                      const isDispatched = dispatchedLots.includes(lotNo);
+                      return (
+                        <Button
+                          key={index}
+                          className={`${selectedLotNo === lotNo ? "bg-white text-dark border-dark" : customBtn
+                            } d-flex align-items-center justify-content-center p-2`}
+                          type="primary"
+                          onClick={() => handleLotClick(lotNo)}
+                          onContextMenu={(e) => handleRightClick(e, lotNo)}
+                        >
+                          {t("lot")} - {lotNo}{" "}
+                          {isDispatched ? (
+                            <BsCheckCircleFill className="ms-1 text-success" />
+                          ) : (
+                            <IoMdEye className="ms-1" />
+                          )}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </Form.Item>
+              </>
+            ) : (
+              <div className="d-flex justify-content-end mb-2">
+                <Button
+                  className={`${customBtn} d-flex align-items-center gap-2`}
+                  type="primary"
+                  onClick={resetEditingMode}
+                >
+                  <CloseOutlined /> 
+                </Button>
               </div>
-              <ViewQuantitySheet
-                project={projectId}
-                selectedLotNo={selectedLotNo}
-                showBtn={showBtn}
-                showTable={showTable}
-                lots={lots}
+            )}
+
+            {isUpdateMode && (
+              <UpdateQuantitySheet
+                projectId={projectId}
+                onClose={() => setIsUpdateMode(false)}
               />
-            </Form.Item>
+            )}
+
+            {/* Quantity Sheet View */}
+            <ViewQuantitySheet
+              project={projectId}
+              selectedLotNo={selectedLotNo}
+              showBtn={showBtn}
+              showTable={showTable}
+              lots={lots}
+            />
           </Form>
         </Col>
       </Row>
+
       {isDropdownVisible && menu}
       <Modal show={isModalVisible} onHide={handleCancelSkip}>
         <Modal.Header closeButton>
