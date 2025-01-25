@@ -139,7 +139,14 @@ const CuDashboard = () => {
           }
         }
 
-        setData(mergedData);
+        // Separate projects with and without quantity sheets
+        const projectsWithQtySheet = mergedData.filter(project => hasDisable(project.projectId));
+        const projectsWithoutQtySheet = mergedData.filter(project => !hasDisable(project.projectId));
+
+        // Combine the two arrays, keeping projects without quantity sheets at the end
+        const finalData = [...projectsWithQtySheet, ...projectsWithoutQtySheet];
+
+        setData(finalData);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
