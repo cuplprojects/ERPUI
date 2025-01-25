@@ -103,7 +103,9 @@ const CuDashboard = () => {
   useEffect(() => {
     const fetchPercentages = async () => {
       try {
+        // get percentage
         const projectCompletionPercentages = await getAllProjectCompletionPercentages();
+        // get project
         const projectData = await API.get(
           `/Project/GetDistinctProjectsForUser/${userData.userId}`
         );
@@ -120,8 +122,22 @@ const CuDashboard = () => {
             remainingPercentage: percentage
               ? 100 - percentage.completionPercentage
               : 100,
+            isrecent: false, // Add the isrecent field and set it to false by default
           };
         });
+
+        // Check if the selected project exists in the data
+        const selectedProject = JSON.parse(localStorage.getItem("selectedProject"));
+        if (selectedProject) {
+          const selectedProjectIndex = mergedData.findIndex(
+            (project) => project.projectId === selectedProject.value
+          );
+          if (selectedProjectIndex !== -1) {
+            const [selectedProjectData] = mergedData.splice(selectedProjectIndex, 1);
+            selectedProjectData.isrecent = true; // Set isrecent to true for the selected project
+            mergedData.unshift(selectedProjectData);
+          }
+        }
 
         setData(mergedData);
       } catch (error) {
@@ -224,6 +240,7 @@ const CuDashboard = () => {
     if (activeCards === 0) {
       return (
         <Row className="g-4">
+          {/* map project */}
           {data.map((item) => (
             <Col key={item.projectId} xs={12} sm={12} md={6} lg={3}>
               <Cards
