@@ -28,6 +28,8 @@ import ToggleProcess from "../pages/processPage/Components/ToggleProcess";
 import PreviousProcess from "../pages/processPage/Components/PreviousProcess";
 import MarqueeAlert from "../pages/processPage/Components/MarqueeAlert";
 import DispatchPage from "../pages/dispatchPage/DispatchPage";
+import { IoIosArrowDropdownCircle } from "react-icons/io";
+import { Collapse } from "react-bootstrap";
 
 const ProcessTable = () => {
   const { encryptedProjectId, encryptedLotNo } = useParams();
@@ -37,6 +39,14 @@ const ProcessTable = () => {
   const { processId, processName } = useCurrentProcessStore();
   const { setProcess } = useCurrentProcessStore((state) => state.actions);
   const userData = useUserData();
+  const [isHeaderOpen, setIsHeaderOpen] = useState(() => {
+    const saved = localStorage.getItem('processTableHeaderOpen');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('processTableHeaderOpen', JSON.stringify(isHeaderOpen));
+  }, [isHeaderOpen]);
   const { t } = useTranslation();
 
   // Subscribe to theme store changes
@@ -75,7 +85,10 @@ const ProcessTable = () => {
   ] = useState(0);
   const [previousProcessTransactions, setPreviousProcessTransactions] =
     useState([]);
-  const [selectedProject, setSelectedProject] = useState(null);
+  const [selectedProject, setSelectedProject] = useState(() => {
+    const savedProject = localStorage.getItem("selectedProject");
+    return savedProject ? JSON.parse(savedProject) : null;
+  });
   const [showPieChart, setShowPieChart] = useState(false);
   const [digitalandOffsetData, setDigitalandOffsetData] = useState([]);
   const [previousIndependent, setPreviousIndependent] = useState({
@@ -275,6 +288,7 @@ const ProcessTable = () => {
     setProjectLots([]);
     setSelectedLot(null);
     setPreviousProcessCompletionPercentage(0);
+    localStorage.setItem("selectedProject", JSON.stringify(selectedProject));
     setSelectedProject(selectedProject);
     setProjectName(selectedProject.label);
     setIsLoading(true);
@@ -811,6 +825,21 @@ const ProcessTable = () => {
 
   return (
     <div className="container-fluid">
+    <div className="d-flex align-items-center mb-">
+<IoIosArrowDropdownCircle 
+  className={`me-2 ${customDarkText}`}
+  size={24}
+  style={{ 
+    cursor: 'pointer',
+    transform: isHeaderOpen ? 'rotate(0deg)' : 'rotate(-90deg)',
+    transition: 'transform 0.3s ease'
+  }}
+  onClick={() => setIsHeaderOpen(!isHeaderOpen)}
+/>
+<span className={`${customDarkText}`}>Project Details</span>
+</div>
+<Collapse in={isHeaderOpen}>
+      <div>
       <Row className="mb-">
         <Col lg={12} md={12} xs={12} className="">
           <Card className="shadow-sm">
@@ -857,6 +886,8 @@ const ProcessTable = () => {
           </Card>
         </Col>
       </Row>
+      </div>
+    </Collapse>
 
       <Row>
         <Col lg={12} md={12}>

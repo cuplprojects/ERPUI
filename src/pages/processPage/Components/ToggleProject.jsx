@@ -39,6 +39,12 @@ const ToggleProject = ({ projectName, selectedLot, onChange }) => {
   };
 
   const menu = (
+    <div
+    style={{
+      maxHeight: "300px",
+      overflowY: "auto",
+      borderRadius: "4px",
+    }}>   
     <Menu>
       {projects.map((project) => (
         <Menu.Item
@@ -56,7 +62,7 @@ const ToggleProject = ({ projectName, selectedLot, onChange }) => {
           {project.noOfSeries > 0 ? ` (${project.seriesName})` : ""}
         </Menu.Item>
       ))}
-    </Menu>
+    </Menu> </div>
   );
 
   const selectedProject = projects.find((p) => p.name === projectName);

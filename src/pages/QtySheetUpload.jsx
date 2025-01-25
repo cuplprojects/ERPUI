@@ -180,6 +180,7 @@ const QtySheetUpload = () => {
       // Using axios to make the POST request
       const response = await API.post("/QuantitySheet/ReleaseForProduction", {
         lotNo: lotNo,
+        projectId: projectId
       });
 
       // Check if the response was successful
@@ -239,6 +240,7 @@ const QtySheetUpload = () => {
         processId: [0],
         status: 0,
         pages: item.Pages || 0,
+        stopCatch : 0
       };
     });
 
