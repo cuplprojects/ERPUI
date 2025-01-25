@@ -124,7 +124,7 @@ const CuDashboard = () => {
               : 100,
             isrecent: false, // Add the isrecent field and set it to false by default
           };
-        });
+        }).filter(project => project.completionPercentage < 100); // Filter out projects with 100% completion
 
         // Check if the selected project exists in the data
         const selectedProject = JSON.parse(localStorage.getItem("selectedProject"));
