@@ -101,6 +101,20 @@ const CuDashboard = () => {
   };
 
   useEffect(() => {
+    const fetchHasQuantitySheet = async () => {
+      try {
+        const response = await API.get(
+          "/QuantitySheet/check-all-quantity-sheets"
+        );
+        setHasquantitySheet(response.data);
+      } catch (error) {
+        console.error("Error fetching quantity sheet data:", error);
+      }
+    };
+    fetchHasQuantitySheet();
+  }, []);
+
+  useEffect(() => {
     const fetchPercentages = async () => {
       try {
         // get percentage
@@ -152,21 +166,7 @@ const CuDashboard = () => {
       }
     };
     fetchPercentages();
-  }, [userData.userId]);
-
-  useEffect(() => {
-    const fetchHasQuantitySheet = async () => {
-      try {
-        const response = await API.get(
-          "/QuantitySheet/check-all-quantity-sheets"
-        );
-        setHasquantitySheet(response.data);
-      } catch (error) {
-        console.error("Error fetching quantity sheet data:", error);
-      }
-    };
-    fetchHasQuantitySheet();
-  }, []);
+  }, [userData.userId, hasquantitySheet]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {

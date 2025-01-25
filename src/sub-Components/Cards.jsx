@@ -114,7 +114,6 @@ const Cards = ({ item, onclick, disableProject, activeCardStyle }) => {
     }
     onclick(item);
   };
-  console.log(item);
   return (
     <StyledWrapper>
       <Tooltip
