@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Button, Input, Switch, Form, Row, Col, message, Checkbox } from 'antd';
-import { EditOutlined } from '@ant-design/icons';
+import { EditOutlined, UploadOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useStore } from 'zustand';
+import { useNavigate } from 'react-router-dom';
 import API from '../../../CustomHooks/MasterApiHooks/api';
 import themeStore from '../../../store/themeStore';
 import EditProjectModal from '../components/EditProjectModal';
 import AddProjectModal from '../components/AddProjectModal';
 import { error, success } from '../../../CustomHooks/Services/AlertMessageService';
+import { encrypt } from '../../../Security/Security';
 
 const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
   const { t } = useTranslation();
@@ -34,6 +36,7 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
   const [sortedInfo, setSortedInfo] = useState({});
   const [total, setTotal] = useState(0);
   const [showDescription, setShowDescription] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     getProjects();
@@ -84,11 +87,11 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
       description: values.description || '',
       groupId: selectedGroup.id,
       typeId: selectedType.typeId,
-      noOfSeries: numberOfSeries || 0, 
+      noOfSeries: numberOfSeries || 0,
       seriesName: seriesNames,
       quantityThreshold: values.quantityThreshold
     };
-    
+
     try {
       const response = await API.post('/Project', newProject);
       getProjects();
@@ -113,7 +116,7 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
   const handleEditSave = async (values) => {
     try {
       const selectedTypeObj = types.find(type => type.typeId === values.type);
-      
+
       const updatedProject = {
         ...editingProject,
         name: values.name,
@@ -188,28 +191,37 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
       title: t('action'),
       key: 'action',
       render: (_, record) => (
-        <Button
-          className={`${customBtn} d-flex align-items-center justify-content-center`}
-          onClick={() => {
-            setEditingProject(record);
-            setNumberOfSeries(record.noOfSeries); // Set numberOfSeries when editing
-            setSeriesNames(record.seriesName);
-            editForm.setFieldsValue({
-              name: record.name,
-              description: record.description,
-              status: record.status,
-              group: record.groupId,
-              type: record.typeId,
-              numberOfSeries: record.noOfSeries,
-              seriesNames: record.seriesName,
-              quantityThreshold: record.quantityThreshold
-            });
-            setIsEditModalVisible(true);
-          }}
-          icon={<EditOutlined />}
-        >
-          {t('edit')}
-        </Button>
+        <div className="d-flex align-items-center justify-content-center">
+          <Button
+            className={`${customBtn} me-2`}
+            onClick={() => {
+              setEditingProject(record);
+              setNumberOfSeries(record.noOfSeries); // Set numberOfSeries when editing
+              setSeriesNames(record.seriesName);
+              editForm.setFieldsValue({
+                name: record.name,
+                description: record.description,
+                status: record.status,
+                group: record.groupId,
+                type: record.typeId,
+                numberOfSeries: record.noOfSeries,
+                seriesNames: record.seriesName,
+                quantityThreshold: record.quantityThreshold
+              });
+              setIsEditModalVisible(true);
+            }}
+            icon={<EditOutlined />}
+            title={t('edit')}
+          >
+            
+          </Button>
+          <Button
+            className={`${customBtn}`}
+            onClick={() => navigate(`/quantity-sheet-uploads/${encrypt(record.projectId)}`)}
+            icon={<UploadOutlined />}
+            title={t('Upload Quantity Sheet')}
+          />
+        </div>
       ),
     },
   ];
@@ -276,7 +288,7 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
           </Button>
         </Col>
         <Col xs={24} sm={12} style={{ textAlign: 'right' }}>
-          <Checkbox 
+          <Checkbox
             checked={showDescription}
             onChange={(e) => setShowDescription(e.target.checked)}
             className="me-3"
@@ -350,8 +362,8 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
         handleTypeChange={handleTypeChange}
         numberOfSeries={numberOfSeries}
         setNumberOfSeries={setNumberOfSeries}
-        seriesNames = {seriesNames}
-        setSeriesNames = {setSeriesNames}
+        seriesNames={seriesNames}
+        setSeriesNames={setSeriesNames}
         projectName={projectName}
         setProjectName={setProjectName}
         selectedGroup={selectedGroup}
@@ -381,8 +393,8 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
         customDarkBorder={customDarkBorder}
         numberOfSeries={numberOfSeries}
         setNumberOfSeries={setNumberOfSeries}
-        seriesNames = {seriesNames}
-        setSeriesNames = {setSeriesNames}
+        seriesNames={seriesNames}
+        setSeriesNames={setSeriesNames}
         t={t}
       />
     </>
