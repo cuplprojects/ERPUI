@@ -185,7 +185,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
     },
     {
       title: t("examDate"),
-      dataIndex: "examDate",
+      dataIndex: "examDate", 
       key: "examDate",
       width: 100,
       sorter: (a, b) => {
@@ -198,14 +198,6 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
 
         return dateA - dateB;
       },
-      render: (text, record) => (
-        <span>
-          {text}
-          {record.isExamDateOverlapped && (
-            <WarningOutlined style={{ color: "#ff4d4f", marginLeft: "5px" }} />
-          )}
-        </span>
-      ),
       render: (text, record) => {
         if (editableRowKey === record.key) {
           return (
@@ -215,8 +207,15 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
             />
           );
         }
-        return text;
-      },
+        return (
+          <span>
+            {text}
+            {record.isExamDateOverlapped && (
+              <WarningOutlined style={{ color: "#ff4d4f", marginLeft: "5px" }} />
+            )}
+          </span>
+        );
+      }
     },
     {
       title: t("examTime"),
