@@ -9,17 +9,24 @@ const DashBarChart = ({ selectedChart, lotsData, handleBarClick, projectId }) =>
   const [processData, setProcessData] = useState({});
   const [processNames, setProcessNames] = useState({});
   const [showRemaining, setShowRemaining] = useState(false);
+  const [isLoading, setIsLoading] = useState({
+    processes: true,
+    names: true
+  });
   const { t } = useTranslation();
 
   // Fetch process completion data
   useEffect(() => {
     const fetchProcessData = async () => {
+      setIsLoading(prev => ({ ...prev, processes: true }));
       try {
         const response = await API.get(`/Transactions/combined-percentages?projectId=${projectId}`);
         setProcessData(response.data.lotProcessWeightageSum);
       } catch (error) {
         console.error("Error fetching process data:", error);
         setProcessData({});
+      } finally {
+        setIsLoading(prev => ({ ...prev, processes: false }));
       }
     };
 
@@ -27,13 +34,12 @@ const DashBarChart = ({ selectedChart, lotsData, handleBarClick, projectId }) =>
       fetchProcessData();
     }
   }, [projectId]);
-
   // Fetch process names
   useEffect(() => {
     const fetchProcessNames = async () => {
+      setIsLoading(prev => ({ ...prev, names: true }));
       try {
         const response = await API.get(`/ProjectProcess/GetProjectProcesses/${projectId}`);
-        // Create a mapping of process ID to process name
         const nameMapping = response.data.reduce((acc, process) => {
           acc[process.id] = process.name;
           return acc;
@@ -42,6 +48,8 @@ const DashBarChart = ({ selectedChart, lotsData, handleBarClick, projectId }) =>
       } catch (error) {
         console.error("Error fetching process names:", error);
         setProcessNames({});
+      } finally {
+        setIsLoading(prev => ({ ...prev, names: false }));
       }
     };
 

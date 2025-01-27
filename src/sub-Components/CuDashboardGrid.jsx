@@ -33,8 +33,26 @@ const CuDashboardGrid = ({ setClickData }) => {
 
   // Use your local JSON data
   const [rowData, setRowData] = useState(Data);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        // Assuming Data is imported from your JSON file
+        setRowData(Data);
+        setClickData(Data?.[0]);
+      } catch (error) {
+        console.error("Error loading data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+  
   useEffect(() => {
     setClickData(rowData?.[0]);
   }, []);

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import LineChart from "./../sub-Components/LineChart";
 import BarChart from "./../sub-Components/BarChart";
-import { Card, Col,Row,Carousel,Container,OverlayTrigger,Tooltip,Dropdown, Spinner} from "react-bootstrap";
+import { Card, Col,Row,Carousel,Container,OverlayTrigger,Tooltip,Dropdown,Spinner} from "react-bootstrap";
 import CuDetailedAgGrid from "../sub-Components/CuDetailedAgGrid";
 import PieChart from "../sub-Components/PieChart";
 import Cards from "../sub-Components/Cards";
@@ -92,6 +92,10 @@ const CuDashboard = () => {
   });
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
+  const [isLoading, setIsLoading] = useState({
+    projects: true,
+    quantitySheet: true
+  });
 
   const hasDisable = (projectid) => {
     const hasQuantitySheet = hasquantitySheet.find(
@@ -101,25 +105,10 @@ const CuDashboard = () => {
   };
 
   useEffect(() => {
-    const fetchHasQuantitySheet = async () => {
-      try {
-        const response = await API.get(
-          "/QuantitySheet/check-all-quantity-sheets"
-        );
-        setHasquantitySheet(response.data);
-      } catch (error) {
-        console.error("Error fetching quantity sheet data:", error);
-      }
-    };
-    fetchHasQuantitySheet();
-  }, []);
-
-  useEffect(() => {
     const fetchPercentages = async () => {
+      setIsLoading(prev => ({ ...prev, projects: true }));
       try {
-        // get percentage
         const projectCompletionPercentages = await getAllProjectCompletionPercentages();
-        // get project
         const projectData = await API.get(
           `/Project/GetDistinctProjectsForUser/${userData.userId}`
         );
@@ -136,37 +125,35 @@ const CuDashboard = () => {
             remainingPercentage: percentage
               ? 100 - percentage.completionPercentage
               : 100,
-            isrecent: false, // Add the isrecent field and set it to false by default
           };
-        }).filter(project => project.completionPercentage < 100); // Filter out projects with 100% completion
+        });
 
-        // Check if the selected project exists in the data
-        const selectedProject = JSON.parse(localStorage.getItem("selectedProject"));
-        if (selectedProject) {
-          const selectedProjectIndex = mergedData.findIndex(
-            (project) => project.projectId === selectedProject.value
-          );
-          if (selectedProjectIndex !== -1) {
-            const [selectedProjectData] = mergedData.splice(selectedProjectIndex, 1);
-            selectedProjectData.isrecent = true; // Set isrecent to true for the selected project
-            mergedData.unshift(selectedProjectData);
-          }
-        }
-
-        // Separate projects with and without quantity sheets
-        const projectsWithQtySheet = mergedData.filter(project => hasDisable(project.projectId));
-        const projectsWithoutQtySheet = mergedData.filter(project => !hasDisable(project.projectId));
-
-        // Combine the two arrays, keeping projects without quantity sheets at the end
-        const finalData = [...projectsWithQtySheet, ...projectsWithoutQtySheet];
-
-        setData(finalData);
+        setData(mergedData);
       } catch (error) {
         console.error("Error fetching data:", error);
+      } finally {
+        setIsLoading(prev => ({ ...prev, projects: false }));
       }
     };
     fetchPercentages();
-  }, [userData.userId, hasquantitySheet]);
+  }, [userData.userId]);
+
+  useEffect(() => {
+    const fetchHasQuantitySheet = async () => {
+      setIsLoading(prev => ({ ...prev, quantitySheet: true }));
+      try {
+        const response = await API.get(
+          "/QuantitySheet/check-all-quantity-sheets"
+        );
+        setHasquantitySheet(response.data);
+      } catch (error) {
+        console.error("Error fetching quantity sheet data:", error);
+      } finally {
+        setIsLoading(prev => ({ ...prev, quantitySheet: false }));
+      }
+    };
+    fetchHasQuantitySheet();
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -230,8 +217,6 @@ const CuDashboard = () => {
     });
   };
 
-
- 
   const renderCards = () => {
     if (isLoading.projects || isLoading.quantitySheet) {
       return (
@@ -259,7 +244,6 @@ const CuDashboard = () => {
     if (activeCards === 0) {
       return (
         <Row className="g-4">
-          {/* map project */}
           {data.map((item) => (
             <Col key={item.projectId} xs={12} sm={12} md={6} lg={3}>
               <Cards
@@ -469,7 +453,7 @@ const CuDashboard = () => {
               className="dcard shadow-lg mb-3"
               style={{ height: "400px", background: "rgba(255,255,255,0.6)" }}
             >
-             {isLoading.projects ? (
+              {isLoading.projects ? (
                 <div className="d-flex justify-content-center align-items-center h-100">
                   <Spinner animation="border" role="status" className={customDarkText}>
                     <span className="visually-hidden">{t("loading")}</span>

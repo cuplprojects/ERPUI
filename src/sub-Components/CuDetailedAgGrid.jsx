@@ -22,7 +22,7 @@ const CuDetailedAgGrid = ({ projectId , clickedProject }) => {
   ] = getCssClasses();
   const { t } = useTranslation();
   const containerStyle = useMemo(() => ({ width: '100%', height: '100%' }), []);
-
+  const [isLoading, setIsLoading] = useState(true);
   const [rowData, setRowData] = useState([]);
   const [processNames, setProcessNames] = useState({});
   const [searchText, setSearchText] = useState('');
@@ -31,6 +31,7 @@ const CuDetailedAgGrid = ({ projectId , clickedProject }) => {
   useEffect(() => {
     // Fetch process names
     const fetchProcessNames = async () => {
+      setIsLoading(prev => ({ ...prev, processes: true }));
       try {
         const response = await API.get('/Processes');
         const processMap = {};
@@ -41,6 +42,9 @@ const CuDetailedAgGrid = ({ projectId , clickedProject }) => {
       } catch (error) {
         console.error('Error fetching process names:', error);
       }
+      finally {
+        setIsLoading(prev => ({ ...prev, processes: false }));
+      }
     };
 
     fetchProcessNames();
@@ -49,6 +53,7 @@ const CuDetailedAgGrid = ({ projectId , clickedProject }) => {
   useEffect(() => {
     const fetchData = async () => {
       if (projectId) {
+        setIsLoading(prev => ({ ...prev, processes: true })); 
         try {
           const response = await API.get(`/Transactions/process-lot-percentages?projectId=${projectId}`);
           const processData = response.data.processes.map((process, index) => ({
@@ -63,6 +68,9 @@ const CuDetailedAgGrid = ({ projectId , clickedProject }) => {
           setFilteredData(processData);
         } catch (error) {
           console.error('Error fetching process data:', error);
+        }
+        finally {
+          setIsLoading(prev => ({ ...prev, processes: false }));
         }
       }
     };

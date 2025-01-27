@@ -1,16 +1,19 @@
 // BarChart.js
 import React, { useEffect, useRef, useState } from 'react';
 import { Chart, registerables } from 'chart.js';
+import { Spinner } from 'react-bootstrap';
 import API from '../CustomHooks/MasterApiHooks/api';
 import { useTranslation } from 'react-i18next';
 import themeStore from '../store/themeStore';
 import { useStore } from 'zustand';
+
 Chart.register(...registerables);
 
 const BarChart = ({ projectId }) => {
   const { t } = useTranslation();
   const chartRef = useRef(null);
   const [lotData, setLotData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const { getCssClasses } = useStore(themeStore);
   const [
     customDark,
@@ -23,13 +26,17 @@ const BarChart = ({ projectId }) => {
     customDarkBorder,
     customThead
   ] = getCssClasses();
+
   useEffect(() => {
     const fetchLotPercentages = async () => {
+      setIsLoading(true);
       try {
         const response = await API.get(`/Transactions/combined-percentages?projectId=${projectId}`);
         setLotData(response.data.totalLotPercentages);
       } catch (error) {
         console.error("Error fetching lot percentages:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -68,28 +75,27 @@ const BarChart = ({ projectId }) => {
         scales: {
           x: {
             ticks: {
-              color: '#000000', // Set x-axis label color to dark black
+              color: '#000000',
             }
           },
           y: {
             beginAtZero: true,
             max: 100,
             ticks: {
-              color: '#000000', // Set y-axis label color to dark black
+              color: '#000000',
             }
           }
         },
         plugins: {
           legend: {
             labels: {
-              color: '#000000', // Set legend text color to dark black
+              color: '#000000',
             }
           }
         }
       }
     });
 
-    
     return () => {
       chartInstance.destroy();
     };
@@ -117,7 +123,12 @@ const BarChart = ({ projectId }) => {
     );
   }
 
-  return <canvas ref={chartRef} style={{ width: '100%', height: '100%' }}/>;
+  return (
+    <canvas 
+      ref={chartRef} 
+      style={{ width: '100%', height: '100%' }}
+    />
+  );
 };
 
 export default BarChart;
