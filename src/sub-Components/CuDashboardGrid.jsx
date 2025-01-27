@@ -8,6 +8,7 @@ import { ClientSideRowModelModule } from '@ag-grid-community/client-side-row-mod
 import { ModuleRegistry } from '@ag-grid-community/core';
 import Data from './../store/CuAgGrid.json';
 import { useNavigate } from 'react-router-dom';
+import { Spinner } from 'react-bootstrap';
 import themeStore from '../store/themeStore';
 import { useStore } from 'zustand';
 // Register AG Grid Modules
@@ -104,15 +105,59 @@ const CuDashboardGrid = ({ setClickData }) => {
   return (
     <div style={containerStyle}>
       <div id="grid-wrapper" style={{ width: '100%', height: '100%' }}>
-        <div style={gridStyle} className="ag-theme-quartz-dark">
-          <AgGridReact
-            rowData={rowData}
-            columnDefs={columnDefs}
-            getRowClass={getRowClass} 
-            onGridSizeChanged={onGridSizeChanged}
-            onFirstDataRendered={onFirstDataRendered}
-          />
-        </div>
+        {isLoading ? (
+          <div className="d-flex justify-content-center align-items-center h-100">
+            <Spinner 
+              animation="border" 
+              role="status" 
+              className={customDarkText}
+            >
+              <span className="visually-hidden">{t('loading')}</span>
+            </Spinner>
+          </div>
+        ) : (
+          <div style={gridStyle} className="ag-theme-quartz-dark">
+            <AgGridReact
+              rowData={rowData}
+              columnDefs={columnDefs}
+              getRowClass={getRowClass}
+              onGridSizeChanged={onGridSizeChanged}
+              onFirstDataRendered={onFirstDataRendered}
+              overlayLoadingTemplate={
+                '<span class="ag-overlay-loading-center">' + t('loading') + '</span>'
+              }
+              overlayNoRowsTemplate={
+                '<span class="ag-overlay-no-rows-center">' + t('noDataAvailable') + '</span>'
+              }
+              loadingOverlayComponent={LoadingOverlay}
+              noRowsOverlayComponent={NoRowsOverlay}
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const LoadingOverlay = () => {
+  const { t } = useTranslation();
+  return (
+    <div className="d-flex justify-content-center align-items-center h-100">
+      <Spinner animation="border" role="status">
+        <span className="visually-hidden">{t('loading')}</span>
+      </Spinner>
+    </div>
+  );
+};
+
+// Custom No Rows Overlay Component
+const NoRowsOverlay = () => {
+  const { t } = useTranslation();
+  return (
+    <div className="d-flex justify-content-center align-items-center h-100">
+      <div className="text-center">
+        <h4>{t('noDataAvailable')}</h4>
+        <p>{t('pleaseCheckYourData')}</p>
       </div>
     </div>
   );

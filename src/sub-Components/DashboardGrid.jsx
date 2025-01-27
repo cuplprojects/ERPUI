@@ -7,6 +7,7 @@ import { ModuleRegistry } from "@ag-grid-community/core";
 import "./../styles/DashboardGrid.css";
 import API from '../CustomHooks/MasterApiHooks/api';
 import { useTranslation } from 'react-i18next';
+import { Spinner } from 'react-bootstrap';
 
 // Register AG Grid Modules
 ModuleRegistry.registerModules([ClientSideRowModelModule]);
@@ -115,29 +116,43 @@ const DashboardGrid = ({ projectId, lotNo }) => {
 
   return (
     <div style={{ width: '100%', height: '100vh' }}>
-      <div style={{ height: '100%', width: '100%' }} className="ag-theme-quartz-dark">
-        <AgGridReact
-          rowData={rowData}
-          columnDefs={columnDefs}
-          defaultColDef={defaultColDef}
-          onGridReady={onGridReady}
-          paginationPageSize={10}
-          pagination={true}
-          autoHeight={true}
-          width={300}
-          height={300}
-          localeText={{
-            page: t('page'),
-            to: t('to'), 
-            of: t('of'),
-            pageSize: t('pageSize')
-          }}
-          paginationOptions={{
-            pageSize: 10,
-            pageSizes: [10, 25, 50],
-          }}
-        />
-      </div>
+      {isLoading.transactions || isLoading.transactionData ? (
+        <div className="d-flex justify-content-center align-items-center h-100">
+          <Spinner animation="border" role="status">
+            <span className="visually-hidden">{t('loading')}</span>
+          </Spinner>
+        </div>
+      ) : (
+        <div style={{ height: '100%', width: '100%' }} className="ag-theme-quartz-dark">
+          <AgGridReact
+            rowData={rowData}
+            columnDefs={columnDefs}
+            defaultColDef={defaultColDef}
+            onGridReady={onGridReady}
+            paginationPageSize={10}
+            pagination={true}
+            autoHeight={true}
+            width={300}
+            height={300}
+            localeText={{
+              page: t('page'),
+              to: t('to'), 
+              of: t('of'),
+              pageSize: t('pageSize')
+            }}
+            paginationOptions={{
+              pageSize: 10,
+              pageSizes: [10, 25, 50],
+            }}
+            overlayLoadingTemplate={
+              '<span class="ag-overlay-loading-center">' + t('loading') + '</span>'
+            }
+            overlayNoRowsTemplate={
+              '<span class="ag-overlay-no-rows-center">' + t('noDataAvailable') + '</span>'
+            }
+          />
+        </div>
+      )}
     </div>
   );
 };

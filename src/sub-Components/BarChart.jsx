@@ -89,10 +89,33 @@ const BarChart = ({ projectId }) => {
       }
     });
 
+    
     return () => {
       chartInstance.destroy();
     };
   }, [lotData, t]);
+
+  if (isLoading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center h-100">
+        <Spinner 
+          animation="border" 
+          role="status"
+          className={customDarkText}
+        >
+          <span className="visually-hidden">{t('loading')}</span>
+        </Spinner>
+      </div>
+    );
+  }
+
+  if (!lotData) {
+    return (
+      <div className="d-flex justify-content-center align-items-center h-100">
+        <p className={customDarkText}>{t('noDataAvailable')}</p>
+      </div>
+    );
+  }
 
   return <canvas ref={chartRef} style={{ width: '100%', height: '100%' }}/>;
 };

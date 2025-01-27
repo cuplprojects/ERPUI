@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import LineChart from "./../sub-Components/LineChart";
 import BarChart from "./../sub-Components/BarChart";
-import { Card, Col,Row,Carousel,Container,OverlayTrigger,Tooltip,Dropdown} from "react-bootstrap";
+import { Card, Col,Row,Carousel,Container,OverlayTrigger,Tooltip,Dropdown, Spinner} from "react-bootstrap";
 import CuDetailedAgGrid from "../sub-Components/CuDetailedAgGrid";
 import PieChart from "../sub-Components/PieChart";
 import Cards from "../sub-Components/Cards";
@@ -230,7 +230,19 @@ const CuDashboard = () => {
     });
   };
 
+
+ 
   const renderCards = () => {
+    if (isLoading.projects || isLoading.quantitySheet) {
+      return (
+        <div className="d-flex justify-content-center align-items-center" style={{ height: "200px" }}>
+          <Spinner animation="border" role="status" className={customDarkText}>
+            <span className="visually-hidden">{t("loading")}</span>
+          </Spinner>
+        </div>
+      );
+    }
+
     if (data.length === 0) {
       return (
         <div
@@ -438,7 +450,15 @@ const CuDashboard = () => {
               className="dcard shadow-lg mb-3"
               style={{ height: "400px", background: "rgba(255,255,255,0.6)" }}
             >
-              <LineChart data={data} onProjectClick={handleProjectClick} />
+              {isLoading.projects ? (
+                <div className="d-flex justify-content-center align-items-center h-100">
+                  <Spinner animation="border" role="status" className={customDarkText}>
+                    <span className="visually-hidden">{t("loading")}</span>
+                  </Spinner>
+                </div>
+              ) : (
+                <LineChart data={data} onProjectClick={handleProjectClick} />
+              )}
             </Card>
           </Col>
         )}
@@ -449,7 +469,15 @@ const CuDashboard = () => {
               className="dcard shadow-lg mb-3"
               style={{ height: "400px", background: "rgba(255,255,255,0.6)" }}
             >
-              <PieChart data={pieData} />
+             {isLoading.projects ? (
+                <div className="d-flex justify-content-center align-items-center h-100">
+                  <Spinner animation="border" role="status" className={customDarkText}>
+                    <span className="visually-hidden">{t("loading")}</span>
+                  </Spinner>
+                </div>
+              ) : (
+                <PieChart data={pieData} />
+              )}
             </Card>
           </Col>
         )}
