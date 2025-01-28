@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { Table, Select, Input, Space, Button, Typography, Row, Col, Checkbox, Form, Dropdown, Menu, message } from 'antd';
-import { Card, Modal } from 'react-bootstrap';
+import { Table, Select, Input, Space, Button, Row, Col, Checkbox, Form, Dropdown, Menu, message } from 'antd';
+import { Modal } from 'react-bootstrap';
 import { EyeOutlined, EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
 import 'antd/dist/reset.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -12,14 +12,12 @@ import { useStore } from 'zustand';
 import { useMediaQuery } from 'react-responsive';
 import { AiFillCloseSquare } from 'react-icons/ai';
 import { BsFunnelFill } from "react-icons/bs";
-import { MdDeleteForever } from "react-icons/md";
 import { useTranslation } from 'react-i18next';
 import { success, error } from '../CustomHooks/Services/AlertMessageService';
 import { useUserData } from '../store/userDataStore';
 const BaseUrl = import.meta.env.VITE_API_BASE_URL;
 
 const { Option } = Select;
-const { Title } = Typography;
 
 const AllUsers = () => {
   const { t } = useTranslation();
@@ -28,7 +26,8 @@ const AllUsers = () => {
   const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
   const userData = useUserData()
   const userRole = userData?.role
-  console.log(userRole.priorityOrder)
+  
+  // console.log(userRole.priorityOrder)
 
   const [users, setUsers] = useState([]);
   const [filterType, setFilterType] = useState('none');
@@ -48,7 +47,6 @@ const AllUsers = () => {
   const [pageSize, setPageSize] = useState(5); // Default page size
   const [currentPage, setCurrentPage] = useState(1); // Track current page
   const isMobile = useMediaQuery({ maxWidth: 767 });
-  const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1023 });
 
   useEffect(() => {
     const getUsers = async () => {
@@ -120,13 +118,13 @@ const AllUsers = () => {
     setCurrentUserData({ ...record });
   }, []);
 
-
-
-  const isEditDisabled = (record) =>{
+  const isEditDisabled = (record) => {
     const roledata = roles.find(r => r.roleId === record.roleId)
-    const res = userRole?.priorityOrder <= roledata?.priorityOrder
+    console.log("userRole",userRole)
+    console.log("roledata",roledata)
+    const res = userRole?.priorityOrder > roledata?.priorityOrder
     console.log(res)
-    return 
+    return res
   }
 
   const handleSave = useCallback(async (record) => {
