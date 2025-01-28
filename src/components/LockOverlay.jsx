@@ -8,6 +8,9 @@ import { useStore } from 'zustand';
 import { useTranslation } from 'react-i18next';
 import AuthService from '../CustomHooks/ApiServices/AuthService';
 
+// Configure inactivity timeout in milliseconds
+const INACTIVITY_TIMEOUT = 5 * 60 * 1000; 
+
 const LockOverlay = () => {
     const { t } = useTranslation();
     const { getCssClasses } = useStore(themeStore);
@@ -30,6 +33,7 @@ const LockOverlay = () => {
     const [isLocked, setIsLocked] = useState(() => {
         return JSON.parse(localStorage.getItem('isLocked') || 'false');
     });
+    const [lastActivity, setLastActivity] = useState(Date.now());
 
     useEffect(() => {
         localStorage.setItem('isLocked', JSON.stringify(isLocked));
@@ -40,13 +44,14 @@ const LockOverlay = () => {
 
         const resetInactivityTimer = () => {
             if (inactivityTimer) clearTimeout(inactivityTimer);
+            setLastActivity(Date.now());
             
             // Only start timer if screen is not already locked
             if (!isLocked) {
                 inactivityTimer = setTimeout(() => {
                     setIsLocked(true);
                     setShowModal(false);
-                }, 300000); // 5 minutes
+                }, INACTIVITY_TIMEOUT);
             }
         };
 
@@ -87,15 +92,23 @@ const LockOverlay = () => {
         });
 
         // Handle page visibility changes
-        document.addEventListener('visibilitychange', () => {
+        const handleVisibilityChange = () => {
             if (document.hidden) {
-                // Page is hidden, clear timer
-                if (inactivityTimer) clearTimeout(inactivityTimer);
+                // Page is hidden, check if enough time has passed to lock
+                const inactiveTime = Date.now() - lastActivity;
+                if (inactiveTime >= INACTIVITY_TIMEOUT) {
+                    setIsLocked(true);
+                    setShowModal(false);
+                }
             } else {
-                // Page is visible again, reset timer
-                resetInactivityTimer();
+                // Page is visible again, reset timer if not locked
+                if (!isLocked) {
+                    resetInactivityTimer();
+                }
             }
-        });
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
 
         // Cleanup
         return () => {
@@ -104,13 +117,14 @@ const LockOverlay = () => {
             events.forEach(event => {
                 window.removeEventListener(event, handleUserActivity);
             });
-            document.removeEventListener('visibilitychange', handleUserActivity);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
         };
-    }, [isLocked]);
+    }, [isLocked, lastActivity]);
 
     const handleLock = useCallback(() => {
         setIsLocked(true);
         setShowModal(false);
+        setLastActivity(Date.now() - INACTIVITY_TIMEOUT); // Set last activity to trigger immediate lock
         if (timerRef.current) clearTimeout(timerRef.current);
     }, []);
 
@@ -135,6 +149,7 @@ const LockOverlay = () => {
                     setIsLocked(false);
                     setShowModal(false);
                     setPassword('');
+                    setLastActivity(Date.now()); // Reset last activity on successful unlock
                 }
             } catch (error) {
                 console.log('Pin is incorrect');

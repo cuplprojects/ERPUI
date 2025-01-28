@@ -4,21 +4,13 @@ import styled from "styled-components";
 import { FaUpload, FaInfoCircle } from "react-icons/fa";
 
 import { useNavigate } from "react-router-dom";
-
 import { encrypt } from "../Security/Security";
-
 import useUserDataStore from "../store/userDataStore";
-
 import { useTranslation } from "react-i18next";
-
 import { Tooltip } from "antd";
-
 import API from "../CustomHooks/MasterApiHooks/api";
-
 import themeStore from "../store/themeStore";
-
 import { useStore } from "zustand";
-
 const Cards = ({ item, onclick, disableProject, activeCardStyle }) => {
   const navigate = useNavigate();
 
