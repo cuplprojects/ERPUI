@@ -72,15 +72,15 @@ const Project = () => {
         </div>
       )
     },
-    {
-      key: "4",
-      label: t('Archived Projects'),
-      children: (
-        <div className="responsive-container">
-          <ArchivedProjects />
-        </div>
-      )
-    }
+    // {
+    //   key: "4",
+    //   label: t('Archived Projects'),
+    //   children: (
+    //     <div className="responsive-container">
+    //       <ArchivedProjects />
+    //     </div>
+    //   )
+    // }
   ];
 
   return (

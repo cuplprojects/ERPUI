@@ -214,12 +214,12 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
             icon={<EditOutlined />}
             title={t('edit')}
           />
-          <Button
+          {/* <Button
             className={`${customBtn} d-flex align-items-center justify-content-center`}
             onClick={() => handleArchive(record)}
             icon={<FaArchive />}
             title={t('archive')}
-          />
+          /> */}
         </div>
       ),
     },
