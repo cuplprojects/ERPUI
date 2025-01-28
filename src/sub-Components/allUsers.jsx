@@ -120,10 +120,8 @@ const AllUsers = () => {
 
   const isEditDisabled = (record) => {
     const roledata = roles.find(r => r.roleId === record.roleId)
-    // console.log("userRole",userRole)
-    // console.log("roledata",roledata)
-    const res = userRole?.priorityOrder > roledata?.priorityOrder
-    // console.log(res)
+    // User cannot edit if target user's role is higher or equal to their own
+    const res = userRole?.priorityOrder >= roledata?.priorityOrder
     return res
   }
 
