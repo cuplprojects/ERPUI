@@ -120,10 +120,10 @@ const AllUsers = () => {
 
   const isEditDisabled = (record) => {
     const roledata = roles.find(r => r.roleId === record.roleId)
-    console.log("userRole",userRole)
-    console.log("roledata",roledata)
+    // console.log("userRole",userRole)
+    // console.log("roledata",roledata)
     const res = userRole?.priorityOrder > roledata?.priorityOrder
-    console.log(res)
+    // console.log(res)
     return res
   }
 
@@ -186,18 +186,30 @@ const AllUsers = () => {
       key: 'roleId',
       render: (text, record) => {
         const editable = record.userId === editingUserId;
+        const currentRole = roles.find(role => role.roleId === text);
+        
         return editable ? (
           <Select
             value={currentUserData.roleId}
             onChange={(value) => setCurrentUserData(prev => ({ ...prev, roleId: value }))}
             style={{ width: '200px' }}
           >
-            {roles.map(role => (
-              <Option key={role.roleId} value={role.roleId}>{role.roleName}</Option>
-            ))}
+            <Option key={currentRole?.roleId} value={currentRole?.roleId}>
+              {currentRole?.roleName}
+            </Option>
+            {roles
+              .filter(role => 
+                role.priorityOrder > userRole?.priorityOrder && 
+                role.roleId !== currentRole?.roleId
+              )
+              .map(role => (
+                <Option key={role.roleId} value={role.roleId}>
+                  {role.roleName}
+                </Option>
+              ))}
           </Select>
         ) : (
-          roles.find(role => role.roleId === text)?.roleName || text
+          currentRole?.roleName || text
         );
       },
       width: 200,
@@ -299,7 +311,7 @@ const AllUsers = () => {
               disabled={isEditDisabled(record)}
 
             >
-              {console.log(isEditDisabled(record))}
+              {/* {console.log(isEditDisabled(record))} */}
               <span className="ms-1">{t('edit')}</span>
             </Button>
           </Space>
