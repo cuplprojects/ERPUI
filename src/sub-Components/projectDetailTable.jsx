@@ -1469,17 +1469,7 @@ console.log(tableData)
     console.error("Error assigning team:", error);
   };
 
-  const handleInputPagesSuccess = () => {
-    success("Pages updated successfully");
-    setSelectedRowKeys([]);
-    setSelectAll(false);
-    setShowOptions(false);
-  };
 
-  const handleInputPagesError = (error) => {
-    error("Failed to update pages");
-    console.error("Error updating pages:", error);
-  };
 
   return (
     <>
