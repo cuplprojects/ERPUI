@@ -8,7 +8,7 @@ import themeStore from '../../../store/themeStore';
 import EditProjectModal from '../components/EditProjectModal';
 import AddProjectModal from '../components/AddProjectModal';
 import { error, success } from '../../../CustomHooks/Services/AlertMessageService';
-
+import { FaArchive } from "react-icons/fa";
 const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
   const { t } = useTranslation();
   const { getCssClasses } = useStore(themeStore);
@@ -44,6 +44,7 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
   const getProjects = async () => {
     try {
       const response = await API.get('/Project');
+      console.log(response.data)
       setProjects(response.data);
       setTotal(response.data.length);
     } catch (err) {
@@ -55,20 +56,23 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
   const getGroups = async () => {
     try {
       const response = await API.get('/Groups');
-      setGroups(response.data);
-    } catch (err) {
-      console.error('Failed to fetch groups', err);
-      error(t('unableToFetchGroups'));
+      // Filter out groups where status is false
+      const activeGroups = response.data.filter(group => group.status === true);
+      setGroups(activeGroups);
+    } catch (error) {
+      console.error('Error fetching groups:', error);
     }
   };
 
   const getTypes = async () => {
     try {
       const response = await API.get('/PaperTypes');
-      setTypes(response.data);
+      // Filter out types where status is false
+      const activeTypes = response.data.filter(type => type.status === true);
+      setTypes(activeTypes);
     } catch (err) {
       console.error('Failed to fetch types', err);
-      error(t('unableToFetchTypes'));
+      error(t('unableToFetchTypes')); 
     }
   };
 
@@ -188,28 +192,35 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
       title: t('action'),
       key: 'action',
       render: (_, record) => (
-        <Button
-          className={`${customBtn} d-flex align-items-center justify-content-center`}
-          onClick={() => {
-            setEditingProject(record);
-            setNumberOfSeries(record.noOfSeries); // Set numberOfSeries when editing
-            setSeriesNames(record.seriesName);
-            editForm.setFieldsValue({
-              name: record.name,
-              description: record.description,
-              status: record.status,
-              group: record.groupId,
-              type: record.typeId,
-              numberOfSeries: record.noOfSeries,
-              seriesNames: record.seriesName,
-              quantityThreshold: record.quantityThreshold
-            });
-            setIsEditModalVisible(true);
-          }}
-          icon={<EditOutlined />}
-        >
-          {t('edit')}
-        </Button>
+        <div className="d-flex gap-2">
+          <Button
+            className={`${customBtn} d-flex align-items-center justify-content-center`}
+            onClick={() => {
+              setEditingProject(record);
+              setNumberOfSeries(record.noOfSeries);
+              setSeriesNames(record.seriesName);
+              editForm.setFieldsValue({
+                name: record.name,
+                description: record.description,
+                status: record.status,
+                group: record.groupId,
+                type: record.typeId,
+                numberOfSeries: record.noOfSeries,
+                seriesNames: record.seriesName,
+                quantityThreshold: record.quantityThreshold
+              });
+              setIsEditModalVisible(true);
+            }}
+            icon={<EditOutlined />}
+            title={t('edit')}
+          />
+          {/* <Button
+            className={`${customBtn} d-flex align-items-center justify-content-center`}
+            onClick={() => handleArchive(record)}
+            icon={<FaArchive />}
+            title={t('archive')}
+          /> */}
+        </div>
       ),
     },
   ];

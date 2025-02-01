@@ -39,6 +39,7 @@ import { useTranslation } from "react-i18next";
 import Tippy from "@tippyjs/react";
 import InputPages from "../menus/InputPages";
 import { success } from "../CustomHooks/Services/AlertMessageService";
+import { offset } from "highcharts";
 
 const { Option } = Select;
 
@@ -370,17 +371,7 @@ console.log(tableData)
     }
   };
 
-  const handleInputPagesSuccess = () => {
-    success("Pages updated successfully");
-    setSelectedRowKeys([]);
-    setSelectAll(false);
-    setShowOptions(false);
-  };
 
-  const handleInputPagesError = (error) => {
-    error("Failed to update pages");
-    console.error("Error updating pages:", error);
-  };
 
   const handleCatchClick = (record) => {
     setCatchDetailModalShow(true);
@@ -398,6 +389,7 @@ console.log(tableData)
 
   const columns = [
     {
+      fixed:'left',
       title: (
         <input
           type="checkbox"
@@ -444,6 +436,7 @@ console.log(tableData)
     },
     {
       title: t("srNo"),
+      fixed:'left',
       key: "srNo",
       fixed:"left",
       align: "center",
@@ -452,6 +445,7 @@ console.log(tableData)
     },
     {
       title: t("catchNo"),
+      fixed:'left',
       dataIndex: "catchNumber",
       key: "catchNumber",
       align: "center",
@@ -760,7 +754,6 @@ console.log(tableData)
       dataIndex: "status",
       fixed: 'right',
       key: "status",
-      fixed:"right",
       align: "center",
       render: (text, record) => {
         // Add debug logging
@@ -1480,8 +1473,8 @@ console.log(tableData)
 
   return (
     <>
-      <div className="">
-        <Row className={`${customLight} mb-2 p-2 rounded`}>
+      <div className="" style={{ position: "sticky", top: 57, zIndex: 1000}}>
+        <Row className={`${customLight} mb-2 p-2 rounded `}>
           <Col
             lg={1}
             md={1}
