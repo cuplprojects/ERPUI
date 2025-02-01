@@ -455,12 +455,9 @@ const QtySheetUpload = () => {
         setIsProcessingFile(false); // Hide loader if no valid data
         return;
       }
-
-
       // Extract the headers (first row of the data)
       const excelHeaders = filteredData[0];
       setHeaders(excelHeaders);
-
       setShowMappingFields(true);
       setShowDisclaimer(true);
 
@@ -482,8 +479,6 @@ const QtySheetUpload = () => {
     reader.readAsArrayBuffer(file);
   };
   
-
-
   const handleMappingChange = (property, value) => {
     setFieldMappings((prev) => {
       const newMappings = { ...prev };
@@ -492,10 +487,6 @@ const QtySheetUpload = () => {
     });
   };
   
-  
-
-
-
   const getAvailableOptions = (property) => {
     const selectedValues = Object.values(fieldMappings).flat();
     return headers

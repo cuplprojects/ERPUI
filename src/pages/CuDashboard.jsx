@@ -100,50 +100,91 @@ const CuDashboard = () => {
     return hasQuantitySheet ? hasQuantitySheet.quantitySheet : false;
   };
 
+  // useEffect(() => {
+  //   const fetchPercentages = async () => {
+  //     try {
+  //       const projectCompletionPercentages = await getAllProjectCompletionPercentages();
+  //       const projectData = await API.get(
+  //         `/Project/GetDistinctProjectsForUser/${userData.userId}`
+  //       );
+
+  //       const mergedData = projectData.data.map((project) => {
+  //         const percentage = projectCompletionPercentages.find(
+  //           (p) => p.projectId === project.projectId
+  //         );
+  //         return {
+  //           ...project,
+  //           completionPercentage: percentage
+  //             ? percentage.completionPercentage
+  //             : 0,
+  //           remainingPercentage: percentage
+  //             ? 100 - percentage.completionPercentage
+  //             : 100,
+  //         };
+  //       });
+
+  //       setData(mergedData);
+  //     } catch (error) {
+  //       console.error("Error fetching data:", error);
+  //     }
+  //   };
+  //   fetchPercentages();
+  // }, [userData.userId]);
+
   useEffect(() => {
     const fetchPercentages = async () => {
       try {
-        const projectCompletionPercentages = await getAllProjectCompletionPercentages();
-        const projectData = await API.get(
-          `/Project/GetDistinctProjectsForUser/${userData.userId}`
-        );
-
+        // Fetch distinct projects for the user
+        const projectData = await API.get(`/Project/GetDistinctProjectsForUser/${userData.userId}`);
+        const projectIds = projectData.data.map(project => project.projectId); // Extract project IDs
+        console.log(projectIds); // This is an array of project IDs
+      
+        // Convert the projectIds array into a query string like ?projectIds=7&projectIds=9&projectIds=11
+        const queryString = projectIds.map(id => `projectIds=${id}`).join('&');
+      
+        // Fetch the completion percentages for the specific projects with the correct query string
+        const projectCompletionPercentages = await API.get(`/Transactions/all-project-completion-percentages?${queryString}`);
+      
+        // Merge the data
         const mergedData = projectData.data.map((project) => {
-          const percentage = projectCompletionPercentages.find(
+          const percentage = projectCompletionPercentages.data.find(
             (p) => p.projectId === project.projectId
           );
           return {
             ...project,
-            completionPercentage: percentage
-              ? percentage.completionPercentage
-              : 0,
-            remainingPercentage: percentage
-              ? 100 - percentage.completionPercentage
-              : 100,
+            completionPercentage: percentage ? percentage.completionPercentage : 0,
+            remainingPercentage: percentage ? 100 - percentage.completionPercentage : 100,
           };
         });
-
-        setData(mergedData);
+      
+        setData(mergedData); // Set the merged data in state
+  
+        // Now send projectIds to the check-all-quantity-sheets API
+        const quantitySheetResponse = await API.get(`/QuantitySheet/check-all-quantity-sheets?${queryString}`);
+        setHasquantitySheet(quantitySheetResponse.data); // Store the result from quantity sheet API
       } catch (error) {
         console.error("Error fetching data:", error);
       }
     };
+  
     fetchPercentages();
   }, [userData.userId]);
-
-  useEffect(() => {
-    const fetchHasQuantitySheet = async () => {
-      try {
-        const response = await API.get(
-          "/QuantitySheet/check-all-quantity-sheets"
-        );
-        setHasquantitySheet(response.data);
-      } catch (error) {
-        console.error("Error fetching quantity sheet data:", error);
-      }
-    };
-    fetchHasQuantitySheet();
-  }, []);
+  
+  
+  
+  // useEffect(() => {
+  //   const fetchHasQuantitySheet = async () => {
+  //     try {
+  //       const response = await API.get(
+  //         "/QuantitySheet/check-all-quantity-sheets"
+  //       );
+  //       setHasquantitySheet(response.data);
+  //     } catch (error) {
+  //       console.error("Error fetching quantity sheet data:", error);
+  //     }
+  //   };
+  //   fetchHasQuantitySheet();
+  // }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
