@@ -615,7 +615,7 @@ const QtySheetUpload = () => {
       {/* Top Headers */}
       <Row className="mt-2 mb-1">
         <Col lg={12}>
-          <div className="text-center p-2 d-flex justify-content-between align-items-center">
+          <div className="text-center p-2 d-flex justify-content-around align-items-center">
             <h4 className={`${customDarkText} fw-bold m-0`}>
               {t("Quantity Sheet")}
             </h4>
