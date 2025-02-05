@@ -14,6 +14,7 @@ const UpdateQuantitySheet = ({ projectId, onClose }) => {
   const [updateMode, setUpdateMode] = useState(null);
   const [selectedLot, setSelectedLot] = useState(null);
   const [availableLots, setAvailableLots] = useState([]);
+  const [filterOutLots, setFilterOutLots] = useState([]);
   const [apiData, setApiData] = useState([]);
   const [selectedFieldsToUpdate, setSelectedFieldsToUpdate] = useState({});
   const [selectedCatchToupdate, setSelectedCatchToupdate] = useState({});
@@ -51,38 +52,72 @@ const UpdateQuantitySheet = ({ projectId, onClose }) => {
     const [day, month, year] = dateString.split("/");
     return `${year}-${month}-${day}`; // Convert to "YYYY-MM-DD"
 };
+useEffect(() => {
+  const fetchAvailableLots = async () => {
+    try {
+      const response = await API.get(`/QuantitySheet/Lots?ProjectId=${projectId}`);
+      const lots = response.data; // ["1", "2", ..., "12"]
 
-  useEffect(() => {
-    const fetchAvailableLots = async () => {
-      try {
-        const response = await API.get(
-          `/QuantitySheet/Lots?ProjectId=${projectId}`
-        );
-        setAvailableLots(response.data);
-      } catch (error) {
-        console.error("Failed to fetch lots:", error);
-      }
-    };
+      let dispatchedLots = [];
+      let availableLots = [];
 
-    fetchAvailableLots();
-  }, [projectId]);
+      await Promise.all(
+        lots.map(async (lot) => {
+          try {
+            const dispatchResponse = await API.get(`/Dispatch/project/${projectId}/lot/${lot}`);
+            const dispatchData = dispatchResponse.data; // Expecting an array
 
-  useEffect(() => {
-    const fetchApiData = async () => {
-      try {
-        const response = await API.get(
-          `/QuantitySheet/CatchByproject?ProjectId=${projectId}`
-        );
-        setApiData(response.data);
-      } catch (error) {
-        console.error("Failed to fetch API data:", error);
-      }
-    };
+            // If any entry has status: true, consider it dispatched
+            const isDispatched = dispatchData.some(entry => entry.status === true);
 
-    if (projectId) {
-      fetchApiData();
+            if (isDispatched) {
+              dispatchedLots.push(lot);  // Store dispatched lots separately
+            } else {
+              availableLots.push(lot);   // Store non-dispatched lots
+            }
+          } catch (err) {
+            console.error(`Error checking lot ${lot}:`, err);
+            availableLots.push(lot); // If error, keep it available
+          }
+        })
+      );
+
+      setFilterOutLots(dispatchedLots);  // Set dispatched lots
+      setAvailableLots(availableLots);  // Set available lots
+
+    } catch (error) {
+      console.error("Failed to fetch lots:", error);
     }
-  }, [projectId]);
+  };
+
+  if (projectId) {
+    fetchAvailableLots();
+  }
+}, [projectId]);
+
+
+useEffect(() => {
+  const fetchApiData = async () => {
+    try {
+      const response = await API.get(
+        `/QuantitySheet/CatchByproject?ProjectId=${projectId}`
+      );
+      let data = response.data;
+
+      // 🔹 Filter only data with LotNo present in availableLots
+      data = data.filter((item) => availableLots.includes(item.lotNo?.toString()));
+
+      setApiData(data);
+    } catch (error) {
+      console.error("Failed to fetch API data:", error);
+    }
+  };
+
+  if (projectId && availableLots.length > 0) {
+    fetchApiData();
+  }
+}, [projectId, availableLots]); // 🔹 Runs again when availableLots changes
+
 
   const handleModeSelect = (mode) => {
     setUpdateMode(mode);
@@ -323,11 +358,26 @@ const UpdateQuantitySheet = ({ projectId, onClose }) => {
 
   // Get paginated data
   const getPaginatedData = () => {
-    const filteredData = getFilteredData();
+    const filteredData = getFilteredData().filter((row) => {
+      const lotNoHeader = mappedFields["LotNo"];
+      if (!lotNoHeader) return true; // If LotNo is not mapped, keep all data
+  
+      const lotNoIndex = excelHeaders.indexOf(lotNoHeader);
+      if (lotNoIndex === -1) return true; // If header not found, keep all data
+  
+      const rowLotNo = row[lotNoIndex]?.toString().trim();
+      
+      // 🔹 Exclude rows where LotNo exists in filterOutLots
+      return !filterOutLots.includes(rowLotNo);
+    });
+  
+    console.log("Filtered Paginated Data:", filteredData);
+  
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
     return filteredData.slice(startIndex, endIndex);
   };
+  
 
   return (
     <div className="container-fluid">
