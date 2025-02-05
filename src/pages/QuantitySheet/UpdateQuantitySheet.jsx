@@ -19,6 +19,7 @@ const UpdateQuantitySheet = ({ projectId, onClose }) => {
   const [selectedFieldsToUpdate, setSelectedFieldsToUpdate] = useState({});
   const [selectedCatchToupdate, setSelectedCatchToupdate] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const pageSize = 10;
 
   // Add constant for locked fields
@@ -49,7 +50,10 @@ const UpdateQuantitySheet = ({ projectId, onClose }) => {
   ];
 
   const formatDateForDB = (dateString) => {
+    if (!dateString) return '';
+    
     const [day, month, year] = dateString.split("/");
+    if (!day || !month || !year) return '';
     return `${year}-${month}-${day}`; // Convert to "YYYY-MM-DD"
 };
 useEffect(() => {
@@ -234,73 +238,98 @@ useEffect(() => {
   };
 
   const handleSubmit = async () => {
-    // Get filtered data based on selected lot
-    const filteredData = getFilteredData();
-
-    const formattedData = filteredData.map((row, index) => {
-      const catchNoIndex = excelHeaders.indexOf(mappedFields["CatchNo"]);
-      const currentCatchNo =
-        catchNoIndex !== -1 ? row[catchNoIndex]?.toString().trim() : null;
-      const existingData = apiData.find(
-        (apiRow) => apiRow.catchNo?.toString().trim() === currentCatchNo
-      );
-
-      const examDate = convertExcelDate(
-        getColumnData(mappedFields["ExamDate"])[index]
-      );
-
-      const rowData = {
-        quantitySheetId: existingData?.quantitySheetId || 0,
-        catchNo: currentCatchNo || "",
-        paper: getColumnData(mappedFields["Paper"])[index]?.toString() || "",
-        course: getColumnData(mappedFields["Course"])[index]?.toString() || "",
-        subject:
-          getColumnData(mappedFields["Subject"])[index]?.toString() || "",
-        innerEnvelope:
-          getColumnData(mappedFields["InnerEnvelope"])[index] || "",
-        outerEnvelope:
-          Number(getColumnData(mappedFields["OuterEnvelope"])[index]) || 0,
-        examDate: formatDateForDB(examDate) || "",
-        examTime:
-          getColumnData(mappedFields["ExamTime"])[index]?.toString() || "",
-        lotNo:
-          updateMode === "lot"
-            ? selectedLot
-            : getColumnData(mappedFields["LotNo"])[index]?.toString() || "",
-        quantity: Number(getColumnData(mappedFields["Quantity"])[index]) || 0,
-        pages: Number(getColumnData(mappedFields["Pages"])[index]) || 0,
-        percentageCatch: 0,
-        projectId: projectId,
-        processId: [0],
-        status: 0,
-        stopCatch: 0,
-      };
-
-      // For existing catches, preserve original data for unselected fields
-      if (existingData) {
-        fields.forEach((field) => {
-          const key = field.name.charAt(0).toLowerCase() + field.name.slice(1);
-          if (!selectedFieldsToUpdate[field.name]) {
-            if (["quantity", "outerEnvelope", "pages"].includes(key)) {
-              rowData[key] = Number(existingData[key]) || 0;
-            } else if (key === "examDate") {
-              rowData[key] = existingData[key] || "";
-            } else {
-              rowData[key] = existingData[key]?.toString() || "";
-            }
-          }
-        });
-      }
-
-      return rowData;
-    });
+    if (isSubmitting) return;
 
     try {
+      setIsSubmitting(true);
+      // Get all filtered data, not just current page
+      const filteredData = getFilteredData();
+
+      // Get all rows that are actually displayed in table (across all pages)
+      const displayedData = filteredData.filter((row) => {
+        const lotNoHeader = mappedFields["LotNo"];
+        if (!lotNoHeader) return true;
+        
+        const lotNoIndex = excelHeaders.indexOf(lotNoHeader);
+        if (lotNoIndex === -1) return true;
+        
+        const rowLotNo = row[lotNoIndex]?.toString().trim();
+        return !filterOutLots.includes(rowLotNo);
+      });
+
+      const formattedData = displayedData.map((row, index) => {
+        const catchNoIndex = excelHeaders.indexOf(mappedFields["CatchNo"]);
+        const currentCatchNo =
+          catchNoIndex !== -1 ? row[catchNoIndex]?.toString().trim() : null;
+        const existingData = apiData.find(
+          (apiRow) => apiRow.catchNo?.toString().trim() === currentCatchNo
+        );
+
+        const examDate = convertExcelDate(
+          getColumnData(mappedFields["ExamDate"])[index]
+        );
+
+        const lotNoIndex = excelHeaders.indexOf(mappedFields["LotNo"]);
+        const rowLotNo = lotNoIndex !== -1 ? row[lotNoIndex]?.toString().trim() : "";
+
+        // Skip if lot is filtered out
+        if (filterOutLots.includes(rowLotNo)) {
+          return null;
+        }
+
+        const rowData = {
+          quantitySheetId: existingData?.quantitySheetId || 0,
+          catchNo: currentCatchNo || "",
+          paper: getColumnData(mappedFields["Paper"])[index]?.toString() || "",
+          course: getColumnData(mappedFields["Course"])[index]?.toString() || "",
+          subject:
+            getColumnData(mappedFields["Subject"])[index]?.toString() || "",
+          innerEnvelope:
+            getColumnData(mappedFields["InnerEnvelope"])[index] || "",
+          outerEnvelope:
+            Number(getColumnData(mappedFields["OuterEnvelope"])[index]) || 0,
+          examDate: formatDateForDB(examDate) || "",
+          examTime:
+            getColumnData(mappedFields["ExamTime"])[index]?.toString() || "",
+          lotNo:
+            updateMode === "lot"
+              ? selectedLot
+              : rowLotNo || "",
+          quantity: Number(getColumnData(mappedFields["Quantity"])[index]) || 0,
+          pages: Number(getColumnData(mappedFields["Pages"])[index]) || 0,
+          percentageCatch: 0,
+          projectId: projectId,
+          processId: [0],
+          status: 0,
+          stopCatch: 0,
+        };
+
+        // For existing catches, preserve original data for unselected fields
+        if (existingData) {
+          fields.forEach((field) => {
+            const key = field.name.charAt(0).toLowerCase() + field.name.slice(1);
+            if (!selectedFieldsToUpdate[field.name]) {
+              if (["quantity", "outerEnvelope", "pages"].includes(key)) {
+                rowData[key] = Number(existingData[key]) || 0;
+              } else if (key === "examDate") {
+                rowData[key] = existingData[key] || "";
+              } else {
+                rowData[key] = existingData[key]?.toString() || "";
+              }
+            }
+          });
+        }
+
+        return rowData;
+      }).filter(Boolean); // Remove null entries
+
       const response = await API.put("/QuantitySheet", formattedData);
       console.log("Update successful:", response);
       onClose();
     } catch (error) {
       console.error("Failed to update quantity sheet:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -741,9 +770,9 @@ useEffect(() => {
                   <Button
                     variant="primary"
                     onClick={handleSubmit}
-                    disabled={getFilteredData().length === 0}
+                    disabled={getFilteredData().length === 0 || isSubmitting}
                   >
-                    {t("submit")}
+                    {isSubmitting ? t("submitting") : t("submit")}
                   </Button>
                 </div>
               </div>
