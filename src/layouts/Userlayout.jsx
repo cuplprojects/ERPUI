@@ -16,7 +16,7 @@ import themeStore from './../store/themeStore';
 import { useStore } from 'zustand';
 import QtySheetUpload from '../pages/QtySheetUpload';
 import Labels from '../pages/Message/Message';
-import Reports from '../pages/Reports';
+import Reports from '../pages/Report/Reports';
 import CuDashboard from '../pages/CuDashboard';
 import AddProjectProcess from '../pages/ProjectMaster/Tabs/AddProjectProcess';
 import { hasPermission } from '../CustomHooks/Services/permissionUtils';
