@@ -94,17 +94,21 @@ const QtySheetUpload = () => {
 
   useEffect(() => {
     const checkTransactionExistence = async () => {
-      try {
-        // const response = await API.get(`/Transactions/exists/${projectId}`);
-        const response = await API.get(`/Dispatch/project/${projectId}/lot/${selectedLotNo}`);
-        const hasDispatched = response.data?.status;
-        // Only show delete button if there are no transactions AND a file has been uploaded
-        setShowDeleteButton(
-          !hasDispatched && (hasUploadedFile || isLotsFetched)
-        );
-      } catch (error) {
-        console.error("Failed to check transaction existence:", error);
-        setShowDeleteButton(true);
+      if (selectedLotNo) { // Check if selectedLotNo is not null
+        try {
+          // const response = await API.get(`/Transactions/exists/${projectId}`);
+          const response = await API.get(`/Dispatch/project/${projectId}/lot/${selectedLotNo}`);
+          const hasDispatched = response.data?.status;
+          // Only show delete button if there are no transactions AND a file has been uploaded
+          setShowDeleteButton(
+            !hasDispatched && (hasUploadedFile || isLotsFetched)
+          );
+        } catch (error) {
+          console.error("Failed to check transaction existence:", error);
+          setShowDeleteButton(true);
+        }
+      } else {
+        setShowDeleteButton(false); // Reset delete button visibility if selectedLotNo is null
       }
     };
 
@@ -127,18 +131,20 @@ const QtySheetUpload = () => {
   useEffect(() => {
     const fetchDispatchedLots = async () => {
       try {
-        const response = await API.get(`/Dispatch/project/${projectId}/lot/${selectedLotNo}`);
-        const dispatchedLotStatus = response.data.map(
-          (dispatch) => dispatch.lotNo
-        );
-        setDispatchedLots(dispatchedLotStatus);
+        if (projectId && selectedLotNo) {
+          const response = await API.get(`/Dispatch/project/${projectId}/lot/${selectedLotNo}`);
+          const dispatchedLotStatus = response.data.map(
+            (dispatch) => dispatch.lotNo
+          );
+          setDispatchedLots(dispatchedLotStatus);
+        }
       } catch (error) {
         console.error("Failed to fetch dispatched lots status:", error);
       }
     };
 
     fetchDispatchedLots();
-  }, [projectId]);
+  }, [projectId, selectedLotNo]);
 
 
   useEffect(() => {
@@ -597,6 +603,7 @@ const QtySheetUpload = () => {
     setShowTable(false);
     setShowBtn(false);
     setSelectedLotNo(null);
+    setIsLotsFetched(true); // Keep the initial state
     // Re-fetch lots to refresh the view
     fetchLots();
   };
@@ -607,15 +614,16 @@ const QtySheetUpload = () => {
     >
       {/* Top Headers */}
       <Row className="mt-2 mb-1">
-        <Col lg={12} className="d-flex justify-content-center">
-          <div className="text-center p-2">
-            <h4 className={`${customDarkText} fw-bold mb-1 pb-2`}>
+        <Col lg={12}>
+          <div className="text-center p-2 d-flex justify-content-between align-items-center">
+            <h4 className={`${customDarkText} fw-bold m-0`}>
               {t("Quantity Sheet")}
             </h4>
-            <h5 className={`${customDarkText} custom-zoom-btn  mt-2`}>
+            <h5 className={`${customDarkText} custom-zoom-btn m-0`}>
               {projectName}
             </h5>
           </div>
+          <hr className="mt-2 mb-1" />
         </Col>
       </Row>
 
@@ -748,7 +756,16 @@ const QtySheetUpload = () => {
             {isUpdateMode && (
               <UpdateQuantitySheet
                 projectId={projectId}
-                onClose={() => setIsUpdateMode(false)}
+                onClose={() => {
+                  setIsUpdateMode(false);
+                  setIsLotsFetched(true);
+                  resetState();
+                  setShowDeleteButton(true);
+                  setShowTable(false);
+                  setShowBtn(false);
+                  setSelectedLotNo(null);
+                  fetchLots();
+                }}
               />
             )}
 
