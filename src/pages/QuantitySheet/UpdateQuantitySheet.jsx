@@ -336,7 +336,7 @@ useEffect(() => {
         return rowData;
       }).filter(Boolean); // Remove null entries
 
-      const response = await API.put("/QuantitySheet1", formattedData);
+      const response = await API.put("/QuantitySheet", formattedData);
       console.log("Update successful:", response);
       onClose();
     } catch (error) {
