@@ -23,7 +23,7 @@ const UpdateQuantitySheet = ({ projectId, onClose }) => {
   const pageSize = 10;
 
   // Add constant for locked fields
-  const LOCKED_FIELDS = ["CatchNo", "LotNo", "Quantity", "Pages"];
+  const LOCKED_FIELDS = ["CatchNo", "LotNo", "Pages",];
 
   const fields = [
     { name: "CatchNo", type: "string" },
@@ -56,6 +56,7 @@ const UpdateQuantitySheet = ({ projectId, onClose }) => {
     if (!day || !month || !year) return '';
     return `${year}-${month}-${day}`; // Convert to "YYYY-MM-DD"
 };
+
 useEffect(() => {
   const fetchAvailableLots = async () => {
     try {
@@ -155,8 +156,20 @@ useEffect(() => {
 
       setExcelHeaders(headers);
       setExcelData(rows);
-      setMappedFields({}); // Reset mappings when new file is uploaded
-      setCurrentPage(1); // Reset to first page when new file is uploaded
+      
+      // Auto map fields that have matching names in Excel headers
+      const autoMappedFields = {};
+      fields.forEach(field => {
+        const matchingHeader = headers.find(header => 
+          header.toLowerCase().replace(/\s+/g, '') === field.name.toLowerCase()
+        );
+        if (matchingHeader) {
+          autoMappedFields[field.name] = matchingHeader;
+        }
+      });
+      
+      setMappedFields(autoMappedFields);
+      setCurrentPage(1);
     };
 
     reader.readAsArrayBuffer(file);
@@ -323,7 +336,7 @@ useEffect(() => {
         return rowData;
       }).filter(Boolean); // Remove null entries
 
-      const response = await API.put("/QuantitySheet", formattedData);
+      const response = await API.put("/QuantitySheet1", formattedData);
       console.log("Update successful:", response);
       onClose();
     } catch (error) {
@@ -674,7 +687,7 @@ useEffect(() => {
                                           placement="topRight"
                                         >
                                           <BsInfoCircle 
-                                            style={{cursor: 'pointer', color: '#1890ff'}}
+                                            style={{cursor: 'pointer', color: 'red'}}
                                           />
                                         </Popover>
                                       </div>
@@ -738,7 +751,7 @@ useEffect(() => {
                                       placement="topRight"
                                     >
                                       <BsInfoCircle 
-                                        style={{cursor: 'pointer', color: '#1890ff'}}
+                                        style={{cursor: 'pointer', color: 'red'}}
                                       />
                                     </Popover>
                                   </div>
