@@ -27,25 +27,8 @@ const ProjectReport = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [showDropdown, setShowDropdown] = useState(false);
     const [isSearching, setIsSearching] = useState(false);
+    const [selectedItem, setSelectedItem] = useState(null);
 
-    const handleSearch = async (query) => {
-        console.log("Calling search API");
-        if (!query.trim()) {
-            setSearchResults([]);
-            return;
-        }
-        setIsSearching(true);
-        try {
-            const response = await API.get(`/Reports/search?query=${encodeURIComponent(query)}`);
-            console.log(response.data)
-            setSearchResults(response.data.results);
-        } catch (error) {
-            console.error("Error searching:", error);
-            setSearchResults([]);
-        } finally {
-            setIsSearching(false);
-        }
-    };
 
     useEffect(() => {
         const fetchData = async () => {
@@ -132,6 +115,55 @@ const ProjectReport = () => {
         }
     };
 
+    const handleSearch = async (query, page = 1, pageSize = 5) => {
+        console.log("Calling search API");
+        if (!query.trim()) {
+            setSearchResults([]);
+            return;
+        }
+        setIsSearching(true);
+        try {
+            const response = await API.get(`/Reports/search?query=${encodeURIComponent(query)}&page=${page}&pageSize=${pageSize}&groupId=${selectedGroup}&projectId=${selectedProjectId}`);
+            console.log(response.data);
+            setSearchResults(response.data.results);
+        } catch (error) {
+            console.error("Error searching:", error);
+            setSearchResults([]);
+        } finally {
+            setIsSearching(false);
+        }
+    };
+
+
+    const handleSearchs = async (value) => {
+        setSearchTerm(value);
+
+        if (!value) {
+            setSearchResults([]);
+            return;
+        }
+
+        setIsSearching(true);
+
+        try {
+            const response = await fetch(`https://localhost:7212/api/Reports/GetQuantitySheetsByCatchNo/${value}`);
+            if (!response.ok) throw new Error("Failed to fetch data");
+
+            const data = await response.json();
+            setSearchResults(data);
+        } catch (error) {
+            console.error("Search error:", error);
+            setSearchResults([]);
+        } finally {
+            setIsSearching(false);
+        }
+    };
+
+    const handleSearchResultClicks = (item) => {
+        setSelectedItem(item);
+        setSearchTerm(item.catchNo);
+        setShowDropdown(false);
+    };
     const handleRowClick = (sheet) => {
         setSelectedCatch(sheet);
         setShowCatchView(true);
@@ -253,98 +285,170 @@ const ProjectReport = () => {
                         </Button>
                     </Col>
                 )}
-                <Col xs={12} md={3} lg={3} className="mb-3 mb-md-0 d-flex justify-content-end align-items-center" style={{ position: "fixed", right: "20px", marginTop: "30px" }}>
-
-                    <Dropdown show={showDropdown} onToggle={(isOpen) => setShowDropdown(isOpen)}>
-                        <Dropdown.Toggle
-                            variant="primary"
-                            id="dropdown-search"
-                            style={{
-                                borderRadius: "30px",
-                                backgroundColor: "#4A90E2",
-                                padding: "10px 20px",
-                                width: "250px",
-                                boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                            }}
-                        >
-                            <FaSearch style={{ marginRight: "10px" }} />
-                            {searchTerm || "Quick search..."}
-                        </Dropdown.Toggle>
-
-                        <Dropdown.Menu style={{ width: "400px", padding: "40px", height: "300px", overflowY: "auto" }}>
-                            <div className="position-relative mb-2">
-                                <Form.Control
-                                    type="text"
-                                    placeholder="Enter search term..."
-                                    className="pl-4"
-                                    value={searchTerm}
-                                    onChange={(e) => {
-                                        const value = e.target.value;
-                                        setSearchTerm(value);
-                                        handleSearch(value);
-                                        if (!showDropdown) setShowDropdown(true);
-                                    }}
-                                    style={{
-                                        borderRadius: "20px",
-                                        border: "1px solid #4A90E2",
-                                        paddingLeft: "55px",
-                                        gap: "100px",
-                                    }}
-                                />
-                                <FaSearch
-                                    style={{
-                                        position: "absolute",
-                                        left: "12px",
-                                        top: "50%",
-                                        transform: "translateY(-50%)",
-                                        color: "#4A90E2",
-                                    }}
-                                />
+                <div className="container mt-2">
+                    {/* Selected Item Details */}
+                    {selectedItem && (
+                        <div className="mb-3 p-2 bg-light rounded shadow-sm">
+                            <div className="row">
+                                <div className="col-md-3">
+                                    <strong>Group:</strong> {groups[selectedGroup]}
+                                </div>
+                                <div className="col-md-3">
+                                    <strong>Project:</strong> {selectedProjectId}
+                                </div>
+                                <div className="col-md-3">
+                                    <strong>Lot:</strong> {selectedItem.lotNo}
+                                </div>
                             </div>
-                            {isSearching ? (
-                                <div className="text-center py-3">
-                                    <Spinner animation="border" size="sm" variant="primary" />
-                                    <div className="text-muted mt-2">Searching...</div>
+                        </div>
+                    )}
+
+                    {/* Search Dropdown */}
+                    <div className="d-flex justify-content-end mb-3">
+                        <Dropdown show={showDropdown} onToggle={(isOpen) => setShowDropdown(isOpen)}>
+                            <Dropdown.Toggle
+                                variant="primary"
+                                id="dropdown-search"
+                                style={{
+                                    borderRadius: "30px",
+                                    backgroundColor: "#4A90E2",
+                                    padding: "10px 20px",
+                                    width: "250px",
+                                    boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "space-between",
+                                }}
+                            >
+                                <FaSearch style={{ marginRight: "10px" }} />
+                                {searchTerm || "Quick search..."}
+                            </Dropdown.Toggle>
+
+                            <Dropdown.Menu style={{ width: "400px", padding: "20px", height: "300px", overflowY: "auto" }}>
+                                <div className="position-relative mb-2">
+                                    <Form.Control
+                                        type="text"
+                                        placeholder="Enter Catch No..."
+                                        value={searchTerm}
+                                        onChange={(e) => {
+                                            setSearchTerm(e.target.value);
+                                            handleSearchs(e.target.value);
+                                        }}
+                                        style={{ borderRadius: "20px", border: "1px solid #4A90E2", paddingLeft: "40px" }}
+                                    />
+                                    <FaSearch style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#4A90E2" }} />
                                 </div>
-                            ) : searchResults.length > 0 ? (
-                                <div className="search-results">
-                                    {searchResults.map((result, index) => (
-                                        <div
-                                            key={index}
-                                            className="p-3 border-bottom hover-bg-light"
-                                            onClick={() => handleSearchResultClick(result)}
-                                            style={{ cursor: "pointer" }}
-                                        >
-                                            <div className="d-flex justify-content-between align-items-center">
-                                                <div>
-                                                    <div className="fw-bold text-primary">{result.catchNo}</div>
-                                                    <div className="text-muted small">{result.projectName}</div>
-                                                    <div className="text-muted small">Group: {result.groupName}</div>
-                                                </div>
-                                                <span className="badge bg-info">{result.matchedColumn}</span>
+
+                                {isSearching ? (
+                                    <div className="text-center py-3">
+                                        <Spinner animation="border" size="sm" variant="primary" />
+                                        <div className="text-muted mt-2">Searching...</div>
+                                    </div>
+                                ) : searchResults.length > 0 ? (
+                                    <div className="search-results">
+                                        {searchResults.map((result, index) => (
+                                            <div key={index} className="p-3 border-bottom hover-bg-light" onClick={() => handleSearchResultClicks(result)} style={{ cursor: "pointer" }}>
+                                                <div className="fw-bold text-primary">{result.catchNo}</div>
+                                                <div className="text-muted small">{result.examDate}</div>
+                                                <div className="text-muted small">Status: {result.catchStatus}</div>
                                             </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : searchTerm ? (
-                                <div className="text-center py-4">
-                                    <div className="text-muted">No results found</div>
-                                    <small className="text-muted">Try a different search term</small>
-                                </div>
-                            ) : (
-                                <div className="text-center py-4 text-muted">
-                                    <div>Type to search for catch numbers</div>
-                                    <small>Search results will appear here</small>
-                                </div>
-                            )}
+                                        ))}
+                                    </div>
+                                ) : searchTerm ? (
+                                    <div className="text-center py-4">
+                                        <div className="text-muted">No results found</div>
+                                        <small className="text-muted">Try a different search term</small>
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-4 text-muted">
+                                        <div>Type to search for Catch No</div>
+                                        <small>Search results will appear here</small>
+                                    </div>
+                                )}
+                            </Dropdown.Menu>
+                        </Dropdown>
+                    </div>
 
-                        </Dropdown.Menu>
-
-                    </Dropdown>
-                </Col>
+                    {/* Table to display selected data */}
+                    {selectedItem && (
+                        <Table striped bordered hover>
+                            <thead>
+                                <tr>
+                                    <th>Catch No</th>
+                                    <th>Paper</th>
+                                    <th>Exam Date</th>
+                                    <th>Exam Time</th>
+                                    <th>Lot No</th>
+                                    <th>Quantity</th>
+                                    <th>Pages</th>
+                                    <th>Status</th>
+                                    <th>Current Process</th>
+                                    <th>Processes</th>
+                                    <th>Teams</th>
+                                    <th>Machines</th>
+                                    <th>Dispatch</th>
+                                    <th>Process Details</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>{selectedItem.catchNo}</td>
+                                    <td>{selectedItem.paper}</td>
+                                    <td>{new Date(selectedItem.examDate).toLocaleDateString()}</td>
+                                    <td>{selectedItem.examTime}</td>
+                                    <td>{selectedItem.lotNo}</td>
+                                    <td>{selectedItem.quantity}</td>
+                                    <td>{selectedItem.pages}</td>
+                                    <td>{selectedItem.catchStatus}</td>
+                                    <td>{selectedItem.currentProcessName}</td>
+                                    <td>
+                                        <ul>
+                                            {selectedItem.processNames.map((process, i) => (
+                                                <li key={i}>{process}</li>
+                                            ))}
+                                        </ul>
+                                    </td>
+                                    <td>
+                                        {selectedItem.transactionData.teamDetails.map((team, i) => (
+                                            <div key={i}>
+                                                <b>{team.teamName}</b>: {team.userNames.join(", ")}
+                                            </div>
+                                        ))}
+                                    </td>
+                                    <td>{selectedItem.transactionData.machineNames.join(", ")}</td>
+                                    <td>{selectedItem.dispatchDate}</td>
+                                    <td>
+                                        <Button 
+                                            variant="link"
+                                            className="ms-2"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                selectedItem.showProcessDetails = !selectedItem.showProcessDetails;
+                                                setSelectedItem({...selectedItem});
+                                            }}
+                                        >
+                                            <FaArrowLeft style={{
+                                                transform: selectedItem.showProcessDetails ? 'rotate(90deg)' : 'rotate(270deg)',
+                                                transition: 'transform 0.3s'
+                                            }} />
+                                        </Button>
+                                    </td>
+                                </tr>
+                                {selectedItem.showProcessDetails && (
+                                    <tr>
+                                        <td colSpan="14">
+                                            <ProcessDetails
+                                                catchData={selectedItem}
+                                                projectName={selectedProjectId}
+                                                groupName={groups[selectedGroup]}
+                                            />
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </Table>
+                    )}
+                </div>
 
 
 
@@ -363,43 +467,14 @@ const ProjectReport = () => {
                 <Row className="mt-4">
                     <Col>
                         <Row className="mb-3 align-items-center">
-                            <Col xs={12} md={4}>
-                                {showCatchView && (
-                                    <div className="d-flex gap-3 justify-content-center my-3">
-                                        {/* Back Button */}
-                                        <Button
-                                            variant="outline-primary"
-                                            className="d-flex align-items-center gap-2 px-4 py-2 rounded-pill shadow-sm"
-                                            onClick={() => {
-                                                setShowCatchView(false);
-                                                setViewMode("catch");
-                                            }}
-                                        >
-                                            <FaArrowLeft size={18} /> <span>Back</span>
-                                        </Button>
-
-                                        {/* Toggle View Button */}
-                                        <Button
-                                            variant="outline-secondary"
-                                            className="d-flex align-items-center gap-3 px-4 py-2 rounded-pill shadow-sm"
-                                            onClick={toggleView}
-                                        >
-                                            {viewMode === "catch" ? (
-                                                <FaToggleOn size={32} className="text-primary" />
-                                            ) : (
-                                                <FaToggleOff size={32} className="text-danger" />
-                                            )}
-                                        </Button>
-                                    </div>
-                                )}
-                            </Col>
+                           
 
                             <Col xs={12} md={4}>
                                 <div className="position-relative w-100 d-flex align-items-center">
                                     <Form.Control
                                         type="search"
                                         placeholder="Search..."
-                                        className="pe-5"
+                                        className="rounded-pill"
                                         onChange={(e) => {
                                             const searchTerm = e.target.value.toLowerCase();
                                             if (!searchTerm) {
@@ -500,58 +575,77 @@ const ProjectReport = () => {
 
                         {!showCatchView ? (
                             <div className="table-responsive">
+                                
+                                
                                 <Table striped bordered hover className="shadow-sm">
                                     <thead className="bg-primary text-white">
                                         <tr>
                                             <th>Catch No</th>
-                                            <th>Quantity</th>
-                                            <th>Course</th>
                                             <th>Subject</th>
-                                            <th>Paper</th>
-                                            <th>Pages</th>
-                                            <th>Catch Status</th>
+                                            <th>Course</th>  
                                             <th>Exam Date</th>
                                             <th>Exam Time</th>
+                                            <th>Quantity</th>
+                                            <th>Page NO</th>
+                                            <th>Status</th>
+                                            <th>Dispatch Date</th>
+                                            <th>Process Details</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {quantitySheets.map((sheet, index) => (
-                                            <tr
-                                                key={index}
-                                                onClick={() => handleRowClick(sheet)}
-                                                style={{ cursor: 'pointer' }}
-                                                className="hover-highlight"
-                                            >
-                                                <td>{sheet.catchNo}</td>
-                                                <td>{new Date(sheet.examDate).toLocaleDateString()}</td>
-                                                <td>{sheet.examTime}</td>
-                                                <td>{sheet.lotNo}</td>
-                                                <td>{sheet.quantity}</td>
-                                                <td>
-                                                    <span className={`badge ${sheet.catchStatus === 'Completed' ? 'bg-success' :
-                                                        sheet.catchStatus === 'Running' ? 'bg-warning' : 'bg-secondary'
-                                                        }`}>
-                                                        {sheet.catchStatus}
-                                                    </span>
-                                                </td>
-                                                <td>{sheet.transactionData?.zoneDescriptions?.join(', ') || 'N/A'}</td>
-                                                <td>
-                                                    {sheet.transactionData?.teamDetails?.map(team => (
-                                                        <div key={team.teamName} className="mb-1">
-                                                            <span className="fw-bold">{team.teamName}</span>: {team.userNames.join(', ')}</div>
-                                                    )) || 'N/A'}
-                                                </td>
-                                                <td>{sheet.transactionData?.machineNames?.join(', ') || 'N/A'}</td>
-                                                <td>
-                                                    <ul className="list-unstyled m-0 d-flex flex-wrap gap-1">
-                                                        {sheet.processNames?.map((process, idx) => (
-                                                            <li key={idx} className={`badge ${process === sheet.currentProcessName ? 'bg-success' : 'bg-light text-dark'}`}>
-                                                                {process}
-                                                            </li>
-                                                        ))}
-                                                    </ul>
-                                                </td>
-                                            </tr>
+                                            <>
+                                                <tr
+                                                    key={index}
+                                                   
+                                                    style={{ cursor: 'pointer' }}
+                                                    className="hover-highlight"
+                                                >
+                                                    <td>{sheet.catchNo}</td>
+                                                    <td>{sheet.paper}</td>
+                                                    <td>{sheet.course}</td>
+                                                    <td>{new Date(sheet.examDate).toLocaleDateString()}</td>
+                                                    <td>{sheet.examTime}</td>
+                                                    <td>{sheet.quantity}</td>
+                                                    <td>{sheet.pages}</td>
+                                                    <td>
+                                                        <span className={`badge ${sheet.catchStatus === 'Completed' ? 'bg-success' :
+                                                            sheet.catchStatus === 'Running' ? 'bg-warning' : 'bg-secondary'
+                                                            }`}>
+                                                            {sheet.catchStatus}
+                                                        </span>
+                                                    </td>
+                                                    <td>{sheet.dispatchDate}</td>
+                                                    <td>
+                                                        <Button 
+                                                            variant="link"
+                                                            className="ms-2"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setSelectedCatch(sheet);
+                                                                sheet.showProcessDetails = !sheet.showProcessDetails;
+                                                                setQuantitySheets([...quantitySheets]);
+                                                            }}
+                                                        >
+                                                            <FaArrowLeft style={{
+                                                                transform: sheet.showProcessDetails ? 'rotate(90deg)' : 'rotate(270deg)',
+                                                                transition: 'transform 0.3s'
+                                                            }} />
+                                                        </Button>
+                                                    </td>
+                                                </tr>
+                                                {sheet.showProcessDetails && (
+                                                    <tr>
+                                                        <td colSpan="10">
+                                                            <ProcessDetails
+                                                                catchData={sheet}
+                                                                projectName={selectedProjectId}
+                                                                groupName={groups[selectedGroup]}
+                                                            />
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </>
                                         ))}
                                     </tbody>
                                 </Table>
@@ -575,15 +669,7 @@ const ProjectReport = () => {
                 </Row>
             )}
 
-            {!isLoading && showTable && quantitySheets.length === 0 && (
-                <Row className="mt-4">
-                    <Col>
-                        <div className="alert alert-info">
-                            No quantity sheets found for this project.
-                        </div>
-                    </Col>
-                </Row>
-            )}
+
         </Container>
     );
 };
