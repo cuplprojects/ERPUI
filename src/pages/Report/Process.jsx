@@ -85,6 +85,32 @@ const ProcessDetails = ({ catchData, projectName, groupName }) => {
     teamMembers: {
       color: "#7f8c8d",
       fontSize: "13px",
+    },
+    supervisor: {
+      backgroundColor: '#fff3cd', // Light yellow background
+      color: '#856404', // Darker yellow text
+      padding: '2px 8px',
+      borderRadius: '4px',
+      fontSize: '13px',
+      fontWeight: '500',
+      display: 'inline-block',
+      margin: '2px 4px',
+      border: '1px solid #ffeeba'
+    },
+    teamMember: {
+      backgroundColor: '#f8f9fa',
+      color: '#495057',
+      padding: '2px 8px',
+      borderRadius: '4px',
+      fontSize: '13px',
+      margin: '2px 4px',
+      display: 'inline-block'
+    },
+    memberContainer: {
+      display: 'flex',
+      flexWrap: 'wrap',
+      gap: '4px',
+      alignItems: 'center'
     }
   };
 
@@ -111,26 +137,29 @@ const ProcessDetails = ({ catchData, projectName, groupName }) => {
           striped 
           bordered 
           hover
+          responsive
           style={{
             boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
             borderRadius: '8px',
             overflow: 'hidden',
-            backgroundColor: 'white'
+            backgroundColor: 'white',
+            width: '100%',
+            tableLayout: 'auto'
           }}
         >
           <thead>
             <tr>
-              <th style={{...styles.tableHeader, borderTopLeftRadius: '8px'}}>Process</th>
-              <th style={{...styles.tableHeader, borderTopRightRadius: '8px'}}>Status</th>
-              <th style={styles.tableHeader}>Zone Description</th>
-              <th style={styles.tableHeader}>Teams & Members</th>
-              <th style={styles.tableHeader}>Machine</th>
-             
+              <th style={{...styles.tableHeader, borderTopLeftRadius: '8px', width: '15%'}}>Process</th>
+              <th style={{...styles.tableHeader, width: '10%'}}>Status</th>
+              <th style={{...styles.tableHeader, width: '20%'}}>Zone Description</th>
+              <th style={{...styles.tableHeader, width: '25%'}}>Team & Supervisors</th>
+              <th style={{...styles.tableHeader, width: '15%'}}>Machine</th>
+              <th style={{...styles.tableHeader, borderTopRightRadius: '8px', width: '15%'}}>Time</th>
             </tr>
           </thead>
           <tbody>
-            {Object.entries(processData).map(([processId, processDetails]) => (
-              processDetails.map((detail, idx) => (
+            {Object.entries(processData).map(([processId, details]) => (
+              details.map((detail, idx) => (
                 <tr 
                   key={`${processId}-${idx}`}
                   style={{
@@ -140,41 +169,47 @@ const ProcessDetails = ({ catchData, projectName, groupName }) => {
                     }
                   }}
                 >
-                  <td style={{...styles.tableCell, fontWeight: '500'}}>{getProcessName(processId)}</td>
-                  <td style={styles.tableCell}>
+                  <td style={{...styles.tableCell, fontWeight: '500', whiteSpace: 'nowrap'}}>{getProcessName(processId)}</td>
+                  <td style={{...styles.tableCell, textAlign: 'center'}}>
                     <span style={{
                       ...styles.processBadge(detail.status),
                       boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-                      transition: 'all 0.2s'
+                      transition: 'all 0.2s',
+                      display: 'inline-block',
+                      minWidth: '80px'
                     }}>
                       {detail.status === 2 ? 'Completed' : 'Pending'}
                     </span>
                   </td>
-                  <td style={{...styles.tableCell, color: '#4a5568'}}>{detail.zoneDescription || 'N/A'}</td>
+                  <td style={{...styles.tableCell, color: '#4a5568', wordBreak: 'break-word'}}>{detail.zoneDescription || 'N/A'}</td>
                   <td style={styles.tableCell}>
-                    {detail.teamDetails?.map(team => (
-                      <div key={team.teamName} style={{
-                        ...styles.teamContainer,
-                        padding: '4px 0'
-                      }}>
-                        <span style={{
-                          ...styles.teamName,
-                          backgroundColor: '#e2e8f0',
-                          padding: '2px 8px',
-                          borderRadius: '4px',
-                          marginRight: '6px'
-                        }}>{team.teamName}</span>
-                        <span style={{
-                          ...styles.teamMembers,
-                          fontStyle: 'italic'
-                        }}>
-                          {team.userDetails.map(user => user.fullName).join(', ')}
+                    <div style={{...styles.memberContainer, maxWidth: '100%'}}>
+                      {/* Supervisors Section */}
+                      {detail.supervisor?.map((sup, index) => (
+                        <span key={`sup-${index}`} style={{...styles.supervisor, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis'}}>
+                          👤 {sup.fullName}
                         </span>
-                      </div>
-                    ))}
+                      ))}
+                      
+                      {/* Team Members Section */}
+                      {detail.teamMembers?.map((member, index) => (
+                        <span key={`member-${index}`} style={{...styles.teamMember, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis'}}>
+                          {member.fullName}
+                        </span>
+                      ))}
+                    </div>
                   </td>
-                  <td style={{...styles.tableCell, color: '#4a5568'}}>{detail.machineName || 'N/A'}</td>
-                  
+                  <td style={{...styles.tableCell, color: '#4a5568', whiteSpace: 'nowrap'}}>{detail.machineName || 'N/A'}</td>
+                  <td style={{...styles.tableCell, whiteSpace: 'nowrap'}}>
+                    <div className="small">
+                      <div>
+                        <strong>Start:</strong> {new Date(detail.startTime).toLocaleString()}
+                      </div>
+                      <div>
+                        <strong>End:</strong> {new Date(detail.endTime).toLocaleString()}
+                      </div>
+                    </div>
+                  </td>
                 </tr>
               ))
             ))}
