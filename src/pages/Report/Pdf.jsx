@@ -3,10 +3,10 @@ import { Button } from 'react-bootstrap';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
-const PdfExport = ({ data, projectName, groupName }) => {
+const PdfExport = ({ data, projectName, groupName, visibleColumns }) => {
   const exportToPDF = () => {
     // Create PDF in portrait A4 format
-    const doc = new jsPDF('p', 'mm', 'a4'); // 'p' for portrait, a4 size (210 x 297 mm)
+    const doc = new jsPDF('p', 'mm', 'a4');
     
     // Add title with styling
     doc.setFontSize(16);
@@ -26,40 +26,74 @@ const PdfExport = ({ data, projectName, groupName }) => {
     doc.setTextColor(127, 140, 141);
     doc.text(`Generated on: ${new Date().toLocaleString()}`, doc.internal.pageSize.width - 20, 25, {align: 'right'});
 
-    // Format data for table
-    const tableData = data.map(sheet => ([
-      sheet.catchNo,
-      new Date(sheet.examDate).toLocaleDateString(),
-      sheet.examTime,
-      sheet.lotNo,
-      sheet.quantity,
-      sheet.status === 1 ? 'Active' : 'Inactive',
-      sheet.transactionData?.zoneDescriptions?.join(', ') || 'N/A',
-      sheet.transactionData?.teamDetails?.map(team => 
-        `${team.teamName}: ${team.userNames.join(', ')}`
-      ).join(' | ') || 'N/A',
-      sheet.transactionData?.machineNames?.join(', ') || 'N/A',
-      sheet.processNames.join(', ')
-    ]));
+    // Define headers based on visible columns
+    const headers = [
+      visibleColumns.catchNo && 'Catch No',
+      visibleColumns.subject && 'Subject',
+      visibleColumns.course && 'Course',
+      visibleColumns.examDate && 'Exam Date',
+      visibleColumns.examTime && 'Exam Time',
+      visibleColumns.quantity && 'Quantity',
+      visibleColumns.pageNo && 'Page No',
+      visibleColumns.status && 'Status',
+      visibleColumns.dispatchDate && 'Dispatch Date'
+    ].filter(Boolean);
+
+    // Format data for table based on visible columns
+    const tableData = data.map(sheet => {
+      const row = [
+        visibleColumns.catchNo && sheet.catchNo,
+        visibleColumns.subject && sheet.paper,
+        visibleColumns.course && sheet.course,
+        visibleColumns.examDate && new Date(sheet.examDate).toLocaleDateString(),
+        visibleColumns.examTime && sheet.examTime,
+        visibleColumns.quantity && sheet.quantity,
+        visibleColumns.pageNo && sheet.pages,
+        visibleColumns.status && sheet.catchStatus,
+        visibleColumns.dispatchDate && sheet.dispatchDate
+      ].filter(Boolean);
+      return row;
+    });
+
+    // Calculate column widths based on visible columns
+    const columnStyles = {};
+    let currentIndex = 0;
+
+    if (visibleColumns.catchNo) {
+      columnStyles[currentIndex++] = { fontStyle: 'bold', width: 15 };
+    }
+    if (visibleColumns.subject) {
+      columnStyles[currentIndex++] = { width: 25 };
+    }
+    if (visibleColumns.course) {
+      columnStyles[currentIndex++] = { width: 20 };
+    }
+    if (visibleColumns.examDate) {
+      columnStyles[currentIndex++] = { width: 18 };
+    }
+    if (visibleColumns.examTime) {
+      columnStyles[currentIndex++] = { width: 15 };
+    }
+    if (visibleColumns.quantity) {
+      columnStyles[currentIndex++] = { halign: 'right', width: 12 };
+    }
+    if (visibleColumns.pageNo) {
+      columnStyles[currentIndex++] = { width: 15 };
+    }
+    if (visibleColumns.status) {
+      columnStyles[currentIndex++] = { halign: 'center', width: 15 };
+    }
+    if (visibleColumns.dispatchDate) {
+      columnStyles[currentIndex++] = { width: 20 };
+    }
 
     // Add table with improved styling for A4
     doc.autoTable({
-      head: [[
-        'Catch No',
-        'Exam Date',
-        'Exam Time',
-        'Lot No',
-        'Quantity',
-        'Status',
-        'Zone',
-        'Team',
-        'Machine',
-        'Process Names'
-      ]],
+      head: [headers],
       body: tableData,
       startY: 35,
       styles: {
-        fontSize: 7,
+        fontSize: 8,
         cellPadding: 1.5,
         lineColor: [189, 195, 199],
         lineWidth: 0.1,
@@ -80,18 +114,7 @@ const PdfExport = ({ data, projectName, groupName }) => {
       alternateRowStyles: {
         fillColor: [241, 245, 249]
       },
-      columnStyles: {
-        0: { fontStyle: 'bold', width: 15 },  // Catch No
-        1: { width: 18 },                     // Exam Date
-        2: { width: 15 },                     // Exam Time
-        3: { width: 15 },                     // Lot No
-        4: { halign: 'right', width: 12 },    // Quantity
-        5: { halign: 'center', width: 15 },   // Status
-        6: { fontSize: 6, width: 25 },        // Zone
-        7: { fontSize: 6, width: 35 },        // Team
-        8: { fontSize: 6, width: 25 },        // Machine
-        9: { fontSize: 6, width: 25 }         // Process Names
-      },
+      columnStyles: columnStyles,
       margin: { top: 25, right: 15, bottom: 15, left: 15 },
       didDrawPage: function(data) {
         // Add page number at bottom
@@ -118,7 +141,7 @@ const PdfExport = ({ data, projectName, groupName }) => {
     <Button 
       variant="danger" 
       onClick={exportToPDF}
-      className="ms-2"
+      className="ms-2 px-3"
     >
       Export PDF
     </Button>

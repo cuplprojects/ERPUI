@@ -4,6 +4,20 @@ import API from "../../CustomHooks/MasterApiHooks/api";
 
 const ProcessDetails = ({ catchData, projectName, groupName }) => {
   const [processData, setProcessData] = useState({});
+  const [processes, setProcesses] = useState([]);
+
+  useEffect(() => {
+    const fetchProcesses = async () => {
+      try {
+        const response = await API.get('/Processes');
+        setProcesses(response.data);
+      } catch (error) {
+        console.error("Error fetching processes:", error);
+      }
+    };
+
+    fetchProcesses();
+  }, []);
 
   useEffect(() => {
     const fetchProcessData = async () => {
@@ -74,6 +88,11 @@ const ProcessDetails = ({ catchData, projectName, groupName }) => {
     }
   };
 
+  const getProcessName = (processId) => {
+    const process = processes.find(p => p.id === parseInt(processId));
+    return process ? process.name : `Process ${processId}`;
+  };
+
   if (!catchData) return null;
 
   return (
@@ -88,39 +107,74 @@ const ProcessDetails = ({ catchData, projectName, groupName }) => {
       </div>
 
       <div style={styles.tableContainer}>
-        <Table striped bordered hover>
+        <Table 
+          striped 
+          bordered 
+          hover
+          style={{
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+            borderRadius: '8px',
+            overflow: 'hidden',
+            backgroundColor: 'white'
+          }}
+        >
           <thead>
             <tr>
-              <th style={styles.tableHeader}>Process</th>
+              <th style={{...styles.tableHeader, borderTopLeftRadius: '8px'}}>Process</th>
+              <th style={{...styles.tableHeader, borderTopRightRadius: '8px'}}>Status</th>
               <th style={styles.tableHeader}>Zone Description</th>
               <th style={styles.tableHeader}>Teams & Members</th>
               <th style={styles.tableHeader}>Machine</th>
-              <th style={styles.tableHeader}>Status</th>
+             
             </tr>
           </thead>
           <tbody>
             {Object.entries(processData).map(([processId, processDetails]) => (
               processDetails.map((detail, idx) => (
-                <tr key={`${processId}-${idx}`}>
-                  <td style={styles.tableCell}>Process {processId}</td>
-                  <td style={styles.tableCell}>{detail.zoneDescription || 'N/A'}</td>
+                <tr 
+                  key={`${processId}-${idx}`}
+                  style={{
+                    transition: 'background-color 0.2s',
+                    '&:hover': {
+                      backgroundColor: '#f8f9fa'
+                    }
+                  }}
+                >
+                  <td style={{...styles.tableCell, fontWeight: '500'}}>{getProcessName(processId)}</td>
+                  <td style={styles.tableCell}>
+                    <span style={{
+                      ...styles.processBadge(detail.status),
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                      transition: 'all 0.2s'
+                    }}>
+                      {detail.status === 2 ? 'Completed' : 'Pending'}
+                    </span>
+                  </td>
+                  <td style={{...styles.tableCell, color: '#4a5568'}}>{detail.zoneDescription || 'N/A'}</td>
                   <td style={styles.tableCell}>
                     {detail.teamDetails?.map(team => (
-                      <div key={team.teamName} style={styles.teamContainer}>
-                        <span style={styles.teamName}>{team.teamName}</span>
-                        {": "}
-                        <span style={styles.teamMembers}>
+                      <div key={team.teamName} style={{
+                        ...styles.teamContainer,
+                        padding: '4px 0'
+                      }}>
+                        <span style={{
+                          ...styles.teamName,
+                          backgroundColor: '#e2e8f0',
+                          padding: '2px 8px',
+                          borderRadius: '4px',
+                          marginRight: '6px'
+                        }}>{team.teamName}</span>
+                        <span style={{
+                          ...styles.teamMembers,
+                          fontStyle: 'italic'
+                        }}>
                           {team.userDetails.map(user => user.fullName).join(', ')}
                         </span>
                       </div>
                     ))}
                   </td>
-                  <td style={styles.tableCell}>{detail.machineName || 'N/A'}</td>
-                  <td style={styles.tableCell}>
-                    <span style={styles.processBadge(detail.status)}>
-                      {detail.status === 2 ? 'Completed' : 'Pending'}
-                    </span>
-                  </td>
+                  <td style={{...styles.tableCell, color: '#4a5568'}}>{detail.machineName || 'N/A'}</td>
+                  
                 </tr>
               ))
             ))}

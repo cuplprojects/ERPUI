@@ -1,65 +1,58 @@
 import { Button } from 'react-bootstrap';
 import * as XLSX from 'xlsx';
 
-const ExcelExport = ({ data, projectName, groupName }) => {
+const ExcelExport = ({ data, projectName, groupName, visibleColumns }) => {
   const handleExcelExport = () => {
     try {
       const wb = XLSX.utils.book_new();
 
-      // Create worksheet
-      const ws = XLSX.utils.aoa_to_sheet([
+      // Define headers based on visible columns
+      const headers = [
+        visibleColumns.catchNo && "Catch No",
+        visibleColumns.subject && "Subject",
+        visibleColumns.course && "Course",
+        visibleColumns.examDate && "Exam Date",
+        visibleColumns.examTime && "Exam Time",
+        visibleColumns.quantity && "Quantity",
+        visibleColumns.pageNo && "Page No",
+        visibleColumns.status && "Status",
+        visibleColumns.dispatchDate && "Dispatch Date"
+      ].filter(Boolean); // Remove false values
+
+      // Create worksheet data
+      const wsData = [
         ['Quantity Sheets Report'], // Title
         [], // Empty row
         ['Group:', groupName || 'N/A'],
         ['Project:', projectName || 'N/A'],
         ['Generated on:', new Date().toLocaleString()],
         [], // Empty row
-        [ // Headers
-          "Catch No",
-          "Exam Date",
-          "Exam Time",
-          "Lot No",
-          "Quantity",
-          "Status",
-          "Zone",
-          "Team",
-          "Machine",
-          "Process Names"
-        ],
+        headers, // Headers
         // Data rows
-        ...data.map(sheet => [
-          sheet.catchNo,
-          new Date(sheet.examDate).toLocaleDateString(),
-          sheet.examTime,
-          sheet.lotNo,
-          sheet.quantity,
-          sheet.status === 1 ? 'Active' : 'Inactive',
-          sheet.transactionData?.zoneDescriptions?.join(', ') || 'N/A',
-          sheet.transactionData?.teamDetails?.map(team => 
-            `${team.teamName}: ${team.userNames.join(', ')}`
-          ).join(' | ') || 'N/A',
-          sheet.transactionData?.machineNames?.join(', ') || 'N/A',
-          sheet.processNames.join('; ')
-        ])
-      ]);
-
-      // Set column widths
-      ws['!cols'] = [
-        { wch: 12 },  // Catch No
-        { wch: 12 },  // Exam Date
-        { wch: 12 },  // Exam Time
-        { wch: 12 },  // Lot No
-        { wch: 10 },  // Quantity
-        { wch: 10 },  // Status
-        { wch: 25 },  // Zone
-        { wch: 40 },  // Team
-        { wch: 25 },  // Machine
-        { wch: 30 }   // Process Names
+        ...data.map(sheet => {
+          const row = [
+            visibleColumns.catchNo && sheet.catchNo,
+            visibleColumns.subject && sheet.paper,
+            visibleColumns.course && sheet.course,
+            visibleColumns.examDate && new Date(sheet.examDate).toLocaleDateString(),
+            visibleColumns.examTime && sheet.examTime,
+            visibleColumns.quantity && sheet.quantity,
+            visibleColumns.pageNo && sheet.pages,
+            visibleColumns.status && sheet.catchStatus,
+            visibleColumns.dispatchDate && sheet.dispatchDate
+          ].filter((_, index) => headers[index]); // Only include data for visible columns
+          return row;
+        })
       ];
+
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+      // Set column widths based on visible columns
+      ws['!cols'] = headers.map(() => ({ wch: 15 })); // Default width for all columns
 
       // Merge cells for title
       ws['!merges'] = [
-        { s: { r: 0, c: 0 }, e: { r: 0, c: 9 } }
+        { s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } }
       ];
 
       // Define header colors
@@ -69,7 +62,7 @@ const ExcelExport = ({ data, projectName, groupName }) => {
       ];
 
       // Apply styles
-      for (let i = 0; i < 10; i++) {
+      headers.forEach((_, i) => {
         // Style title
         if (i === 0) {
           const titleCell = XLSX.utils.encode_cell({r: 0, c: i});
@@ -118,7 +111,7 @@ const ExcelExport = ({ data, projectName, groupName }) => {
             };
           }
         }
-      }
+      });
 
       // Add worksheet to workbook
       XLSX.utils.book_append_sheet(wb, ws, "Quantity Sheets");
@@ -140,7 +133,7 @@ const ExcelExport = ({ data, projectName, groupName }) => {
   return (
     <Button 
       variant="success" 
-      className="me-2"
+      className="ms-2"
       onClick={handleExcelExport}
     >
       Export Excel

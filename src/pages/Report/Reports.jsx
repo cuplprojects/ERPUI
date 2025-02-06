@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Form, Button, Row, Col, Container, Spinner, Dropdown } from "react-bootstrap";
-import { FaFilePdf, FaFileExcel, FaSearch, FaFilter, FaSave, FaArrowLeft, FaToggleOn, FaToggleOff } from 'react-icons/fa';
+import { Form, Button, Row, Col, Container, Spinner, Dropdown, Pagination } from "react-bootstrap";
+import { FaFilePdf, FaFileExcel, FaFileExport, FaSearch, FaFilter, FaSave, FaArrowLeft, FaToggleOn, FaToggleOff } from 'react-icons/fa';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import API from "../../CustomHooks/MasterApiHooks/api";
 import Table from 'react-bootstrap/Table';
 import ExcelExport from './excel';
 import PdfExport from './Pdf';
-import CatchDetails from './Catch';
+
 import ProcessDetails from './Process';
 
 const ProjectReport = () => {
@@ -19,7 +19,7 @@ const ProjectReport = () => {
     const [quantitySheets, setQuantitySheets] = useState([]);
     const [showTable, setShowTable] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const [showCatchDetails, setShowCatchDetails] = useState(false);
+
     const [selectedCatch, setSelectedCatch] = useState(null);
     const [showCatchView, setShowCatchView] = useState(false);
     const [viewMode, setViewMode] = useState('catch'); // 'catch' or 'process'
@@ -28,7 +28,29 @@ const ProjectReport = () => {
     const [showDropdown, setShowDropdown] = useState(false);
     const [isSearching, setIsSearching] = useState(false);
     const [selectedItem, setSelectedItem] = useState(null);
+    const [visibleColumns, setVisibleColumns] = useState({
+        catchNo: true,
+        subject: true,
+        course: true,
+        examDate: true,
+        examTime: true,
+        quantity: true,
+        pageNo: true,
+        status: true,
+        dispatchDate: true
+    });
 
+    const columnDefinitions = [
+        { id: 'catchNo', label: 'Catch No' },
+        { id: 'subject', label: 'Subject' },
+        { id: 'course', label: 'Course' },
+        { id: 'examDate', label: 'Exam Date' },
+        { id: 'examTime', label: 'Exam Time' },
+        { id: 'quantity', label: 'Quantity' },
+        { id: 'pageNo', label: 'Page NO' },
+        { id: 'status', label: 'Status' },
+        { id: 'dispatchDate', label: 'Dispatch Date' }
+    ];
 
     useEffect(() => {
         const fetchData = async () => {
@@ -114,18 +136,19 @@ const ProjectReport = () => {
             }
         }
     };
-
     const handleSearch = async (query, page = 1, pageSize = 5) => {
-        console.log("Calling search API");
         if (!query.trim()) {
             setSearchResults([]);
             return;
         }
         setIsSearching(true);
         try {
-            const response = await API.get(`/Reports/search?query=${encodeURIComponent(query)}&page=${page}&pageSize=${pageSize}&groupId=${selectedGroup}&projectId=${selectedProjectId}`);
-            console.log(response.data);
-            setSearchResults(response.data.results);
+            const response = await fetch(`/Reports/search?query=${encodeURIComponent(query)}&page=${page}&pageSize=${pageSize}&groupId=${selectedGroup}&projectId=${selectedProjectId}`);
+            if (!response.ok) {
+                throw new Error('Failed to fetch search results');
+            }
+            const data = await response.json();
+            setSearchResults(data.results);
         } catch (error) {
             console.error("Error searching:", error);
             setSearchResults([]);
@@ -164,21 +187,9 @@ const ProjectReport = () => {
         setSearchTerm(item.catchNo);
         setShowDropdown(false);
     };
-    const handleRowClick = (sheet) => {
-        setSelectedCatch(sheet);
-        setShowCatchView(true);
-        setViewMode('catch'); // Reset to catch view when new row is clicked
-    };
 
-    const toggleView = () => {
-        setViewMode(prev => prev === 'catch' ? 'process' : 'catch');
-    };
-    const handleSearchResultClick = (result) => {
-        setSelectedCatch(result);
-        setShowCatchView(true);
-        setViewMode('catch');
-        setShowDropdown(false);
-    };
+    const [currentPage, setCurrentPage] = useState(0);
+    const recordsPerPage = 5;
 
     return (
         <Container fluid className="py-1"
@@ -332,6 +343,7 @@ const ProjectReport = () => {
                                         value={searchTerm}
                                         onChange={(e) => {
                                             setSearchTerm(e.target.value);
+                                            handleSearch(e.target.value);
                                             handleSearchs(e.target.value);
                                         }}
                                         style={{ borderRadius: "20px", border: "1px solid #4A90E2", paddingLeft: "40px" }}
@@ -348,6 +360,7 @@ const ProjectReport = () => {
                                     <div className="search-results">
                                         {searchResults.map((result, index) => (
                                             <div key={index} className="p-3 border-bottom hover-bg-light" onClick={() => handleSearchResultClicks(result)} style={{ cursor: "pointer" }}>
+
                                                 <div className="fw-bold text-primary">{result.catchNo}</div>
                                                 <div className="text-muted small">{result.examDate}</div>
                                                 <div className="text-muted small">Status: {result.catchStatus}</div>
@@ -387,7 +400,6 @@ const ProjectReport = () => {
                                     <th>Teams</th>
                                     <th>Machines</th>
                                     <th>Dispatch</th>
-                                    <th>Process Details</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -416,15 +428,15 @@ const ProjectReport = () => {
                                         ))}
                                     </td>
                                     <td>{selectedItem.transactionData.machineNames.join(", ")}</td>
-                                    <td>{selectedItem.dispatchDate}</td>
                                     <td>
-                                        <Button 
+                                        {selectedItem.dispatchDate}
+                                        <Button
                                             variant="link"
                                             className="ms-2"
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 selectedItem.showProcessDetails = !selectedItem.showProcessDetails;
-                                                setSelectedItem({...selectedItem});
+                                                setSelectedItem({ ...selectedItem });
                                             }}
                                         >
                                             <FaArrowLeft style={{
@@ -436,7 +448,7 @@ const ProjectReport = () => {
                                 </tr>
                                 {selectedItem.showProcessDetails && (
                                     <tr>
-                                        <td colSpan="14">
+                                        <td colSpan="13">
                                             <ProcessDetails
                                                 catchData={selectedItem}
                                                 projectName={selectedProjectId}
@@ -467,7 +479,7 @@ const ProjectReport = () => {
                 <Row className="mt-4">
                     <Col>
                         <Row className="mb-3 align-items-center">
-                           
+
 
                             <Col xs={12} md={4}>
                                 <div className="position-relative w-100 d-flex align-items-center">
@@ -543,7 +555,25 @@ const ProjectReport = () => {
                                                     </div>
                                                 </div>
                                                 <div className="column-list" style={{ cursor: 'grab' }}>
-                                                    {[/* ... */]}
+                                                    {columnDefinitions.map(column => (
+                                                        <div key={column.id} className="form-check mb-2">
+                                                            <input
+                                                                className="form-check-input"
+                                                                type="checkbox"
+                                                                id={`column-${column.id}`}
+                                                                checked={visibleColumns[column.id]}
+                                                                onChange={(e) => {
+                                                                    setVisibleColumns(prev => ({
+                                                                        ...prev,
+                                                                        [column.id]: e.target.checked
+                                                                    }));
+                                                                }}
+                                                            />
+                                                            <label className="form-check-label" htmlFor={`column-${column.id}`}>
+                                                                {column.label}
+                                                            </label>
+                                                        </div>
+                                                    ))}
                                                 </div>
                                             </div>
                                         </div>
@@ -552,62 +582,93 @@ const ProjectReport = () => {
                             </Col>
 
                             <Col xs={12} md={4} className="text-end">
-                                <div>
-                                    <ExcelExport
-                                        data={quantitySheets}
-                                        projectName={selectedProjectId}
-                                        groupName={groups[selectedGroup]}
-                                    >
-                                        <FaFileExcel className="me-2" />
-                                        Export Excel
-                                    </ExcelExport>
-                                    <PdfExport
-                                        data={quantitySheets}
-                                        projectName={selectedProjectId}
-                                        groupName={groups[selectedGroup]}
-                                    >
-                                        <FaFilePdf className="me-2" />
-                                        Export PDF
-                                    </PdfExport>
+                                <div className="mt-3">
+                                    <Dropdown className="d-inline-block">
+                                        <Dropdown.Toggle variant="primary" id="export-dropdown" className="me-2">
+                                            <FaFileExport className="me-3" />
+                                            Export
+                                        </Dropdown.Toggle>
+
+                                        <Dropdown.Menu className="mt-1">
+                                            <Dropdown.Item
+                                                as={ExcelExport}
+                                                data={quantitySheets}
+                                                projectName={selectedProjectId}
+                                                groupName={groups[selectedGroup]}
+                                                visibleColumns={visibleColumns}
+                                                className="py-2"
+                                            >
+
+                                            </Dropdown.Item>
+
+                                            <Dropdown.Divider />
+
+                                            <Dropdown.Item
+                                                as={PdfExport}
+                                                data={quantitySheets}
+                                                projectName={selectedProjectId}
+                                                groupName={groups[selectedGroup]}
+                                                visibleColumns={visibleColumns}
+                                                className="py-2"
+                                            >
+                                            </Dropdown.Item>
+                                        </Dropdown.Menu>
+                                    </Dropdown>
                                 </div>
                             </Col>
                         </Row>
 
                         {!showCatchView ? (
                             <div className="table-responsive">
-                                
-                                
+
+
+                                <div className="mb-3 d-flex justify-content-between align-items-center">
+                                    <div className="bg-light p-2 rounded shadow-sm">
+                                        <span className="fw-bold text-primary">Total Records: </span>
+                                        <span className="badge bg-danger">{quantitySheets.length}</span>
+                                    </div>
+                                    <div>
+                                        Show: 
+                                        <select 
+                                            className="form-select form-select-sm d-inline-block w-auto ms-2"
+                                            value={recordsPerPage}
+                                            onChange={(e) => setRecordsPerPage(Number(e.target.value))}
+                                        >
+                                            <option value={5}>5</option>
+                                            <option value={10}>10</option>
+                                            <option value={20}>20</option>
+                                            <option value={50}>50</option>
+                                        </select>
+                                    </div>
+                                </div>
+
                                 <Table striped bordered hover className="shadow-sm">
                                     <thead className="bg-primary text-white">
                                         <tr>
-                                            <th>Catch No</th>
-                                            <th>Subject</th>
-                                            <th>Course</th>  
-                                            <th>Exam Date</th>
-                                            <th>Exam Time</th>
-                                            <th>Quantity</th>
-                                            <th>Page NO</th>
-                                            <th>Status</th>
-                                            <th>Dispatch Date</th>
-                                            <th>Process Details</th>
+                                            {visibleColumns.catchNo && <th>Catch No</th>}
+                                            {visibleColumns.subject && <th>Subject</th>}
+                                            {visibleColumns.course && <th>Course</th>}
+                                            {visibleColumns.examDate && <th>Exam Date</th>}
+                                            {visibleColumns.examTime && <th>Exam Time</th>}
+                                            {visibleColumns.quantity && <th>Quantity</th>}
+                                            {visibleColumns.pageNo && <th>Page NO</th>}
+                                            {visibleColumns.status && <th>Status</th>}
+                                            {visibleColumns.dispatchDate && <th>Dispatch Date</th>}
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {quantitySheets.map((sheet, index) => (
-                                            <>
-                                                <tr
-                                                    key={index}
-                                                   
-                                                    style={{ cursor: 'pointer' }}
-                                                    className="hover-highlight"
-                                                >
-                                                    <td>{sheet.catchNo}</td>
-                                                    <td>{sheet.paper}</td>
-                                                    <td>{sheet.course}</td>
-                                                    <td>{new Date(sheet.examDate).toLocaleDateString()}</td>
-                                                    <td>{sheet.examTime}</td>
-                                                    <td>{sheet.quantity}</td>
-                                                    <td>{sheet.pages}</td>
+                                        {quantitySheets
+                                            .slice(currentPage * recordsPerPage, (currentPage + 1) * recordsPerPage)
+                                            .map((sheet, index) => [
+                                            <tr key={`${index}-main`} style={{ cursor: 'pointer' }} className="hover-highlight">
+                                                {visibleColumns.catchNo && <td>{sheet.catchNo}</td>}
+                                                {visibleColumns.subject && <td>{sheet.subject}</td>}
+                                                {visibleColumns.course && <td>{sheet.course}</td>}
+                                                {visibleColumns.examDate && <td>{new Date(sheet.examDate).toLocaleDateString()}</td>}
+                                                {visibleColumns.examTime && <td>{sheet.examTime}</td>}
+                                                {visibleColumns.quantity && <td>{sheet.quantity}</td>}
+                                                {visibleColumns.pageNo && <td>{sheet.pages}</td>}
+                                                {visibleColumns.status && (
                                                     <td>
                                                         <span className={`badge ${sheet.catchStatus === 'Completed' ? 'bg-success' :
                                                             sheet.catchStatus === 'Running' ? 'bg-warning' : 'bg-secondary'
@@ -615,40 +676,112 @@ const ProjectReport = () => {
                                                             {sheet.catchStatus}
                                                         </span>
                                                     </td>
-                                                    <td>{sheet.dispatchDate}</td>
+                                                )}
+                                                {visibleColumns.dispatchDate && (
                                                     <td>
-                                                        <Button 
-                                                            variant="link"
-                                                            className="ms-2"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                setSelectedCatch(sheet);
-                                                                sheet.showProcessDetails = !sheet.showProcessDetails;
-                                                                setQuantitySheets([...quantitySheets]);
-                                                            }}
-                                                        >
-                                                            <FaArrowLeft style={{
-                                                                transform: sheet.showProcessDetails ? 'rotate(90deg)' : 'rotate(270deg)',
-                                                                transition: 'transform 0.3s'
-                                                            }} />
-                                                        </Button>
+                                                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                                                            {sheet.dispatchDate}
+                                                            <Button
+                                                                variant="link"
+                                                                className="ms-2"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setSelectedCatch(sheet);
+                                                                    sheet.showProcessDetails = !sheet.showProcessDetails;
+                                                                    setQuantitySheets([...quantitySheets]);
+                                                                }}
+                                                            >
+                                                                <FaArrowLeft style={{
+                                                                    transform: sheet.showProcessDetails ? 'rotate(90deg)' : 'rotate(270deg)',
+                                                                    transition: 'transform 0.3s'
+                                                                }} />
+                                                            </Button>
+                                                        </div>
+                                                    </td>
+                                                )}
+                                            </tr>,
+                                            sheet.showProcessDetails && (
+                                                <tr key={`${index}-details`}>
+                                                    <td colSpan="9">
+                                                        <ProcessDetails
+                                                            catchData={sheet}
+                                                            projectName={selectedProjectId}
+                                                            groupName={groups[selectedGroup]}
+                                                        />
                                                     </td>
                                                 </tr>
-                                                {sheet.showProcessDetails && (
-                                                    <tr>
-                                                        <td colSpan="10">
-                                                            <ProcessDetails
-                                                                catchData={sheet}
-                                                                projectName={selectedProjectId}
-                                                                groupName={groups[selectedGroup]}
-                                                            />
-                                                        </td>
-                                                    </tr>
-                                                )}
-                                            </>
-                                        ))}
+                                            )
+                                        ])}
                                     </tbody>
                                 </Table>
+
+                                <div className="d-flex justify-content-between align-items-center mt-3">
+                                    <div className="text-muted" style={{
+                                        fontSize: "0.95rem",
+                                        fontWeight: "500",
+                                        padding: "8px 12px",
+                                        backgroundColor: "#f8f9fa",
+                                        borderRadius: "6px",
+                                        boxShadow: "0 1px 3px rgba(0,0,0,0.05)"
+                                    }}>
+                                        <span className="text-primary">Showing</span>{" "}
+                                        <span className="fw-bold">{currentPage * recordsPerPage + 1}</span>{" "}
+                                        <span className="text-primary">to</span>{" "}
+                                        <span className="fw-bold">{Math.min((currentPage + 1) * recordsPerPage, quantitySheets.length)}</span>{" "}
+                                        <span className="text-primary">of</span>{" "}
+                                        <span className="text-danger">{quantitySheets.length}</span>{" "}
+                                        <span className="text-primary">entries</span>
+                                    </div>
+                                    <ul className="pagination mb-0">
+                                        <li className={`page-item ${currentPage === 0 ? 'disabled' : ''}`}>
+                                            <button 
+                                                className="page-link" 
+                                                onClick={() => setCurrentPage(p => p - 1)}
+                                                disabled={currentPage === 0}
+                                            >
+                                                Previous
+                                            </button>
+                                        </li>
+                                        {[...Array(Math.ceil(quantitySheets.length / recordsPerPage))].map((_, i) => {
+                                            // Show first page, current page, last page and one page before/after current
+                                            const showPage = i === 0 || // First page
+                                                           i === Math.ceil(quantitySheets.length / recordsPerPage) - 1 || // Last page
+                                                           Math.abs(currentPage - i) <= 1; // Current page and adjacent pages
+                                            
+                                            if (!showPage) {
+                                                // Show ellipsis if there's a gap
+                                                if (i === currentPage - 2 || i === currentPage + 2) {
+                                                    return (
+                                                        <li key={i} className="page-item disabled">
+                                                            <span className="page-link">...</span>
+                                                        </li>
+                                                    );
+                                                }
+                                                return null;
+                                            }
+
+                                            return (
+                                                <li key={i} className={`page-item ${currentPage === i ? 'active' : ''}`}>
+                                                    <button 
+                                                        className="page-link"
+                                                        onClick={() => setCurrentPage(i)}
+                                                    >
+                                                        {i + 1}
+                                                    </button>
+                                                </li>
+                                            );
+                                        })}
+                                        <li className={`page-item ${currentPage >= Math.ceil(quantitySheets.length / recordsPerPage) - 1 ? 'disabled' : ''}`}>
+                                            <button 
+                                                className="page-link"
+                                                onClick={() => setCurrentPage(p => p + 1)}
+                                                disabled={currentPage >= Math.ceil(quantitySheets.length / recordsPerPage) - 1}
+                                            >
+                                                Next
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
                             </div>
                         ) : (
                             viewMode === 'catch' ? (
