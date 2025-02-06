@@ -54,8 +54,11 @@ const UpdateQuantitySheet = ({ projectId, onClose }) => {
     
     const [day, month, year] = dateString.split("/");
     if (!day || !month || !year) return '';
-    return `${year}-${month}-${day}`; // Convert to "YYYY-MM-DD"
-};
+    
+    // Create date object and format as ISO string
+    const date = new Date(year, month - 1, day); // month is 0-based
+    return date.toISOString(); // Returns format like "2025-02-03T00:00:00.000Z"
+  };
 
 useEffect(() => {
   const fetchAvailableLots = async () => {
@@ -90,6 +93,32 @@ useEffect(() => {
       setFilterOutLots(dispatchedLots);  // Set dispatched lots
       setAvailableLots(availableLots);  // Set available lots
 
+      // Fetch API data after setting available lots
+      try {
+        const response = await API.get(
+          `/QuantitySheet/CatchByproject?ProjectId=${projectId}`
+        );
+        let data = response.data;
+
+        // Filter only data with LotNo present in availableLots
+        data = data.filter((item) => availableLots.includes(item.lotNo?.toString()));
+
+        // Group data by catchNo and combine quantities
+        const groupedData = data.reduce((acc, curr) => {
+          const existingEntry = acc.find(item => item.catchNo === curr.catchNo);
+          if (existingEntry) {
+            existingEntry.quantity += curr.quantity;
+          } else {
+            acc.push({...curr});
+          }
+          return acc;
+        }, []);
+
+        setApiData(groupedData);
+      } catch (error) {
+        console.error("Failed to fetch API data:", error);
+      }
+
     } catch (error) {
       console.error("Failed to fetch lots:", error);
     }
@@ -99,30 +128,6 @@ useEffect(() => {
     fetchAvailableLots();
   }
 }, [projectId]);
-
-
-useEffect(() => {
-  const fetchApiData = async () => {
-    try {
-      const response = await API.get(
-        `/QuantitySheet/CatchByproject?ProjectId=${projectId}`
-      );
-      let data = response.data;
-
-      // 🔹 Filter only data with LotNo present in availableLots
-      data = data.filter((item) => availableLots.includes(item.lotNo?.toString()));
-
-      setApiData(data);
-    } catch (error) {
-      console.error("Failed to fetch API data:", error);
-    }
-  };
-
-  if (projectId && availableLots.length > 0) {
-    fetchApiData();
-  }
-}, [projectId, availableLots]); // 🔹 Runs again when availableLots changes
-
 
   const handleModeSelect = (mode) => {
     setUpdateMode(mode);
@@ -274,9 +279,14 @@ useEffect(() => {
         const catchNoIndex = excelHeaders.indexOf(mappedFields["CatchNo"]);
         const currentCatchNo =
           catchNoIndex !== -1 ? row[catchNoIndex]?.toString().trim() : null;
-        const existingData = apiData.find(
+          
+        // Find all matching records for the current catch number
+        const matchingRecords = apiData.filter(
           (apiRow) => apiRow.catchNo?.toString().trim() === currentCatchNo
         );
+
+        // Calculate combined quantity from all matching records
+        const totalQuantity = matchingRecords.reduce((sum, record) => sum + (record.quantity || 0), 0);
 
         const examDate = convertExcelDate(
           getColumnData(mappedFields["ExamDate"])[index]
@@ -291,7 +301,7 @@ useEffect(() => {
         }
 
         const rowData = {
-          quantitySheetId: existingData?.quantitySheetId || 0,
+          quantitySheetId: matchingRecords[0]?.quantitySheetId || 0,
           catchNo: currentCatchNo || "",
           paper: getColumnData(mappedFields["Paper"])[index]?.toString() || "",
           course: getColumnData(mappedFields["Course"])[index]?.toString() || "",
@@ -308,7 +318,9 @@ useEffect(() => {
             updateMode === "lot"
               ? selectedLot
               : rowLotNo || "",
-          quantity: Number(getColumnData(mappedFields["Quantity"])[index]) || 0,
+          quantity: selectedFieldsToUpdate["Quantity"] ? 
+            Number(getColumnData(mappedFields["Quantity"])[index]) || 0 :
+            totalQuantity || Number(getColumnData(mappedFields["Quantity"])[index]) || 0,
           pages: Number(getColumnData(mappedFields["Pages"])[index]) || 0,
           percentageCatch: 0,
           projectId: projectId,
@@ -318,16 +330,18 @@ useEffect(() => {
         };
 
         // For existing catches, preserve original data for unselected fields
-        if (existingData) {
+        if (matchingRecords.length > 0) {
           fields.forEach((field) => {
             const key = field.name.charAt(0).toLowerCase() + field.name.slice(1);
             if (!selectedFieldsToUpdate[field.name]) {
-              if (["quantity", "outerEnvelope", "pages"].includes(key)) {
-                rowData[key] = Number(existingData[key]) || 0;
+              if (key === "quantity") {
+                rowData[key] = totalQuantity; // Always use combined quantity for existing records
+              } else if (["outerEnvelope", "pages"].includes(key)) {
+                rowData[key] = Number(matchingRecords[0][key]) || 0;
               } else if (key === "examDate") {
-                rowData[key] = existingData[key] || "";
+                rowData[key] = matchingRecords[0][key] || "";
               } else {
-                rowData[key] = existingData[key]?.toString() || "";
+                rowData[key] = matchingRecords[0][key]?.toString() || "";
               }
             }
           });
