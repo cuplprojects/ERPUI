@@ -442,7 +442,7 @@ useEffect(() => {
           <div className="d-flex flex-column flex-lg-row gap-3 p-3 bg-white shadow rounded">
             {/* Radio Buttons Group */}
             <div className="d-flex flex-column flex-sm-row justify-content-start gap-3">
-              {/* <div className="d-flex align-items-center">
+              <div className="d-flex align-items-center">
                 <Form.Check
                   type="radio"
                   id="lot-radio"
@@ -456,7 +456,7 @@ useEffect(() => {
                     cursor: "pointer",
                   }}
                 />
-              </div> */}
+              </div>
               <div className="d-flex align-items-center">
                 <Form.Check
                   type="radio"
