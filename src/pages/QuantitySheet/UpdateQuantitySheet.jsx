@@ -43,7 +43,7 @@ const UpdateQuantitySheet = ({ projectId, onClose }) => {
     {
       name: "OuterEnvelope",
       type: "string",
-      multiSelect: true,
+      multiSelect: false,
     },
     { name: "Quantity", type: "string" },
     { name: "Pages", type: "string" },
@@ -317,7 +317,7 @@ const UpdateQuantitySheet = ({ projectId, onClose }) => {
           if (filterOutLots.includes(rowLotNo)) {
             return null;
           }
-
+          console.log(matchingRecords);
           const rowData = {
             quantitySheetId: matchingRecords[0]?.quantitySheetId || 0,
             catchNo: currentCatchNo || "",
