@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Form, Table, Button } from "react-bootstrap";
+import { Form, Table, Button, Row } from "react-bootstrap";
 import { Select, Pagination, Popover } from "antd";
 import * as XLSX from "xlsx";
 import { useTranslation } from "react-i18next";
@@ -11,7 +11,7 @@ const UpdateQuantitySheet = ({ projectId, onClose }) => {
   const [excelHeaders, setExcelHeaders] = useState([]);
   const [mappedFields, setMappedFields] = useState({});
   const [excelData, setExcelData] = useState([]);
-  const [updateMode, setUpdateMode] = useState('project');
+  const [updateMode, setUpdateMode] = useState("project");
   const [selectedLot, setSelectedLot] = useState(null);
   const [availableLots, setAvailableLots] = useState([]);
   const [filterOutLots, setFilterOutLots] = useState([]);
@@ -23,7 +23,7 @@ const UpdateQuantitySheet = ({ projectId, onClose }) => {
   const pageSize = 10;
 
   // Add constant for locked fields
-  const LOCKED_FIELDS = ["CatchNo", "LotNo", "Pages",];
+  const LOCKED_FIELDS = ["CatchNo", "LotNo", "Pages"];
 
   const fields = [
     { name: "CatchNo", type: "string" },
@@ -38,7 +38,7 @@ const UpdateQuantitySheet = ({ projectId, onClose }) => {
       type: "string",
       multiSelect: true,
       envelopeTypes: ["E10", "E20", "E30", "E40", "E50", "E60", "E80", "E100"],
-      colspan: true
+      colspan: true,
     },
     {
       name: "OuterEnvelope",
@@ -50,84 +50,93 @@ const UpdateQuantitySheet = ({ projectId, onClose }) => {
   ];
 
   const formatDateForDB = (dateString) => {
-    if (!dateString) return '';
-    
+    if (!dateString) return "";
+
     const [day, month, year] = dateString.split("/");
-    if (!day || !month || !year) return '';
-    
+    if (!day || !month || !year) return "";
+
     // Create date object and format as ISO string
     const date = new Date(year, month - 1, day); // month is 0-based
     return date.toISOString(); // Returns format like "2025-02-03T00:00:00.000Z"
   };
 
-useEffect(() => {
-  const fetchAvailableLots = async () => {
-    try {
-      const response = await API.get(`/QuantitySheet/Lots?ProjectId=${projectId}`);
-      const lots = response.data; // ["1", "2", ..., "12"]
-
-      let dispatchedLots = [];
-      let availableLots = [];
-
-      await Promise.all(
-        lots.map(async (lot) => {
-          try {
-            const dispatchResponse = await API.get(`/Dispatch/project/${projectId}/lot/${lot}`);
-            const dispatchData = dispatchResponse.data; // Expecting an array
-
-            // If any entry has status: true, consider it dispatched
-            const isDispatched = dispatchData.some(entry => entry.status === true);
-
-            if (isDispatched) {
-              dispatchedLots.push(lot);  // Store dispatched lots separately
-            } else {
-              availableLots.push(lot);   // Store non-dispatched lots
-            }
-          } catch (err) {
-            console.error(`Error checking lot ${lot}:`, err);
-            availableLots.push(lot); // If error, keep it available
-          }
-        })
-      );
-
-      setFilterOutLots(dispatchedLots);  // Set dispatched lots
-      setAvailableLots(availableLots);  // Set available lots
-
-      // Fetch API data after setting available lots
+  useEffect(() => {
+    const fetchAvailableLots = async () => {
       try {
         const response = await API.get(
-          `/QuantitySheet/CatchByproject?ProjectId=${projectId}`
+          `/QuantitySheet/Lots?ProjectId=${projectId}`
         );
-        let data = response.data;
+        const lots = response.data; // ["1", "2", ..., "12"]
 
-        // Filter only data with LotNo present in availableLots
-        data = data.filter((item) => availableLots.includes(item.lotNo?.toString()));
+        let dispatchedLots = [];
+        let availableLots = [];
 
-        // Group data by catchNo and combine quantities
-        const groupedData = data.reduce((acc, curr) => {
-          const existingEntry = acc.find(item => item.catchNo === curr.catchNo);
-          if (existingEntry) {
-            existingEntry.quantity += curr.quantity;
-          } else {
-            acc.push({...curr});
-          }
-          return acc;
-        }, []);
+        await Promise.all(
+          lots.map(async (lot) => {
+            try {
+              const dispatchResponse = await API.get(
+                `/Dispatch/project/${projectId}/lot/${lot}`
+              );
+              const dispatchData = dispatchResponse.data; // Expecting an array
 
-        setApiData(groupedData);
+              // If any entry has status: true, consider it dispatched
+              const isDispatched = dispatchData.some(
+                (entry) => entry.status === true
+              );
+
+              if (isDispatched) {
+                dispatchedLots.push(lot); // Store dispatched lots separately
+              } else {
+                availableLots.push(lot); // Store non-dispatched lots
+              }
+            } catch (err) {
+              console.error(`Error checking lot ${lot}:`, err);
+              availableLots.push(lot); // If error, keep it available
+            }
+          })
+        );
+
+        setFilterOutLots(dispatchedLots); // Set dispatched lots
+        setAvailableLots(availableLots); // Set available lots
+
+        // Fetch API data after setting available lots
+        try {
+          const response = await API.get(
+            `/QuantitySheet/CatchByproject?ProjectId=${projectId}`
+          );
+          let data = response.data;
+
+          // Filter only data with LotNo present in availableLots
+          data = data.filter((item) =>
+            availableLots.includes(item.lotNo?.toString())
+          );
+
+          // Group data by catchNo and combine quantities
+          const groupedData = data.reduce((acc, curr) => {
+            const existingEntry = acc.find(
+              (item) => item.catchNo === curr.catchNo
+            );
+            if (existingEntry) {
+              existingEntry.quantity += curr.quantity;
+            } else {
+              acc.push({ ...curr });
+            }
+            return acc;
+          }, []);
+
+          setApiData(groupedData);
+        } catch (error) {
+          console.error("Failed to fetch API data:", error);
+        }
       } catch (error) {
-        console.error("Failed to fetch API data:", error);
+        console.error("Failed to fetch lots:", error);
       }
+    };
 
-    } catch (error) {
-      console.error("Failed to fetch lots:", error);
+    if (projectId) {
+      fetchAvailableLots();
     }
-  };
-
-  if (projectId) {
-    fetchAvailableLots();
-  }
-}, [projectId]);
+  }, [projectId]);
 
   const handleModeSelect = (mode) => {
     setUpdateMode(mode);
@@ -161,18 +170,20 @@ useEffect(() => {
 
       setExcelHeaders(headers);
       setExcelData(rows);
-      
+
       // Auto map fields that have matching names in Excel headers
       const autoMappedFields = {};
-      fields.forEach(field => {
-        const matchingHeader = headers.find(header => 
-          header.toLowerCase().replace(/\s+/g, '') === field.name.toLowerCase()
+      fields.forEach((field) => {
+        const matchingHeader = headers.find(
+          (header) =>
+            header.toLowerCase().replace(/\s+/g, "") ===
+            field.name.toLowerCase()
         );
         if (matchingHeader) {
           autoMappedFields[field.name] = matchingHeader;
         }
       });
-      
+
       setMappedFields(autoMappedFields);
       setCurrentPage(1);
     };
@@ -196,19 +207,21 @@ useEffect(() => {
         if (excelHeader === mappedFields["InnerEnvelope"]) {
           // Special handling for InnerEnvelope
           const envelopeData = [];
-          fields.find(f => f.name === "InnerEnvelope").envelopeTypes.forEach(envelopeType => {
-            const header = excelHeader.find(h => h.includes(envelopeType));
-            if (header) {
-              const headerIndex = excelHeaders.indexOf(header);
-              const value = row[headerIndex];
-              if (value) {
-                envelopeData.push(`${envelopeType}: ${value}`);
+          fields
+            .find((f) => f.name === "InnerEnvelope")
+            .envelopeTypes.forEach((envelopeType) => {
+              const header = excelHeader.find((h) => h.includes(envelopeType));
+              if (header) {
+                const headerIndex = excelHeaders.indexOf(header);
+                const value = row[headerIndex];
+                if (value) {
+                  envelopeData.push(`${envelopeType}: ${value}`);
+                }
               }
-            }
-          });
+            });
           return envelopeData.join(", "); // Return as single string
         }
-        
+
         return excelHeader
           .map((header) => {
             const headerIndex = excelHeaders.indexOf(header);
@@ -246,12 +259,12 @@ useEffect(() => {
       // If it's already a date string, parse it
       date = new Date(excelDate);
     }
-    
+
     // Format as DD/MM/YYYY
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
     const year = date.getFullYear();
-    
+
     return `${day}/${month}/${year}`;
   };
 
@@ -267,88 +280,96 @@ useEffect(() => {
       const displayedData = filteredData.filter((row) => {
         const lotNoHeader = mappedFields["LotNo"];
         if (!lotNoHeader) return true;
-        
+
         const lotNoIndex = excelHeaders.indexOf(lotNoHeader);
         if (lotNoIndex === -1) return true;
-        
+
         const rowLotNo = row[lotNoIndex]?.toString().trim();
         return !filterOutLots.includes(rowLotNo);
       });
 
-      const formattedData = displayedData.map((row, index) => {
-        const catchNoIndex = excelHeaders.indexOf(mappedFields["CatchNo"]);
-        const currentCatchNo =
-          catchNoIndex !== -1 ? row[catchNoIndex]?.toString().trim() : null;
-          
-        // Find all matching records for the current catch number
-        const matchingRecords = apiData.filter(
-          (apiRow) => apiRow.catchNo?.toString().trim() === currentCatchNo
-        );
+      const formattedData = displayedData
+        .map((row, index) => {
+          const catchNoIndex = excelHeaders.indexOf(mappedFields["CatchNo"]);
+          const currentCatchNo =
+            catchNoIndex !== -1 ? row[catchNoIndex]?.toString().trim() : null;
 
-        // Calculate combined quantity from all matching records
-        const totalQuantity = matchingRecords.reduce((sum, record) => sum + (record.quantity || 0), 0);
+          // Find all matching records for the current catch number
+          const matchingRecords = apiData.filter(
+            (apiRow) => apiRow.catchNo?.toString().trim() === currentCatchNo
+          );
 
-        const examDate = convertExcelDate(
-          getColumnData(mappedFields["ExamDate"])[index]
-        );
+          // Calculate combined quantity from all matching records
+          const totalQuantity = matchingRecords.reduce(
+            (sum, record) => sum + (record.quantity || 0),
+            0
+          );
 
-        const lotNoIndex = excelHeaders.indexOf(mappedFields["LotNo"]);
-        const rowLotNo = lotNoIndex !== -1 ? row[lotNoIndex]?.toString().trim() : "";
+          const examDate = convertExcelDate(
+            getColumnData(mappedFields["ExamDate"])[index]
+          );
 
-        // Skip if lot is filtered out
-        if (filterOutLots.includes(rowLotNo)) {
-          return null;
-        }
+          const lotNoIndex = excelHeaders.indexOf(mappedFields["LotNo"]);
+          const rowLotNo =
+            lotNoIndex !== -1 ? row[lotNoIndex]?.toString().trim() : "";
 
-        const rowData = {
-          quantitySheetId: matchingRecords[0]?.quantitySheetId || 0,
-          catchNo: currentCatchNo || "",
-          paper: getColumnData(mappedFields["Paper"])[index]?.toString() || "",
-          course: getColumnData(mappedFields["Course"])[index]?.toString() || "",
-          subject:
-            getColumnData(mappedFields["Subject"])[index]?.toString() || "",
-          innerEnvelope:
-            getColumnData(mappedFields["InnerEnvelope"])[index] || "",
-          outerEnvelope:
-            Number(getColumnData(mappedFields["OuterEnvelope"])[index]) || 0,
-          examDate: formatDateForDB(examDate) || "",
-          examTime:
-            getColumnData(mappedFields["ExamTime"])[index]?.toString() || "",
-          lotNo:
-            updateMode === "lot"
-              ? selectedLot
-              : rowLotNo || "",
-          quantity: selectedFieldsToUpdate["Quantity"] ? 
-            Number(getColumnData(mappedFields["Quantity"])[index]) || 0 :
-            totalQuantity || Number(getColumnData(mappedFields["Quantity"])[index]) || 0,
-          pages: Number(getColumnData(mappedFields["Pages"])[index]) || 0,
-          percentageCatch: 0,
-          projectId: projectId,
-          processId: [0],
-          status: 0,
-          stopCatch: 0,
-        };
+          // Skip if lot is filtered out
+          if (filterOutLots.includes(rowLotNo)) {
+            return null;
+          }
 
-        // For existing catches, preserve original data for unselected fields
-        if (matchingRecords.length > 0) {
-          fields.forEach((field) => {
-            const key = field.name.charAt(0).toLowerCase() + field.name.slice(1);
-            if (!selectedFieldsToUpdate[field.name]) {
-              if (key === "quantity") {
-                rowData[key] = totalQuantity; // Always use combined quantity for existing records
-              } else if (["outerEnvelope", "pages"].includes(key)) {
-                rowData[key] = Number(matchingRecords[0][key]) || 0;
-              } else if (key === "examDate") {
-                rowData[key] = matchingRecords[0][key] || "";
-              } else {
-                rowData[key] = matchingRecords[0][key]?.toString() || "";
+          const rowData = {
+            quantitySheetId: matchingRecords[0]?.quantitySheetId || 0,
+            catchNo: currentCatchNo || "",
+            paper:
+              getColumnData(mappedFields["Paper"])[index]?.toString() || "",
+            course:
+              getColumnData(mappedFields["Course"])[index]?.toString() || "",
+            subject:
+              getColumnData(mappedFields["Subject"])[index]?.toString() || "",
+            innerEnvelope:
+              getColumnData(mappedFields["InnerEnvelope"])[index] || "",
+            outerEnvelope:
+              Number(getColumnData(mappedFields["OuterEnvelope"])[index]) || 0,
+            examDate: formatDateForDB(examDate) || "",
+            examTime:
+              getColumnData(mappedFields["ExamTime"])[index]?.toString() || "",
+            lotNo: updateMode === "lot" ? selectedLot : rowLotNo || "",
+            quantity: selectedFieldsToUpdate["Quantity"]
+              ? Number(getColumnData(mappedFields["Quantity"])[index]) || 0
+              : totalQuantity ||
+                Number(getColumnData(mappedFields["Quantity"])[index]) ||
+                0,
+            pages: Number(getColumnData(mappedFields["Pages"])[index]) || 0,
+            percentageCatch: 0,
+            projectId: projectId,
+            processId: [0],
+            status: 0,
+            stopCatch: 0,
+          };
+
+          // For existing catches, preserve original data for unselected fields
+          if (matchingRecords.length > 0) {
+            fields.forEach((field) => {
+              const key =
+                field.name.charAt(0).toLowerCase() + field.name.slice(1);
+              if (!selectedFieldsToUpdate[field.name]) {
+                if (key === "quantity") {
+                  rowData[key] = totalQuantity; // Always use combined quantity for existing records
+                } else if (["outerEnvelope", "pages"].includes(key)) {
+                  rowData[key] = Number(matchingRecords[0][key]) || 0;
+                } else if (key === "examDate") {
+                  rowData[key] = matchingRecords[0][key] || "";
+                } else {
+                  rowData[key] = matchingRecords[0][key]?.toString() || "";
+                }
               }
-            }
-          });
-        }
+            });
+          }
 
-        return rowData;
-      }).filter(Boolean); // Remove null entries
+          return rowData;
+        })
+        .filter(Boolean); // Remove null entries
 
       const response = await API.put("/QuantitySheet", formattedData);
       console.log("Update successful:", response);
@@ -417,23 +438,22 @@ useEffect(() => {
     const filteredData = getFilteredData().filter((row) => {
       const lotNoHeader = mappedFields["LotNo"];
       if (!lotNoHeader) return true; // If LotNo is not mapped, keep all data
-  
+
       const lotNoIndex = excelHeaders.indexOf(lotNoHeader);
       if (lotNoIndex === -1) return true; // If header not found, keep all data
-  
+
       const rowLotNo = row[lotNoIndex]?.toString().trim();
-      
+
       // 🔹 Exclude rows where LotNo exists in filterOutLots
       return !filterOutLots.includes(rowLotNo);
     });
-  
+
     console.log("Filtered Paginated Data:", filteredData);
-  
+
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
     return filteredData.slice(startIndex, endIndex);
   };
-  
 
   return (
     <div className="container-fluid">
@@ -520,28 +540,78 @@ useEffect(() => {
       {(updateMode === "project" || (updateMode === "lot" && selectedLot)) && (
         <>
           {excelHeaders.length > 0 && (
-            <div className="row">
-              <div className="col-12">
-                <Table striped bordered hover responsive>
-                  <thead>
-                    <tr>
-                      {fields.map((field) => {
-                        if (field.colspan && mappedFields[field.name]) {
-                          const selectedHeaders = Array.isArray(
-                            mappedFields[field.name]
-                          )
-                            ? mappedFields[field.name]
-                            : [mappedFields[field.name]];
+            <>
+              <div className="row">
+                <div className="col-12">
+                  <Table striped bordered hover responsive>
+                    <thead>
+                      <tr>
+                        {fields.map((field) => {
+                          if (field.colspan && mappedFields[field.name]) {
+                            const selectedHeaders = Array.isArray(
+                              mappedFields[field.name]
+                            )
+                              ? mappedFields[field.name]
+                              : [mappedFields[field.name]];
+                            return (
+                              <>
+                                <th
+                                  key={field.name}
+                                  colSpan={selectedHeaders.length}
+                                  className="text-center"
+                                >
+                                  <div className="d-flex align-items-center gap-2">
+                                    {field.name}
+                                    {!LOCKED_FIELDS.includes(field.name) && (
+                                      <Form.Check
+                                        type="checkbox"
+                                        checked={
+                                          selectedFieldsToUpdate[field.name] ||
+                                          false
+                                        }
+                                        onChange={() =>
+                                          handleFieldUpdateSelection(field.name)
+                                        }
+                                        label="Update existing"
+                                      />
+                                    )}
+                                  </div>
+                                  <div>
+                                    <Select
+                                      style={{ width: "100%" }}
+                                      placeholder="Select Excel Header"
+                                      onChange={(value) =>
+                                        handleHeaderMapping(field.name, value)
+                                      }
+                                      value={mappedFields[field.name]}
+                                      mode={
+                                        field.multiSelect
+                                          ? "multiple"
+                                          : undefined
+                                      }
+                                      virtual={false}
+                                      listHeight={256}
+                                    >
+                                      {excelHeaders.map((header) => (
+                                        <Select.Option
+                                          key={header}
+                                          value={header}
+                                        >
+                                          {header}
+                                        </Select.Option>
+                                      ))}
+                                    </Select>
+                                  </div>
+                                </th>
+                              </>
+                            );
+                          }
                           return (
-                            <>
-                              <th
-                                key={field.name}
-                                colSpan={selectedHeaders.length}
-                                className="text-center"
-                              >
-                                <div className="d-flex align-items-center gap-2">
-                                  {field.name}
-                                  {!LOCKED_FIELDS.includes(field.name) && (
+                            <th key={field.name} className="text-center">
+                              <div className="d-flex align-items-center justify-content-between gap-2 mb-2">
+                                {field.name}
+                                {!LOCKED_FIELDS.includes(field.name) && (
+                                  <div className="d-flex align-items-center gap-1">
                                     <Form.Check
                                       type="checkbox"
                                       checked={
@@ -551,259 +621,249 @@ useEffect(() => {
                                       onChange={() =>
                                         handleFieldUpdateSelection(field.name)
                                       }
-                                      label="Update existing"
+                                      className="m-0"
                                     />
-                                  )}
-                                </div>
-                                <div>
-                                  <Select
-                                    style={{ width: "100%" }}
-                                    placeholder="Select Excel Header"
-                                    onChange={(value) =>
-                                      handleHeaderMapping(field.name, value)
-                                    }
-                                    value={mappedFields[field.name]}
-                                    mode={
-                                      field.multiSelect ? "multiple" : undefined
-                                    }
-                                    virtual={false}
-                                    listHeight={256}
-                                  >
-                                    {excelHeaders.map((header) => (
-                                      <Select.Option
-                                        key={header}
-                                        value={header}
-                                      >
-                                        {header}
-                                      </Select.Option>
-                                    ))}
-                                  </Select>
-                                </div>
-                              </th>
-                            </>
+                                    <BsPencilSquare
+                                      size={14}
+                                      title="Update existing"
+                                    />
+                                  </div>
+                                )}
+                              </div>
+                              <div>
+                                <Select
+                                  style={{ width: "100%", minWidth: "100px" }}
+                                  placeholder="Select Excel Header"
+                                  onChange={(value) =>
+                                    handleHeaderMapping(field.name, value)
+                                  }
+                                  value={mappedFields[field.name]}
+                                  mode={
+                                    field.multiSelect ? "multiple" : undefined
+                                  }
+                                  virtual={false}
+                                  listHeight={256}
+                                >
+                                  {excelHeaders.map((header) => (
+                                    <Select.Option key={header} value={header}>
+                                      {header}
+                                    </Select.Option>
+                                  ))}
+                                </Select>
+                              </div>
+                            </th>
                           );
-                        }
-                        return (
-                          <th key={field.name} className="text-center">
-                            <div className="d-flex align-items-center justify-content-between gap-2 mb-2">
-                              {field.name}
-                              {!LOCKED_FIELDS.includes(field.name) && (
-                                <div className="d-flex align-items-center gap-1">
-                                  <Form.Check
-                                    type="checkbox"
-                                    checked={
-                                      selectedFieldsToUpdate[field.name] ||
-                                      false
-                                    }
-                                    onChange={() =>
-                                      handleFieldUpdateSelection(field.name)
-                                    }
-                                    className="m-0"
-                                  />
-                                  <BsPencilSquare
-                                    size={14}
-                                    title="Update existing"
-                                  />
-                                </div>
-                              )}
-                            </div>
-                            <div>
-                              <Select
-                                style={{ width: "100%", minWidth: "100px" }}
-                                placeholder="Select Excel Header"
-                                onChange={(value) =>
-                                  handleHeaderMapping(field.name, value)
-                                }
-                                value={mappedFields[field.name]}
-                                mode={
-                                  field.multiSelect ? "multiple" : undefined
-                                }
-                                virtual={false}
-                                listHeight={256}
-                              >
-                                {excelHeaders.map((header) => (
-                                  <Select.Option key={header} value={header}>
-                                    {header}
-                                  </Select.Option>
-                                ))}
-                              </Select>
-                            </div>
-                          </th>
+                        })}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {getPaginatedData().map((row, rowIndex) => {
+                        const catchNoIndex = excelHeaders.indexOf(
+                          mappedFields["CatchNo"]
                         );
-                      })}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {getPaginatedData().map((row, rowIndex) => {
-                      const catchNoIndex = excelHeaders.indexOf(
-                        mappedFields["CatchNo"]
-                      );
-                      const currentCatchNo =
-                        catchNoIndex !== -1 ? row[catchNoIndex] : null;
-                      const existingData = apiData.find(
-                        (apiRow) =>
-                          apiRow.catchNo?.toString().trim() ===
-                          currentCatchNo?.toString().trim()
-                      );
-                      const isMatching = !!existingData;
+                        const currentCatchNo =
+                          catchNoIndex !== -1 ? row[catchNoIndex] : null;
+                        const existingData = apiData.find(
+                          (apiRow) =>
+                            apiRow.catchNo?.toString().trim() ===
+                            currentCatchNo?.toString().trim()
+                        );
+                        const isMatching = !!existingData;
 
-                      return (
-                        <tr key={rowIndex}>
-                          {fields.map((field) => {
-                            if (field.colspan && mappedFields[field.name]) {
-                              const selectedHeaders = Array.isArray(
-                                mappedFields[field.name]
-                              )
-                                ? mappedFields[field.name]
-                                : [mappedFields[field.name]];
-                              return selectedHeaders.map((header, idx) => {
-                                let displayValue = "";
-                                let oldValue = "";
-                                if (
-                                  isMatching &&
-                                  !selectedFieldsToUpdate[field.name]
-                                ) {
-                                  // Show API data if exists and field not selected for update
-                                  const key =
-                                    field.name.charAt(0).toLowerCase() +
-                                    field.name.slice(1);
-                                  displayValue = existingData[key] || "";
-                                } else {
-                                  // Show Excel data
-                                  displayValue =
-                                    row[excelHeaders.indexOf(header)] || "";
-                                  if (isMatching) {
+                        return (
+                          <tr key={rowIndex}>
+                            {fields.map((field) => {
+                              if (field.colspan && mappedFields[field.name]) {
+                                const selectedHeaders = Array.isArray(
+                                  mappedFields[field.name]
+                                )
+                                  ? mappedFields[field.name]
+                                  : [mappedFields[field.name]];
+                                return selectedHeaders.map((header, idx) => {
+                                  let displayValue = "";
+                                  let oldValue = "";
+                                  if (
+                                    isMatching &&
+                                    !selectedFieldsToUpdate[field.name]
+                                  ) {
+                                    // Show API data if exists and field not selected for update
                                     const key =
                                       field.name.charAt(0).toLowerCase() +
                                       field.name.slice(1);
-                                    oldValue = existingData[key] || "";
+                                    displayValue = existingData[key] || "";
+                                  } else {
+                                    // Show Excel data
+                                    displayValue =
+                                      row[excelHeaders.indexOf(header)] || "";
+                                    if (isMatching) {
+                                      const key =
+                                        field.name.charAt(0).toLowerCase() +
+                                        field.name.slice(1);
+                                      oldValue = existingData[key] || "";
+                                    }
                                   }
+                                  return (
+                                    <td
+                                      key={`${field.name}-${idx}`}
+                                      style={{
+                                        color:
+                                          isMatching &&
+                                          !selectedFieldsToUpdate[field.name]
+                                            ? "blue"
+                                            : "green",
+                                        position: "relative",
+                                        textAlign: "center",
+                                      }}
+                                    >
+                                      {displayValue}
+                                      {isMatching &&
+                                        oldValue &&
+                                        oldValue !== displayValue && (
+                                          <div
+                                            style={{
+                                              position: "absolute",
+                                              top: 2,
+                                              right: 2,
+                                            }}
+                                          >
+                                            <Popover
+                                              content={
+                                                <div
+                                                  style={{
+                                                    whiteSpace: "pre-wrap",
+                                                    maxWidth: "200px",
+                                                  }}
+                                                >{`Previous value: ${oldValue}`}</div>
+                                              }
+                                              trigger="click"
+                                              placement="topRight"
+                                            >
+                                              <BsInfoCircle
+                                                style={{
+                                                  cursor: "pointer",
+                                                  color: "red",
+                                                }}
+                                              />
+                                            </Popover>
+                                          </div>
+                                        )}
+                                    </td>
+                                  );
+                                });
+                              }
+
+                              let displayValue = "";
+                              let oldValue = "";
+                              if (
+                                isMatching &&
+                                !selectedFieldsToUpdate[field.name]
+                              ) {
+                                // Show API data if exists and field not selected for update
+                                const key =
+                                  field.name.charAt(0).toLowerCase() +
+                                  field.name.slice(1);
+                                displayValue = existingData[key] || "";
+                              } else {
+                                // Show Excel data
+                                const headerIndex = excelHeaders.indexOf(
+                                  mappedFields[field.name]
+                                );
+                                displayValue =
+                                  headerIndex !== -1 ? row[headerIndex] : "";
+                                if (isMatching) {
+                                  const key =
+                                    field.name.charAt(0).toLowerCase() +
+                                    field.name.slice(1);
+                                  oldValue = existingData[key] || "";
                                 }
-                                return (
-                                  <td
-                                    key={`${field.name}-${idx}`}
-                                    style={{
-                                      color:
-                                        isMatching &&
-                                        !selectedFieldsToUpdate[field.name]
-                                          ? "blue"
-                                          : "green",
-                                      position: "relative",
-                                      textAlign: "center"
-                                    }}
-                                  >
-                                    {displayValue}
-                                    {isMatching && oldValue && oldValue !== displayValue && (
-                                      <div style={{position: "absolute", top: 2, right: 2}}>
-                                        <Popover 
-                                          content={<div style={{whiteSpace: "pre-wrap", maxWidth: "200px"}}>{`Previous value: ${oldValue}`}</div>}
+                              }
+
+                              // Format date if the field is ExamDate
+                              if (field.name === "ExamDate") {
+                                displayValue = convertExcelDate(displayValue);
+                                oldValue = convertExcelDate(oldValue);
+                              }
+
+                              return (
+                                <td
+                                  key={field.name}
+                                  style={{
+                                    color:
+                                      isMatching &&
+                                      !selectedFieldsToUpdate[field.name]
+                                        ? "blue"
+                                        : "green",
+                                    position: "relative",
+                                    textAlign: "center",
+                                  }}
+                                >
+                                  {displayValue}
+                                  {isMatching &&
+                                    oldValue &&
+                                    oldValue !== displayValue && (
+                                      <div
+                                        style={{
+                                          position: "absolute",
+                                          top: 2,
+                                          right: 2,
+                                        }}
+                                      >
+                                        <Popover
+                                          content={
+                                            <div
+                                              style={{
+                                                whiteSpace: "pre-wrap",
+                                                maxWidth: "200px",
+                                              }}
+                                            >{`Previous value: ${oldValue}`}</div>
+                                          }
                                           trigger="click"
                                           placement="topRight"
                                         >
-                                          <BsInfoCircle 
-                                            style={{cursor: 'pointer', color: 'red'}}
+                                          <BsInfoCircle
+                                            style={{
+                                              cursor: "pointer",
+                                              color: "red",
+                                            }}
                                           />
                                         </Popover>
                                       </div>
                                     )}
-                                  </td>
-                                );
-                              });
-                            }
-
-                            let displayValue = "";
-                            let oldValue = "";
-                            if (
-                              isMatching &&
-                              !selectedFieldsToUpdate[field.name]
-                            ) {
-                              // Show API data if exists and field not selected for update
-                              const key =
-                                field.name.charAt(0).toLowerCase() +
-                                field.name.slice(1);
-                              displayValue = existingData[key] || "";
-                            } else {
-                              // Show Excel data
-                              const headerIndex = excelHeaders.indexOf(
-                                mappedFields[field.name]
+                                </td>
                               );
-                              displayValue =
-                                headerIndex !== -1 ? row[headerIndex] : "";
-                              if (isMatching) {
-                                const key =
-                                  field.name.charAt(0).toLowerCase() +
-                                  field.name.slice(1);
-                                oldValue = existingData[key] || "";
-                              }
-                            }
-
-                            // Format date if the field is ExamDate
-                            if (field.name === "ExamDate") {
-                              displayValue = convertExcelDate(displayValue);
-                              oldValue = convertExcelDate(oldValue);
-                            }
-
-                            return (
-                              <td
-                                key={field.name}
-                                style={{
-                                  color:
-                                    isMatching &&
-                                    !selectedFieldsToUpdate[field.name]
-                                      ? "blue"
-                                      : "green",
-                                  position: "relative",
-                                  textAlign: "center"
-                                }}
-                              >
-                                {displayValue}
-                                {isMatching && oldValue && oldValue !== displayValue && (
-                                  <div style={{position: "absolute", top: 2, right: 2}}>
-                                    <Popover 
-                                      content={<div style={{whiteSpace: "pre-wrap", maxWidth: "200px"}}>{`Previous value: ${oldValue}`}</div>}
-                                      trigger="click"
-                                      placement="topRight"
-                                    >
-                                      <BsInfoCircle 
-                                        style={{cursor: 'pointer', color: 'red'}}
-                                      />
-                                    </Popover>
-                                  </div>
-                                )}
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </Table>
-                {getFilteredData().length === 0 ? (
-                  <div className="text-center p-3">
-                    <p>{t("noDataFoundForSelectedLot")}</p>
+                            })}
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </Table>
+                  {getFilteredData().length === 0 ? (
+                    <div className="text-center p-3">
+                      <p>{t("noDataFoundForSelectedLot")}</p>
+                    </div>
+                  ) : (
+                    <div className="d-flex justify-content-center mt-3">
+                      <Pagination
+                        current={currentPage}
+                        total={getFilteredData().length}
+                        pageSize={pageSize}
+                        onChange={(page) => setCurrentPage(page)}
+                        showSizeChanger={false}
+                      />
+                    </div>
+                  )}
+                  <div className="text-end mt-3 mb-4">
+                    <Button
+                      variant="primary"
+                      onClick={handleSubmit}
+                      disabled={getFilteredData().length === 0 || isSubmitting}
+                    >
+                      {isSubmitting ? t("submitting") : t("submit")}
+                    </Button>
                   </div>
-                ) : (
-                  <div className="d-flex justify-content-center mt-3">
-                    <Pagination
-                      current={currentPage}
-                      total={getFilteredData().length}
-                      pageSize={pageSize}
-                      onChange={(page) => setCurrentPage(page)}
-                      showSizeChanger={false}
-                    />
-                  </div>
-                )}
-                <div className="text-end mt-3 mb-4">
-                  <Button
-                    variant="primary"
-                    onClick={handleSubmit}
-                    disabled={getFilteredData().length === 0 || isSubmitting}
-                  >
-                    {isSubmitting ? t("submitting") : t("submit")}
-                  </Button>
                 </div>
               </div>
-            </div>
+            </>
           )}
         </>
       )}
