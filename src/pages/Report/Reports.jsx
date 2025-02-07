@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Form, Button, Row, Col, Container, Spinner, Dropdown, Pagination, } from "react-bootstrap";
-import { FaFilePdf, FaFileExcel, FaFileExport, FaSearch, FaFilter, FaSave, FaArrowLeft, FaToggleOn, FaToggleOff, FaSort , FaSortUp, FaSortDown,} from 'react-icons/fa';
+import { Form, Button, Row, Col, Container, Spinner, Dropdown  } from "react-bootstrap";
+import {  FaFileExport, FaSearch, FaFilter, FaSave , FaSortUp, FaSortDown} from 'react-icons/fa';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import API from "../../CustomHooks/MasterApiHooks/api";
 import Table from 'react-bootstrap/Table';
@@ -11,7 +11,7 @@ import ProcessDetails from './Process';
 
 const ProjectReport = () => {
     const [activeProjects, setActiveProjects] = useState([]);
-    const [selectedProjectId, setSelectedProjectId] = useState(() => localStorage.getItem('selectedProjectId') || "");
+    const [selectedProjectId, setSelectedProjectId] = useState("");
     const [selectedGroup, setSelectedGroup] = useState(() => localStorage.getItem('selectedGroup') || "");
     const [selectedLot, setSelectedLot] = useState("");
     const [lotNumbers, setLotNumbers] = useState([]);
@@ -38,7 +38,9 @@ const ProjectReport = () => {
         quantity: true,
         pageNo: true,
         status: true,
-        dispatchDate: true
+        dispatchDate: true,
+        innerEnvelope: true,
+        outerEnvelope: true
     });
 
     const [sortField, setSortField] = useState(null);
@@ -59,7 +61,9 @@ const ProjectReport = () => {
         { id: 'quantity', label: 'Quantity' },
         { id: 'pageNo', label: 'Pages' },
         { id: 'status', label: 'Status' },
-        { id: 'dispatchDate', label: 'Dispatch Date' }
+        { id: 'dispatchDate', label: 'Dispatch Date' },
+        { id: 'innerEnvelope', label: 'Inner Envelope' },
+        { id: 'outerEnvelope', label: 'Outer Envelope' }
     ];
 
     useEffect(() => {
@@ -99,6 +103,8 @@ const ProjectReport = () => {
                 }
             } else {
                 setActiveProjects([]);
+                localStorage.removeItem('selectedGroup');
+                localStorage.removeItem('selectedProjectId');
             }
         };
 
@@ -110,8 +116,7 @@ const ProjectReport = () => {
             if (selectedProjectId) {
                 setIsLoading(true);
                 try {
-                    const projectIndex = activeProjects.indexOf(selectedProjectId) + 1;
-                    const response = await API.get(`/Reports/GetLotNosByProjectId/${projectIndex}`);
+                    const response = await API.get(`/Reports/GetLotNosByProjectId/${selectedProjectId}`);
                     setLotNumbers(response.data);
                     localStorage.setItem('selectedProjectId', selectedProjectId);
                 } catch (error) {
@@ -122,6 +127,7 @@ const ProjectReport = () => {
                 }
             } else {
                 setLotNumbers([]);
+                localStorage.removeItem('selectedProjectId');
             }
         };
 
@@ -137,8 +143,7 @@ const ProjectReport = () => {
         if (selectedProjectId) {
             setIsLoading(true);
             try {
-                const projectIndex = activeProjects.indexOf(selectedProjectId) + 1;
-                const response = await API.get(`/Reports/GetQuantitySheetsByProjectId/${projectIndex}/LotNo/${selectedLot}`);
+                const response = await API.get(`/Reports/GetQuantitySheetsByProjectId/${selectedProjectId}/LotNo/${selectedLot}`);
                 const filteredSheets = selectedLot
                     ? response.data.filter((sheet) => sheet.lotNo === selectedLot)
                     : response.data;
@@ -158,12 +163,16 @@ const ProjectReport = () => {
         }
         setIsSearching(true);
         try {
-            const response = await fetch(`/Reports/search?query=${encodeURIComponent(query)}&page=${page}&pageSize=${pageSize}&groupId=${selectedGroup}&projectId=${selectedProjectId}`);
-            if (!response.ok) {
-                throw new Error('Failed to fetch search results');
-            }
-            const data = await response.json();
-            setSearchResults(data.results);
+            const response = await API.get(`/Reports/search`, {
+                params: {
+                    query: query,
+                    page: page,
+                    pageSize: pageSize,
+                    groupId: selectedGroup,
+                    projectId: selectedProjectId
+                }
+            });
+            setSearchResults(response.data.results);
         } catch (error) {
             console.error("Error searching:", error);
             setSearchResults([]);
@@ -173,8 +182,11 @@ const ProjectReport = () => {
     };
 
 
-    const handleSearchs = async (value) => {
-        setSearchTerm(value);
+    const SearchCatchClick = async (value) => {
+        setSearchTerm('');
+        setSearchResults([]);
+        setSelectedItem(null); // Clear selected item
+        setShowDropdown(false); // Hide dropdown
 
         if (!value) {
             setSearchResults([]);
@@ -184,11 +196,9 @@ const ProjectReport = () => {
         setIsSearching(true);
 
         try {
-            const response = await fetch(`https://localhost:7212/api/Reports/GetQuantitySheetsByCatchNo/${value}`);
-            if (!response.ok) throw new Error("Failed to fetch data");
-
-            const data = await response.json();
-            setSearchResults(data);
+            const response = await API.get(`/Reports/GetQuantitySheetsByCatchNo/${value.projectId}/${value.catchNo}`);
+            setShowDropdown(false);
+            setSelectedItem(response.data[0]);
         } catch (error) {
             console.error("Search error:", error);
             setSearchResults([]);
@@ -197,12 +207,7 @@ const ProjectReport = () => {
         }
     };
 
-    const handleSearchResultClicks = (item) => {
-        setSelectedItem(item);
-        setSearchTerm(item.catchNo);
-        
-        setShowDropdown(false);
-    };
+   
 
     const handleSort = (field) => {
         const newDirection = sortField === field && sortDirection === 'asc' ? 'desc' : 'asc';
@@ -285,8 +290,24 @@ const ProjectReport = () => {
         <Container fluid className="py-1"
         >
 
-
+             
             <Row  >
+                
+                    <div className="d-flex justify-content-center align-items-center mb-4">
+                        <h4 className="mb-0" style={{ 
+                            color: '#2c3e50',
+                            fontWeight: '700',
+                            letterSpacing: '1px',
+                            textShadow: '2px 2px 4px rgba(0,0,0,0.1)',
+                            fontSize: '2rem',
+                            padding: '0.5rem 2rem',
+                            position: 'relative'
+                        }}>
+                            View Reports 
+                        </h4>
+                    </div>
+              
+                
                 <Col xs={12} md={3} lg={2} className="mb-3 mb-md-0">
                     <Form.Label className="fw-bold text-primary mb-2" style={{ fontSize: "1.1rem", letterSpacing: "0.5px", fontWeight: "700" }}>
                         <span style={{ color: '#2c3e50', textShadow: '1px 1px 2px rgba(0,0,0,0.1)' }}>Group</span>
@@ -295,6 +316,7 @@ const ProjectReport = () => {
                     <Form.Select
                         onChange={(e) => {
                             setSelectedGroup(e.target.value);
+                            setSelectedProjectId('');
                             setQuantitySheets([]);
                         }}
                         value={selectedGroup}
@@ -334,8 +356,9 @@ const ProjectReport = () => {
                         }}
                     >
                         <option value="">Select Project</option>
+                        {console.log(activeProjects)}
                         {activeProjects.map((project, index) => (
-                            <option key={index} value={project}>{project}</option>
+                            <option key={index} value={project.projectId}>{project.name}</option>
                         ))}
                     </Form.Select>
                 </Col>
@@ -386,7 +409,7 @@ const ProjectReport = () => {
                         </Button>
                     </Col>
                 )}
-                <div className="container mt-2">
+                <div className="mb-3 mb-md-0">
                    
 
                     {/* Search Dropdown */}
@@ -419,7 +442,6 @@ const ProjectReport = () => {
                                         onChange={(e) => {
                                             setSearchTerm(e.target.value);
                                             handleSearch(e.target.value);
-                                            handleSearchs(e.target.value);
                                         }}
                                         style={{ borderRadius: "20px", border: "1px solid #4A90E2", paddingLeft: "40px" }}
                                     />
@@ -433,17 +455,13 @@ const ProjectReport = () => {
                                     </div>
                                 ) : searchResults.length > 0 ? (
                                     <div className="search-results">
+                                        {console.log(searchResults)}
                                         {searchResults.map((result, index) => (
-                                            <div key={index} className="p-3 border-bottom hover-bg-light" onClick={() => handleSearchResultClicks(result)} style={{ cursor: "pointer" }}>
+                                            <div key={index} className="p-3 border-bottom hover-bg-light" onClick={() => SearchCatchClick(result)} style={{ cursor: "pointer" }}>
 
                                                 <div className="fw-bold text-primary">Catch No: {result.catchNo}</div>
-                                                <div className="fw-bold text-primary">Subject: {result.subject}</div>
-                                                <div className="fw-bold text-primary">Course: {result.course}</div>
-                                                <div className="fw-bold text-primary">Paper: {result.paper}</div>
-
-
-                                               
-                                                <div className="text-muted small">Status: {result.catchStatus}</div>
+                                                <div className="fw-bold text-primary">{result.matchedColumn}: {result.matchedValue}</div>
+                                                
                                             </div>
                                         ))}
                                     </div>
@@ -465,87 +483,128 @@ const ProjectReport = () => {
                     {/* Table to display selected data */}
 
 
-                     {/* Selected Item Details */}
-                     {selectedItem && (
-                        <div className="mb-2 p-2 bg-light rounded shadow-sm">
-                            <div className="row">
-                                <div className="col-md-3">
-                                    <strong>Group:</strong> {groups[selectedGroup]}
-                                </div>
-                                <div className="col-md-3">
-                                    <strong>Project:</strong> {selectedProjectId}
-                                </div>
-                                <div className="col-md-3">
-                                    <strong>Lot:</strong> {selectedItem.lotNo}
-                                </div>
-                            </div>
-                        </div>
-                    )}
+                   
                     {selectedItem && (
-                        <Table striped bordered hover>
-                            <thead>
-                                <tr>
-                                    <th>Catch No</th>
-                                    <th>Subject</th>
-                                    <th>Course</th>
-                                    <th>Paper</th>
-                                    <th>Exam Date</th>
-                                    <th>Exam Time</th>
-                                    
-                                    <th>Quantity</th>
-                                    <th>Pages</th>
-                                    
-                                    
-                                    
-                                    <th>Dispatch</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>{selectedItem.catchNo}</td>
-                                    <td>{selectedItem.subject}</td>
-                                    <td>{selectedItem.course}</td>
-                                    <td>{selectedItem.paper}</td>
-                                    <td>{new Date(selectedItem.examDate).toLocaleDateString()}</td>
-                                    <td>{selectedItem.examTime}</td>
-                                    
-                                    <td>{selectedItem.quantity}</td>
-                                    <td>{selectedItem.pages}</td>
-                                    
-                                    
-                                   
-                                   
-                                    <td>
-                                        {selectedItem.dispatchDate}
-                                        <Button
-                                            variant="link"
-                                            className="ms-2"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                selectedItem.showProcessDetails = !selectedItem.showProcessDetails;
-                                                setSelectedItem({ ...selectedItem });
+                        <>
+                            <div className="d-flex justify-content-between align-items-center mb-3">
+                                <h5 className="mb-0"></h5>
+                                <Dropdown className="d-inline-block">
+                                    <Dropdown.Toggle variant="primary" id="export-dropdown" className="me-2">
+                                        <FaFileExport className="me-2" />
+                                        Export
+                                    </Dropdown.Toggle>
+
+                                    <Dropdown.Menu className="mt-1">
+                                        <Dropdown.Item
+                                            as={ExcelExport}
+                                            data={[selectedItem]} // Pass as array since ExcelExport expects array
+                                            projectName={selectedProjectId}
+                                            groupName={groups[selectedGroup]}
+                                            visibleColumns={{
+                                                catchNo: true,
+                                                subject: true,
+                                                course: true,
+                                                paper: true,
+                                                examDate: true,
+                                                examTime: true,
+                                                quantity: true,
+                                                pageNo: true,
+                                                status: true,
+                                                innerEnvelope: true,
+                                                outerEnvelope: true,
+                                                dispatchDate: true
                                             }}
-                                        >
-                                            <FaArrowLeft style={{
-                                                transform: selectedItem.showProcessDetails ? 'rotate(90deg)' : 'rotate(270deg)',
-                                                transition: 'transform 0.3s'
-                                            }} />
-                                        </Button>
-                                    </td>
-                                </tr>
-                                {selectedItem.showProcessDetails && (
-                                    <tr>
-                                        <td colSpan="13">
-                                            <ProcessDetails
-                                                catchData={selectedItem}
-                                                projectName={selectedProjectId}
-                                                groupName={groups[selectedGroup]}
-                                            />
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </Table>
+                                            className="py-2"
+                                        />
+                                        <Dropdown.Divider />
+                                        <Dropdown.Item
+                                            as={PdfExport}
+                                            data={[selectedItem]} // Pass as array since PdfExport expects array
+                                            projectName={selectedProjectId}
+                                            groupName={groups[selectedGroup]}
+                                            visibleColumns={{
+                                                catchNo: true,
+                                                subject: true,
+                                                course: true,
+                                                paper: true,
+                                                examDate: true,
+                                                examTime: true,
+                                                quantity: true,
+                                                pageNo: true,
+                                                status: true,
+                                                innerEnvelope: true,
+                                                outerEnvelope: true,
+                                                dispatchDate: true
+                                            }}
+                                            className="py-2"
+                                        />
+                                    </Dropdown.Menu>
+                                </Dropdown>
+                            </div>
+                            <div className="position-relative">
+                                <Table striped bordered hover>
+                                    <thead>
+                                        <tr>
+                                            <th>Catch No</th>
+                                            <th>Subject</th>
+                                            <th>Course</th>
+                                            <th>Paper</th>
+                                            <th>Exam Date</th>
+                                            <th>Exam Time</th>
+                                            <th>Quantity</th>
+                                            <th>Pages</th>
+                                            <th>Inner Envelope</th>
+                                            <th>Outer Envelope</th>
+                                            <th>Dispatch</th>
+                                           
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr onClick={() => {
+                                            selectedItem.showProcessDetails = !selectedItem.showProcessDetails;
+                                            setSelectedItem({ ...selectedItem });
+                                        }} style={{ cursor: 'pointer' }}>
+                                            <td>{selectedItem.catchNo}</td>
+                                            <td>{selectedItem.subject}</td>
+                                            <td>{selectedItem.course}</td>
+                                            <td>{selectedItem.paper}</td>
+                                            <td>{new Date(selectedItem.examDate).toLocaleDateString()}</td>
+                                            <td>{selectedItem.examTime}</td>
+                                            <td>{selectedItem.quantity}</td>
+                                            <td>{selectedItem.pages}</td>
+                                            <td>{selectedItem.innerEnvelope}</td>
+                                            <td>{selectedItem.outerEnvelope}</td>
+                                            <td>{selectedItem.dispatchDate}</td>
+                                           
+                                        </tr>
+                                        {selectedItem.showProcessDetails && (
+                                            <tr>
+                                                <td colSpan="13">
+                                                    <ProcessDetails
+                                                        catchData={selectedItem}
+                                                        projectName={selectedProjectId}
+                                                        groupName={groups[selectedGroup]}
+                                                    />
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </Table>
+                                <button 
+                                    className="btn btn-sm btn-outline-secondary position-absolute" 
+                                    style={{
+                                        top: '10px', 
+                                        right: '10px',
+                                        transition: 'color 0.2s'
+                                    }}
+                                    onMouseEnter={(e) => e.target.style.color = 'red'}
+                                    onMouseLeave={(e) => e.target.style.color = ''}
+                                    onClick={() => setSelectedItem(null)}
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                        </>
                     )}
                 </div>
 
@@ -943,6 +1002,8 @@ const ProjectReport = () => {
                                                 </th>
                                             )}
                                             {visibleColumns.status && (
+
+                                                
                                                 <th onClick={() => handleSort('status')} style={{ cursor: 'pointer' }}>
                                                     <div className="d-flex align-items-center justify-content-between">
                                                         Status
@@ -953,6 +1014,40 @@ const ProjectReport = () => {
                                                             />
                                                             <FaSortDown 
                                                                 color={sortField === 'status' && sortDirection === 'desc' ? '#fff' : '#000'}
+                                                                style={{ marginTop: '-3px' }}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </th>
+                                            )}
+                                             {visibleColumns.innerEnvelope && (
+                                                <th onClick={() => handleSort('innerEnvelope')} style={{ cursor: 'pointer' }}>
+                                                    <div className="d-flex align-items-center justify-content-between">
+                                                        Inner Envelope
+                                                        <div className="d-flex flex-column ms-2" style={{ fontSize: '12px' }}>
+                                                            <FaSortUp 
+                                                                color={sortField === 'innerEnvelope' && sortDirection === 'asc' ? '#fff' : '#000'}
+                                                                style={{ marginBottom: '-3px' }}
+                                                            />
+                                                            <FaSortDown 
+                                                                color={sortField === 'innerEnvelope' && sortDirection === 'desc' ? '#fff' : '#000'}
+                                                                style={{ marginTop: '-3px' }}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </th>
+                                             )}
+                                            {visibleColumns.outerEnvelope && (
+                                                <th onClick={() => handleSort('outerEnvelope')} style={{ cursor: 'pointer' }}>
+                                                    <div className="d-flex align-items-center justify-content-between">
+                                                        Outer Envelope
+                                                        <div className="d-flex flex-column ms-2" style={{ fontSize: '12px' }}>
+                                                            <FaSortUp 
+                                                                color={sortField === 'outerEnvelope' && sortDirection === 'asc' ? '#fff' : '#000'}
+                                                                style={{ marginBottom: '-3px' }}
+                                                            />
+                                                            <FaSortDown 
+                                                                color={sortField === 'outerEnvelope' && sortDirection === 'desc' ? '#fff' : '#000'}
                                                                 style={{ marginTop: '-3px' }}
                                                             />
                                                         </div>
@@ -976,15 +1071,24 @@ const ProjectReport = () => {
                                                     </div>
                                                 </th>
                                             )}
+                                           
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {filteredSheets
                                             .slice(currentPage * recordsPerPage, (currentPage + 1) * recordsPerPage)
                                             .map((sheet, index) => [
-                                            <tr key={`${index}-main`} style={{ cursor: 'pointer' }} className="hover-highlight">
+                                            <tr 
+                                                key={`${index}-main`} 
+                                                style={{ cursor: 'pointer' }} 
+                                                className="hover-highlight"
+                                                onClick={() => {
+                                                    setSelectedCatch(sheet);
+                                                    sheet.showProcessDetails = !sheet.showProcessDetails;
+                                                    setQuantitySheets([...quantitySheets]);
+                                                }}
+                                            >
                                                 {visibleColumns.catchNo && <td>{sheet.catchNo}</td>}
-
                                                 {visibleColumns.subject && <td>{sheet.subject}</td>}
                                                 {visibleColumns.course && <td>{sheet.course}</td>}
                                                 {visibleColumns.paper && <td>{sheet.paper}</td>}
@@ -992,41 +1096,26 @@ const ProjectReport = () => {
                                                 {visibleColumns.examTime && <td>{sheet.examTime}</td>}
                                                 {visibleColumns.quantity && <td>{sheet.quantity}</td>}
                                                 {visibleColumns.pageNo && <td>{sheet.pages}</td>}
+                                               
                                                 {visibleColumns.status && (
                                                     <td>
                                                         <span className={`badge ${sheet.catchStatus === 'Completed' ? 'bg-success' :
-                                                            sheet.catchStatus === 'Running' ? 'bg-warning' : 'bg-secondary'
+                                                            sheet.catchStatus === 'Running' ? 'bg-primary' : 
+                                                            sheet.catchStatus === 'Pending' ? 'bg-danger' : 'bg-secondary'
                                                             }`}>
                                                             {sheet.catchStatus}
                                                         </span>
                                                     </td>
                                                 )}
-                                                {visibleColumns.dispatchDate && (
-                                                    <td>
-                                                        <div style={{ display: 'flex', alignItems: 'center' }}>
-                                                            {sheet.dispatchDate}
-                                                            <Button
-                                                                variant="link"
-                                                                className="ms-2"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    setSelectedCatch(sheet);
-                                                                    sheet.showProcessDetails = !sheet.showProcessDetails;
-                                                                    setQuantitySheets([...quantitySheets]);
-                                                                }}
-                                                            >
-                                                                <FaArrowLeft style={{
-                                                                    transform: sheet.showProcessDetails ? 'rotate(90deg)' : 'rotate(270deg)',
-                                                                    transition: 'transform 0.3s'
-                                                                }} />
-                                                            </Button>
-                                                        </div>
-                                                    </td>
-                                                )}
+
+                                                {visibleColumns.innerEnvelope && <td>{sheet.innerEnvelope}</td>}
+                                                {visibleColumns.outerEnvelope && <td>{sheet.outerEnvelope}</td>}
+                                                {visibleColumns.dispatchDate && <td>{sheet.dispatchDate}</td>}
+                                                
                                             </tr>,
                                             sheet.showProcessDetails && (
                                                 <tr key={`${index}-details`}>
-                                                    <td colSpan={Object.values(visibleColumns).filter(Boolean).length}>
+                                                    <td colSpan={Object.values(visibleColumns).filter(Boolean).length + 2}>
                                                         <ProcessDetails
                                                             catchData={sheet}
                                                             projectName={selectedProjectId}
@@ -1038,7 +1127,7 @@ const ProjectReport = () => {
                                         ])}
                                         {filteredSheets.length === 0 && (
                                             <tr>
-                                                <td colSpan={Object.values(visibleColumns).filter(Boolean).length} className="text-center py-4">
+                                                <td colSpan={Object.values(visibleColumns).filter(Boolean).length + 2} className="text-center py-4">
                                                     <div className="text-muted">No records found</div>
                                                 </td>
                                             </tr>

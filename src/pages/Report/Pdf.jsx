@@ -28,30 +28,36 @@ const PdfExport = ({ data, projectName, groupName, visibleColumns }) => {
 
     // Define headers based on visible columns
     const headers = [
-      visibleColumns.catchNo && 'Catch No',
-      visibleColumns.subject && 'Subject',
-      visibleColumns.course && 'Course',
-      visibleColumns.examDate && 'Exam Date',
-      visibleColumns.examTime && 'Exam Time',
-      visibleColumns.quantity && 'Quantity',
-      visibleColumns.pageNo && 'Page No',
-      visibleColumns.status && 'Status',
-      visibleColumns.dispatchDate && 'Dispatch Date'
+      visibleColumns.catchNo && "Catch No",
+      visibleColumns.subject && "Subject",
+      visibleColumns.course && "Course",
+      visibleColumns.paper && "Paper",
+      visibleColumns.examDate && "Exam Date",
+      visibleColumns.examTime && "Exam Time",
+      visibleColumns.quantity && "Quantity",
+      visibleColumns.pageNo && "Pages",
+      visibleColumns.status && "Status",
+      visibleColumns.innerEnvelope && "Inner Envelope",
+      visibleColumns.outerEnvelope && "Outer Envelope",
+      visibleColumns.dispatchDate && "Dispatch Date"
     ].filter(Boolean);
 
     // Format data for table based on visible columns
     const tableData = data.map(sheet => {
       const row = [
         visibleColumns.catchNo && sheet.catchNo,
-        visibleColumns.subject && sheet.paper,
+        visibleColumns.subject && sheet.subject,
         visibleColumns.course && sheet.course,
+        visibleColumns.paper && sheet.paper,
         visibleColumns.examDate && new Date(sheet.examDate).toLocaleDateString(),
         visibleColumns.examTime && sheet.examTime,
         visibleColumns.quantity && sheet.quantity,
         visibleColumns.pageNo && sheet.pages,
         visibleColumns.status && sheet.catchStatus,
+        visibleColumns.innerEnvelope && sheet.innerEnvelope,
+        visibleColumns.outerEnvelope && sheet.outerEnvelope,
         visibleColumns.dispatchDate && sheet.dispatchDate
-      ].filter(Boolean);
+      ].filter((_, index) => headers[index]); // Only include data for visible columns
       return row;
     });
 
@@ -68,6 +74,9 @@ const PdfExport = ({ data, projectName, groupName, visibleColumns }) => {
     if (visibleColumns.course) {
       columnStyles[currentIndex++] = { width: 20 };
     }
+    if (visibleColumns.paper) {
+      columnStyles[currentIndex++] = { width: 25 };
+    }
     if (visibleColumns.examDate) {
       columnStyles[currentIndex++] = { width: 18 };
     }
@@ -82,6 +91,13 @@ const PdfExport = ({ data, projectName, groupName, visibleColumns }) => {
     }
     if (visibleColumns.status) {
       columnStyles[currentIndex++] = { halign: 'center', width: 15 };
+
+    }
+    if (visibleColumns.innerEnvelope) {
+      columnStyles[currentIndex++] = { width: 15 };
+    }
+    if (visibleColumns.outerEnvelope) {
+      columnStyles[currentIndex++] = { width: 15 };
     }
     if (visibleColumns.dispatchDate) {
       columnStyles[currentIndex++] = { width: 20 };
@@ -94,39 +110,82 @@ const PdfExport = ({ data, projectName, groupName, visibleColumns }) => {
       startY: 35,
       styles: {
         fontSize: 8,
-        cellPadding: 1.5,
+        cellPadding: 2,
         lineColor: [189, 195, 199],
         lineWidth: 0.1,
         font: "helvetica",
         overflow: 'linebreak'
       },
       headStyles: {
-        fillColor: [52, 73, 94],
+        fillColor: [41, 128, 185], // Pleasant blue color for header
         textColor: 255,
-        fontSize: 8,
+        fontSize: 9,
         fontStyle: 'bold',
         halign: 'center',
-        cellPadding: 2
+        cellPadding: 3,
+        minCellHeight: 12
       },
       bodyStyles: {
-        textColor: [44, 62, 80]
+        textColor: [44, 62, 80],
+        fontSize: 8,
+        cellPadding: 2,
+        minCellHeight: 10
       },
       alternateRowStyles: {
-        fillColor: [241, 245, 249]
+        fillColor: [241, 245, 249] // Light blue-gray for alternate rows
       },
-      columnStyles: columnStyles,
+      columnStyles: {
+        ...columnStyles,
+        // Add specific styling for status column
+        [headers.indexOf('Status')]: {
+          halign: 'center',
+          cellCallback: function(cell, data) {
+            if (cell.text === 'Completed') {
+              cell.fillColor = [46, 204, 113, 0.2]; // Light green
+            } else if (cell.text === 'Running') {
+              cell.fillColor = [52, 152, 219, 0.2]; // Light blue
+            } else if (cell.text === 'Pending') {
+              cell.fillColor = [231, 76, 60, 0.2]; // Light red
+            }
+          }
+        },
+        // Right align quantity column
+        [headers.indexOf('Quantity')]: {
+          halign: 'right'
+        }
+      },
       margin: { top: 25, right: 15, bottom: 15, left: 15 },
       didDrawPage: function(data) {
-        // Add page number at bottom
+        // Add continuation text on subsequent pages (without headers)
+        if (data.pageNumber > 1) {
+          doc.setFontSize(10);
+          doc.setTextColor(44, 62, 80);
+          doc.text('Quantity Sheets Report - Continued', doc.internal.pageSize.width/2, 15, {align: 'center'});
+        }
+        
+        // Add footer with page number
         doc.setFontSize(8);
+        doc.setTextColor(127, 140, 141);
         doc.text(
           `Page ${data.pageNumber} of ${doc.internal.getNumberOfPages()}`,
           doc.internal.pageSize.width/2, 
           doc.internal.pageSize.height - 10,
           {align: 'center'}
         );
+
+        // Add watermark-style timestamp
+        doc.setFontSize(8);
+        doc.setTextColor(189, 195, 199);
+        doc.text(
+          `Generated: ${new Date().toLocaleString()}`,
+          15,
+          doc.internal.pageSize.height - 10
+        );
       },
-      showHead: 'firstPage'
+      showHead: 'firstPage',
+      theme: 'grid',
+      tableLineColor: [189, 195, 199],
+      tableLineWidth: 0.1
     });
 
     // Save PDF with formatted name including project
