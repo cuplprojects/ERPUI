@@ -35,85 +35,7 @@ const ProcessDetails = ({ catchData, projectName, groupName }) => {
     }
   }, [catchData?.catchNo]);
 
-  const styles = {
-    container: {
-      padding: "24px",
-      backgroundColor: "#ffffff", 
-      borderRadius: "8px",
-      boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-    },
-    header: {
-      marginBottom: "24px",
-    },
-    title: {
-      fontSize: "24px",
-      fontWeight: "600",
-      color: "#2c3e50",
-      marginBottom: "8px",
-    },
-    subtitle: {
-      color: "#7f8c8d",
-      fontSize: "14px",
-    },
-    tableContainer: {
-      overflowX: "auto",
-    },
-    tableHeader: {
-      backgroundColor: "#3498db",
-      color: "white",
-      padding: "12px",
-    },
-    tableCell: {
-      padding: "12px",
-      verticalAlign: "middle",
-    },
-    processBadge: {
-      padding: "6px 12px",
-      borderRadius: "4px",
-      fontSize: "12px",
-      fontWeight: "500",
-      backgroundColor: "#f8f9fa",
-      color: "#2c3e50",
-      border: "1px solid #dee2e6",
-    },
-    teamContainer: {
-      marginBottom: "4px",
-    },
-    teamName: {
-      fontWeight: "600",
-      color: "#34495e",
-    },
-    teamMembers: {
-      color: "#7f8c8d",
-      fontSize: "13px",
-    },
-    supervisor: {
-      backgroundColor: '#fff3cd',
-      color: '#856404',
-      padding: '2px 8px',
-      borderRadius: '4px',
-      fontSize: '13px',
-      fontWeight: '500',
-      display: 'inline-block',
-      margin: '2px 4px',
-      border: '1px solid #ffeeba'
-    },
-    teamMember: {
-      backgroundColor: '#f8f9fa',
-      color: '#495057',
-      padding: '2px 8px',
-      borderRadius: '4px',
-      fontSize: '13px',
-      margin: '2px 4px',
-      display: 'inline-block'
-    },
-    memberContainer: {
-      display: 'flex',
-      flexWrap: 'wrap',
-      gap: '4px',
-      alignItems: 'center'
-    }
-  };
+  
 
   const getProcessName = (processId) => {
     const process = processes.find(p => p.id === processId);
@@ -124,69 +46,97 @@ const ProcessDetails = ({ catchData, projectName, groupName }) => {
 
   return (
     
-      <div style={styles.tableContainer}>
+      <div >
         <Table 
           striped 
           bordered 
           hover
           responsive
-          style={{
-            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-            borderRadius: '8px',
-            overflow: 'hidden',
-            backgroundColor: 'white',
-            width: '100%',
-            tableLayout: 'auto'
-          }}
+          className="shadow-sm rounded overflow-hidden bg-white w-100"
         >
           <thead>
             <tr>
-              <th style={{...styles.tableHeader, borderTopLeftRadius: '8px', width: '15%'}}>Process</th>
-              <th style={{...styles.tableHeader, width: '20%'}}>Zone</th>
-              <th style={{...styles.tableHeader, width: '25%'}}>Team & Supervisor</th>
-              <th style={{...styles.tableHeader, width: '15%'}}>Machine</th>
-              <th style={{...styles.tableHeader, borderTopRightRadius: '8px', width: '25%'}}>Time</th>
+              <th className="bg-primary text-white text-center fw-semibold" 
+                  style={{
+                    width: '15%',
+                    padding: '12px 8px',
+                    borderTopLeftRadius: '6px',
+                    fontSize: '0.95rem',
+                    letterSpacing: '0.5px',
+                    borderBottom: 'none'
+                  }}>
+                Process
+              </th>
+              <th className="bg-primary text-white text-center fw-semibold" 
+                  style={{
+                    width: '20%',
+                    padding: '12px 8px',
+                    fontSize: '0.95rem',
+                    letterSpacing: '0.5px',
+                    borderBottom: 'none'
+                  }}>
+                Zone
+              </th>
+              <th className="bg-primary text-white text-center fw-semibold" 
+                  style={{
+                    width: '25%',
+                    padding: '12px 8px',
+                    fontSize: '0.95rem',
+                    letterSpacing: '0.5px',
+                    borderBottom: 'none'
+                  }}>
+                Team & Supervisor
+              </th>
+              <th className="bg-primary text-white text-center fw-semibold" 
+                  style={{
+                    width: '15%',
+                    padding: '12px 8px',
+                    fontSize: '0.95rem',
+                    letterSpacing: '0.5px',
+                    borderBottom: 'none'
+                  }}>
+                Machine
+              </th>
+              <th className="bg-primary text-white text-center fw-semibold" 
+                  style={{
+                    width: '25%',
+                    padding: '12px 8px',
+                    borderTopRightRadius: '6px',
+                    fontSize: '0.95rem',
+                    letterSpacing: '0.5px',
+                    borderBottom: 'none'
+                  }}>
+                Time
+              </th>
             </tr>
           </thead>
           <tbody>
-            
             {processData.map((process) => (
               process.transactions.map((transaction, idx) => (
-                <tr 
-                  key={`${process.processId}-${idx}`}
-                  style={{
-                    transition: 'background-color 0.2s',
-                    '&:hover': {
-                      backgroundColor: '#f8f9fa'
-                    }
-                  }}
-                >
-                  <td style={{...styles.tableCell, fontWeight: '500', whiteSpace: 'nowrap'}}>
+                <tr key={`${process.processId}-${idx}`}>
+                  <td className="text-center fw-medium text-nowrap">
                     {getProcessName(process.processId)}
                   </td>
-                  <td style={{...styles.tableCell, color: '#4a5568', wordBreak: 'break-word'}}>
+                  <td className="text-center text-secondary">
                     {transaction.zoneName || 'N/A'}
                   </td>
-                  <td style={styles.tableCell}>
-                    <div style={{...styles.memberContainer, maxWidth: '100%'}}>
-                      {/* Supervisor Section */}
-                      <span style={{...styles.supervisor, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis'}}>
+                  <td className="text-center">
+                    <div className="d-flex flex-wrap gap-1 justify-content-center align-items-center">
+                      <span className="badge bg-warning text-dark text-truncate">
                         👤 {transaction.supervisor}
-                        
                       </span>
                       
-                      {/* Team Members Section */}
                       {transaction.teamMembers?.map((member, index) => (
-                        <span key={`member-${index}`} style={{...styles.teamMember, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis'}}>
+                        <span key={`member-${index}`} className="badge bg-light text-dark text-truncate">
                           {member.fullName}
                         </span>
                       ))}
                     </div>
                   </td>
-                  <td style={{...styles.tableCell, color: '#4a5568', whiteSpace: 'nowrap'}}>
+                  <td className="text-center text-secondary text-nowrap">
                     {transaction.machineName || 'N/A'}
                   </td>
-                  <td style={{...styles.tableCell, whiteSpace: 'nowrap'}}>
+                  <td className="text-center text-nowrap">
                     <div className="small">
                       <div>
                         <strong>Start:</strong> {new Date(transaction.startTime).toLocaleString()}

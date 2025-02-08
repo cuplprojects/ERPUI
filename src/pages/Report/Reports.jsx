@@ -6,8 +6,10 @@ import API from "../../CustomHooks/MasterApiHooks/api";
 import Table from 'react-bootstrap/Table';
 import ExcelExport from './excel';
 import PdfExport from './Pdf';
-
+import { AiFillCloseSquare } from "react-icons/ai";
 import ProcessDetails from './Process';
+import { FaUndo } from 'react-icons/fa';
+import { FaAnglesLeft, FaAnglesRight } from "react-icons/fa6";
 
 const ProjectReport = () => {
     const [activeProjects, setActiveProjects] = useState([]);
@@ -289,27 +291,71 @@ const ProjectReport = () => {
         setCurrentPage(0);
     };
 
+    const handleResetAll = () => {
+        {
+            // Reset all state variables
+            setSelectedGroup('');
+            setSelectedProjectId('');
+            setSelectedLot('');
+            setQuantitySheets([]);
+            setFilteredSheets([]);
+            setSearchTerm('');
+            setCurrentPage(0);
+            setRecordsPerPage(10);
+            setSortField('');
+            setSortDirection('asc');
+            setVisibleColumns({
+                catchNo: true,
+                subject: true,
+                course: true,
+                paper: true,
+                examDate: true,
+                examTime: true,
+                quantity: true,
+                pageNo: true,
+                status: true,
+                innerEnvelope: true,
+                outerEnvelope: true,
+                dispatchDate: true
+            });
+        }
+    };
+
     return (
         <Container fluid className="py-1"
         >
             <Row  >
 
-                <div className="d-flex justify-content-center align-items-center mb-4">
-                    <h4 className="mb-0" style={{
-                        color: '#2c3e50',
-                        fontWeight: '700',
-                        letterSpacing: '1px',
-                        textShadow: '2px 2px 4px rgba(0,0,0,0.1)',
-                        fontSize: '2rem',
-                        padding: '0.5rem 2rem',
-                        position: 'relative'
+                <div className="text-center position-relative">
+                    <h4 className="mt-0" style={{
+                        fontSize: "2rem",
+                        fontWeight: "600",
+                        color: "#2c3e50",
+                        letterSpacing: "1px",
+                        textShadow: "2px 2px 4px rgba(0,0,0,0.1)",
                     }}>
-                        View Report
+                        Reports
                     </h4>
+                    <div className="position-absolute top-0 end-0">
+                        <Button
+                            variant="outline-secondary"
+                            className="rounded px-4 py-2 btn-sm"
+                            onClick={handleResetAll}
+                            style={{
+                                transition: 'all 0.2s ease',
+                                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                            }}
+                        >
+                            <FaUndo className="me-2" />
+                            Reset All
+                        </Button>
+                    </div>
                 </div>
+                <hr />
 
-                <div className="d-flex align-items-center justify-content-around">
-
+                {/* Filters */}
+                <div className="d-flex align-items-center justify-content-between">
+                    {/* Group Dropdown */}
                     <Col xs={12} md={3} lg={2} className="mb-3 mb-md-0">
                         <Form.Label className="fw-bold text-primary mb-2" style={{ fontSize: "1.1rem", letterSpacing: "0.5px", fontWeight: "700" }}>
                             <span style={{ color: '#2c3e50', textShadow: '1px 1px 2px rgba(0,0,0,0.1)' }}>Group</span>
@@ -322,7 +368,7 @@ const ProjectReport = () => {
                                 setQuantitySheets([]);
                             }}
                             value={selectedGroup}
-                            className="form-select-lg border-0 rounded-pill"
+                            className="form-select-lg border-0 rounded"
                             style={{
                                 backgroundColor: "#f8f9fa",
                                 cursor: "pointer",
@@ -337,6 +383,7 @@ const ProjectReport = () => {
                         </Form.Select>
                     </Col>
 
+                    {/* Project Dropdown */}
                     <Col xs={12} md={3} lg={2} className="mb-3 mb-md-0">
                         <Form.Label className="fw-bold text-primary mb-2" style={{ fontSize: "1.1rem", letterSpacing: "0.5px", fontWeight: "700" }}>
                             <span style={{ color: '#2c3e50', textShadow: '1px 1px 2px rgba(0,0,0,0.1)' }}>Project</span>
@@ -349,7 +396,7 @@ const ProjectReport = () => {
                                 setQuantitySheets([]);
                             }}
                             value={selectedProjectId}
-                            className="form-select-lg border-0 rounded-pill"
+                            className="form-select-lg border-0 rounded"
                             style={{
                                 backgroundColor: "#f8f9fa",
                                 cursor: "pointer",
@@ -365,6 +412,7 @@ const ProjectReport = () => {
                         </Form.Select>
                     </Col>
 
+                    {/* Lot Dropdown */}
                     <Col xs={12} md={3} lg={2} className="mb-3 mb-md-0">
                         <Form.Label className="fw-bold text-primary mb-2" style={{ fontSize: "1.1rem", letterSpacing: "0.5px", fontWeight: "700" }}>
                             <span style={{ color: '#2c3e50', textShadow: '1px 1px 2px rgba(0,0,0,0.1)' }}>Lot</span>
@@ -377,7 +425,7 @@ const ProjectReport = () => {
                             }}
                             value={selectedLot}
                             disabled={!selectedProjectId}
-                            className="form-select-lg border-0 rounded-pill"
+                            className="form-select-lg border-0 rounded"
                             style={{
                                 backgroundColor: "#f8f9fa",
                                 cursor: "pointer",
@@ -393,13 +441,14 @@ const ProjectReport = () => {
                         </Form.Select>
                     </Col>
 
-                    {selectedGroup && selectedProjectId && selectedLot && (
-                        <Col xs={12} md={3} lg={2} className="mb-2 mb-md-0 d-flex align-items-end justify-content-center">
+                    {/* View Report Button */}
+                    <Col xs={12} md={3} lg={2} className="mt-4 mb-md-0 d-flex align-items-end justify-content-center">
+                        {selectedGroup && selectedProjectId && selectedLot && (
                             <Button
                                 variant="primary"
                                 onClick={handleViewReport}
                                 disabled={isLoading}
-                                className="w-50 py-2 rounded-pill fw-bold"
+                                className="w-50 py-2 rounded fw-bold"
                                 style={{
                                     transition: "all 0.3s ease",
                                     boxShadow: "0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08)",
@@ -409,140 +458,159 @@ const ProjectReport = () => {
                             >
                                 View Report
                             </Button>
-                        </Col>
-                    )}
-
-                    {/* Search Dropdown */}
-                    <Col xs={12} md={3} lg={2} className="mb-3 mb-md-0">
-                        <div className="d-flex justify-content-end mb-3">
-                            <Dropdown show={showDropdown} onToggle={(isOpen) => setShowDropdown(isOpen)}>
-                                <Dropdown.Toggle
-                                    variant="primary"
-                                    id="dropdown-search"
-                                    style={{
-                                        borderRadius: "30px",
-                                        backgroundColor: "#4A90E2",
-                                        padding: "10px 20px",
-                                        width: "250px",
-                                        boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "space-between",
-                                    }}
-                                >
-                                    <FaSearch style={{ marginRight: "10px" }} />
-                                    {searchTerm || "Quick search..."}
-                                </Dropdown.Toggle>
-
-                                <Dropdown.Menu style={{ width: "400px", padding: "20px", height: "300px", overflowY: "auto" }}>
-                                    <div className="position-relative mb-2">
-                                        <Form.Control
-                                            type="text"
-                                            placeholder="Enter Catch No..."
-                                            value={searchTerm}
-                                            onChange={(e) => {
-                                                setSearchTerm(e.target.value);
-                                                handleSearch(e.target.value);
-                                            }}
-                                            style={{ borderRadius: "20px", border: "1px solid #4A90E2", paddingLeft: "40px" }}
-                                        />
-                                        <FaSearch style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#4A90E2" }} />
-                                    </div>
-
-                                    {isSearching ? (
-                                        <div className="text-center py-3">
-                                            <Spinner animation="border" size="sm" variant="primary" />
-                                            <div className="text-muted mt-2">Searching...</div>
-                                        </div>
-                                    ) : searchResults.length > 0 ? (
-                                        <div className="search-results">
-                                            {console.log(searchResults)}
-                                            {searchResults.map((result, index) => (
-                                                <div key={index} className="p-3 border-bottom hover-bg-light" onClick={() => SearchCatchClick(result)} style={{ cursor: "pointer" }}>
-
-                                                    <div className="fw-bold text-primary">Catch No: {result.catchNo}</div>
-                                                    <div className="fw-bold text-primary">{result.matchedColumn}: {result.matchedValue}</div>
-
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ) : searchTerm ? (
-                                        <div className="text-center py-4">
-                                            <div className="text-muted">No results found</div>
-                                            <small className="text-muted">Try a different search term</small>
-                                        </div>
-                                    ) : (
-                                        <div className="text-center py-4 text-muted">
-                                            <div>Type to search for Catch No</div>
-                                            <small>Search results will appear here</small>
-                                        </div>
-                                    )}
-                                </Dropdown.Menu>
-                            </Dropdown>
-                        </div>
+                        )}
                     </Col>
 
+                    {/* Search Dropdown */}
+                    <Col xs={12} md={3} lg={2} className="mb- mb-md-0">
+                        <div className="d-flex justify-content-end mt-4">
+                            <div className="position-relative">
+                                <Form.Control
+                                    type="text"
+                                    placeholder="Quick search ..."
+                                    value={searchTerm}
+                                    onChange={(e) => {
+                                        setSearchTerm(e.target.value);
+                                        handleSearch(e.target.value);
+                                    }}
+                                    className="form-control-lg border-0 rounded"
+                                    style={{
+                                        backgroundColor: "#f8f9fa",
+                                        padding: "10px 20px 10px 40px",
+                                        boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+                                        width: "300px",
+                                       
+                                    }}
+                                />
+                                <FaSearch
+                                    style={{
+                                        position: "absolute",
+                                        left: "15px",
+                                        top: "50%",
+                                        transform: "translateY(-50%)",
+                                        color: "#4A90E2"
+                                    }}
+                                />
+
+                                {searchTerm.length > 0 && (
+                                    <div
+                                        className="position-absolute w-100 bg-white rounded shadow-lg mt-1"
+                                        style={{
+                                            maxHeight: "300px",
+                                            overflowY: "auto",
+                                            zIndex: 1000
+                                        }}
+                                    >
+                                        {isSearching ? (
+                                            <div className="text-center py-3">
+                                                <Spinner animation="border" size="sm" variant="primary" />
+                                                <div className="text-muted mt-2">Searching...</div>
+                                            </div>
+                                        ) : searchResults.length > 0 ? (
+                                            <div className="search-results">
+                                                {searchResults.map((result, index) => (
+                                                    <div
+                                                        key={index}
+                                                        className="p-3 border-bottom hover-bg-light"
+                                                        onClick={() => SearchCatchClick(result)}
+                                                        style={{ cursor: "pointer" }}
+                                                    >
+                                                        <div className="fw-bold text-primary">Catch No: {result.catchNo}</div>
+                                                        <div className="fw-bold text-primary">{result.matchedColumn}: {result.matchedValue}</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="text-center py-4">
+                                                <div className="text-muted">No results found</div>
+                                                <small className="text-muted">Try a different search term</small>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </Col>
                 </div>
+
                 <div className="mb-3 mb-md-0">
                     {/* Table to display selected data */}
                     {selectedItem && (
                         <>
-                            <div className="d-flex justify-content-between align-items-center mb-3">
-                                <h5 className="mb-0"></h5>
+                            <div className="d-flex justify-content-end align-items-center mb-3 mt-2">
+
                                 <Dropdown className="d-inline-block">
-                                    <Dropdown.Toggle variant="primary" id="export-dropdown" className="me-2">
-                                        <FaFileExport className="me-2" />
-                                        Export
-                                    </Dropdown.Toggle>
+                                    <div className="export-btn d-flex justify-content-end">
+                                        <Dropdown.Toggle variant="primary" id="export-dropdown" className="me-2">
+                                            <FaFileExport className="me-2" />
+                                            Export
+                                        </Dropdown.Toggle>
+                                    </div>
+
 
                                     <Dropdown.Menu className="mt-1">
-                                        <Dropdown.Item
-                                            as={ExcelExport}
-                                            data={[selectedItem]} // Pass as array since ExcelExport expects array
-                                            projectName={selectedProjectId}
-                                            groupName={groups[selectedGroup]}
-                                            visibleColumns={{
-                                                catchNo: true,
-                                                subject: true,
-                                                course: true,
-                                                paper: true,
-                                                examDate: true,
-                                                examTime: true,
-                                                quantity: true,
-                                                pageNo: true,
-                                                status: true,
-                                                innerEnvelope: true,
-                                                outerEnvelope: true,
-                                                dispatchDate: true
-                                            }}
-                                            className="py-2"
-                                        />
-                                        <Dropdown.Divider />
-                                        <Dropdown.Item
-                                            as={PdfExport}
-                                            data={[selectedItem]} // Pass as array since PdfExport expects array
-                                            projectName={selectedProjectId}
-                                            groupName={groups[selectedGroup]}
-                                            visibleColumns={{
-                                                catchNo: true,
-                                                subject: true,
-                                                course: true,
-                                                paper: true,
-                                                examDate: true,
-                                                examTime: true,
-                                                quantity: true,
-                                                pageNo: true,
-                                                status: true,
-                                                innerEnvelope: true,
-                                                outerEnvelope: true,
-                                                dispatchDate: true
-                                            }}
-                                            className="py-2"
-                                        />
+                                        <div className="d-flex">
+                                            <Dropdown.Item
+                                                as={ExcelExport}
+                                                data={[selectedItem]}
+                                                projectName={selectedProjectId}
+                                                groupName={groups[selectedGroup]}
+                                                visibleColumns={{
+                                                    catchNo: true,
+                                                    subject: true,
+                                                    course: true,
+                                                    paper: true,
+                                                    examDate: true,
+                                                    examTime: true,
+                                                    quantity: true,
+                                                    pageNo: true,
+                                                    status: true,
+                                                    innerEnvelope: true,
+                                                    outerEnvelope: true,
+                                                    dispatchDate: true
+                                                }}
+                                                className="py-2"
+                                            />
+                                            <div className="vr mx-1"></div>
+                                            <Dropdown.Item
+                                                as={PdfExport}
+                                                data={[selectedItem]}
+                                                projectName={selectedProjectId}
+                                                groupName={groups[selectedGroup]}
+                                                visibleColumns={{
+                                                    catchNo: true,
+                                                    subject: true,
+                                                    course: true,
+                                                    paper: true,
+                                                    examDate: true,
+                                                    examTime: true,
+                                                    quantity: true,
+                                                    pageNo: true,
+                                                    status: true,
+                                                    innerEnvelope: true,
+                                                    outerEnvelope: true,
+                                                    dispatchDate: true
+                                                }}
+                                                className="py-2"
+                                            />
+                                        </div>
                                     </Dropdown.Menu>
                                 </Dropdown>
                             </div>
                             <div className="position-relative">
+                                <button
+                                    className="p-0 m-0 btn btn-sm btn-outline-secondary position-absolute"
+                                    style={{
+                                        top: '0px',
+                                        right: '10px',
+                                        transition: 'color 0.2s'
+                                    }}
+                                    onMouseEnter={(e) => e.target.style.color = 'red'}
+                                    onMouseLeave={(e) => e.target.style.color = ''}
+                                    onClick={() => setSelectedItem(null)}
+                                >
+                                    <AiFillCloseSquare size={30} color="red" />
+                                </button>
                                 <Table striped bordered hover>
                                     <thead>
                                         <tr>
@@ -591,30 +659,14 @@ const ProjectReport = () => {
                                         )}
                                     </tbody>
                                 </Table>
-                                <button
-                                    className="btn btn-sm btn-outline-secondary position-absolute"
-                                    style={{
-                                        top: '10px',
-                                        right: '10px',
-                                        transition: 'color 0.2s'
-                                    }}
-                                    onMouseEnter={(e) => e.target.style.color = 'red'}
-                                    onMouseLeave={(e) => e.target.style.color = ''}
-                                    onClick={() => setSelectedItem(null)}
-                                >
-                                    ✕
-                                </button>
+
                             </div>
                         </>
                     )}
                 </div>
-
-
-
-
-
-
             </Row>
+            
+
 
             {isLoading && (
                 <div className="text-center mt-4">
@@ -623,23 +675,87 @@ const ProjectReport = () => {
             )}
 
             {!isLoading && showTable && quantitySheets.length > 0 && (
-                <Row className="mt-4">
+                <Row className="">
                     <Col>
-                        <Row className="mb-3 align-items-center">
+                        <Row className=" mb-2 mt-3">
+                            {/* <Col xs={12} md={4} lg={3} className="text-end">
+                                <div className="mb-3 d-flex justify-content-between align-items-center">
+                                    <div className="bg-light p-2 rounded shadow-sm">
+                                        <span className="fw-bold text-primary">Total Records: </span>
+                                        <span className="badge bg-danger">{filteredSheets.length}</span>
+                                    </div>
+                                    <div>
+                                        <strong>Show: </strong>
+                                        <select
+                                            className="form-select form-select-sm d-inline-block w-auto ms-2"
+                                            value={recordsPerPage}
+                                            onChange={handleRecordsPerPageChange}
+                                        >
+                                            <option value={5}>5</option>
+                                            <option value={10}>10</option>
+                                            <option value={20}>20</option>
+                                            <option value={50}>50</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </Col> */}
 
+                            {/* Showing total records */}
+                            <Col xs={12} md={4} lg={2}>
+                                <div className="text-muted" style={{
+                                    fontSize: "0.95rem",
+                                    fontWeight: "500",
+                                    padding: "8px 12px",
+                                    backgroundColor: "#f8f9fa",
+                                    boxShadow: "0 1px 3px rgba(0,0,0,0.05)"
+                                }}>
+                                    <span className="text-primary">Showing</span>{" "}
+                                    <span className="fw-bold">
+                                        {filteredSheets.length > 0 ? currentPage * recordsPerPage + 1 : 0}
+                                    </span>{" "}
+                                    <span className="text-primary">to</span>{" "}
+                                    <span className="fw-bold">
+                                        {Math.min((currentPage + 1) * recordsPerPage, filteredSheets.length)}
+                                    </span>{" "}
+                                    <span className="text-primary">of</span>{" "}
+                                    <span className="text-danger">{filteredSheets.length}</span>{" "}
+                                    <span className="text-primary">Records</span>
+                                </div>
+                            </Col>
+                            {/* Limit Rows */}
+                            <Col xs={12} md={4} lg={3}>
+                                <div className=" d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>Limit Rows: </strong>
+                                        <select
+                                            className="form-select form-select-sm d-inline-block w-auto ms-2"
+                                            value={recordsPerPage}
+                                            onChange={handleRecordsPerPageChange}
+                                        >
+                                            <option value={5}>5</option>
+                                            <option value={10}>10</option>
+                                            <option value={20}>20</option>
+                                            <option value={50}>50</option>
+                                        </select>
+                                    </div>
+                                </div>
 
-                            <Col xs={12} md={4}>
+                            </Col>
+
+                            {/* Search and Filters */}
+                            <Col xs={12} md={4} lg={3}>
+                                {/* Table Search */}
                                 <div className="position-relative w-100 d-flex align-items-center">
-                                    <div className="position-relative" style={{ width: "230px" }}>
+
+                                    <div className="position-relative" style={{ width: "330px" }}>
                                         <Form.Control
                                             style={{
-                                                borderRadius: "30px",
                                                 height: "40px",
                                                 paddingRight: "40px"
                                             }}
                                             type="search"
                                             placeholder="Search..."
-                                            className="rounded-pill"
+                                            className="rounded"
                                             onChange={(e) => {
                                                 const searchTerm = e.target.value.toLowerCase();
                                                 if (!searchTerm) {
@@ -682,10 +798,11 @@ const ProjectReport = () => {
                                             }}
                                         />
                                     </div>
-                                    <div className="dropdown">
+
+                                    <div className="dropdown bg-white btn ms-4">
                                         <Button
                                             variant="link"
-                                            className="p-0 ms-2"
+                                            className="p-0"
                                             data-bs-toggle="dropdown"
                                             aria-expanded="false"
                                             onClick={(e) => {
@@ -714,13 +831,15 @@ const ProjectReport = () => {
                                                                 className="form-check-input"
                                                                 type="checkbox"
                                                                 id={`column-${column.id}`}
-                                                                checked={visibleColumns[column.id]}
+                                                                checked={column.id === 'catchNo' ? true : visibleColumns[column.id]}
                                                                 onChange={(e) => {
+                                                                    if (column.id === 'catchNo') return;
                                                                     setVisibleColumns(prev => ({
                                                                         ...prev,
                                                                         [column.id]: e.target.checked
                                                                     }));
                                                                 }}
+                                                                disabled={column.id === 'catchNo'}
                                                             />
                                                             <label className="form-check-label" htmlFor={`column-${column.id}`}>
                                                                 {column.label}
@@ -731,30 +850,35 @@ const ProjectReport = () => {
                                             </div>
                                         </div>
                                     </div>
+
                                 </div>
                             </Col>
 
-                            <Col xs={12} md={4} lg={6} className="text-end">
-                                <div className="mt-3">
+
+
+                            {/* Export */}
+                            <Col xs={12} md={4} lg={1} className="text-end">
+
+                                {/* Export */}
+                                <div className="exporttbn">
                                     <Dropdown className="d-inline-block">
-                                        <Dropdown.Toggle variant="primary" id="export-dropdown" className="me-2">
+                                        <Dropdown.Toggle variant="primary" id="export-dropdown" className="me-">
                                             <FaFileExport className="me-3" />
                                             Export
                                         </Dropdown.Toggle>
 
-                                        <Dropdown.Menu className="mt-1">
+                                        <Dropdown.Menu className="mt-1 d-flex align-items-center">
                                             <Dropdown.Item
                                                 as={ExcelExport}
                                                 data={quantitySheets}
                                                 projectName={selectedProjectId}
                                                 groupName={groups[selectedGroup]}
                                                 visibleColumns={visibleColumns}
-                                                className="py-2"
+                                                className="py-1"
                                             >
-
                                             </Dropdown.Item>
 
-                                            <Dropdown.Divider />
+                                            <div className="vr mx-1"></div>
 
                                             <Dropdown.Item
                                                 as={PdfExport}
@@ -762,58 +886,17 @@ const ProjectReport = () => {
                                                 projectName={selectedProjectId}
                                                 groupName={groups[selectedGroup]}
                                                 visibleColumns={visibleColumns}
-                                                className="py-2"
+                                                className="py-1"
                                             >
                                             </Dropdown.Item>
                                         </Dropdown.Menu>
                                     </Dropdown>
                                 </div>
                             </Col>
-                        </Row>
 
-                        {!showCatchView ? (
-                            <div className="table-responsive">
-                                <div className="mb-3 d-flex justify-content-between align-items-center">
-                                    <div className="bg-light p-2 rounded shadow-sm">
-                                        <span className="fw-bold text-primary">Total Records: </span>
-                                        <span className="badge bg-danger">{filteredSheets.length}</span>
-                                    </div>
-                                    <div>
-                                        <strong>Show: </strong>
-                                        <select
-                                            className="form-select form-select-sm d-inline-block w-auto ms-2"
-                                            value={recordsPerPage}
-                                            onChange={handleRecordsPerPageChange}
-                                        >
-                                            <option value={5}>5</option>
-                                            <option value={10}>10</option>
-                                            <option value={20}>20</option>
-                                            <option value={50}>50</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div className="d-flex justify-content-between align-items-center mt-3">
-                                    <div className="text-muted" style={{
-                                        fontSize: "0.95rem",
-                                        fontWeight: "500",
-                                        padding: "8px 12px",
-                                        backgroundColor: "#f8f9fa",
-                                        borderRadius: "6px",
-                                        boxShadow: "0 1px 3px rgba(0,0,0,0.05)"
-                                    }}>
-                                        <span className="text-primary">Showing</span>{" "}
-                                        <span className="fw-bold">
-                                            {filteredSheets.length > 0 ? currentPage * recordsPerPage + 1 : 0}
-                                        </span>{" "}
-                                        <span className="text-primary">to</span>{" "}
-                                        <span className="fw-bold">
-                                            {Math.min((currentPage + 1) * recordsPerPage, filteredSheets.length)}
-                                        </span>{" "}
-                                        <span className="text-primary">of</span>{" "}
-                                        <span className="text-danger">{filteredSheets.length}</span>{" "}
-                                        <span className="text-primary">entries</span>
-                                    </div>
-
+                            {/* Pagination */}
+                            <Col xs={12} md={4} lg={3}>
+                                <div className="d-flex justify-content-end">
                                     <ul className="pagination mb-0">
                                         <li className={`page-item ${currentPage === 0 ? 'disabled' : ''}`}>
                                             <button
@@ -821,7 +904,7 @@ const ProjectReport = () => {
                                                 onClick={() => setCurrentPage(p => p - 1)}
                                                 disabled={currentPage === 0}
                                             >
-                                                Previous
+                                                <FaAnglesLeft />
                                             </button>
                                         </li>
                                         {[...Array(Math.ceil(filteredSheets.length / recordsPerPage))].map((_, i) => {
@@ -857,12 +940,16 @@ const ProjectReport = () => {
                                                 onClick={() => setCurrentPage(p => p + 1)}
                                                 disabled={currentPage >= Math.ceil(filteredSheets.length / recordsPerPage) - 1}
                                             >
-                                                Next
+                                                <FaAnglesRight />
                                             </button>
                                         </li>
                                     </ul>
                                 </div>
+                            </Col>
 
+                        </Row>
+                        {!showCatchView ? (
+                            <div className="table-responsive">
                                 <Table striped bordered hover className="shadow-sm">
                                     <thead className="bg-primary text-white">
                                         <tr>
@@ -1089,17 +1176,17 @@ const ProjectReport = () => {
                                                         setQuantitySheets([...quantitySheets]);
                                                     }}
                                                 >
-                                                    {visibleColumns.catchNo && <td>{sheet.catchNo}</td>}
-                                                    {visibleColumns.subject && <td>{sheet.subject}</td>}
-                                                    {visibleColumns.course && <td>{sheet.course}</td>}
-                                                    {visibleColumns.paper && <td>{sheet.paper}</td>}
-                                                    {visibleColumns.examDate && <td>{new Date(sheet.examDate).toLocaleDateString()}</td>}
-                                                    {visibleColumns.examTime && <td>{sheet.examTime}</td>}
-                                                    {visibleColumns.quantity && <td>{sheet.quantity}</td>}
-                                                    {visibleColumns.pageNo && <td>{sheet.pages}</td>}
+                                                    {visibleColumns.catchNo && <td className="text-center">{sheet.catchNo}</td>}
+                                                    {visibleColumns.subject && <td className="text-center">{sheet.subject}</td>}
+                                                    {visibleColumns.course && <td className="text-center">{sheet.course}</td>}
+                                                    {visibleColumns.paper && <td className="text-center">{sheet.paper}</td>}
+                                                    {visibleColumns.examDate && <td className="text-center">{new Date(sheet.examDate).toLocaleDateString('en-GB')}</td>}
+                                                    {visibleColumns.examTime && <td className="text-center">{sheet.examTime}</td>}
+                                                    {visibleColumns.quantity && <td className="text-center">{sheet.quantity}</td>}
+                                                    {visibleColumns.pageNo && <td className="text-center">{sheet.pages}</td>}
 
                                                     {visibleColumns.status && (
-                                                        <td>
+                                                        <td className="text-center">
                                                             <span className={`badge ${sheet.catchStatus === 'Completed' ? 'bg-success' :
                                                                 sheet.catchStatus === 'Running' ? 'bg-primary' :
                                                                     sheet.catchStatus === 'Pending' ? 'bg-danger' : 'bg-secondary'
@@ -1109,9 +1196,9 @@ const ProjectReport = () => {
                                                         </td>
                                                     )}
 
-                                                    {visibleColumns.innerEnvelope && <td>{sheet.innerEnvelope}</td>}
-                                                    {visibleColumns.outerEnvelope && <td>{sheet.outerEnvelope}</td>}
-                                                    {visibleColumns.dispatchDate && <td>{sheet.dispatchDate}</td>}
+                                                    {visibleColumns.innerEnvelope && <td className="text-center">{sheet.innerEnvelope}</td>}
+                                                    {visibleColumns.outerEnvelope && <td className="text-center">{sheet.outerEnvelope}</td>}
+                                                    {visibleColumns.dispatchDate && <td className="text-center">{sheet.dispatchDate}</td>}
 
                                                 </tr>,
                                                 sheet.showProcessDetails && (
@@ -1142,7 +1229,6 @@ const ProjectReport = () => {
                                         fontWeight: "500",
                                         padding: "8px 12px",
                                         backgroundColor: "#f8f9fa",
-                                        borderRadius: "6px",
                                         boxShadow: "0 1px 3px rgba(0,0,0,0.05)"
                                     }}>
                                         <span className="text-primary">Showing</span>{" "}
@@ -1155,7 +1241,7 @@ const ProjectReport = () => {
                                         </span>{" "}
                                         <span className="text-primary">of</span>{" "}
                                         <span className="text-danger">{filteredSheets.length}</span>{" "}
-                                        <span className="text-primary">entries</span>
+                                        <span className="text-primary">Records</span>
                                     </div>
 
                                     <ul className="pagination mb-0">
@@ -1165,7 +1251,7 @@ const ProjectReport = () => {
                                                 onClick={() => setCurrentPage(p => p - 1)}
                                                 disabled={currentPage === 0}
                                             >
-                                                Previous
+                                                <FaAnglesLeft />
                                             </button>
                                         </li>
                                         {[...Array(Math.ceil(filteredSheets.length / recordsPerPage))].map((_, i) => {
@@ -1201,7 +1287,7 @@ const ProjectReport = () => {
                                                 onClick={() => setCurrentPage(p => p + 1)}
                                                 disabled={currentPage >= Math.ceil(filteredSheets.length / recordsPerPage) - 1}
                                             >
-                                                Next
+                                                <FaAnglesRight />
                                             </button>
                                         </li>
                                     </ul>

@@ -71,7 +71,7 @@ const UserLayout = () => {
             </Routes>
           </div>
           <div className={`${customDark === 'dark-dark' ? "d-none" : ""} fixed-bottom w-100 border ${customMid}`} style={{ zIndex: "1", height: "150px", borderRadius: "20%  ", borderStyle: "wavy" }}></div>
-          <Footer className="sticky-bottom " style={{ zIndex: "1" }} />
+          {/* <Footer className="sticky-bottom " style={{ zIndex: "1" }} /> */}
         </Col>
       </Row>
     </div>

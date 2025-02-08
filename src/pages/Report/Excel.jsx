@@ -1,5 +1,6 @@
 import { Button } from 'react-bootstrap';
 import * as XLSX from 'xlsx';
+import { FaFileExcel } from "react-icons/fa";
 
 const ExcelExport = ({ data, projectName, groupName, visibleColumns }) => {
   const handleExcelExport = () => {
@@ -155,13 +156,14 @@ const ExcelExport = ({ data, projectName, groupName, visibleColumns }) => {
   };
 
   return (
-    <Button 
-      variant="success" 
+    <span 
       className="ms-2"
       onClick={handleExcelExport}
+      style={{ cursor: 'pointer' }}
     >
-      Export Excel
-    </Button>
+      <FaFileExcel className="p-0" color='green' size={40}/>
+      {/* Export Excel */}
+    </span>
   );
 };
 
