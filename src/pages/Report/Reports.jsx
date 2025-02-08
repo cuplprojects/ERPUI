@@ -38,11 +38,12 @@ const ProjectReport = () => {
         examDate: true,
         examTime: true,
         quantity: true,
-        pageNo: true,
+        pages: true,
         status: true,
-        dispatchDate: true,
         innerEnvelope: true,
-        outerEnvelope: true
+        outerEnvelope: true,
+        dispatchDate: true,
+       
     });
 
     const [sortField, setSortField] = useState(null);
@@ -61,11 +62,12 @@ const ProjectReport = () => {
         { id: 'examDate', label: 'Exam Date' },
         { id: 'examTime', label: 'Exam Time' },
         { id: 'quantity', label: 'Quantity' },
-        { id: 'pageNo', label: 'Pages' },
+        { id: 'pages', label: 'Pages' },
         { id: 'status', label: 'Status' },
-        { id: 'dispatchDate', label: 'Dispatch Date' },
         { id: 'innerEnvelope', label: 'Inner Envelope' },
-        { id: 'outerEnvelope', label: 'Outer Envelope' }
+        { id: 'outerEnvelope', label: 'Outer Envelope' },
+        { id: 'dispatchDate', label: 'Dispatch Date' },
+       
     ];
 
     useEffect(() => {
@@ -252,7 +254,7 @@ const ProjectReport = () => {
                     aValue = Number(a.quantity);
                     bValue = Number(b.quantity);
                     break;
-                case 'pageNo':
+                case 'pages':
                     aValue = Number(a.pages);
                     bValue = Number(b.pages);
                     break;
@@ -304,6 +306,7 @@ const ProjectReport = () => {
             setRecordsPerPage(10);
             setSortField('');
             setSortDirection('asc');
+            setSearchResults([]);
             setVisibleColumns({
                 catchNo: true,
                 subject: true,
@@ -312,7 +315,7 @@ const ProjectReport = () => {
                 examDate: true,
                 examTime: true,
                 quantity: true,
-                pageNo: true,
+                pages: true,
                 status: true,
                 innerEnvelope: true,
                 outerEnvelope: true,
@@ -479,7 +482,7 @@ const ProjectReport = () => {
                                         padding: "10px 20px 10px 40px",
                                         boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
                                         width: "300px",
-                                       
+
                                     }}
                                 />
                                 <FaSearch
@@ -563,7 +566,7 @@ const ProjectReport = () => {
                                                     examDate: true,
                                                     examTime: true,
                                                     quantity: true,
-                                                    pageNo: true,
+                                                    pages: true,
                                                     status: true,
                                                     innerEnvelope: true,
                                                     outerEnvelope: true,
@@ -585,7 +588,7 @@ const ProjectReport = () => {
                                                     examDate: true,
                                                     examTime: true,
                                                     quantity: true,
-                                                    pageNo: true,
+                                                    pages: true,
                                                     status: true,
                                                     innerEnvelope: true,
                                                     outerEnvelope: true,
@@ -622,6 +625,7 @@ const ProjectReport = () => {
                                             <th>Exam Time</th>
                                             <th>Quantity</th>
                                             <th>Pages</th>
+                                            <th>Status</th>
                                             <th>Inner Envelope</th>
                                             <th>Outer Envelope</th>
                                             <th>Dispatch</th>
@@ -641,6 +645,12 @@ const ProjectReport = () => {
                                             <td>{selectedItem.examTime}</td>
                                             <td>{selectedItem.quantity}</td>
                                             <td>{selectedItem.pages}</td>
+                                            <td><span className={`badge ${selectedItem.catchStatus === 'Completed' ? 'bg-success' :
+                                                selectedItem.catchStatus === 'Running' ? 'bg-primary' :
+                                                    selectedItem.catchStatus === 'Pending' ? 'bg-danger' : 'bg-secondary'
+                                                }`}>
+                                                {selectedItem.catchStatus}
+                                            </span></td>
                                             <td>{selectedItem.innerEnvelope}</td>
                                             <td>{selectedItem.outerEnvelope}</td>
                                             <td>{selectedItem.dispatchDate}</td>
@@ -665,7 +675,7 @@ const ProjectReport = () => {
                     )}
                 </div>
             </Row>
-            
+
 
 
             {isLoading && (
@@ -867,7 +877,7 @@ const ProjectReport = () => {
                                             Export
                                         </Dropdown.Toggle>
 
-                                        <Dropdown.Menu className="mt-1 d-flex align-items-center">
+                                        <Dropdown.Menu className="mt-1">
                                             <Dropdown.Item
                                                 as={ExcelExport}
                                                 data={quantitySheets}
@@ -1072,17 +1082,17 @@ const ProjectReport = () => {
                                                     </div>
                                                 </th>
                                             )}
-                                            {visibleColumns.pageNo && (
-                                                <th onClick={() => handleSort('pageNo')} style={{ cursor: 'pointer' }}>
+                                            {visibleColumns.pages && (
+                                                <th onClick={() => handleSort('pages')} style={{ cursor: 'pointer' }}>
                                                     <div className="d-flex align-items-center justify-content-between">
                                                         Pages
                                                         <div className="d-flex flex-column ms-2" style={{ fontSize: '12px' }}>
                                                             <FaSortUp
-                                                                color={sortField === 'pageNo' && sortDirection === 'asc' ? '#fff' : '#000'}
+                                                                color={sortField === 'pages' && sortDirection === 'asc' ? '#fff' : '#000'}
                                                                 style={{ marginBottom: '-3px' }}
                                                             />
                                                             <FaSortDown
-                                                                color={sortField === 'pageNo' && sortDirection === 'desc' ? '#fff' : '#000'}
+                                                                color={sortField === 'pages' && sortDirection === 'desc' ? '#fff' : '#000'}
                                                                 style={{ marginTop: '-3px' }}
                                                             />
                                                         </div>
@@ -1183,7 +1193,7 @@ const ProjectReport = () => {
                                                     {visibleColumns.examDate && <td className="text-center">{new Date(sheet.examDate).toLocaleDateString('en-GB')}</td>}
                                                     {visibleColumns.examTime && <td className="text-center">{sheet.examTime}</td>}
                                                     {visibleColumns.quantity && <td className="text-center">{sheet.quantity}</td>}
-                                                    {visibleColumns.pageNo && <td className="text-center">{sheet.pages}</td>}
+                                                    {visibleColumns.pages && <td className="text-center">{sheet.pages}</td>}
 
                                                     {visibleColumns.status && (
                                                         <td className="text-center">

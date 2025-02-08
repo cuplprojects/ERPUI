@@ -27,66 +27,61 @@ const PdfExport = ({ data, projectName, groupName, visibleColumns }) => {
     doc.setTextColor(127, 140, 141);
     doc.text(`Generated on: ${new Date().toLocaleString()}`, doc.internal.pageSize.width - 20, 25, {align: 'right'});
 
-    // Define headers based on visible columns
-    const headers = [
-      visibleColumns.catchNo && 'Catch No',
-      visibleColumns.subject && 'Subject',
-      visibleColumns.course && 'Course',
-      visibleColumns.examDate && 'Exam Date',
-      visibleColumns.examTime && 'Exam Time',
-      visibleColumns.quantity && 'Quantity',
-      visibleColumns.pageNo && 'Page No',
-      visibleColumns.status && 'Status',
-      visibleColumns.dispatchDate && 'Dispatch Date'
-    ].filter(Boolean);
+    // Map of headers to their corresponding data fields
+    const headerMap = {
+      'Catch No': sheet => sheet.catchNo,
+      'Subject': sheet => sheet.subject,
+      'Course': sheet => sheet.course,
+      'Paper': sheet => sheet.paper,
+      'Exam Date': sheet => new Date(sheet.examDate).toLocaleDateString('en-GB'),
+      'Exam Time': sheet => sheet.examTime,
+      'Quantity': sheet => sheet.quantity,
+      'Pages': sheet => sheet.pages,
+      'Status': sheet => sheet.catchStatus === 'Completed' ? 'Completed' :
+                        sheet.catchStatus === 'Running' ? 'Running' :
+                        sheet.catchStatus === 'Pending' ? 'Pending' : 'N/A',
+      'Inner Envelope': sheet => sheet.innerEnvelope,
+      'Outer Envelope': sheet => sheet.outerEnvelope,
+      'Dispatch Date': sheet => sheet.dispatchDate
+    };
 
-    // Format data for table based on visible columns
+    // Column width configurations
+    const columnWidthMap = {
+      'Catch No': { fontStyle: 'bold', width: 15 },
+      'Subject': { width: 25 },
+      'Course': { width: 20 },
+      'Paper': { width: 20 },
+      'Exam Date': { width: 18 },
+      'Exam Time': { width: 15 },
+      'Quantity': { halign: 'right', width: 12 },
+      'Pages': { width: 15 },
+      'Status': { halign: 'center', width: 15 },
+      'Inner Envelope': { width: 20 },
+      'Outer Envelope': { width: 20 },
+      'Dispatch Date': { width: 20 }
+    };
+
+    // Get visible headers based on visibleColumns
+    const headers = Object.entries(visibleColumns)
+      .filter(([key, isVisible]) => isVisible)
+      .map(([key]) => {
+        const headerKey = key.replace(/([A-Z])/g, ' $1').trim(); // Convert camelCase to Title Case
+        return headerKey.charAt(0).toUpperCase() + headerKey.slice(1);
+      });
+
+    // Format table data using the header map
     const tableData = data.map(sheet => {
-      const row = [
-        visibleColumns.catchNo && sheet.catchNo,
-        visibleColumns.subject && sheet.subject,
-        visibleColumns.course && sheet.course,
-        visibleColumns.examDate && new Date(sheet.examDate).toLocaleDateString(),
-        visibleColumns.examTime && sheet.examTime,
-        visibleColumns.quantity && sheet.quantity,
-        visibleColumns.pageNo && sheet.pages,
-        visibleColumns.status && sheet.catchStatus,
-        visibleColumns.dispatchDate && sheet.dispatchDate
-      ].filter(Boolean);
-      return row;
+      return headers.map(header => {
+        const dataFn = headerMap[header];
+        return dataFn ? dataFn(sheet) : '';
+      });
     });
 
-    // Calculate column widths based on visible columns
+    // Build column styles object
     const columnStyles = {};
-    let currentIndex = 0;
-
-    if (visibleColumns.catchNo) {
-      columnStyles[currentIndex++] = { fontStyle: 'bold', width: 15 };
-    }
-    if (visibleColumns.subject) {
-      columnStyles[currentIndex++] = { width: 25 };
-    }
-    if (visibleColumns.course) {
-      columnStyles[currentIndex++] = { width: 20 };
-    }
-    if (visibleColumns.examDate) {
-      columnStyles[currentIndex++] = { width: 18 };
-    }
-    if (visibleColumns.examTime) {
-      columnStyles[currentIndex++] = { width: 15 };
-    }
-    if (visibleColumns.quantity) {
-      columnStyles[currentIndex++] = { halign: 'right', width: 12 };
-    }
-    if (visibleColumns.pageNo) {
-      columnStyles[currentIndex++] = { width: 15 };
-    }
-    if (visibleColumns.status) {
-      columnStyles[currentIndex++] = { halign: 'center', width: 15 };
-    }
-    if (visibleColumns.dispatchDate) {
-      columnStyles[currentIndex++] = { width: 20 };
-    }
+    headers.forEach((header, index) => {
+      columnStyles[index] = columnWidthMap[header];
+    });
 
     // Add table with improved styling for A4
     doc.autoTable({
@@ -142,7 +137,7 @@ const PdfExport = ({ data, projectName, groupName, visibleColumns }) => {
     <span 
       onClick={exportToPDF}
       className="ms-2 px-3"
-      style={{ cursor: 'pointer' }}
+      
     >
       <FaFilePdf size={40} color='purple' />
     </span>

@@ -25,11 +25,7 @@ const ExcelExport = ({ data, projectName, groupName, visibleColumns }) => {
 
       // Create worksheet data
       const wsData = [
-        ['Quantity Sheets Report'], // Title
-        [], // Empty row
-        ['Group:', groupName || 'N/A'],
-        ['Project:', projectName || 'N/A'],
-        ['Generated on:', new Date().toLocaleString()],
+        ['Quantity Sheets Report', '', '', 'Group: ' + (groupName || 'N/A'), 'Project: ' + (projectName || 'N/A'), 'Date: ' + new Date().toLocaleString()], // Title and metadata in one row
         [], // Empty row
         headers, // Headers
         // Data rows
@@ -57,9 +53,12 @@ const ExcelExport = ({ data, projectName, groupName, visibleColumns }) => {
       // Set column widths based on visible columns
       ws['!cols'] = headers.map(() => ({ wch: 15 })); // Default width for all columns
 
-      // Merge cells for title
+      // Merge cells for title components
       ws['!merges'] = [
-        { s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } }
+        { s: { r: 0, c: 0 }, e: { r: 0, c: 2 } }, // Merge first 3 cells for report title
+        { s: { r: 0, c: 3 }, e: { r: 0, c: 3 } }, // Group cell
+        { s: { r: 0, c: 4 }, e: { r: 0, c: 4 } }, // Project cell
+        { s: { r: 0, c: 5 }, e: { r: 0, c: 5 } }  // Date cell
       ];
 
       // Define header colors
@@ -71,32 +70,20 @@ const ExcelExport = ({ data, projectName, groupName, visibleColumns }) => {
       // Apply styles
       headers.forEach((_, i) => {
         try {
-          // Style title
-          if (i === 0) {
+          // Style title row
+          if (i <= 5) {
             const titleCell = XLSX.utils.encode_cell({r: 0, c: i});
             if (ws[titleCell]) {
               ws[titleCell].s = {
-                font: { bold: true, size: 16 },
+                font: { bold: true, size: 12 },
                 fill: { fgColor: { rgb: "90EE90" } },
-                alignment: { horizontal: 'center' }
-              };
-            }
-          }
-
-          // Style metadata
-          for (let r = 2; r <= 4; r++) {
-            const metaCell = XLSX.utils.encode_cell({r: r, c: i});
-            if (ws[metaCell]) {
-              ws[metaCell].s = {
-                font: { bold: true, size: 11 },
-                fill: { fgColor: { rgb: "E0EEE0" } },
-                alignment: { horizontal: 'left' }
+                alignment: { horizontal: 'center', vertical: 'center' }
               };
             }
           }
 
           // Style headers
-          const headerCell = XLSX.utils.encode_cell({r: 6, c: i});
+          const headerCell = XLSX.utils.encode_cell({r: 2, c: i});
           if (ws[headerCell]) {
             ws[headerCell].s = {
               font: { bold: true, color: { rgb: "FFFFFF" }, size: 11 },
@@ -106,7 +93,7 @@ const ExcelExport = ({ data, projectName, groupName, visibleColumns }) => {
           }
 
           // Style data cells
-          for (let r = 7; r < 7 + data.length; r++) {
+          for (let r = 3; r < 3 + data.length; r++) {
             const dataCell = XLSX.utils.encode_cell({r: r, c: i});
             if (ws[dataCell]) {
               ws[dataCell].s = {
