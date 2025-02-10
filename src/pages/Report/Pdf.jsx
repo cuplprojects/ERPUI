@@ -13,7 +13,7 @@ const PdfExport = ({ data, projectName, groupName, visibleColumns }) => {
     doc.setFontSize(16);
     doc.setTextColor(44, 62, 80);
     doc.setFont("helvetica", "bold");
-    doc.text(' Report', doc.internal.pageSize.width/2, 15, {align: 'center'});
+    doc.text('Report', doc.internal.pageSize.width/2, 15, {align: 'center'});
     
     // Add project and group info
     doc.setFontSize(10);
@@ -21,6 +21,7 @@ const PdfExport = ({ data, projectName, groupName, visibleColumns }) => {
     doc.setFont("helvetica", "normal");
     doc.text(`Group: ${groupName || 'N/A'}`, 20, 25);
     doc.text(`Project: ${projectName || 'N/A'}`, 20, 30);
+    doc.text(`Lot: ${data[0]?.lot || 'N/A'}`, 20, 35);
     
     // Add timestamp
     doc.setFontSize(8);
@@ -87,7 +88,7 @@ const PdfExport = ({ data, projectName, groupName, visibleColumns }) => {
     doc.autoTable({
       head: [headers],
       body: tableData,
-      startY: 35,
+      startY: 40,
       styles: {
         fontSize: 8,
         cellPadding: 1.5,

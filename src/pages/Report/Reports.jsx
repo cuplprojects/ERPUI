@@ -53,6 +53,9 @@ const ProjectReport = () => {
     const [currentPage, setCurrentPage] = useState(0);
     const [recordsPerPage, setRecordsPerPage] = useState(10);
 
+    const [currentSearchPage, setCurrentSearchPage] = useState(1);
+    const [hasMoreResults, setHasMoreResults] = useState(false);
+
     const columnDefinitions = [
         { id: 'catchNo', label: 'Catch No' },
         { id: 'subject', label: 'Subject' },
@@ -164,6 +167,7 @@ const ProjectReport = () => {
     const handleSearch = async (query, page = 1, pageSize = 5) => {
         if (!query.trim()) {
             setSearchResults([]);
+            setHasMoreResults(false);
             return;
         }
         setIsSearching(true);
@@ -177,15 +181,27 @@ const ProjectReport = () => {
                     projectId: selectedProjectId
                 }
             });
-            setSearchResults(response.data.results);
+            
+            if (page === 1) {
+                setSearchResults(response.data.results);
+            } else {
+                setSearchResults(prev => [...prev, ...response.data.results]);
+            }
+            
+            setHasMoreResults(response.data.results.length === pageSize);
+            setCurrentSearchPage(page);
         } catch (error) {
             console.error("Error searching:", error);
             setSearchResults([]);
+            setHasMoreResults(false);
         } finally {
             setIsSearching(false);
         }
     };
 
+    const handleShowMore = () => {
+        handleSearch(searchTerm, currentSearchPage + 1);
+    };
 
     const SearchCatchClick = async (value) => {
         setQuantitySheets([]);
@@ -213,8 +229,6 @@ const ProjectReport = () => {
             setIsSearching(false);
         }
     };
-
-
 
     const handleSort = (field) => {
         const newDirection = sortField === field && sortDirection === 'asc' ? 'desc' : 'asc';
@@ -474,7 +488,8 @@ const ProjectReport = () => {
                                     value={searchTerm}
                                     onChange={(e) => {
                                         setSearchTerm(e.target.value);
-                                        handleSearch(e.target.value);
+                                        setCurrentSearchPage(1); // Reset page when search term changes
+                                        handleSearch(e.target.value, 1);
                                     }}
                                     className="form-control-lg border-0 rounded"
                                     style={{
@@ -482,7 +497,6 @@ const ProjectReport = () => {
                                         padding: "10px 20px 10px 40px",
                                         boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
                                         width: "300px",
-
                                     }}
                                 />
                                 <FaSearch
@@ -504,25 +518,58 @@ const ProjectReport = () => {
                                             zIndex: 1000
                                         }}
                                     >
-                                        {isSearching ? (
+                                        {isSearching && currentSearchPage === 1 ? (
                                             <div className="text-center py-3">
                                                 <Spinner animation="border" size="sm" variant="primary" />
                                                 <div className="text-muted mt-2">Searching...</div>
                                             </div>
                                         ) : searchResults.length > 0 ? (
-                                            <div className="search-results">
-                                                {searchResults.map((result, index) => (
-                                                    <div
-                                                        key={index}
-                                                        className="p-3 border-bottom hover-bg-light"
-                                                        onClick={() => SearchCatchClick(result)}
-                                                        style={{ cursor: "pointer" }}
+                                            <>
+                                                <div className="search-results">
+                                                    {searchResults.map((result, index) => (
+                                                        <div
+                                                            key={index}
+                                                            className="p-3 border-bottom hover-bg-light"
+                                                            onClick={() => SearchCatchClick(result)}
+                                                            style={{ cursor: "pointer" }}
+                                                        >
+                                                            <div className="fw-bold text-primary">Catch No: {result.catchNo}</div>
+                                                            <div className="fw-bold text-primary">
+                                                                {result.matchedColumn}: {result.matchedValue}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                
+                                                {hasMoreResults && (
+                                                    <div 
+                                                        className="text-center py-2 border-top"
+                                                        style={{ backgroundColor: '#f8f9fa' }}
                                                     >
-                                                        <div className="fw-bold text-primary">Catch No: {result.catchNo}</div>
-                                                        <div className="fw-bold text-primary">{result.matchedColumn}: {result.matchedValue}</div>
+                                                        <button
+                                                            className="btn btn-link text-primary"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleShowMore();
+                                                            }}
+                                                            disabled={isSearching}
+                                                        >
+                                                            {isSearching ? (
+                                                                <>
+                                                                    <Spinner
+                                                                        animation="border"
+                                                                        size="sm"
+                                                                        className="me-2"
+                                                                    />
+                                                                    Loading...
+                                                                </>
+                                                            ) : (
+                                                                'Show More'
+                                                            )}
+                                                        </button>
                                                     </div>
-                                                ))}
-                                            </div>
+                                                )}
+                                            </>
                                         ) : (
                                             <div className="text-center py-4">
                                                 <div className="text-muted">No results found</div>

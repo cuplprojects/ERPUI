@@ -41,7 +41,7 @@ const ExcelExport = ({ data, projectName, groupName, visibleColumns }) => {
 
       // Create worksheet data
       const wsData = [
-        [' Report', '', '', 'Group: ' + (groupName || 'N/A'), 'Project: ' + (projectName || 'N/A'), 'Date: ' + new Date().toLocaleString()],
+        [' Report', '', '', 'Group: ' + (groupName || 'N/A'), 'Project: ' + (projectName || 'N/A'), 'Lot: ' + (data[0]?.lot || 'N/A'), 'Date: ' + new Date().toLocaleString()],
         [],
         headers,
         ...data.map(sheet => {
