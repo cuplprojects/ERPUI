@@ -106,9 +106,11 @@ const CuDashboard = () => {
 
   useEffect(() => {
     const fetchPercentages = async () => {
-      setIsLoading(prev => ({ ...prev, projects: true }));
+      setIsLoading(prev => ({ ...prev, projects: true })); 
       try {
+        // get percentage
         const projectCompletionPercentages = await getAllProjectCompletionPercentages();
+        // get project
         const projectData = await API.get(
           `/Project/GetDistinctProjectsForUser/${userData.userId}`
         );
@@ -125,18 +127,41 @@ const CuDashboard = () => {
             remainingPercentage: percentage
               ? 100 - percentage.completionPercentage
               : 100,
+            isrecent: false, // Add the isrecent field and set it to false by default
           };
-        });
+        }).filter(project => project.completionPercentage < 100); // Filter out projects with 100% completion
 
-        setData(mergedData);
+        // Check if the selected project exists in the data
+        const selectedProject = JSON.parse(localStorage.getItem("selectedProject"));
+        if (selectedProject) {
+          const selectedProjectIndex = mergedData.findIndex(
+            (project) => project.projectId === selectedProject.value
+          );
+          if (selectedProjectIndex !== -1) {
+            const [selectedProjectData] = mergedData.splice(selectedProjectIndex, 1);
+            selectedProjectData.isrecent = true; // Set isrecent to true for the selected project
+            mergedData.unshift(selectedProjectData);
+          }
+        }
+
+        // Separate projects with and without quantity sheets
+        const projectsWithQtySheet = mergedData.filter(project => hasDisable(project.projectId));
+        const projectsWithoutQtySheet = mergedData.filter(project => !hasDisable(project.projectId));
+
+        // Combine the two arrays, keeping projects without quantity sheets at the end
+        const finalData = [...projectsWithQtySheet, ...projectsWithoutQtySheet];
+
+        setData(finalData);
       } catch (error) {
         console.error("Error fetching data:", error);
-      } finally {
-        setIsLoading(prev => ({ ...prev, projects: false }));
+      }
+      finally {
+
+        setIsLoading(prev => ({ ...prev, projects: false }))
       }
     };
     fetchPercentages();
-  }, [userData.userId]);
+  }, [userData.userId, hasquantitySheet]);
 
   useEffect(() => {
     const fetchHasQuantitySheet = async () => {

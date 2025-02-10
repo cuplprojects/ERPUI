@@ -40,6 +40,7 @@ import Tippy from "@tippyjs/react";
 import InputPages from "../menus/InputPages";
 import { success } from "../CustomHooks/Services/AlertMessageService";
 
+
 const { Option } = Select;
 
 const ProjectDetailsTable = ({
@@ -51,6 +52,8 @@ const ProjectDetailsTable = ({
   processId,
   lotNo,
   fetchTransactions,
+  handleLotClick,
+  projectLots
 }) => {
   //Theme Change Section
   const { t } = useTranslation();
@@ -1538,7 +1541,7 @@ console.log(tableData)
           <Col
             lg={1}
             md={1}
-            sx={2}
+            xs={2}
             className="d-flex justify-content- mt-md-1 mt-xs-1 mb-md-1 mb-xs-1"
           >
             {hasFeaturePermission(6) && (
@@ -1629,7 +1632,7 @@ console.log(tableData)
           </Col>
 
           {/* update status button */}
-          <Col lg={5} md={4} sx={2} className="mt-md-1 mt-xs-1">
+          <Col lg={1} md={1} xs={2} className="mt-md-1 mt-xs-1">
             {selectedRowKeys.length > 1 && getSelectedStatus() !== null && (
               <div className="mt-1 d-flex align-items-center">
                 <span
@@ -1748,8 +1751,38 @@ console.log(tableData)
               </div>
             )}
           </Col>
+
+          <Col lg={6} md={8}  className="pe-0">
+          <div className="d-flex flex-wrap gap-2 justify-content-center">
+            {projectLots.map((lot, index) => (
+              <button
+                key={index}
+                className={`btn btn-sm ${
+                  lotNo === lot.lotNo
+                    ? "bg-white text-dark border-dark"
+                    : customBtn
+                } ${
+                  customDark === "dark-dark" ? "border" : "custom-light-border"
+                } 
+                d-flex align-items-center justify-content-center p-2 rounded-2 ${
+                  customDark === "dark-dark"
+                    ? "text-dark border-dark"
+                    : "text-dark"
+                } ${customDarkBorder}`}
+                onClick={() => handleLotClick(lot.lotNo)}
+                style={{
+                  minWidth: "100px",
+                  transition: "all 0.2s",
+                }}
+              >
+                {t("lot")} {lot.lotNo}
+              </button>
+            ))}
+          </div>
+        </Col>
+
           {/* search box */}
-          <Col lg={5} md={6} xs={12}>
+          <Col lg={3} md={1} xs={12}>
             <div className="d-flex justify-content-end align-items-center search-container">
               {searchVisible && (
                 <div
@@ -1797,7 +1830,7 @@ console.log(tableData)
           </Col>
 
           {/* group action icon */}
-          <Col lg={0} md={1} sx={2}>
+          <Col lg={1} md={1} xs={2}>
             <div className="d-flex justify-content-end ms-">
               <Dropdown overlay={menu} trigger={["click"]}>
                 <Button
@@ -1856,6 +1889,7 @@ console.log(tableData)
         setColumnVisibility={setColumnVisibility}
         featureData={featureData}
         hasFeaturePermission={hasFeaturePermission}
+        processId={processId}
       />
       <AlarmModal
         show={alarmModalShow}

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { Table, Select, Input, Space, Button, Typography, Row, Col, Checkbox, Form, Dropdown, Menu, message } from 'antd';
-import { Card, Modal } from 'react-bootstrap';
+import { Table, Select, Input, Space, Button, Row, Col, Checkbox, Form, Dropdown, Menu, message } from 'antd';
+import { Modal } from 'react-bootstrap';
 import { EyeOutlined, EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
 import 'antd/dist/reset.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -12,14 +12,12 @@ import { useStore } from 'zustand';
 import { useMediaQuery } from 'react-responsive';
 import { AiFillCloseSquare } from 'react-icons/ai';
 import { BsFunnelFill } from "react-icons/bs";
-import { MdDeleteForever } from "react-icons/md";
 import { useTranslation } from 'react-i18next';
 import { success, error } from '../CustomHooks/Services/AlertMessageService';
 import { useUserData } from '../store/userDataStore';
 const BaseUrl = import.meta.env.VITE_API_BASE_URL;
 
 const { Option } = Select;
-const { Title } = Typography;
 
 const AllUsers = () => {
   const { t } = useTranslation();
@@ -28,7 +26,8 @@ const AllUsers = () => {
   const [customDark, customMid, customLight, customBtn, customDarkText, customLightText, customLightBorder, customDarkBorder] = cssClasses;
   const userData = useUserData()
   const userRole = userData?.role
-  console.log(userRole.priorityOrder)
+  
+  // console.log(userRole.priorityOrder)
 
   const [users, setUsers] = useState([]);
   const [filterType, setFilterType] = useState('none');
@@ -48,7 +47,6 @@ const AllUsers = () => {
   const [pageSize, setPageSize] = useState(5); // Default page size
   const [currentPage, setCurrentPage] = useState(1); // Track current page
   const isMobile = useMediaQuery({ maxWidth: 767 });
-  const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1023 });
 
   useEffect(() => {
     const getUsers = async () => {
@@ -120,14 +118,19 @@ const AllUsers = () => {
     setCurrentUserData({ ...record });
   }, []);
 
-
-
-  const isEditDisabled = (record) =>{
-    const roledata = roles.find(r => r.roleId === record.roleId)
-    const res = userRole?.priorityOrder <= roledata?.priorityOrder
-    console.log(res)
-    return 
+  const isEditDisabled = (record) => {
+    const roledata = roles.find(r => r.roleId === record.roleId);
+  
+    // User can always edit their own role, but no one else’s role
+    if (record.userId === userData?.userId) {
+      return false; // Allow user to edit their own role
+    }
+  
+    // User cannot edit if the target user's role is higher or equal to their own
+    const res = userRole?.priorityOrder >= roledata?.priorityOrder;
+    return res;
   }
+  
 
   const handleSave = useCallback(async (record) => {
     try {
@@ -188,18 +191,30 @@ const AllUsers = () => {
       key: 'roleId',
       render: (text, record) => {
         const editable = record.userId === editingUserId;
+        const currentRole = roles.find(role => role.roleId === text);
+        
         return editable ? (
           <Select
             value={currentUserData.roleId}
             onChange={(value) => setCurrentUserData(prev => ({ ...prev, roleId: value }))}
             style={{ width: '200px' }}
           >
-            {roles.map(role => (
-              <Option key={role.roleId} value={role.roleId}>{role.roleName}</Option>
-            ))}
+            <Option key={currentRole?.roleId} value={currentRole?.roleId}>
+              {currentRole?.roleName}
+            </Option>
+            {roles
+              .filter(role => 
+                role.priorityOrder > userRole?.priorityOrder && 
+                role.roleId !== currentRole?.roleId
+              )
+              .map(role => (
+                <Option key={role.roleId} value={role.roleId}>
+                  {role.roleName}
+                </Option>
+              ))}
           </Select>
         ) : (
-          roles.find(role => role.roleId === text)?.roleName || text
+          currentRole?.roleName || text
         );
       },
       width: 200,
@@ -301,7 +316,7 @@ const AllUsers = () => {
               disabled={isEditDisabled(record)}
 
             >
-              {console.log(isEditDisabled(record))}
+              {/* {console.log(isEditDisabled(record))} */}
               <span className="ms-1">{t('edit')}</span>
             </Button>
           </Space>

@@ -4,6 +4,8 @@ import { Bar } from 'react-chartjs-2';
 import { Switch } from 'antd';
 import API from '../CustomHooks/MasterApiHooks/api';
 import { useTranslation } from 'react-i18next';
+import themeStore from './../store/themeStore';
+import { useStore } from 'zustand';
 
 const DashBarChart = ({ selectedChart, lotsData, handleBarClick, projectId }) => {
   const [processData, setProcessData] = useState({});
@@ -14,6 +16,16 @@ const DashBarChart = ({ selectedChart, lotsData, handleBarClick, projectId }) =>
     names: true
   });
   const { t } = useTranslation();
+  const { getCssClasses } = useStore(themeStore);
+  const cssClasses = getCssClasses();
+  const customDark = cssClasses[0];
+  const customMid = cssClasses[1];
+  const customLight = cssClasses[2];
+  const customBtn = cssClasses[3];
+  const customDarkText = cssClasses[4];
+  const customLightText = cssClasses[5];
+  const customLightBorder = cssClasses[6];
+  const customDarkBorder = cssClasses[7];
 
   // Fetch process completion data
   useEffect(() => {

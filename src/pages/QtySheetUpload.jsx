@@ -1,18 +1,27 @@
 import React, { useEffect, useState } from "react";
 import { Form, Upload, Button, Select, message, Menu, Spin } from "antd";
 import { Row, Col, Modal } from "react-bootstrap";
-import { UploadOutlined, DeleteOutlined } from "@ant-design/icons";
+import {
+  UploadOutlined,
+  DeleteOutlined,
+  CloseOutlined,
+} from "@ant-design/icons";
 import * as XLSX from "xlsx";
 import themeStore from "./../store/themeStore";
 import { useStore } from "zustand";
-import ViewQuantitySheet from "./ViewQuantitySheet";
+import ViewQuantitySheet from "./../pages/ViewQuantitySheet"
 import { useParams } from "react-router-dom";
 import { IoMdEye } from "react-icons/io";
 import API from "../CustomHooks/MasterApiHooks/api";
 import { useTranslation } from "react-i18next";
-import { decrypt } from "../Security/Security";
+import { decrypt } from "./../Security/Security";
 import { BsCheckCircleFill } from "react-icons/bs";
-import { success, error, warning } from "../CustomHooks/Services/AlertMessageService";
+import {
+  success,
+  error,
+  warning,
+} from "./../CustomHooks/Services/AlertMessageService";
+import UpdateQuantitySheet from "./UpdateQuantitySheet";
 
 // Helper function to convert Excel date number to JS Date
 const convertExcelDate = (excelDate) => {
@@ -93,17 +102,24 @@ const QtySheetUpload = () => {
 
   useEffect(() => {
     const checkTransactionExistence = async () => {
-      try {
-        // const response = await API.get(`/Transactions/exists/${projectId}`);
-        const response = await API.get(`/Dispatch/project/${projectId}/lot/${selectedLotNo}`);
-        const hasDispatched = response.data?.status;
-        // Only show delete button if there are no transactions AND a file has been uploaded
-        setShowDeleteButton(
-          !hasDispatched && (hasUploadedFile || isLotsFetched)
-        );
-      } catch (error) {
-        console.error("Failed to check transaction existence:", error);
-        setShowDeleteButton(true);
+      if (selectedLotNo) {
+        // Check if selectedLotNo is not null
+        try {
+          // const response = await API.get(`/Transactions/exists/${projectId}`);
+          const response = await API.get(
+            `/Dispatch/project/${projectId}/lot/${selectedLotNo}`
+          );
+          const hasDispatched = response.data?.status;
+          // Only show delete button if there are no transactions AND a file has been uploaded
+          setShowDeleteButton(
+            !hasDispatched && (hasUploadedFile || isLotsFetched)
+          );
+        } catch (error) {
+          console.error("Failed to check transaction existence:", error);
+          setShowDeleteButton(true);
+        }
+      } else {
+        setShowDeleteButton(false); // Reset delete button visibility if selectedLotNo is null
       }
     };
 
@@ -126,24 +142,29 @@ const QtySheetUpload = () => {
   useEffect(() => {
     const fetchDispatchedLots = async () => {
       try {
-        const response = await API.get(`/Dispatch/project/${projectId}/lot/${selectedLotNo}`);
-        const dispatchedLotStatus = response.data.map(
-          (dispatch) => dispatch.lotNo
-        );
-        setDispatchedLots(dispatchedLotStatus);
+        if (projectId && selectedLotNo) {
+          const response = await API.get(
+            `/Dispatch/project/${projectId}/lot/${selectedLotNo}`
+          );
+          const dispatchedLotStatus = response.data.map(
+            (dispatch) => dispatch.lotNo
+          );
+          setDispatchedLots(dispatchedLotStatus);
+        }
       } catch (error) {
         console.error("Failed to fetch dispatched lots status:", error);
       }
     };
 
     fetchDispatchedLots();
-  }, [projectId]);
-
+  }, [projectId, selectedLotNo]);
 
   useEffect(() => {
     const fetchUnReleasedLots = async () => {
       try {
-        const response = await API.get(`/QuantitySheet/UnReleasedLots?ProjectId=${projectId}`);
+        const response = await API.get(
+          `/QuantitySheet/UnReleasedLots?ProjectId=${projectId}`
+        );
         setUnReleasedLots(response.data);
       } catch (error) {
         console.error("Failed to fetch dispatched lots status:", error);
@@ -180,7 +201,7 @@ const QtySheetUpload = () => {
       // Using axios to make the POST request
       const response = await API.post("/QuantitySheet/ReleaseForProduction", {
         lotNo: lotNo,
-        projectId: projectId
+        projectId: projectId,
       });
 
       // Check if the response was successful
@@ -200,58 +221,57 @@ const QtySheetUpload = () => {
     setShowDisclaimer(false);
     let mappedData;
 
-    if (data) {
-      mappedData = data;
-    } else {
-      mappedData = await createMappedData();
-    }
-
-    if (!mappedData || !Array.isArray(mappedData) || mappedData.length === 0) {
-      console.error(t("mappedDataInvalidOrEmpty"));
-      setUploading(false);
-      resetState();
-      return;
-    }
-
-    const finalPayload = mappedData.map((item) => {
-      // Convert Excel date to proper date format
-      const examDate = item.ExamDate ? convertExcelDate(item.ExamDate) : null;
-      const lotNo = String(item.LotNo || "").trim();
-      const catchNo = String(item.CatchNo || "").trim();
-      const innerEnvelope = String(item.InnerEnvelope || "").trim();
-
-      // Debugging lotNo value before sending it
-      console.log(`lotNo before payload:`, lotNo, `Type:`, typeof lotNo);
-      console.log(`catchNo before payload:`, catchNo, `Type:`, typeof catchNo);
-      console.log(`innerEnvelope before payload:`, innerEnvelope, `Type:`, typeof innerEnvelope);
-      return {
-        catchNo: item.CatchNo || "",
-        paper: item.Paper || "",
-        course: item.Course || "",
-        subject: item.Subject || "",
-        innerEnvelope: item.InnerEnvelope || "",
-        outerEnvelope: item.OuterEnvelope || 0,
-        examDate: examDate ? examDate.toISOString() : "",
-        examTime: item.ExamTime || "",
-        lotNo: item.LotNo || "",
-        quantity: Number(item.Quantity) || 0,
-        percentageCatch: Number(item.percentageCatch) || 0,
-        projectId: projectId,
-        processId: [0],
-        status: 0,
-        pages: item.Pages || 0,
-        stopCatch : 0
-      };
-    });
-
-
-
     try {
+      if (data) {
+        mappedData = data;
+      } else {
+        mappedData = await createMappedData();
+      }
+
+      if (
+        !mappedData ||
+        !Array.isArray(mappedData) ||
+        mappedData.length === 0
+      ) {
+        error(t("mappedDataInvalidOrEmpty"));
+        setUploading(false);
+        resetState();
+        return;
+      }
+
+      const finalPayload = mappedData.map((item) => {
+        // Convert Excel date to proper date format
+        const examDate = item.ExamDate ? convertExcelDate(item.ExamDate) : null;
+        const lotNo = String(item.LotNo || "").trim();
+        const catchNo = String(item.CatchNo || "").trim();
+        const innerEnvelope = String(item.InnerEnvelope || "").trim();
+
+        return {
+          catchNo: item.CatchNo || "",
+          paper: item.Paper || "",
+          course: item.Course || "",
+          subject: item.Subject || "",
+          innerEnvelope: item.InnerEnvelope || "",
+          outerEnvelope: item.OuterEnvelope || 0,
+          examDate: examDate ? examDate.toISOString() : "",
+          examTime: item.ExamTime || "",
+          lotNo: item.LotNo || "",
+          quantity: Number(item.Quantity) || 0,
+          percentageCatch: Number(item.percentageCatch) || 0,
+          projectId: projectId,
+          processId: [0],
+          status: 0,
+          pages: item.Pages || 0,
+          stopCatch: 0,
+        };
+      });
+
       const response = await API.post("/QuantitySheet", finalPayload, {
         headers: {
           "Content-Type": "application/json",
         },
       });
+
       setDataSource(finalPayload);
       success(
         isUpdateMode
@@ -262,8 +282,8 @@ const QtySheetUpload = () => {
       setHasUploadedFile(true);
       resetState();
     } catch (err) {
-      console.error(t("uploadFailed"), err.response?.data || err.message);
       error(t("failedToUploadQuantitySheet"));
+      console.error(t("uploadFailed"), err.response?.data || err.message);
     } finally {
       setIsLoading(false);
     }
@@ -277,45 +297,46 @@ const QtySheetUpload = () => {
         const workbook = XLSX.read(data, { type: "array" });
         const firstSheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[firstSheetName];
-  
+
         // Convert the sheet to JSON with the first row as headers
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
         // Ensure that jsonData[0] is an array (header row)
         if (!Array.isArray(jsonData[0])) {
-          console.error('The first row (headers) is not an array.', jsonData[0]);
-          resolve([]);  // Resolve with an empty array if the headers are malformed
+          console.error(
+            "The first row (headers) is not an array.",
+            jsonData[0]
+          );
+          resolve([]); // Resolve with an empty array if the headers are malformed
           return;
         }
         const rows = jsonData.slice(1); // Skip the header row
         const mappedData = rows.map((row) => {
           const rowData = {};
-  
+
           // Iterate over each field in fieldMappings
           for (let property in fieldMappings) {
-
             let headers = fieldMappings[property]; // Array of headers for this field
-  
+
             // Ensure headers is an array
             if (!Array.isArray(headers)) {
               headers = [headers]; // Convert to array if it's a single value
             }
 
-  
             // If there are multiple headers for the property, create a string value
             if (headers.length > 1) {
               const valueString = headers
                 .map((header) => {
                   const index = jsonData[0].indexOf(header); // Find the index of the header
                   if (index !== -1) {
-                    const value = row[index] || "";  // Get the value for that header
-                    return `${header}: ${value}`;  // Format as "header: value"
+                    const value = row[index] || ""; // Get the value for that header
+                    return `${header}: ${value}`; // Format as "header: value"
                   }
                   return null;
                 })
                 .filter(Boolean) // Remove any null values
                 .join(", "); // Join all header-value pairs with commas
-  
+
               // Store the formatted string (e.g., "E10: 2, E20: 4")
               rowData[property] = valueString;
             } else {
@@ -324,11 +345,20 @@ const QtySheetUpload = () => {
               const index = jsonData[0].indexOf(header);
               if (index !== -1) {
                 let value = row[index] || ""; // Get the value for that header
-  
+
                 // Explicitly convert 'LotNo' and 'CatchNo' to strings
-                if (property === "LotNo" || property === "CatchNo" || property === "InnerEnvelope") {
+                if (
+                  property === "LotNo" ||
+                  property === "CatchNo" ||
+                  property === "InnerEnvelope"
+                ) {
                   value = String(value).trim(); // Ensure 'LotNo' and 'CatchNo' are treated as strings
-                  console.log(`${property} value before sending:`, value, `Type:`, typeof value);
+                  console.log(
+                    `${property} value before sending:`,
+                    value,
+                    `Type:`,
+                    typeof value
+                  );
                 }
 
                 // Add the value directly to the rowData
@@ -336,23 +366,22 @@ const QtySheetUpload = () => {
               }
             }
           }
-  
+
           // Add additional fields like projectId or percentageCatch
           rowData["projectId"] = projectId;
           rowData["percentageCatch"] = "0";
 
           return rowData; // Return the mapped row data
         });
-  
+
         setMappeddata(mappedData); // Set the processed data
         resolve(mappedData); // Resolve with the mapped data
       };
-  
+
       // Read the file as an ArrayBuffer
       reader.readAsArrayBuffer(selectedFile);
     });
   };
-  
 
   const handleUpdate = async () => {
     setIsLoading(true);
@@ -392,21 +421,26 @@ const QtySheetUpload = () => {
   };
 
   const handleSkipUpdate = () => {
-    // Remove the skipped lots from the mapped data
-    const skipLotNos = skipLots.map((item) => item.LotNo);
-    const remainingMappedData = mappedData.filter(
-      (item) => !skipLotNos.includes(item.LotNo)
-    );
+    try {
+      const skipLotNos = skipLots.map((item) => item.LotNo);
+      const remainingMappedData = mappedData.filter(
+        (item) => !skipLotNos.includes(item.LotNo)
+      );
 
-    if (remainingMappedData.length === 0) {
-      warning(t("allLotsSkipped"));
+      if (remainingMappedData.length === 0) {
+        warning(t("allLotsSkipped"));
+        setIsModalVisible(false);
+        return;
+      }
+
+      success(
+        `${skipLotNos.length} ${t("lotsSkipped")}: ${skipLotNos.join(", ")}`
+      );
+      handleUpload(remainingMappedData);
       setIsModalVisible(false);
-      return;
+    } catch (err) {
+      error(t("errorProcessingSkipUpdate"));
     }
-
-    message.info(`${skipLotNos.length} lots skipped: ${skipLotNos.join(", ")}`);
-    handleUpload(remainingMappedData); // Call handleUpload with the filtered data
-    setIsModalVisible(false);
   };
 
   const handleCancelSkip = () => {
@@ -444,63 +478,61 @@ const QtySheetUpload = () => {
   const processFile = async (file) => {
     const reader = new FileReader();
     reader.onload = async (e) => {
-      const data = new Uint8Array(e.target.result);
-      const workbook = XLSX.read(data, { type: "array" });
-      const firstSheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[firstSheetName];
-      // Convert the sheet to JSON with the first row as headers
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-  
-      // Filter out rows where all cells are empty
-      const filteredData = jsonData.filter((row) =>
-        row.some((cell) => cell !== null && cell !== "")
-      );
-  
-      if (filteredData.length === 0) {
-        console.warn(t("noValidDataFoundInFile"));
-        setIsProcessingFile(false); // Hide loader if no valid data
-        return;
-      }
+      try {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: "array" });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
-
-      // Extract the headers (first row of the data)
-      const excelHeaders = filteredData[0];
-      setHeaders(excelHeaders);
-
-      setShowMappingFields(true);
-      setShowDisclaimer(true);
-
-      // Dynamically build the field mappings based on multiple headers per field
-      const autoMappings = {};
-      // Adjust this to support multiple headers per field
-      columns.forEach((col) => {
-        // Create an array to hold all matching headers for the current field
-        const matchingHeaders = excelHeaders.filter(
-          (header) => header?.toLowerCase() === col?.toLowerCase()
+        const filteredData = jsonData.filter((row) =>
+          row.some((cell) => cell !== null && cell !== "")
         );
-        // Assign the matching headers (or empty array if no match found)
-        autoMappings[col] = matchingHeaders.length > 0 ? matchingHeaders : [];
-      });
-  
-      setFieldMappings(autoMappings);
-      setIsProcessingFile(false); // Hide loader when processing is complete
+
+        if (filteredData.length === 0) {
+          error(t("noValidDataFoundInFile"));
+          setIsProcessingFile(false);
+          return;
+        }
+
+        // Extract the headers (first row of the data)
+        const excelHeaders = filteredData[0];
+        setHeaders(excelHeaders);
+
+        setShowMappingFields(true);
+        setShowDisclaimer(true);
+
+        // Dynamically build the field mappings based on multiple headers per field
+        const autoMappings = {};
+        // Adjust this to support multiple headers per field
+        columns.forEach((col) => {
+          // Create an array to hold all matching headers for the current field
+          const matchingHeaders = excelHeaders.filter(
+            (header) => header?.toLowerCase() === col?.toLowerCase()
+          );
+          // Assign the matching headers (or empty array if no match found)
+          autoMappings[col] = matchingHeaders.length > 0 ? matchingHeaders : [];
+        });
+
+        setFieldMappings(autoMappings);
+        success(t("fileProcessedSuccessfully"));
+      } catch (err) {
+        error(t("errorProcessingFile"));
+        console.error("File processing error:", err);
+      } finally {
+        setIsProcessingFile(false);
+      }
     };
     reader.readAsArrayBuffer(file);
   };
-  
-
 
   const handleMappingChange = (property, value) => {
     setFieldMappings((prev) => {
       const newMappings = { ...prev };
-      newMappings[property] = value || [];  // Ensure value is an array
+      newMappings[property] = value || []; // Ensure value is an array
       return newMappings;
     });
   };
-  
-  
-
-
 
   const getAvailableOptions = (property) => {
     const selectedValues = Object.values(fieldMappings).flat();
@@ -529,9 +561,9 @@ const QtySheetUpload = () => {
       setLots(lotsData);
       setExistingLots(lotsData);
       setIsLotsFetched(lotsData.length > 0);
-    } catch (error) {
-      console.error(t("failedToFetchLots"));
-      setIsLotsFetched(false);
+    } catch (err) {
+      error(t("failedToFetchLots"));
+      console.error(t("failedToFetchLots"), err);
     }
   };
 
@@ -595,148 +627,201 @@ const QtySheetUpload = () => {
     }
   };
 
+  const resetEditingMode = () => {
+    setIsUpdateMode(false);
+    resetState();
+    setShowDeleteButton(true);
+    setShowTable(false);
+    setShowBtn(false);
+    setSelectedLotNo(null);
+    setIsLotsFetched(true); // Keep the initial state
+    // Re-fetch lots to refresh the view
+    fetchLots();
+  };
+
   return (
     <div
-      className={`container ${customDarkText} rounded shadow-lg ${customLight} ${customLightBorder}`}
+      className={`container-fluid ${customDarkText} rounded shadow-lg ${customLight} ${customLightBorder}`}
     >
-      <Row className="mt-2 mb-2">
-        <Col lg={12} className="d-flex justify-content-center">
-          <div className="text-center p-2">
-            <h1 className={`${customDarkText}`}>
-              {" "}
-              {t("uploadQuantitySheet")}{" "}
-            </h1>
-            <h2 className={`${customDarkText} custom-zoom-btn`}>
-              {" "}
-              {projectName}{" "}
-            </h2>
+      {/* Top Headers */}
+      <Row className="mt-2 mb-1">
+        <Col lg={12}>
+          <div className="text-center p-2 d-flex justify-content-around align-items-center">
+            <h4 className={`${customDarkText} fw-bold m-0`}>
+              {t("Quantity Sheet")}
+            </h4>
+            <h5 className={`${customDarkText} custom-zoom-btn m-0`}>
+              {projectName}
+            </h5>
           </div>
+          <hr className="mt-2 mb-1" />
         </Col>
       </Row>
 
+      {/* Warning Message */}
       {showConfigDisclaimer && (
-        <div className="alert alert-warning text-center mb-3">
-          {t(
-            "Warning: Once you upload the quantity sheet, project configuration cannot be changed."
-          )}
-        </div>
+        <Row className="mb-3">
+          <Col lg={8} className="mx-auto">
+            <div className="alert alert-warning text-center p-1">
+              {t(
+                "Warning: Once you upload the quantity sheet, project configuration cannot be changed."
+              )}
+            </div>
+          </Col>
+        </Row>
       )}
 
+      {/* File Upload Section */}
       <Row className="mb-2">
         <Col lg={12}>
           <Form layout="vertical" form={form}>
-            <Form.Item
-              name="file"
-              rules={[{ required: true, message: t("pleaseSelectAFile") }]}
-            >
-              <div className="d-flex align-items-center">
-                {!isLotsFetched ? (
-                  <Upload
-                    onRemove={(file) => {
-                      const index = fileList.indexOf(file);
-                      const newFileList = fileList.slice();
-                      newFileList.splice(index, 1);
-                      setFileList(newFileList);
-                    }}
-                    beforeUpload={handleFileUpload}
-                    fileList={fileList}
-                    className="flex-grow-1"
-                  >
-                    <Button className="fs-4 custom-zoom-btn w-100 d-flex align-items-center p-2">
-                      <UploadOutlined />
-                      <span className="d-none d-sm-inline">
-                        {" "}
-                        {t("selectFile")}{" "}
-                      </span>
-                      <span className="d-inline d-sm-none">
-                        {" "}
-                        {t("upload")}{" "}
-                      </span>
-                    </Button>
-                  </Upload>
-                ) : (
-                  <Button
-                    className={`${customBtn}`}
-                    type="primary"
-                    onClick={() => {
-                      setIsLotsFetched(false);
-                      setIsUpdateMode(true);
-                      setShowTable(false);
-                      setShowBtn(false);
-                    }}
-                  >
-                    {t("updateFile")}
-                  </Button>
-                )}
-                {showDeleteButton && (
-                  <Button
-                    type="primary"
-                    danger
-                    onClick={handleDelete}
-                    className="ms-2"
-                    disabled={transactionExist}
-                  >
-                    <DeleteOutlined />
-                    <span> {t("deleteFile")} </span>
-                  </Button>
-                )}
-              </div>
-            </Form.Item>
-            <Form.Item>
-              {fileList.length > 0 && showDisclaimer && (
-                <Button
-                  className={`${customBtn}`}
-                  type="primary"
-                  onClick={handleUpdate}
-                  loading={isLoading}
+            {/* File Upload */}
+            {!isUpdateMode ? (
+              <>
+                <Form.Item
+                  name="file"
+                  rules={[{ required: true, message: t("pleaseSelectAFile") }]}
                 >
-                  {isUpdateMode
-                    ? t("updateLots")
-                    : isLotsFetched
-                      ? t("updateLots")
-                      : t("uploadLots")}
-                </Button>
-              )}
-            </Form.Item>
-            <Form.Item>
-              <div className="d-flex flex-wrap gap-2">
-                {lots.map((lotNo, index) => {
-                  const isDispatched = dispatchedLots.includes(lotNo);
-                  return (
+                  <div className="d-flex align-items-center">
+                    {!isLotsFetched ? (
+                      <Upload
+                        onRemove={(file) => {
+                          const index = fileList.indexOf(file);
+                          const newFileList = fileList.slice();
+                          newFileList.splice(index, 1);
+                          setFileList(newFileList);
+                        }}
+                        beforeUpload={handleFileUpload}
+                        fileList={fileList}
+                        className="flex-grow-1"
+                      >
+                        <Button className="fs-4 custom-zoom-btn w-100 d-flex align-items-center p-2">
+                          <UploadOutlined />
+                          <span className="d-none d-sm-inline">
+                            {t("selectFile")}
+                          </span>
+                          <span className="d-inline d-sm-none">
+                            {t("upload")}
+                          </span>
+                        </Button>
+                      </Upload>
+                    ) : (
+                      <Button
+                        className={customBtn}
+                        type="primary"
+                        onClick={() => {
+                          setIsLotsFetched(false);
+                          setIsUpdateMode(true);
+                          setShowTable(false);
+                          setShowBtn(false);
+                        }}
+                      >
+                        {t("updateFile")}
+                      </Button>
+                    )}
+
+                    {showDeleteButton && (
+                      <Button
+                        type="primary"
+                        danger
+                        onClick={handleDelete}
+                        className="ms-2"
+                        disabled={transactionExist}
+                      >
+                        <DeleteOutlined />
+                        <span>{t("deleteFile")}</span>
+                      </Button>
+                    )}
+                  </div>
+                </Form.Item>
+
+                {/* Upload/Update Button */}
+                {fileList.length > 0 && showDisclaimer && (
+                  <Form.Item>
                     <Button
-                      key={index}
-                      className={`${selectedLotNo === lotNo
-                          ? "bg-white text-dark border-dark"
-                          : customBtn
-                        } d-flex align-items-center justify-content-center p-2`}
+                      className={customBtn}
                       type="primary"
-                      onClick={() => handleLotClick(lotNo)}
-                      onContextMenu={(e) => handleRightClick(e, lotNo)}
+                      onClick={handleUpdate}
+                      loading={isLoading}
                     >
-                      {t("lot")} - {lotNo}{" "}
-                      {isDispatched ? (
-                        <BsCheckCircleFill className="ms-1 text-success" />
-                      ) : (
-                        <IoMdEye
-                          className={`ms-1 ${selectedLotNo === lotNo ? "" : ""
-                            }`}
-                        />
-                      )}
+                      {isUpdateMode
+                        ? t("updateLots")
+                        : isLotsFetched
+                        ? t("updateLots")
+                        : t("uploadLots")}
                     </Button>
-                  );
-                })}
+                  </Form.Item>
+                )}
+
+                {/* Lot Buttons */}
+                <Form.Item>
+                  <div className="d-flex flex-wrap gap-2">
+                    {lots.map((lotNo, index) => {
+                      const isDispatched = dispatchedLots.includes(lotNo);
+                      return (
+                        <Button
+                          key={index}
+                          className={`${
+                            selectedLotNo === lotNo
+                              ? "bg-white text-dark border-dark"
+                              : customBtn
+                          } d-flex align-items-center justify-content-center p-2`}
+                          type="primary"
+                          onClick={() => handleLotClick(lotNo)}
+                          onContextMenu={(e) => handleRightClick(e, lotNo)}
+                        >
+                          {t("lot")} - {lotNo}{" "}
+                          {isDispatched ? (
+                            <BsCheckCircleFill className="ms-1 text-success" />
+                          ) : (
+                            <IoMdEye className="ms-1" />
+                          )}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </Form.Item>
+              </>
+            ) : (
+              <div className="d-flex justify-content-end mb-2">
+                <Button
+                  className={`${customBtn} d-flex align-items-center gap-2`}
+                  type="primary"
+                  onClick={resetEditingMode}
+                >
+                  <CloseOutlined />
+                </Button>
               </div>
-              <ViewQuantitySheet
-                project={projectId}
-                selectedLotNo={selectedLotNo}
-                showBtn={showBtn}
-                showTable={showTable}
-                lots={lots}
+            )}
+
+            {isUpdateMode && (
+              <UpdateQuantitySheet
+                projectId={projectId}
+                onClose={() => {
+                  setIsUpdateMode(false);
+                  setIsLotsFetched(true);
+                  resetState();
+                  setShowDeleteButton(true);
+                  setShowTable(false);
+                  setShowBtn(false);
+                  setSelectedLotNo(null);
+                  fetchLots();
+                }}
               />
-            </Form.Item>
+            )}
+
+            {/* Quantity Sheet View */}
+            <ViewQuantitySheet
+              project={projectId}
+              selectedLotNo={selectedLotNo}
+              showBtn={showBtn}
+              showTable={showTable}
+              lots={lots}
+            />
           </Form>
         </Col>
       </Row>
+
       {isDropdownVisible && menu}
       <Modal show={isModalVisible} onHide={handleCancelSkip}>
         <Modal.Header closeButton>
@@ -821,7 +906,9 @@ const QtySheetUpload = () => {
                     <td>{property} </td>
                     <td>
                       <Select
-                        mode={property === "InnerEnvelope" ? "multiple" : "default"}
+                        mode={
+                          property === "InnerEnvelope" ? "multiple" : "default"
+                        }
                         allowClear
                         value={fieldMappings[property]}
                         onChange={(value) =>
