@@ -2,7 +2,7 @@ import { Button } from 'react-bootstrap';
 import * as XLSX from 'xlsx';
 import { FaFileExcel } from "react-icons/fa";
 
-const ExcelExport = ({ data, projectName, groupName, visibleColumns }) => {
+const ExcelExport = ({ data, projectName, groupName, visibleColumns, lotNo }) => {
   const handleExcelExport = () => {
     try {
       const wb = XLSX.utils.book_new();
@@ -41,9 +41,15 @@ const ExcelExport = ({ data, projectName, groupName, visibleColumns }) => {
 
       // Create worksheet data
       const wsData = [
-        [' Report', '', '', 'Group: ' + (groupName || 'N/A'), 'Project: ' + (projectName || 'N/A'), 'Lot: ' + (data[0]?.lot || 'N/A'), 'Date: ' + new Date().toLocaleString()],
+        // Title row with clean formatting and spacing
+      
+        // Info row with clear labels and values
+        ['', `Group: ${groupName || 'N/A'}`, '', `Project: ${projectName || 'N/A'}`, '', `Lot: ${lotNo || 'N/A'}`, `Generated: ${new Date().toLocaleString()}`, '', `Dispatch Date: ${data[0]?.dispatchDate || 'N/A'}`],
+        // Blank row for spacing
         [],
+        // Column headers
         headers,
+        // Data rows
         ...data.map(sheet => {
           return headers.map(header => {
             const dataFn = headerMap[header];
@@ -67,8 +73,8 @@ const ExcelExport = ({ data, projectName, groupName, visibleColumns }) => {
 
       // Define header colors
       const headerColors = [
-        "FF0000", "FF8C00", "FFD700", "32CD32", "20B2AA",
-        "4169E1", "8A2BE2", "FF1493", "FF4500", "2E8B57"
+        "90EE90", "90EE90", "90EE90", "90EE90", "90EE90",
+        "90EE90", "90EE90", "90EE90", "90EE90", "90EE90"
       ];
 
       // Apply styles

@@ -4,29 +4,42 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { FaFilePdf } from "react-icons/fa6";
 
-const PdfExport = ({ data, projectName, groupName, visibleColumns }) => {
+const PdfExport = ({ data, projectName, groupName, visibleColumns, lotNo }) => {
   const exportToPDF = () => {
-    // Create PDF in portrait A4 format
-    const doc = new jsPDF('p', 'mm', 'a4');
+    // Create PDF in landscape A4 format
+    const doc = new jsPDF('l', 'mm', 'a4');
     
-    // Add title with styling
-    doc.setFontSize(16);
+    // Add title and info in a compact layout
+    doc.setFontSize(12);
     doc.setTextColor(44, 62, 80);
     doc.setFont("helvetica", "bold");
-    doc.text('Report', doc.internal.pageSize.width/2, 15, {align: 'center'});
+    doc.text('Report', doc.internal.pageSize.width/2, 12, {align: 'center'});
     
-    // Add project and group info
-    doc.setFontSize(10);
+    // Add project and group info in a horizontal layout
+    doc.setFontSize(8);
     doc.setTextColor(52, 73, 94);
     doc.setFont("helvetica", "normal");
-    doc.text(`Group: ${groupName || 'N/A'}`, 20, 25);
-    doc.text(`Project: ${projectName || 'N/A'}`, 20, 30);
-    doc.text(`Lot: ${data[0]?.lot || 'N/A'}`, 20, 35);
     
-    // Add timestamp
-    doc.setFontSize(8);
-    doc.setTextColor(127, 140, 141);
-    doc.text(`Generated on: ${new Date().toLocaleString()}`, doc.internal.pageSize.width - 20, 25, {align: 'right'});
+    // Left side info
+    doc.text(`Group: `, 20, 20);
+    doc.setFont("helvetica", "bold");
+    doc.text(`${groupName || 'N/A'}`, 32, 20);
+    
+    doc.setFont("helvetica", "normal");
+    doc.text(`Project: `, 80, 20);
+    doc.setFont("helvetica", "bold");
+    doc.text(`${projectName || 'N/A'}`, 95, 20);
+    
+    doc.setFont("helvetica", "normal");
+    doc.text(`Lot: `, 140, 20);
+    doc.setFont("helvetica", "bold");
+    doc.text(`${lotNo || 'N/A'}`, 150, 20);
+
+    doc.setFont("helvetica", "normal");
+    doc.text(`Dispatch Date: `, 180, 20);
+    doc.setFont("helvetica", "bold");
+    doc.text(`${data[0]?.dispatchDate || 'N/A'}`, 200, 20);
+    
 
     // Map of headers to their corresponding data fields
     const headerMap = {
@@ -42,24 +55,22 @@ const PdfExport = ({ data, projectName, groupName, visibleColumns }) => {
                         sheet.catchStatus === 'Running' ? 'Running' :
                         sheet.catchStatus === 'Pending' ? 'Pending' : 'N/A',
       'Inner Envelope': sheet => sheet.innerEnvelope,
-      'Outer Envelope': sheet => sheet.outerEnvelope,
-      'Dispatch Date': sheet => sheet.dispatchDate
+      'Outer Envelope': sheet => sheet.outerEnvelope
     };
 
-    // Column width configurations
+    // Column width configurations - adjusted for landscape
     const columnWidthMap = {
-      'Catch No': { fontStyle: 'bold', width: 15 },
-      'Subject': { width: 25 },
-      'Course': { width: 20 },
-      'Paper': { width: 20 },
-      'Exam Date': { width: 18 },
-      'Exam Time': { width: 15 },
-      'Quantity': { halign: 'right', width: 12 },
-      'Pages': { width: 15 },
-      'Status': { halign: 'center', width: 15 },
-      'Inner Envelope': { width: 20 },
-      'Outer Envelope': { width: 20 },
-      'Dispatch Date': { width: 20 }
+      'Catch No': { fontStyle: 'bold', width: 20, halign: 'center' },
+      'Subject': { width: 35, halign: 'center' },
+      'Course': { width: 30, halign: 'center' },
+      'Paper': { width: 25, halign: 'center' },
+      'Exam Date': { width: 25, halign: 'center' },
+      'Exam Time': { width: 20, halign: 'center' },
+      'Quantity': { width: 15, halign: 'center' },
+      'Pages': { width: 15, halign: 'center' },
+      'Status': { width: 20, halign: 'center' },
+      'Inner Envelope': { width: 25, halign: 'center' },
+      'Outer Envelope': { width: 25, halign: 'center' }
     };
 
     // Get visible headers based on visibleColumns
@@ -84,26 +95,27 @@ const PdfExport = ({ data, projectName, groupName, visibleColumns }) => {
       columnStyles[index] = columnWidthMap[header];
     });
 
-    // Add table with improved styling for A4
+    // Add table with improved styling for landscape A4
     doc.autoTable({
       head: [headers],
       body: tableData,
-      startY: 40,
+      startY: 25,
       styles: {
-        fontSize: 8,
-        cellPadding: 1.5,
+        fontSize: 7,
+        cellPadding: 2,
         lineColor: [189, 195, 199],
         lineWidth: 0.1,
         font: "helvetica",
-        overflow: 'linebreak'
+        overflow: 'linebreak',
+        halign: 'center'
       },
       headStyles: {
         fillColor: [52, 73, 94],
         textColor: 255,
-        fontSize: 8,
+        fontSize: 7, // Reduced from 9
         fontStyle: 'bold',
         halign: 'center',
-        cellPadding: 2
+        cellPadding: 3
       },
       bodyStyles: {
         textColor: [44, 62, 80]
@@ -114,13 +126,27 @@ const PdfExport = ({ data, projectName, groupName, visibleColumns }) => {
       columnStyles: columnStyles,
       margin: { top: 25, right: 15, bottom: 15, left: 15 },
       didDrawPage: function(data) {
-        // Add page number at bottom
-        doc.setFontSize(8);
+        // Add page number at bottom center
+        doc.setFontSize(6); // Reduced from 8
+        doc.setTextColor(44, 62, 80);
+        const currentPage = doc.internal.getNumberOfPages();
+      
         doc.text(
-          `Page ${data.pageNumber} of ${doc.internal.getNumberOfPages()}`,
+          `Page ${currentPage}`,
           doc.internal.pageSize.width/2, 
           doc.internal.pageSize.height - 10,
           {align: 'center'}
+        );
+
+        // Add datetime watermark footer at bottom right
+        doc.setFontSize(5); // Reduced from 6
+        doc.setTextColor(180, 180, 180);
+        const datetime = new Date().toLocaleString();
+        doc.text(
+          `Generated: ${datetime}`,
+          doc.internal.pageSize.width - 15,
+          doc.internal.pageSize.height - 10,
+          {align: 'right'}
         );
       },
       showHead: 'firstPage'
@@ -128,7 +154,7 @@ const PdfExport = ({ data, projectName, groupName, visibleColumns }) => {
 
     // Save PDF with formatted name including group and project
     const dateStr = new Date().toISOString().slice(0,10);
-    const fileName = `${groupName || 'no-group'}_${projectName || 'no-project'}_${dateStr}.pdf`;
+    const fileName = `${groupName || 'no-group'}_${projectName || 'no-project'}_${dateStr}_${new Date().toLocaleTimeString().replace(/:/g,'-')}.pdf`;
     doc.save(fileName);
   };
 
@@ -137,7 +163,6 @@ const PdfExport = ({ data, projectName, groupName, visibleColumns }) => {
       onClick={exportToPDF}
       className="ms-2 px-3"
       style={{ cursor: 'pointer' }}
-      
     >
       <FaFilePdf size={40} color='purple' />
     </span>

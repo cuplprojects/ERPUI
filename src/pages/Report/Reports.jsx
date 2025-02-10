@@ -21,6 +21,7 @@ const ProjectReport = () => {
     const [quantitySheets, setQuantitySheets] = useState([]);
     const [showTable, setShowTable] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [projectName, setProjectName] = useState("");
 
     const [selectedCatch, setSelectedCatch] = useState(null);
     const [showCatchView, setShowCatchView] = useState(false);
@@ -72,6 +73,17 @@ const ProjectReport = () => {
         { id: 'dispatchDate', label: 'Dispatch Date' },
        
     ];
+
+    useEffect(() => {
+        if (selectedProjectId) {
+            const project = activeProjects.find(p => p.projectId === parseInt(selectedProjectId));
+            setProjectName(project ? project.name : "");
+        }
+
+
+
+    }, [selectedProjectId]);
+
 
     useEffect(() => {
         const fetchData = async () => {
@@ -603,8 +615,10 @@ const ProjectReport = () => {
                                             <Dropdown.Item
                                                 as={ExcelExport}
                                                 data={[selectedItem]}
-                                                projectName={selectedProjectId}
+                                                projectName={projectName}
                                                 groupName={groups[selectedGroup]}
+                                                lotNo={selectedLot}
+
                                                 visibleColumns={{
                                                     catchNo: true,
                                                     subject: true,
@@ -622,11 +636,14 @@ const ProjectReport = () => {
                                                 className="py-2"
                                             />
                                             <div className="vr mx-1"></div>
+                                           
                                             <Dropdown.Item
                                                 as={PdfExport}
                                                 data={[selectedItem]}
-                                                projectName={selectedProjectId}
+                                                projectName={projectName}
                                                 groupName={groups[selectedGroup]}
+                                                lotNo={selectedLot}
+
                                                 visibleColumns={{
                                                     catchNo: true,
                                                     subject: true,
@@ -928,22 +945,26 @@ const ProjectReport = () => {
                                             <Dropdown.Item
                                                 as={ExcelExport}
                                                 data={quantitySheets}
-                                                projectName={selectedProjectId}
+                                                projectName={projectName}
                                                 groupName={groups[selectedGroup]}
                                                 visibleColumns={visibleColumns}
+                                                lotNo={selectedLot}
                                                 className="py-1"
+
                                             >
                                             </Dropdown.Item>
 
                                             <div className="vr mx-1"></div>
-
+                                            { console.log(quantitySheets)}
                                             <Dropdown.Item
                                                 as={PdfExport}
                                                 data={quantitySheets}
-                                                projectName={selectedProjectId}
+                                                projectName={projectName}
                                                 groupName={groups[selectedGroup]}
                                                 visibleColumns={visibleColumns}
+                                                lotNo={selectedLot}
                                                 className="py-1"
+
                                             >
                                             </Dropdown.Item>
                                         </Dropdown.Menu>
@@ -1011,7 +1032,7 @@ const ProjectReport = () => {
                                     <thead className="bg-primary text-white">
                                         <tr>
                                             {visibleColumns.catchNo && (
-                                                <th onClick={() => handleSort('catchNo')} style={{ cursor: 'pointer' }}>
+                                                <th onClick={() => handleSort('catchNo')} style={{ cursor: 'pointer', textAlign: 'center' }}>
                                                     <div className="d-flex align-items-center justify-content-between">
                                                         Catch No
                                                         <div className="d-flex flex-column ms-2" style={{ fontSize: '12px' }}>
