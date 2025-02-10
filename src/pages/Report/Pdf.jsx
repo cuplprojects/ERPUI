@@ -13,7 +13,7 @@ const PdfExport = ({ data, projectName, groupName, visibleColumns }) => {
     doc.setFontSize(16);
     doc.setTextColor(44, 62, 80);
     doc.setFont("helvetica", "bold");
-    doc.text('Quantity Sheets Report', doc.internal.pageSize.width/2, 15, {align: 'center'});
+    doc.text(' Report', doc.internal.pageSize.width/2, 15, {align: 'center'});
     
     // Add project and group info
     doc.setFontSize(10);
@@ -125,11 +125,9 @@ const PdfExport = ({ data, projectName, groupName, visibleColumns }) => {
       showHead: 'firstPage'
     });
 
-    // Save PDF with formatted name including project
+    // Save PDF with formatted name including group and project
     const dateStr = new Date().toISOString().slice(0,10);
-    const fileName = projectName ? 
-      `quantity-sheets-${projectName}-${dateStr}.pdf` : 
-      `quantity-sheets-report-${dateStr}.pdf`;
+    const fileName = `${groupName || 'no-group'}_${projectName || 'no-project'}_${dateStr}.pdf`;
     doc.save(fileName);
   };
 
@@ -137,6 +135,7 @@ const PdfExport = ({ data, projectName, groupName, visibleColumns }) => {
     <span 
       onClick={exportToPDF}
       className="ms-2 px-3"
+      style={{ cursor: 'pointer' }}
       
     >
       <FaFilePdf size={40} color='purple' />

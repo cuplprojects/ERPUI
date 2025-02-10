@@ -7,6 +7,22 @@ const ExcelExport = ({ data, projectName, groupName, visibleColumns }) => {
     try {
       const wb = XLSX.utils.book_new();
 
+      // Map of headers to their corresponding data fields
+      const headerMap = {
+        'Catch No': sheet => sheet.catchNo,
+        'Subject': sheet => sheet.subject,
+        'Course': sheet => sheet.course,
+        'Paper': sheet => sheet.paper,
+        'Exam Date': sheet => new Date(sheet.examDate).toLocaleDateString(),
+        'Exam Time': sheet => sheet.examTime,
+        'Quantity': sheet => sheet.quantity,
+        'Pages': sheet => sheet.pages,
+        'Status': sheet => sheet.catchStatus,
+        'Inner Envelope': sheet => sheet.innerEnvelope,
+        'Outer Envelope': sheet => sheet.outerEnvelope,
+        'Dispatch Date': sheet => sheet.dispatchDate
+      };
+
       // Define headers based on visible columns
       const headers = [
         visibleColumns.catchNo && "Catch No",
@@ -21,44 +37,32 @@ const ExcelExport = ({ data, projectName, groupName, visibleColumns }) => {
         visibleColumns.innerEnvelope && "Inner Envelope",
         visibleColumns.outerEnvelope && "Outer Envelope",
         visibleColumns.dispatchDate && "Dispatch Date"
-      ].filter(Boolean); // Remove false values
+      ].filter(Boolean);
 
       // Create worksheet data
       const wsData = [
-        ['Quantity Sheets Report', '', '', 'Group: ' + (groupName || 'N/A'), 'Project: ' + (projectName || 'N/A'), 'Date: ' + new Date().toLocaleString()], // Title and metadata in one row
-        [], // Empty row
-        headers, // Headers
-        // Data rows
+        [' Report', '', '', 'Group: ' + (groupName || 'N/A'), 'Project: ' + (projectName || 'N/A'), 'Date: ' + new Date().toLocaleString()],
+        [],
+        headers,
         ...data.map(sheet => {
-          const row = [
-            visibleColumns.catchNo && sheet.catchNo,
-            visibleColumns.subject && sheet.subject,
-            visibleColumns.course && sheet.course,
-            visibleColumns.paper && sheet.paper,
-            visibleColumns.examDate && new Date(sheet.examDate).toLocaleDateString(),
-            visibleColumns.examTime && sheet.examTime,
-            visibleColumns.quantity && sheet.quantity,
-            visibleColumns.pageNo && sheet.pages,
-            visibleColumns.status && sheet.catchStatus, // Changed to directly use catchStatus
-            visibleColumns.innerEnvelope && sheet.innerEnvelope,
-            visibleColumns.outerEnvelope && sheet.outerEnvelope,
-            visibleColumns.dispatchDate && sheet.dispatchDate
-          ].filter((_, index) => headers[index]); // Only include data for visible columns
-          return row;
+          return headers.map(header => {
+            const dataFn = headerMap[header];
+            return dataFn ? dataFn(sheet) : '';
+          });
         })
       ];
 
       const ws = XLSX.utils.aoa_to_sheet(wsData);
 
-      // Set column widths based on visible columns
-      ws['!cols'] = headers.map(() => ({ wch: 15 })); // Default width for all columns
+      // Set column widths based on visible columns  
+      ws['!cols'] = headers.map(() => ({ wch: 15 }));
 
       // Merge cells for title components
       ws['!merges'] = [
-        { s: { r: 0, c: 0 }, e: { r: 0, c: 2 } }, // Merge first 3 cells for report title
-        { s: { r: 0, c: 3 }, e: { r: 0, c: 3 } }, // Group cell
-        { s: { r: 0, c: 4 }, e: { r: 0, c: 4 } }, // Project cell
-        { s: { r: 0, c: 5 }, e: { r: 0, c: 5 } }  // Date cell
+        { s: { r: 0, c: 0 }, e: { r: 0, c: 2 } },
+        { s: { r: 0, c: 3 }, e: { r: 0, c: 3 } },
+        { s: { r: 0, c: 4 }, e: { r: 0, c: 4 } },
+        { s: { r: 0, c: 5 }, e: { r: 0, c: 5 } }
       ];
 
       // Define header colors
@@ -68,7 +72,7 @@ const ExcelExport = ({ data, projectName, groupName, visibleColumns }) => {
       ];
 
       // Apply styles
-      headers.forEach((_, i) => {
+      headers.forEach((header, i) => {
         try {
           // Style title row
           if (i <= 5) {
@@ -108,14 +112,14 @@ const ExcelExport = ({ data, projectName, groupName, visibleColumns }) => {
               };
 
               // Add color to status cells
-              if (headers[i] === "Status") {
+              if (header === "Status") {
                 const status = ws[dataCell].v;
                 if (status === "Completed") {
-                  ws[dataCell].s.fill = { fgColor: { rgb: "2ECC71" } }; // Green
+                  ws[dataCell].s.fill = { fgColor: { rgb: "2ECC71" } };
                 } else if (status === "Running") {
-                  ws[dataCell].s.fill = { fgColor: { rgb: "3498DB" } }; // Blue
+                  ws[dataCell].s.fill = { fgColor: { rgb: "3498DB" } };
                 } else if (status === "Pending") {
-                  ws[dataCell].s.fill = { fgColor: { rgb: "E74C3C" } }; // Red
+                  ws[dataCell].s.fill = { fgColor: { rgb: "E74C3C" } };
                 }
               }
             }
@@ -130,9 +134,7 @@ const ExcelExport = ({ data, projectName, groupName, visibleColumns }) => {
 
       // Generate Excel file
       const dateStr = new Date().toISOString().slice(0,10);
-      const fileName = projectName ? 
-        `quantity-sheets-${projectName}-${dateStr}.xlsx` : 
-        `quantity-sheets-report-${dateStr}.xlsx`;
+      const fileName = `${groupName || 'no-group'}_${projectName || 'no-project'}_${dateStr}.xlsx`;
 
       XLSX.writeFile(wb, fileName);
 
