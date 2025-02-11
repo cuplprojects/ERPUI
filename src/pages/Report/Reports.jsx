@@ -4,7 +4,7 @@ import { FaFileExport, FaSearch, FaFilter, FaSave, FaSortUp, FaSortDown } from '
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import API from "../../CustomHooks/MasterApiHooks/api";
 import Table from 'react-bootstrap/Table';
-import ExcelExport from './excel';
+import ExcelExport from './Excel';
 import PdfExport from './Pdf';
 import { AiFillCloseSquare } from "react-icons/ai";
 import ProcessDetails from './Process';
@@ -22,7 +22,6 @@ const ProjectReport = () => {
     const [showTable, setShowTable] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [projectName, setProjectName] = useState("");
-
     const [selectedCatch, setSelectedCatch] = useState(null);
     const [showCatchView, setShowCatchView] = useState(false);
     const [viewMode, setViewMode] = useState('catch'); // 'catch' or 'process'
@@ -43,20 +42,16 @@ const ProjectReport = () => {
         status: true,
         innerEnvelope: true,
         outerEnvelope: true,
-        dispatchDate: true,
-       
+        dispatchDate: false,
     });
 
     const [sortField, setSortField] = useState(null);
     const [sortDirection, setSortDirection] = useState('asc');
-
     const [filteredSheets, setFilteredSheets] = useState([]);
     const [currentPage, setCurrentPage] = useState(0);
     const [recordsPerPage, setRecordsPerPage] = useState(10);
-
     const [currentSearchPage, setCurrentSearchPage] = useState(1);
     const [hasMoreResults, setHasMoreResults] = useState(false);
-
     const columnDefinitions = [
         { id: 'catchNo', label: 'Catch No' },
         { id: 'subject', label: 'Subject' },
@@ -79,8 +74,6 @@ const ProjectReport = () => {
             const project = activeProjects.find(p => p.projectId === parseInt(selectedProjectId));
             setProjectName(project ? project.name : "");
         }
-
-
 
     }, [selectedProjectId]);
 

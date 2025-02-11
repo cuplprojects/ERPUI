@@ -41,10 +41,8 @@ const ExcelExport = ({ data, projectName, groupName, visibleColumns, lotNo }) =>
 
       // Create worksheet data
       const wsData = [
-        // Title row with clean formatting and spacing
-      
-        // Info row with clear labels and values
-        ['', `Group: ${groupName || 'N/A'}`, '', `Project: ${projectName || 'N/A'}`, '', `Lot: ${lotNo || 'N/A'}`, `Generated: ${new Date().toLocaleString()}`, '', `Dispatch Date: ${data[0]?.dispatchDate || 'N/A'}`],
+        // Title row with all info in one row
+        [`Group: ${groupName || 'N/A'}`, `Project: ${projectName || 'N/A'}`, `Lot: ${lotNo || 'N/A'}`, `Generated: ${new Date().toLocaleString()}`, `Dispatch Date: ${data[0]?.dispatchDate || 'N/A'}`],
         // Blank row for spacing
         [],
         // Column headers
@@ -65,10 +63,11 @@ const ExcelExport = ({ data, projectName, groupName, visibleColumns, lotNo }) =>
 
       // Merge cells for title components
       ws['!merges'] = [
-        { s: { r: 0, c: 0 }, e: { r: 0, c: 2 } },
-        { s: { r: 0, c: 3 }, e: { r: 0, c: 3 } },
-        { s: { r: 0, c: 4 }, e: { r: 0, c: 4 } },
-        { s: { r: 0, c: 5 }, e: { r: 0, c: 5 } }
+        { s: { r: 0, c: 1 }, e: { r: 0, c: 1 } }, // Group name
+        { s: { r: 0, c: 3 }, e: { r: 0, c: 3 } }, // Project name 
+        { s: { r: 0, c: 5 }, e: { r: 0, c: 5 } }, // Lot number
+        { s: { r: 0, c: 7 }, e: { r: 0, c: 7 } }, // Generated date
+        { s: { r: 0, c: 9 }, e: { r: 0, c: 9 } }  // Dispatch date
       ];
 
       // Define header colors

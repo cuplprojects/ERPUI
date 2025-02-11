@@ -119,4 +119,4 @@ const ProcessDetails = ({ catchData, projectName, groupName }) => {
   )
 }
 
-export default ProcessDetails
+export default ProcessDetails;
