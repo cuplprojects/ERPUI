@@ -9,6 +9,7 @@ import {
   Form,
   Row,
   Col,
+  message,
 } from "antd";
 import { useStore } from "zustand";
 import { Modal as BootstrapModal } from "react-bootstrap";
@@ -81,6 +82,8 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
   const [minDate, setMinDate] = useState(null);
   const [maxDate, setMaxDate] = useState(null);
   const [isinTransaction, setIsInTransaction] = useState([]);
+  const [editableRowKey, setEditableRowKey] = useState(null); // Track editable row
+  const [editedRow, setEditedRow] = useState({}); // Store edited row data
 
   const columns = [
     {
@@ -90,9 +93,10 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
       width: "2%",
       render: (_, record) => {
         const isDispatched = dispatchedLots.includes(selectedLotNo);
+        const isDisabled = record.stopCatch === 1;  // Disable if stopCatch is 1
         return (
           <Checkbox
-            disabled={isDispatched}
+            disabled={isDispatched || isDisabled}
             checked={selectedCatches.some(
               (item) => item.id === record.quantitySheetId
             )}
@@ -131,6 +135,17 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
       key: "paper",
       width: 100,
       sorter: (a, b) => a.paper.localeCompare(b.paper),
+      render: (text, record) => {
+        if (editableRowKey === record.key) {
+          return (
+            <Input
+              value={editedRow.paper}
+              onChange={(e) => handleInputChange("paper", e.target.value)}
+            />
+          );
+        }
+        return text;
+      },
     },
     {
       title: t("course"),
@@ -138,6 +153,17 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
       key: "course",
       width: 100,
       sorter: (a, b) => a.course.localeCompare(b.course),
+      render: (text, record) => {
+        if (editableRowKey === record.key) {
+          return (
+            <Input
+              value={editedRow.course}
+              onChange={(e) => handleInputChange("course", e.target.value)}
+            />
+          );
+        }
+        return text;
+      },
     },
     {
       title: t("subject"),
@@ -145,10 +171,21 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
       key: "subject",
       width: 100,
       sorter: (a, b) => a.subject.localeCompare(b.subject),
+      render: (text, record) => {
+        if (editableRowKey === record.key) {
+          return (
+            <Input
+              value={editedRow.subject}
+              onChange={(e) => handleInputChange("subject", e.target.value)}
+            />
+          );
+        }
+        return text;
+      },
     },
     {
       title: t("examDate"),
-      dataIndex: "examDate",
+      dataIndex: "examDate", 
       key: "examDate",
       width: 100,
       sorter: (a, b) => {
@@ -161,14 +198,24 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
 
         return dateA - dateB;
       },
-      render: (text, record) => (
-        <span>
-          {text}
-          {record.isExamDateOverlapped && (
-            <WarningOutlined style={{ color: "#ff4d4f", marginLeft: "5px" }} />
-          )}
-        </span>
-      ),
+      render: (text, record) => {
+        if (editableRowKey === record.key) {
+          return (
+            <Input
+              value={editedRow.examDate}
+              onChange={(e) => handleInputChange("examDate", e.target.value)}
+            />
+          );
+        }
+        return (
+          <span>
+            {text}
+            {record.isExamDateOverlapped && (
+              <WarningOutlined style={{ color: "#ff4d4f", marginLeft: "5px" }} />
+            )}
+          </span>
+        );
+      }
     },
     {
       title: t("examTime"),
@@ -176,6 +223,17 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
       key: "examTime",
       width: 100,
       sorter: (a, b) => a.examTime.localeCompare(b.examTime),
+      render: (text, record) => {
+        if (editableRowKey === record.key) {
+          return (
+            <Input
+              value={editedRow.examTime}
+              onChange={(e) => handleInputChange("examTime", e.target.value)}
+            />
+          );
+        }
+        return text;
+      },
     },
     {
       title: t("innerEnvelope"),
@@ -226,22 +284,47 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
       width: 150,
       render: (_, record) => {
         const isDispatched = dispatchedLots.includes(selectedLotNo);
+        const isDisabled = record.stopCatch === 1;
+
         return (
+          <>
+            {editableRowKey === record.key ? (
+              <>
+                <Button
+                  type="primary"
+                  onClick={handleSave}
+                  style={{ marginRight: 8 }}
+                >
+                  {t("save")}
+                </Button>
+                <Button onClick={handleCancel}>{t("cancel")}</Button>
+              </>
+            ) : (
           <>
             <Button
               icon={<DeleteOutlined />}
               onClick={() => handleRemoveButtonClick(record.key)}
               style={{ marginRight: 8 }}
               danger
-              disabled={isDispatched}
+              disabled={isDispatched || isDisabled}
             />
             <Button
               icon={<StopOutlined />}
               onClick={() => handleStopButtonClick(record.key)}
+              style={{ marginRight: 8 }}
               danger
               disabled={isDispatched}
             />
+            <Button
+            icon= {<EditOutlined/>}
+            onClick={() => handleCatchEditButton(record)}
+            danger
+            disabled= {isDispatched || isDisabled}
+            />
+
           </>
+            )}
+            </>
         );
       },
     },
@@ -276,7 +359,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
   const fetchQuantity = async (lotNo = selectedLotNo) => {
     try {
       const response = await API.get(
-        `/QuantitySheet/Catch?ProjectId=${projectId}&lotNo=${lotNo}`
+        `/QuantitySheet/Catches?ProjectId=${projectId}&lotNo=${lotNo}`
       );
       console.log("lot data in qty sheet", response.data);
       const dataWithKeys = response.data.map((item) => ({
@@ -284,6 +367,8 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
         key: item.quantitySheetId,
       }));
       setDataSource(dataWithKeys);
+
+
     } catch (error) {
       console.error(t("failedToFetchQuantity"), error);
     }
@@ -374,7 +459,8 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
 
         if (modalMessage === "switchToDigitalPrintingQuestion") {
           updatedProcessIds = updatedProcessIds.filter(
-            (id) => id !== CTP_ID && id !== OFFSET_PRINTING_ID
+            (id) => id !== CTP_ID && id !== OFFSET_PRINTING_ID && id !== CUTTING_ID
+
           );
           updatedProcessIds.push(DIGITAL_PRINTING_ID);
         } else if (modalMessage === "switchToOffsetPrintingQuestion") {
@@ -417,6 +503,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
         setDataSource((prevData) =>
           prevData.filter((item) => item.key !== itemToDelete.key)
         );
+        fetchQuantity();
         setShowDeleteModal(false);
         setItemToDelete(null);
       } catch (error) {
@@ -434,6 +521,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
         setDataSource((prevData) =>
           prevData.filter((item) => item.key !== itemToStop.key)
         );
+        fetchQuantity();
         setShowStopModal(false);
         setItemToStop(null);
       } catch (error) {
@@ -441,6 +529,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
       }
     }
   };
+
 
   const handleModalClose = () => {
     setShowTransferModal(false);
@@ -451,6 +540,8 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
     setIsConfirmed(false);
     setSelectedCatches([]);
     setModalMessage("")
+    setItemToStop(null);
+    setShowStopModal(false);
   };
 
   const handleEditButtonClick = (key) => {
@@ -498,8 +589,8 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
   const validateForm = () => {
     const errors = {};
     if (!newRowData.catchNo) errors.catchNo = t('catchNoRequired');
-    if (!newRowData.examDate) errors.examDate = t('examDateRequired');
-    if (!newRowData.examTime) errors.examTime = t('examTimeRequired');
+    // if (!newRowData.examDate) errors.examDate = t('examDateRequired');
+    //if (!newRowData.examTime) errors.examTime = t('examTimeRequired');
     if (!newRowData.quantity || newRowData.quantity <= 0) errors.quantity = t('validQuantityRequired');
 
     setFormErrors(errors);
@@ -532,6 +623,8 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
         examTime: newRowData.examTime,
         processId: [],
         status: 0,
+        pages: newRowData.pages,
+        stopCatch: 0
       },
     ];
 
@@ -558,6 +651,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
         percentageCatch: 0,
         projectId: projectId,
         status: 0,
+        stopCatch:0
       });
       setFormErrors({});
       fetchQuantity(selectedLotNo);
@@ -567,15 +661,94 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
   };
 
   const handleStopButtonClick = (key) => {
+
+
     const record = dataSource.find((item) => item.key === key);
+
     if (record) {
+
       setItemToStop(record);
+
       setShowStopModal(true);
+
     }
+
   };
 
- 
-  
+
+
+
+
+  const handleCatchEditButton = (key) => {
+
+    setEditableRowKey(key?.quantitySheetId); // Set the row key to editable
+
+    const formattedExamDate = formatDateForInput(key.examDate);
+
+    // Initialize with the existing row data and formatted examDate
+    setEditedRow({ ...key, examDate: formattedExamDate });
+  };
+
+  const formatDateForInput = (dateString) => {
+    const [day, month, year] = dateString.split("-");
+    return `${year}-${month}-${day}`; // Convert DD-MM-YYYY to YYYY-MM-DD
+  };
+
+  const handleInputChange = (field, value) => {
+
+    setEditedRow({ ...editedRow, [field]: value }); // Update edited row data
+
+  };
+
+  const handleSave = async () => {
+
+    try {
+
+      const response = await API.put(
+
+        `/QuantitySheet/update/${editedRow.quantitySheetId}`,
+
+        editedRow
+
+      );
+
+
+
+      if (response.status === 200) {
+
+        message.success(t("updateSuccess"));
+
+        setEditableRowKey(null); // Exit edit mode
+
+        fetchQuantity()
+
+      } else {
+
+        message.error(t("updateFailed"));
+
+      }
+
+    } catch (error) {
+
+      console.error(error);
+
+      message.error(t("updateFailed"));
+
+    }
+
+  };
+
+
+
+  const handleCancel = () => {
+
+    setEditableRowKey(null); // Exit edit mode
+
+    setEditedRow({}); // Reset edited row
+
+  };
+
+
   const handlePageSizeChange = (current, size) => {
     setPageSize(size);
   };
@@ -721,10 +894,9 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
                 <Col span={6}>
                   <Form.Item
                     label={<>
-                      {t('examDate')} <span style={{ color: 'red' }}>*</span>
+
+                      {t('examDate')}
                     </>}
-                    validateStatus={formErrors.examDate ? "error" : ""}
-                    help={formErrors.examDate}
                   >
                     <Input
                       size="small"
@@ -734,7 +906,8 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
                       onChange={handleNewRowChange}
                       min={minDate}
                       max={maxDate}
-                      disabled={dates.length === 0}
+
+                      //disabled={dates.length === 0}
                       placeholder={t('selectExamDate')}
                     />
                   </Form.Item>
@@ -742,9 +915,10 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
                 <Col span={6}>
                   <Form.Item
                     label={<>
-                      {t('examTime')}  <span style={{ color: 'red' }}>*</span>
+
+                      {t('examTime')}
                     </>}
-                    validateStatus={formErrors.examTime ? "error" : ""}
+
                     help={formErrors.examTime || "Please enter the time in this format: 03:00 PM to 05:00 PM"}
                   >
                     <Input
@@ -780,6 +954,25 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
                 </Col>
               </Row>
               <Row gutter={16}>
+
+                <Col span={6}>
+                  <Form.Item
+                    label={<>
+                      {t('pages')}
+                    </>}
+
+                    help={formErrors.pages}
+                  >
+                    <Input
+                      size="small"
+                      type="number"
+                      name="pages"
+                      value={newRowData.pages}
+                      onChange={handleNewRowChange}
+                      placeholder={t('enterPages')}
+                    />
+                  </Form.Item>
+                </Col>
                 <Col span={6}>
                   <Form.Item
                     label={<>
@@ -917,6 +1110,32 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
           </BootstrapModal.Footer>
         </BootstrapModal>
       )}
+      {showStopModal && (
+        <BootstrapModal show={true} onHide={handleModalClose}>
+          <BootstrapModal.Header closeButton>
+            <BootstrapModal.Title>
+              {t("confirmStop")} {itemToStop?.catchNo}
+            </BootstrapModal.Title>
+          </BootstrapModal.Header>
+          <BootstrapModal.Body>
+            {itemToStop.stopCatch === 0
+              ? t("areYouSureStopCatchNo")
+              : t("areYouSureResumeCatchNo")} {/* You can add different messages if necessary */}
+          </BootstrapModal.Body>
+          <BootstrapModal.Footer>
+            <Button variant="secondary" onClick={handleModalClose}>
+              {t("cancel")}
+            </Button>
+            <Button variant="danger" onClick={handleConfirmStop}>
+            {itemToStop.stopCatch === 0
+              ?t("stop")
+              : t("resume")
+            }
+            </Button>
+          </BootstrapModal.Footer>
+        </BootstrapModal>
+      )}
+
 
       {showStopModal && (
         <BootstrapModal show={true} onHide={handleModalClose}>

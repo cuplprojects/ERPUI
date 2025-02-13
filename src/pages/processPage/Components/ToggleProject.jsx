@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { Col } from "react-bootstrap";
 import { useTranslation } from "react-i18next";
 import { Dropdown, Menu } from "antd";
 import API from "../../../CustomHooks/MasterApiHooks/api";
@@ -39,6 +38,12 @@ const ToggleProject = ({ projectName, selectedLot, onChange }) => {
   };
 
   const menu = (
+    <div
+    style={{
+      maxHeight: "300px",
+      overflowY: "auto",
+      borderRadius: "4px",
+    }}>   
     <Menu>
       {projects.map((project) => (
         <Menu.Item
@@ -56,7 +61,7 @@ const ToggleProject = ({ projectName, selectedLot, onChange }) => {
           {project.noOfSeries > 0 ? ` (${project.seriesName})` : ""}
         </Menu.Item>
       ))}
-    </Menu>
+    </Menu> </div>
   );
 
   const selectedProject = projects.find((p) => p.name === projectName);

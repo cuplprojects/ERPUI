@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Table, Input } from 'antd';
+
+import { Table, Input, Spin} from 'antd';
+
 import API from '../CustomHooks/MasterApiHooks/api';
 import { useTranslation } from 'react-i18next';
 import themeStore from '../store/themeStore';
@@ -22,15 +24,20 @@ const CuDetailedAgGrid = ({ projectId , clickedProject }) => {
   ] = getCssClasses();
   const { t } = useTranslation();
   const containerStyle = useMemo(() => ({ width: '100%', height: '100%' }), []);
-
+ 
   const [rowData, setRowData] = useState([]);
   const [processNames, setProcessNames] = useState({});
   const [searchText, setSearchText] = useState('');
   const [filteredData, setFilteredData] = useState([]);
+  const [isLoading, setIsLoading] = useState({
+    processes: true,
+    data: true
+  });
 
   useEffect(() => {
     // Fetch process names
     const fetchProcessNames = async () => {
+      setIsLoading(prev => ({ ...prev, processes: true }));
       try {
         const response = await API.get('/Processes');
         const processMap = {};
@@ -40,7 +47,10 @@ const CuDetailedAgGrid = ({ projectId , clickedProject }) => {
         setProcessNames(processMap);
       } catch (error) {
         console.error('Error fetching process names:', error);
+      } finally {
+        setIsLoading(prev => ({ ...prev, processes: false }));
       }
+     
     };
 
     fetchProcessNames();
@@ -49,6 +59,9 @@ const CuDetailedAgGrid = ({ projectId , clickedProject }) => {
   useEffect(() => {
     const fetchData = async () => {
       if (projectId) {
+
+        setIsLoading(prev => ({ ...prev, processes: true })); 
+
         try {
           const response = await API.get(`/Transactions/process-lot-percentages?projectId=${projectId}`);
           const processData = response.data.processes.map((process, index) => ({
@@ -63,7 +76,10 @@ const CuDetailedAgGrid = ({ projectId , clickedProject }) => {
           setFilteredData(processData);
         } catch (error) {
           console.error('Error fetching process data:', error);
+        } finally {
+          setIsLoading(prev => ({ ...prev, data: false }));
         }
+        
       }
     };
 
@@ -176,37 +192,50 @@ const CuDetailedAgGrid = ({ projectId , clickedProject }) => {
           />
         </div>
         <div style={{ width: '100%', overflowX: 'auto' }}>
-          <Table
-            columns={columns}
-            dataSource={filteredData}
-            pagination={{
-              position: ['bottomCenter'],
-              pageSize: 8,
-              showSizeChanger: true,
-              pageSizeOptions: ['8', '10', '20', '50'],
-              showTotal: (total) => `${t("total")} ${total} ${t("items")}`,
-              className: `${customDark === "dark-dark"? "bg-white" : `${customMid}`} p-2 rounded-bottom border`,
-              responsive: true
-            }}
-            size="small"
-            bordered
-            scroll={{ x: '100%' }}
-            rowClassName={(record, index) => index % 2 === 0 ? 'striped-row' : ''}
-            className={`${customDark === "default-dark" ? "thead-default" : ""}
-              ${customDark === "red-dark" ? "thead-red" : ""}
-              ${customDark === "green-dark" ? "thead-green" : ""}
-              ${customDark === "blue-dark" ? "thead-blue" : ""}
-              ${customDark === "dark-dark" ? "thead-dark" : ""}
-              ${customDark === "pink-dark" ? "thead-pink" : ""}
-              ${customDark === "purple-dark" ? "thead-purple" : ""}
-              ${customDark === "light-dark" ? "thead-light" : ""}
-              ${customDark === "brown-dark" ? "thead-brown" : ""} responsive-table`}
-            style={{
-              ...tableStyle,
-              width: '100%',
-              minWidth: '100%'
-            }}
-          />
+          {(isLoading.processes || isLoading.data) ? (
+            <div className="d-flex justify-content-center align-items-center" style={{ height: '300px' }}>
+              <Spin size="large" tip={t('loading')} />
+            </div>
+          ) : (
+            <Table
+              columns={columns}
+              dataSource={filteredData}
+              pagination={{
+                position: ['bottomCenter'],
+                pageSize: 8,
+                showSizeChanger: true,
+                pageSizeOptions: ['8', '10', '20', '50'],
+                showTotal: (total) => `${t("total")} ${total} ${t("items")}`,
+                className: `${customDark === "dark-dark"? "bg-white" : `${customMid}`} p-2 rounded-bottom border`,
+                responsive: true
+              }}
+              size="small"
+              bordered
+              scroll={{ x: '100%' }}
+              rowClassName={(record, index) => index % 2 === 0 ? 'striped-row' : ''}
+              className={`${customDark === "default-dark" ? "thead-default" : ""}
+                ${customDark === "red-dark" ? "thead-red" : ""}
+                ${customDark === "green-dark" ? "thead-green" : ""}
+                ${customDark === "blue-dark" ? "thead-blue" : ""}
+                ${customDark === "dark-dark" ? "thead-dark" : ""}
+                ${customDark === "pink-dark" ? "thead-pink" : ""}
+                ${customDark === "purple-dark" ? "thead-purple" : ""}
+                ${customDark === "light-dark" ? "thead-light" : ""}
+                ${customDark === "brown-dark" ? "thead-brown" : ""} responsive-table`}
+              style={{
+                ...tableStyle,
+                width: '100%',
+                minWidth: '100%'
+              }}
+              locale={{
+                emptyText: (
+                  <div style={{ padding: '24px 0' }}>
+                    <p>{t('noDataAvailable')}</p>
+                  </div>
+                )
+              }}
+            />
+          )}
         </div>
       </div>
     </div>

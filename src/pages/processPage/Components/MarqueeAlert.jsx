@@ -12,7 +12,7 @@ const MarqueeAlert = ({ data, onClick }) => {
   return (
     <Row>
       <Col lg={12} md={12}>
-        <div className="marquee-container mt-2 mb-2">
+        <div className="marquee-container  ">
           <marquee 
             id="alert-marquee" 
             behavior="scroll" 

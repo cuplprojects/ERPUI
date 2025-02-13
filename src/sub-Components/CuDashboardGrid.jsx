@@ -8,12 +8,16 @@ import { ClientSideRowModelModule } from '@ag-grid-community/client-side-row-mod
 import { ModuleRegistry } from '@ag-grid-community/core';
 import Data from './../store/CuAgGrid.json';
 import { useNavigate } from 'react-router-dom';
+import { Spinner } from 'react-bootstrap';
 import themeStore from '../store/themeStore';
 import { useStore } from 'zustand';
+import { Spinner } from 'react-bootstrap';
+import { useTranslation } from 'react-i18next';
 // Register AG Grid Modules
 ModuleRegistry.registerModules([ClientSideRowModelModule]);
 
 const CuDashboardGrid = ({ setClickData }) => {
+  const { t } = useTranslation();
   const { getCssClasses } = useStore(themeStore);
   const [
     customDark,
@@ -30,12 +34,34 @@ const CuDashboardGrid = ({ setClickData }) => {
   const containerStyle = useMemo(() => ({ width: '100%', height: '100%' }), []);
   const gridStyle = useMemo(() => ({ height: '100%', width: '100%' }), []);
 
+
   // Use your local JSON data
   const [rowData, setRowData] = useState(Data);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        // Assuming Data is imported from your JSON file
+        setRowData(Data);
+        setClickData(Data?.[0]);
+      } catch (error) {
+        console.error("Error loading data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+
+  }, []);
+  
   useEffect(() => {
     setClickData(rowData?.[0]);
+
   }, []);
 
   const onRowClicked = useCallback((params) => {
@@ -104,15 +130,62 @@ const CuDashboardGrid = ({ setClickData }) => {
   return (
     <div style={containerStyle}>
       <div id="grid-wrapper" style={{ width: '100%', height: '100%' }}>
-        <div style={gridStyle} className="ag-theme-quartz-dark">
-          <AgGridReact
-            rowData={rowData}
-            columnDefs={columnDefs}
-            getRowClass={getRowClass} 
-            onGridSizeChanged={onGridSizeChanged}
-            onFirstDataRendered={onFirstDataRendered}
-          />
-        </div>
+        {isLoading ? (
+          <div className="d-flex justify-content-center align-items-center h-100">
+            <Spinner 
+              animation="border" 
+              role="status" 
+              className={customDarkText}
+            >
+              <span className="visually-hidden">{t('loading')}</span>
+            </Spinner>
+          </div>
+        ) : (
+          <div style={gridStyle} className="ag-theme-quartz-dark">
+            <AgGridReact
+              rowData={rowData}
+              columnDefs={columnDefs}
+              getRowClass={getRowClass}
+              onGridSizeChanged={onGridSizeChanged}
+              onFirstDataRendered={onFirstDataRendered}
+              overlayLoadingTemplate={
+                '<span class="ag-overlay-loading-center">' + t('loading') + '</span>'
+              }
+              overlayNoRowsTemplate={
+                '<span class="ag-overlay-no-rows-center">' + t('noDataAvailable') + '</span>'
+              }
+              loadingOverlayComponent={LoadingOverlay}
+              noRowsOverlayComponent={NoRowsOverlay}
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+
+// Custom Loading Overlay Component
+
+const LoadingOverlay = () => {
+  const { t } = useTranslation();
+  return (
+    <div className="d-flex justify-content-center align-items-center h-100">
+      <Spinner animation="border" role="status">
+        <span className="visually-hidden">{t('loading')}</span>
+      </Spinner>
+    </div>
+  );
+};
+
+// Custom No Rows Overlay Component
+const NoRowsOverlay = () => {
+  const { t } = useTranslation();
+  return (
+    <div className="d-flex justify-content-center align-items-center h-100">
+      <div className="text-center">
+        <h4>{t('noDataAvailable')}</h4>
+        <p>{t('pleaseCheckYourData')}</p>
       </div>
     </div>
   );

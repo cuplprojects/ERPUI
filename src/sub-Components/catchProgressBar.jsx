@@ -39,20 +39,20 @@ const CatchProgressBar = ({ data }) => {
   return (
     <div className="progress-container">
       <div className="d-flex justify-content-between align-items-center">
-        <h5 className={`${customDarkText}`}>
-          {t("overallProgress")} :{" "}
-          {`${completedPercent.toFixed(0)}% ${t("completed")}`}{" "}
-        </h5>
-        <h5 className={`${customDarkText}`}>
-          {completed} / {total} {t("completed")}
-        </h5>
+        {/* <h5 className={`${customDarkText}`}>
+          {`${completedPercent.toFixed(0)}%`}{" "}
+        </h5> */}
+        <p className={`${customDarkText} mb-1`} style={{fontSize:'13px'}}>
+          {/* Catches: {completed} / {total} */}
+        </p>
       </div>
       <ProgressBar
         className={`progress-bar-custom border border-2 ${
           customDark === "dark-dark" ? customDark : customDarkText
         }`}
       >
-        <ProgressBar striped variant="success" now={completedPercent} key={3} />
+        <ProgressBar striped variant="success"  label={`${completedPercent}% - Catches: ${completed} / ${total}`} now={completedPercent}  key={3} />
+
       </ProgressBar>
     </div>
   );

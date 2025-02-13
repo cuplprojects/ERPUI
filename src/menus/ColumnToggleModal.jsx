@@ -47,6 +47,7 @@ const ColumnToggleModal = ({ show, handleClose, columnVisibility, setColumnVisib
         { key: 'Zone', label: 'zone' },
         { key: 'Subject', label: 'subject' },
         { key: 'Exam Date', label: 'examDate' },
+        { key: 'Exam Time', label: 'examTime' },
         { key: 'Pages', label: 'Pages' }
     ];
 
