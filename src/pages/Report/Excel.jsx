@@ -18,6 +18,8 @@ const ExcelExport = ({ data, projectName, groupName, visibleColumns, lotNo }) =>
         'Quantity': sheet => sheet.quantity,
         'Pages': sheet => sheet.pages,
         'Status': sheet => sheet.catchStatus,
+        'Current Process': sheet => sheet.currentProcessName,
+        
         'Inner Envelope': sheet => sheet.innerEnvelope,
         'Outer Envelope': sheet => sheet.outerEnvelope,
         'Dispatch Date': sheet => sheet.dispatchDate
@@ -34,6 +36,7 @@ const ExcelExport = ({ data, projectName, groupName, visibleColumns, lotNo }) =>
         visibleColumns.quantity && "Quantity",
         visibleColumns.pageNo && "Pages",
         visibleColumns.status && "Status",
+        visibleColumns.currentProcessName && "Current Process",
         visibleColumns.innerEnvelope && "Inner Envelope",
         visibleColumns.outerEnvelope && "Outer Envelope",
         visibleColumns.dispatchDate && "Dispatch Date"

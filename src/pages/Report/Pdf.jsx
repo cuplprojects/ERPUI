@@ -54,6 +54,7 @@ const PdfExport = ({ data, projectName, groupName, visibleColumns, lotNo }) => {
       'Status': sheet => sheet.catchStatus === 'Completed' ? 'Completed' :
                         sheet.catchStatus === 'Running' ? 'Running' :
                         sheet.catchStatus === 'Pending' ? 'Pending' : 'N/A',
+       'Current Process': sheet => sheet.currentProcessName,                 
       'Inner Envelope': sheet => sheet.innerEnvelope,
       'Outer Envelope': sheet => sheet.outerEnvelope
     };
@@ -69,6 +70,7 @@ const PdfExport = ({ data, projectName, groupName, visibleColumns, lotNo }) => {
       'Quantity': { width: 15, halign: 'center' },
       'Pages': { width: 15, halign: 'center' },
       'Status': { width: 20, halign: 'center' },
+      'Current Process': { width: 25, halign: 'center' },
       'Inner Envelope': { width: 25, halign: 'center' },
       'Outer Envelope': { width: 25, halign: 'center' }
     };

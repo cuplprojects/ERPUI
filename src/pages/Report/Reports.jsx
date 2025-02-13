@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Form, Button, Row, Col, Container, Spinner, Dropdown } from "react-bootstrap";
-import { FaFileExport, FaSearch, FaFilter, FaSave, FaSortUp, FaSortDown } from 'react-icons/fa';
+import { FaFileExport, FaSearch, FaFilter, FaSave, FaSortUp, FaSortDown, FaList } from 'react-icons/fa';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import API from "../../CustomHooks/MasterApiHooks/api";
 import Table from 'react-bootstrap/Table';
@@ -22,6 +22,7 @@ const ProjectReport = () => {
     const [showTable, setShowTable] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [projectName, setProjectName] = useState("");
+
     const [selectedCatch, setSelectedCatch] = useState(null);
     const [showCatchView, setShowCatchView] = useState(false);
     const [viewMode, setViewMode] = useState('catch'); // 'catch' or 'process'
@@ -40,18 +41,23 @@ const ProjectReport = () => {
         quantity: true,
         pages: true,
         status: true,
+        currentProcess: true,
         innerEnvelope: true,
         outerEnvelope: true,
         dispatchDate: false,
+
     });
 
     const [sortField, setSortField] = useState(null);
     const [sortDirection, setSortDirection] = useState('asc');
+
     const [filteredSheets, setFilteredSheets] = useState([]);
     const [currentPage, setCurrentPage] = useState(0);
     const [recordsPerPage, setRecordsPerPage] = useState(10);
+
     const [currentSearchPage, setCurrentSearchPage] = useState(1);
     const [hasMoreResults, setHasMoreResults] = useState(false);
+
     const columnDefinitions = [
         { id: 'catchNo', label: 'Catch No' },
         { id: 'subject', label: 'Subject' },
@@ -63,10 +69,11 @@ const ProjectReport = () => {
         { id: 'quantity', label: 'Quantity' },
         { id: 'pages', label: 'Pages' },
         { id: 'status', label: 'Status' },
+        { id: 'current Process', label: 'Current Process' },
         { id: 'innerEnvelope', label: 'Inner Envelope' },
         { id: 'outerEnvelope', label: 'Outer Envelope' },
         { id: 'dispatchDate', label: 'Dispatch Date' },
-       
+
     ];
 
     useEffect(() => {
@@ -74,6 +81,8 @@ const ProjectReport = () => {
             const project = activeProjects.find(p => p.projectId === parseInt(selectedProjectId));
             setProjectName(project ? project.name : "");
         }
+
+
 
     }, [selectedProjectId]);
 
@@ -186,13 +195,13 @@ const ProjectReport = () => {
                     projectId: selectedProjectId
                 }
             });
-            
+
             if (page === 1) {
                 setSearchResults(response.data.results);
             } else {
                 setSearchResults(prev => [...prev, ...response.data.results]);
             }
-            
+
             setHasMoreResults(response.data.results.length === pageSize);
             setCurrentSearchPage(page);
         } catch (error) {
@@ -545,9 +554,9 @@ const ProjectReport = () => {
                                                         </div>
                                                     ))}
                                                 </div>
-                                                
+
                                                 {hasMoreResults && (
-                                                    <div 
+                                                    <div
                                                         className="text-center py-2 border-top"
                                                         style={{ backgroundColor: '#f8f9fa' }}
                                                     >
@@ -622,6 +631,7 @@ const ProjectReport = () => {
                                                     quantity: true,
                                                     pages: true,
                                                     status: true,
+                                                    currentProcess: true,
                                                     innerEnvelope: true,
                                                     outerEnvelope: true,
                                                     dispatchDate: true
@@ -629,7 +639,7 @@ const ProjectReport = () => {
                                                 className="py-2"
                                             />
                                             <div className="vr mx-1"></div>
-                                           
+
                                             <Dropdown.Item
                                                 as={PdfExport}
                                                 data={[selectedItem]}
@@ -647,6 +657,7 @@ const ProjectReport = () => {
                                                     quantity: true,
                                                     pages: true,
                                                     status: true,
+                                                    currentProcess: true,
                                                     innerEnvelope: true,
                                                     outerEnvelope: true,
                                                     dispatchDate: true
@@ -683,6 +694,7 @@ const ProjectReport = () => {
                                             <th>Quantity</th>
                                             <th>Pages</th>
                                             <th>Status</th>
+                                            <th>CurrentProcess</th>
                                             <th>Inner Envelope</th>
                                             <th>Outer Envelope</th>
                                             <th>Dispatch</th>
@@ -708,6 +720,8 @@ const ProjectReport = () => {
                                                 }`}>
                                                 {selectedItem.catchStatus}
                                             </span></td>
+
+                                            <td>{selectedItem.currentProcessName}</td>
                                             <td>{selectedItem.innerEnvelope}</td>
                                             <td>{selectedItem.outerEnvelope}</td>
                                             <td>{selectedItem.dispatchDate}</td>
@@ -948,7 +962,7 @@ const ProjectReport = () => {
                                             </Dropdown.Item>
 
                                             <div className="vr mx-1"></div>
-                                            { console.log(quantitySheets)}
+                                            {console.log(quantitySheets)}
                                             <Dropdown.Item
                                                 as={PdfExport}
                                                 data={quantitySheets}
@@ -1025,25 +1039,48 @@ const ProjectReport = () => {
                                     <thead className="bg-primary text-white">
                                         <tr>
                                             {visibleColumns.catchNo && (
-                                                <th onClick={() => handleSort('catchNo')} style={{ cursor: 'pointer', textAlign: 'center' }}>
+                                                <th>
                                                     <div className="d-flex align-items-center justify-content-between">
-                                                        Catch No
-                                                        <div className="d-flex flex-column ms-2" style={{ fontSize: '12px' }}>
-                                                            <FaSortUp
-                                                                color={sortField === 'catchNo' && sortDirection === 'asc' ? '#fff' : '#000'}
-                                                                style={{ marginBottom: '-3px' }}
-                                                            />
-                                                            <FaSortDown
-                                                                color={sortField === 'catchNo' && sortDirection === 'desc' ? '#fff' : '#000'}
-                                                                style={{ marginTop: '-3px' }}
-                                                            />
+                                                        <div onClick={() => handleSort('catchNo')} style={{ cursor: 'pointer', textAlign: 'center' }}>
+                                                            <div className="d-flex align-items-center justify-content-center">
+                                                                Catch No
+                                                                <div className="d-flex flex-column ms-2" style={{ fontSize: '12px' }}>
+                                                                    <FaSortUp
+                                                                        color={sortField === 'catchNo' && sortDirection === 'asc' ? '#fff' : '#000'}
+                                                                        style={{ marginBottom: '-3px' }}
+                                                                    />
+                                                                    <FaSortDown
+                                                                        color={sortField === 'catchNo' && sortDirection === 'desc' ? '#fff' : '#000'}
+                                                                        style={{ marginTop: '-3px' }}
+                                                                    />
+                                                                </div>
+                                                            </div>
                                                         </div>
+                                                        <button
+                                                            className="btn btn-sm btn-light ms-2"
+                                                            onClick={() => {
+                                                                // Toggle all process details
+                                                                setFilteredSheets(sheets => {
+                                                                    // Check if any sheet has showProcessDetails as false
+                                                                    const hasHiddenDetails = sheets.some(sheet => !sheet.showProcessDetails);
+
+                                                                    // If any are hidden, show all. Otherwise hide all
+                                                                    return sheets.map(sheet => ({
+                                                                        ...sheet,
+                                                                        showProcessDetails: hasHiddenDetails
+                                                                    }));
+                                                                });
+                                                            }}
+                                                            title="Toggle All Process Details"
+                                                        >
+                                                            <FaList size={12} />
+                                                        </button>
                                                     </div>
                                                 </th>
                                             )}
                                             {visibleColumns.subject && (
                                                 <th onClick={() => handleSort('subject')} style={{ cursor: 'pointer' }}>
-                                                    <div className="d-flex align-items-center justify-content-between">
+                                                    <div className="d-flex align-items-center justify-content-center">
                                                         Subject
                                                         <div className="d-flex flex-column ms-2" style={{ fontSize: '12px' }}>
                                                             <FaSortUp
@@ -1060,7 +1097,7 @@ const ProjectReport = () => {
                                             )}
                                             {visibleColumns.course && (
                                                 <th onClick={() => handleSort('course')} style={{ cursor: 'pointer' }}>
-                                                    <div className="d-flex align-items-center justify-content-between">
+                                                    <div className="d-flex align-items-center justify-content-center">
                                                         Course
                                                         <div className="d-flex flex-column ms-2" style={{ fontSize: '12px' }}>
                                                             <FaSortUp
@@ -1077,7 +1114,7 @@ const ProjectReport = () => {
                                             )}
                                             {visibleColumns.paper && (
                                                 <th onClick={() => handleSort('paper')} style={{ cursor: 'pointer' }}>
-                                                    <div className="d-flex align-items-center justify-content-between">
+                                                    <div className="d-flex align-items-center justify-content-center">
                                                         Paper
                                                         <div className="d-flex flex-column ms-2" style={{ fontSize: '12px' }}>
                                                             <FaSortUp
@@ -1094,7 +1131,7 @@ const ProjectReport = () => {
                                             )}
                                             {visibleColumns.examDate && (
                                                 <th onClick={() => handleSort('examDate')} style={{ cursor: 'pointer' }}>
-                                                    <div className="d-flex align-items-center justify-content-between">
+                                                    <div className="d-flex align-items-center justify-content-center">
                                                         Exam Date
                                                         <div className="d-flex flex-column ms-2" style={{ fontSize: '12px' }}>
                                                             <FaSortUp
@@ -1111,7 +1148,7 @@ const ProjectReport = () => {
                                             )}
                                             {visibleColumns.examTime && (
                                                 <th onClick={() => handleSort('examTime')} style={{ cursor: 'pointer' }}>
-                                                    <div className="d-flex align-items-center justify-content-between">
+                                                    <div className="d-flex align-items-center justify-content-center">
                                                         Exam Time
                                                         <div className="d-flex flex-column ms-2" style={{ fontSize: '12px' }}>
                                                             <FaSortUp
@@ -1128,7 +1165,7 @@ const ProjectReport = () => {
                                             )}
                                             {visibleColumns.quantity && (
                                                 <th onClick={() => handleSort('quantity')} style={{ cursor: 'pointer' }}>
-                                                    <div className="d-flex align-items-center justify-content-between">
+                                                    <div className="d-flex align-items-center justify-content-center">
                                                         Quantity
                                                         <div className="d-flex flex-column ms-2" style={{ fontSize: '12px' }}>
                                                             <FaSortUp
@@ -1145,7 +1182,7 @@ const ProjectReport = () => {
                                             )}
                                             {visibleColumns.pages && (
                                                 <th onClick={() => handleSort('pages')} style={{ cursor: 'pointer' }}>
-                                                    <div className="d-flex align-items-center justify-content-between">
+                                                    <div className="d-flex align-items-center justify-content-center">
                                                         Pages
                                                         <div className="d-flex flex-column ms-2" style={{ fontSize: '12px' }}>
                                                             <FaSortUp
@@ -1164,7 +1201,7 @@ const ProjectReport = () => {
 
 
                                                 <th onClick={() => handleSort('status')} style={{ cursor: 'pointer' }}>
-                                                    <div className="d-flex align-items-center justify-content-between">
+                                                    <div className="d-flex align-items-center justify-content-center">
                                                         Status
                                                         <div className="d-flex flex-column ms-2" style={{ fontSize: '12px' }}>
                                                             <FaSortUp
@@ -1179,9 +1216,29 @@ const ProjectReport = () => {
                                                     </div>
                                                 </th>
                                             )}
+
+                                            {visibleColumns.status && (
+
+
+                                                <th onClick={() => handleSort('currentProcess')} style={{ cursor: 'pointer' }}>
+                                                    <div className="d-flex align-items-center justify-content-center">
+                                                        CurrentProcess
+                                                        <div className="d-flex flex-column ms-2" style={{ fontSize: '12px' }}>
+                                                            <FaSortUp
+                                                                color={sortField === 'currentProcess' && sortDirection === 'asc' ? '#fff' : '#000'}
+                                                                style={{ marginBottom: '-3px' }}
+                                                            />
+                                                            <FaSortDown
+                                                                color={sortField === 'currentProcess' && sortDirection === 'desc' ? '#fff' : '#000'}
+                                                                style={{ marginTop: '-3px' }}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </th>
+                                            )}
                                             {visibleColumns.innerEnvelope && (
                                                 <th onClick={() => handleSort('innerEnvelope')} style={{ cursor: 'pointer' }}>
-                                                    <div className="d-flex align-items-center justify-content-between">
+                                                    <div className="d-flex align-items-center justify-content-center">
                                                         Inner Envelope
                                                         <div className="d-flex flex-column ms-2" style={{ fontSize: '12px' }}>
                                                             <FaSortUp
@@ -1198,7 +1255,7 @@ const ProjectReport = () => {
                                             )}
                                             {visibleColumns.outerEnvelope && (
                                                 <th onClick={() => handleSort('outerEnvelope')} style={{ cursor: 'pointer' }}>
-                                                    <div className="d-flex align-items-center justify-content-between">
+                                                    <div className="d-flex align-items-center justify-content-center">
                                                         Outer Envelope
                                                         <div className="d-flex flex-column ms-2" style={{ fontSize: '12px' }}>
                                                             <FaSortUp
@@ -1215,7 +1272,7 @@ const ProjectReport = () => {
                                             )}
                                             {visibleColumns.dispatchDate && (
                                                 <th onClick={() => handleSort('dispatchDate')} style={{ cursor: 'pointer' }}>
-                                                    <div className="d-flex align-items-center justify-content-between">
+                                                    <div className="d-flex align-items-center justify-content-center">
                                                         Dispatch Date
                                                         <div className="d-flex flex-column ms-2" style={{ fontSize: '12px' }}>
                                                             <FaSortUp
@@ -1266,6 +1323,7 @@ const ProjectReport = () => {
                                                             </span>
                                                         </td>
                                                     )}
+                                                    {visibleColumns.currentProcess && <td className="text-center">{sheet.currentProcessName}</td>}
 
                                                     {visibleColumns.innerEnvelope && <td className="text-center">{sheet.innerEnvelope}</td>}
                                                     {visibleColumns.outerEnvelope && <td className="text-center">{sheet.outerEnvelope}</td>}

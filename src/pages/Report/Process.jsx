@@ -58,6 +58,7 @@ const ProcessDetails = ({ catchData, projectName, groupName }) => {
 
   return (
     <div>
+      
       <Table 
         striped 
         bordered 
