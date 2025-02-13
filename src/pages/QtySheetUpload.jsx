@@ -9,12 +9,12 @@ import {
 import * as XLSX from "xlsx";
 import themeStore from "../store/themeStore";
 import { useStore } from "zustand";
-import ViewQuantitySheet from "./ViewQuantitySheet";
+import ViewQuantitySheet from "./../pages/ViewQuantitySheet"
 import { useParams } from "react-router-dom";
 import { IoMdEye } from "react-icons/io";
 import API from "../CustomHooks/MasterApiHooks/api";
 import { useTranslation } from "react-i18next";
-import { decrypt } from "../Security/Security";
+import { decrypt } from "./../Security/Security";
 import { BsCheckCircleFill } from "react-icons/bs";
 import {
   success,

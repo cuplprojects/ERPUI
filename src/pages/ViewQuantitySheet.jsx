@@ -624,6 +624,8 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
         examTime: newRowData.examTime,
         processId: [],
         status: 0,
+        pages: newRowData.pages,
+        stopCatch: 0
       },
     ];
 
@@ -650,6 +652,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
         percentageCatch: 0,
         projectId: projectId,
         status: 0,
+        stopCatch:0
       });
       setFormErrors({});
       fetchQuantity(selectedLotNo);

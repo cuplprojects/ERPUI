@@ -7,6 +7,8 @@ import { ModuleRegistry } from "@ag-grid-community/core";
 import "./../styles/DashboardGrid.css";
 import API from '../CustomHooks/MasterApiHooks/api';
 import { useTranslation } from 'react-i18next';
+import { Spinner } from 'react-bootstrap';
+
 
 // Register AG Grid Modules
 ModuleRegistry.registerModules([ClientSideRowModelModule]);
@@ -20,12 +22,19 @@ const DashboardGrid = ({ projectId, lotNo }) => {
 
   const [rowData, setRowData] = useState([]);
   const [transactionData, setTransactionData] = useState([]); // Added to hold transaction data
+  const [isLoading, setIsLoading] = useState({
+    transactions: true,
+    transactionData: true
+  });
+
+
+
 
   const getColumnDefs = useCallback(() => [
-    { 
-      field: "quantitySheetId", 
-      headerName: t('srNo'), 
-      cellStyle: { textAlign: "center" }, 
+    {
+      field: "quantitySheetId",
+      headerName: t('srNo'),
+      cellStyle: { textAlign: "center" },
       headerClass: "center-header",
       valueGetter: (params) => {
         // Get the index of the current row and add 1 to start from 1 instead of 0
@@ -40,17 +49,19 @@ const DashboardGrid = ({ projectId, lotNo }) => {
     { field: "outerEnvelope", headerName: t('outerEnvelope'), cellStyle: { textAlign: "center" }, headerClass: "center-header" },
     { field: "quantity", headerName: t('quantity'), cellStyle: { textAlign: "center" }, headerClass: "center-header" },
     { field: "percentageCatch", headerName: t('percentageCatch'), cellStyle: { textAlign: "center" }, headerClass: "center-header", valueFormatter: params => params.value.toFixed(2) },
-    { field: "status", headerName: t('status'), cellStyle: { textAlign: "center" }, headerClass: "center-header", valueFormatter: params => {
-      const transactionStatus = transactionData.find(transaction => transaction.catchNo === params.data.catchNo)?.status;
-      switch (transactionStatus) {
-        case 1:
-          return t('started');
-        case 2:
-          return t('completed');
-        default:
-          return t('pending');
+    {
+      field: "status", headerName: t('status'), cellStyle: { textAlign: "center" }, headerClass: "center-header", valueFormatter: params => {
+        const transactionStatus = transactionData.find(transaction => transaction.catchNo === params.data.catchNo)?.status;
+        switch (transactionStatus) {
+          case 1:
+            return t('started');
+          case 2:
+            return t('completed');
+          default:
+            return t('pending');
+        }
       }
-    } },
+    },
   ], [t, transactionData]);
 
   const [columnDefs, setColumnDefs] = useState(getColumnDefs());
@@ -72,24 +83,32 @@ const DashboardGrid = ({ projectId, lotNo }) => {
 
   useEffect(() => {
     const fetchTransactions = async () => {
+      setIsLoading(prev => ({ ...prev, transactions: true }));
       try {
-        if(lotNo && projectId){
+        if (lotNo && projectId) {
           const response = await API.get(`/QuantitySheet/Catch?ProjectId=${projectId}&lotNo=${lotNo}`);
           setRowData(response.data);
         }
       } catch (error) {
         console.error("Error fetching transactions:", error);
       }
+      finally {
+        setIsLoading(prev => ({ ...prev, transactions: false }));
+      }
     };
 
     const fetchTransactionData = async () => {
+      setIsLoading(prev => ({ ...prev, transactionData: true }));
       try {
-        if(lotNo && projectId){
+        if (lotNo && projectId) {
           const response = await API.get(`/Transactions?ProjectId=${projectId}&ProcessId=${lotNo}`);
           setTransactionData(response.data);
         }
       } catch (error) {
         console.error("Error fetching transaction data:", error);
+      }
+      finally {
+        setIsLoading(prev => ({ ...prev, transactionData: false }));
       }
     };
 
@@ -115,29 +134,43 @@ const DashboardGrid = ({ projectId, lotNo }) => {
 
   return (
     <div style={{ width: '100%', height: '100vh' }}>
-      <div style={{ height: '100%', width: '100%' }} className="ag-theme-quartz-dark">
-        <AgGridReact
-          rowData={rowData}
-          columnDefs={columnDefs}
-          defaultColDef={defaultColDef}
-          onGridReady={onGridReady}
-          paginationPageSize={10}
-          pagination={true}
-          autoHeight={true}
-          width={300}
-          height={300}
-          localeText={{
-            page: t('page'),
-            to: t('to'), 
-            of: t('of'),
-            pageSize: t('pageSize')
-          }}
-          paginationOptions={{
-            pageSize: 10,
-            pageSizes: [10, 25, 50],
-          }}
-        />
-      </div>
+      {isLoading.transactions || isLoading.transactionData ? (
+        <div className="d-flex justify-content-center align-items-center h-100">
+          <Spinner animation="border" role="status">
+            <span className="visually-hidden">{t('loading')}</span>
+          </Spinner>
+        </div>
+      ) : (
+        <div style={{ height: '100%', width: '100%' }} className="ag-theme-quartz-dark">
+          <AgGridReact
+            rowData={rowData}
+            columnDefs={columnDefs}
+            defaultColDef={defaultColDef}
+            onGridReady={onGridReady}
+            paginationPageSize={10}
+            pagination={true}
+            autoHeight={true}
+            width={300}
+            height={300}
+            localeText={{
+              page: t('page'),
+              to: t('to'), 
+              of: t('of'),
+              pageSize: t('pageSize')
+            }}
+            paginationOptions={{
+              pageSize: 10,
+              pageSizes: [10, 25, 50],
+            }}
+            overlayLoadingTemplate={
+              '<span class="ag-overlay-loading-center">' + t('loading') + '</span>'
+            }
+            overlayNoRowsTemplate={
+              '<span class="ag-overlay-no-rows-center">' + t('noDataAvailable') + '</span>'
+            }
+          />
+        </div>
+      )}
     </div>
   );
 };
