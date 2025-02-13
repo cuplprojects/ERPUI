@@ -1,14 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Button, Input, Switch, Form, Row, Col, message, Checkbox } from 'antd';
-import { EditOutlined } from '@ant-design/icons';
+import { EditOutlined, UploadOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useStore } from 'zustand';
+import { useNavigate } from 'react-router-dom';
 import API from '../../../CustomHooks/MasterApiHooks/api';
 import themeStore from '../../../store/themeStore';
 import EditProjectModal from '../components/EditProjectModal';
 import AddProjectModal from '../components/AddProjectModal';
 import { error, success } from '../../../CustomHooks/Services/AlertMessageService';
+
+import { encrypt } from '../../../Security/Security';
+
+
 import { FaArchive } from "react-icons/fa";
+
 const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
   const { t } = useTranslation();
   const { getCssClasses } = useStore(themeStore);
@@ -34,6 +40,7 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
   const [sortedInfo, setSortedInfo] = useState({});
   const [total, setTotal] = useState(0);
   const [showDescription, setShowDescription] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     getProjects();
@@ -56,18 +63,22 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
   const getGroups = async () => {
     try {
       const response = await API.get('/Groups');
-      // Filter out groups where status is false
+
       const activeGroups = response.data.filter(group => group.status === true);
       setGroups(activeGroups);
-    } catch (error) {
-      console.error('Error fetching groups:', error);
+    } catch (err) {
+      console.error('Failed to fetch groups', err);
+      error(t('unableToFetchGroups'));
+
     }
   };
 
   const getTypes = async () => {
     try {
       const response = await API.get('/PaperTypes');
+
       // Filter out types where status is false
+
       const activeTypes = response.data.filter(type => type.status === true);
       setTypes(activeTypes);
     } catch (err) {
@@ -88,11 +99,11 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
       description: values.description || '',
       groupId: selectedGroup.id,
       typeId: selectedType.typeId,
-      noOfSeries: numberOfSeries || 0, 
+      noOfSeries: numberOfSeries || 0,
       seriesName: seriesNames,
       quantityThreshold: values.quantityThreshold
     };
-    
+
     try {
       const response = await API.post('/Project', newProject);
       getProjects();
@@ -117,7 +128,7 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
   const handleEditSave = async (values) => {
     try {
       const selectedTypeObj = types.find(type => type.typeId === values.type);
-      
+
       const updatedProject = {
         ...editingProject,
         name: values.name,
@@ -192,12 +203,14 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
       title: t('action'),
       key: 'action',
       render: (_, record) => (
-        <div className="d-flex gap-2">
+
+        <div className="d-flex align-items-center justify-content-center">
           <Button
-            className={`${customBtn} d-flex align-items-center justify-content-center`}
+            className={`${customBtn} me-2`}
             onClick={() => {
               setEditingProject(record);
-              setNumberOfSeries(record.noOfSeries);
+              setNumberOfSeries(record.noOfSeries); // Set numberOfSeries when editing
+
               setSeriesNames(record.seriesName);
               editForm.setFieldsValue({
                 name: record.name,
@@ -213,13 +226,24 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
             }}
             icon={<EditOutlined />}
             title={t('edit')}
+
+          >
+            
+          </Button>
+          <Button
+            className={`${customBtn}`}
+            onClick={() => navigate(`/quantity-sheet-uploads/${encrypt(record.projectId)}`)}
+            icon={<UploadOutlined />}
+            title={t('Upload Quantity Sheet')}
           />
+
           {/* <Button
             className={`${customBtn} d-flex align-items-center justify-content-center`}
             onClick={() => handleArchive(record)}
             icon={<FaArchive />}
             title={t('archive')}
           /> */}
+
         </div>
       ),
     },
@@ -287,7 +311,7 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
           </Button>
         </Col>
         <Col xs={24} sm={12} style={{ textAlign: 'right' }}>
-          <Checkbox 
+          <Checkbox
             checked={showDescription}
             onChange={(e) => setShowDescription(e.target.checked)}
             className="me-3"
@@ -361,8 +385,8 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
         handleTypeChange={handleTypeChange}
         numberOfSeries={numberOfSeries}
         setNumberOfSeries={setNumberOfSeries}
-        seriesNames = {seriesNames}
-        setSeriesNames = {setSeriesNames}
+        seriesNames={seriesNames}
+        setSeriesNames={setSeriesNames}
         projectName={projectName}
         setProjectName={setProjectName}
         selectedGroup={selectedGroup}
@@ -392,8 +416,8 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
         customDarkBorder={customDarkBorder}
         numberOfSeries={numberOfSeries}
         setNumberOfSeries={setNumberOfSeries}
-        seriesNames = {seriesNames}
-        setSeriesNames = {setSeriesNames}
+        seriesNames={seriesNames}
+        setSeriesNames={setSeriesNames}
         t={t}
       />
     </>

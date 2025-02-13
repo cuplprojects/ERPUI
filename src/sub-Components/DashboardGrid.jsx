@@ -9,6 +9,7 @@ import API from '../CustomHooks/MasterApiHooks/api';
 import { useTranslation } from 'react-i18next';
 import { Spinner } from 'react-bootstrap';
 
+
 // Register AG Grid Modules
 ModuleRegistry.registerModules([ClientSideRowModelModule]);
 
@@ -26,11 +27,12 @@ const DashboardGrid = ({ projectId, lotNo }) => {
     transactionData: true
   });
 
+
   const getColumnDefs = useCallback(() => [
-    { 
-      field: "quantitySheetId", 
-      headerName: t('srNo'), 
-      cellStyle: { textAlign: "center" }, 
+    {
+      field: "quantitySheetId",
+      headerName: t('srNo'),
+      cellStyle: { textAlign: "center" },
       headerClass: "center-header",
       valueGetter: (params) => {
         // Get the index of the current row and add 1 to start from 1 instead of 0
@@ -45,17 +47,19 @@ const DashboardGrid = ({ projectId, lotNo }) => {
     { field: "outerEnvelope", headerName: t('outerEnvelope'), cellStyle: { textAlign: "center" }, headerClass: "center-header" },
     { field: "quantity", headerName: t('quantity'), cellStyle: { textAlign: "center" }, headerClass: "center-header" },
     { field: "percentageCatch", headerName: t('percentageCatch'), cellStyle: { textAlign: "center" }, headerClass: "center-header", valueFormatter: params => params.value.toFixed(2) },
-    { field: "status", headerName: t('status'), cellStyle: { textAlign: "center" }, headerClass: "center-header", valueFormatter: params => {
-      const transactionStatus = transactionData.find(transaction => transaction.catchNo === params.data.catchNo)?.status;
-      switch (transactionStatus) {
-        case 1:
-          return t('started');
-        case 2:
-          return t('completed');
-        default:
-          return t('pending');
+    {
+      field: "status", headerName: t('status'), cellStyle: { textAlign: "center" }, headerClass: "center-header", valueFormatter: params => {
+        const transactionStatus = transactionData.find(transaction => transaction.catchNo === params.data.catchNo)?.status;
+        switch (transactionStatus) {
+          case 1:
+            return t('started');
+          case 2:
+            return t('completed');
+          default:
+            return t('pending');
+        }
       }
-    } },
+    },
   ], [t, transactionData]);
 
   const [columnDefs, setColumnDefs] = useState(getColumnDefs());
@@ -79,7 +83,7 @@ const DashboardGrid = ({ projectId, lotNo }) => {
     const fetchTransactions = async () => {
       setIsLoading(prev => ({ ...prev, transactions: true }));
       try {
-        if(lotNo && projectId){
+        if (lotNo && projectId) {
           const response = await API.get(`/QuantitySheet/Catch?ProjectId=${projectId}&lotNo=${lotNo}`);
           setRowData(response.data);
         }
@@ -88,18 +92,24 @@ const DashboardGrid = ({ projectId, lotNo }) => {
       } finally {
         setIsLoading(prev => ({ ...prev, transactions: false }));
       }
+      finally {
+        setIsLoading(prev => ({ ...prev, transactions: false }));
+      }
     };
 
     const fetchTransactionData = async () => {
       setIsLoading(prev => ({ ...prev, transactionData: true }));
       try {
-        if(lotNo && projectId){
+        if (lotNo && projectId) {
           const response = await API.get(`/Transactions?ProjectId=${projectId}&ProcessId=${lotNo}`);
           setTransactionData(response.data);
         }
       } catch (error) {
         console.error("Error fetching transaction data:", error);
       } finally {
+        setIsLoading(prev => ({ ...prev, transactionData: false }));
+      }
+      finally {
         setIsLoading(prev => ({ ...prev, transactionData: false }));
       }
     };

@@ -8,6 +8,7 @@ import { ClientSideRowModelModule } from '@ag-grid-community/client-side-row-mod
 import { ModuleRegistry } from '@ag-grid-community/core';
 import Data from './../store/CuAgGrid.json';
 import { useNavigate } from 'react-router-dom';
+import { Spinner } from 'react-bootstrap';
 import themeStore from '../store/themeStore';
 import { useStore } from 'zustand';
 import { Spinner } from 'react-bootstrap';
@@ -32,8 +33,13 @@ const CuDashboardGrid = ({ setClickData }) => {
   const [hasProcesses, setHasProcesses] = useState(false);
   const containerStyle = useMemo(() => ({ width: '100%', height: '100%' }), []);
   const gridStyle = useMemo(() => ({ height: '100%', width: '100%' }), []);
+
+
+  // Use your local JSON data
+  const [rowData, setRowData] = useState(Data);
   const [isLoading, setIsLoading] = useState(true);
-  const [rowData, setRowData] = useState([]);
+  const navigate = useNavigate();
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -50,6 +56,12 @@ const CuDashboardGrid = ({ setClickData }) => {
     };
 
     fetchData();
+
+  }, []);
+  
+  useEffect(() => {
+    setClickData(rowData?.[0]);
+
   }, []);
 
   const onRowClicked = useCallback((params) => {
@@ -152,7 +164,9 @@ const CuDashboardGrid = ({ setClickData }) => {
   );
 };
 
+
 // Custom Loading Overlay Component
+
 const LoadingOverlay = () => {
   const { t } = useTranslation();
   return (

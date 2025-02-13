@@ -30,6 +30,7 @@ import MarqueeAlert from "../pages/processPage/Components/MarqueeAlert";
 import DispatchPage from "../pages/dispatchPage/DispatchPage";
 import { IoIosArrowDropdownCircle } from "react-icons/io";
 import { Collapse } from "react-bootstrap";
+import ProcessProgressTrain from "./ProcessProgressTrain";
 
 const ProcessTable = () => {
   const { encryptedProjectId, encryptedLotNo } = useParams();
@@ -39,11 +40,16 @@ const ProcessTable = () => {
   const { processId, processName } = useCurrentProcessStore();
   const { setProcess } = useCurrentProcessStore((state) => state.actions);
   const userData = useUserData();
-  const { t } = useTranslation();
   const [isHeaderOpen, setIsHeaderOpen] = useState(() => {
     const saved = localStorage.getItem('processTableHeaderOpen');
     return saved !== null ? JSON.parse(saved) : true;
   });
+
+  useEffect(() => {
+    localStorage.setItem('processTableHeaderOpen', JSON.stringify(isHeaderOpen));
+  }, [isHeaderOpen]);
+  const { t } = useTranslation();
+  
 
   useEffect(() => {
     localStorage.setItem('processTableHeaderOpen', JSON.stringify(isHeaderOpen));
@@ -394,7 +400,7 @@ const ProcessTable = () => {
     quantity: 0,
     percentageCatch: 0,
     projectId: item.projectId,
-    pages:item.pages,
+    pages: item.pages,
     processId: processId,
     status: item.transactions[0]?.status || 0,
     alerts: item.transactions[0]?.alarmId || "",
@@ -496,10 +502,10 @@ const ProcessTable = () => {
               previousSequence--;
               continue;
             }
-  
-            if (selectedProcess.processId === 3 && 
-               (previousProcessData.processId === 2 || previousProcessData.processId === 1)) {
-              previousSequence--;  // Prevent infinite loop and avoid fetching invalid previous process
+
+            if (selectedProcess.processId === 3 &&
+              (previousProcessData.processId === 2 || previousProcessData.processId === 1)) {
+              previousSequence = 0;  // Prevent infinite loop and avoid fetching invalid previous process
               continue;
             }
 
@@ -609,7 +615,7 @@ const ProcessTable = () => {
               subject: item.subject,
               innerEnvelope: item.innerEnvelope,
               outerEnvelope: item.outerEnvelope,
-              pages:item.pages,
+              pages: item.pages,
               quantity: item.quantity,
               percentageCatch: item.percentageCatch,
               projectId: selectedProject?.value || id,
@@ -825,87 +831,101 @@ const ProcessTable = () => {
 
   return (
     <div className="container-fluid">
-    <div className="d-flex align-items-center mb-">
-      <IoIosArrowDropdownCircle 
-        className={`me-2 ${customDarkText}`}
-        size={24}
-        style={{ 
-          cursor: 'pointer',
-          transform: isHeaderOpen ? 'rotate(0deg)' : 'rotate(-90deg)',
-          transition: 'transform 0.3s ease'
-        }}
-        onClick={() => setIsHeaderOpen(!isHeaderOpen)}
-      />
-      <span className={`${customDarkText}`}>Project Details</span>
-    </div>
-
-    <Collapse in={isHeaderOpen}>
-      <div>
-        <Row className="mb-3">
-          <Col lg={12} md={12} xs={12}>
-            <Card className="shadow-sm">
-              <Card.Header
-                as="h3"
-                className={`${customDark === "dark-dark"
-                  ? `${customDark} text-white`
-                  : `${customDark} text-white`
-                }`}
-              >
-                <Row className="d-flex align-items-center">
-                  <Col lg={3} md={4} xs={12}>
-                    <PreviousProcess
-                      previousProcess={previousProcess}
-                      previousProcessCompletionPercentage={
-                        previousProcessCompletionPercentage
-                      }
-                    />
-                  </Col>
-                  <div className="d-flex justify-content-center d-lg-none d-md-none">
-                    <hr className="w-100 center" />
-                  </div>
-                  <Col lg={6} md={4} xs={12}>
-                    <ToggleProject
-                      projectName={projectName}
-                      selectedLot={selectedLot}
-                      onChange={handleProjectChange}
-                    />
-                  </Col>
-                  <div className="d-flex justify-content-center d-lg-none d-md-none">
-                    <hr className="w-100 center" />
-                  </div>
-                  <Col lg={3} md={4} xs={12}>
-                    <ToggleProcess
-                      processes={processes}
-                      initialProcessId={processId}
-                      onProcessChange={handleProcessChange}
-                      customDark={customDark}
-                    />
-                  </Col>
-                </Row>
-              </Card.Header>
-            </Card>
-          </Col>
-        </Row>
+      <div className="d-flex align-items-center mb-">
+        <IoIosArrowDropdownCircle
+          className={`me-2 ${customDarkText}`}
+          size={24}
+          style={{
+            cursor: 'pointer',
+            transform: isHeaderOpen ? 'rotate(0deg)' : 'rotate(-90deg)',
+            transition: 'transform 0.3s ease'
+          }}
+          onClick={() => setIsHeaderOpen(!isHeaderOpen)}
+        />
+        <span className={`${customDarkText}`}>Project Details</span>
       </div>
-    </Collapse>
+      <Collapse in={isHeaderOpen}>
+        <div>
+          <Row className="mb-">
+            <Col lg={12} md={12} xs={12} className="">
+              <Card className="shadow-sm">
+                <Card.Header
+                  as="h3"
+                  className={`${customDark === "dark-dark"
+                      ? `${customDark} text-white`
+                      : `${customDark} text-white`
+                    }`}
+                >
+                  <Row className="d-flex align-items-center">
+                    <Col lg={3} md={4} xs={12}>
+                      <PreviousProcess
+                        previousProcess={previousProcess}
+                        previousProcessCompletionPercentage={
+                          previousProcessCompletionPercentage
+                        }
+                      />
+                    </Col>
+                    <div className="d-flex justify-content-center d-lg-none d-md-none">
+                      <hr className="w-100 center" />
+                    </div>
+                    <Col lg={6} md={4} xs={12}>
+                      <ToggleProject
+                        projectName={projectName}
+                        selectedLot={selectedLot}
+                        onChange={handleProjectChange}
+                      />
+                    </Col>
+                    <div className="d-flex justify-content-center d-lg-none d-md-none">
+                      <hr className="w-100 center" />
+                    </div>
+                    <Col lg={3} md={4} xs={12}>
+                      <ToggleProcess
+                        processes={processes}
+                        initialProcessId={processId}
+                        onProcessChange={handleProcessChange}
+                        customDark={customDark}
+                      />
+                    </Col>
+                  </Row>
+                </Card.Header>
+              </Card>
+            </Col>
+          </Row>
+        </div>
+      </Collapse>
 
       <Row>
         <Col lg={12} md={12}>
-          <div className="marquee-container mt-2 mb-2">
+          <div className="marquee-container">
             <MarqueeAlert data={tableData} onClick={handleCatchClick} />
           </div>
         </Col>
       </Row>
 
       {processName !== "Dispatch" && (
-        <Row className="mb-5">
-          <Col lg={12} md={12}>
+        
+          <Row className="mb-2">
+            <div className="d-flex align-items-center justify-content-between">
+          
+          <Col lg={1} md={3}>
             <CatchProgressBar data={combinedTableData} />
           </Col>
+          
+          <Col lg={11} md={9} className="mr-2">
+            <div>
+              <ProcessProgressTrain
+                ProjectID={selectedProject.value}
+                lotNumber={selectedLot}
+                previousProcess={previousProcess}
+              />
+            </div>
+          </Col>
+        </div> 
         </Row>
+        
       )}
 
-      <Row>
+      {/* <Row>
         <Col lg={12} md={12} className="pe-0">
           <div className="d-flex flex-wrap gap-2 justify-content-center">
             {projectLots.map((lot, index) => (
@@ -930,7 +950,7 @@ const ProcessTable = () => {
             ))}
           </div>
         </Col>
-      </Row>
+      </Row> */}
 
       {processName === "Dispatch" ? (
         <DispatchPage
@@ -953,6 +973,7 @@ const ProcessTable = () => {
                 hasFeaturePermission={hasFeaturePermission}
                 processId={processId}
                 projectLots={projectLots}
+                handleLotClick={handleLotClick}
               />
             )}
           </Col>

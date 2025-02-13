@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Table, Input, Spin } from 'antd';
+
+import { Table, Input, Spin} from 'antd';
+
 import API from '../CustomHooks/MasterApiHooks/api';
 import { useTranslation } from 'react-i18next';
 import themeStore from '../store/themeStore';
@@ -22,7 +24,7 @@ const CuDetailedAgGrid = ({ projectId , clickedProject }) => {
   ] = getCssClasses();
   const { t } = useTranslation();
   const containerStyle = useMemo(() => ({ width: '100%', height: '100%' }), []);
-
+  const [isLoading, setIsLoading] = useState(true);
   const [rowData, setRowData] = useState([]);
   const [processNames, setProcessNames] = useState({});
   const [searchText, setSearchText] = useState('');
@@ -48,6 +50,9 @@ const CuDetailedAgGrid = ({ projectId , clickedProject }) => {
       } finally {
         setIsLoading(prev => ({ ...prev, processes: false }));
       }
+      finally {
+        setIsLoading(prev => ({ ...prev, processes: false }));
+      }
     };
 
     fetchProcessNames();
@@ -56,7 +61,9 @@ const CuDetailedAgGrid = ({ projectId , clickedProject }) => {
   useEffect(() => {
     const fetchData = async () => {
       if (projectId) {
-        setIsLoading(prev => ({ ...prev, data: true }));
+
+        setIsLoading(prev => ({ ...prev, processes: true })); 
+
         try {
           const response = await API.get(`/Transactions/process-lot-percentages?projectId=${projectId}`);
           const processData = response.data.processes.map((process, index) => ({
@@ -73,6 +80,9 @@ const CuDetailedAgGrid = ({ projectId , clickedProject }) => {
           console.error('Error fetching process data:', error);
         } finally {
           setIsLoading(prev => ({ ...prev, data: false }));
+        }
+        finally {
+          setIsLoading(prev => ({ ...prev, processes: false }));
         }
       }
     };
