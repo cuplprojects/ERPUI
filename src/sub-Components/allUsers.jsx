@@ -119,6 +119,7 @@ const AllUsers = () => {
   }, []);
 
   const isEditDisabled = (record) => {
+
     const roledata = roles.find(r => r.roleId === record.roleId);
   
     // User can always edit their own role, but no one else’s role
@@ -129,6 +130,7 @@ const AllUsers = () => {
     // User cannot edit if the target user's role is higher or equal to their own
     const res = userRole?.priorityOrder >= roledata?.priorityOrder;
     return res;
+
   }
   
 

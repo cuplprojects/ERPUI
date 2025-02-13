@@ -11,7 +11,7 @@ import { Col, Row } from 'react-bootstrap';
 import { FaSearch } from "react-icons/fa";
 import { useTranslation } from 'react-i18next';
 import { success, error } from '../CustomHooks/Services/AlertMessageService';
-
+import { FaArchive } from "react-icons/fa";
 const Group = () => {
   const { t } = useTranslation();
   const { getCssClasses } = useStore(themeStore);
@@ -216,19 +216,29 @@ const Group = () => {
             </Button>
           </div>
         ) : (
-          <Button 
-            type="link" 
-            onClick={() => {
-              setEditingIndex(index);
-              setEditingValue(record.name);
-              setEditingStatus(record.status);
-              setOriginalData(record);
-            }}
-            className={`${customBtn} d-flex align-items-center`}
-          >
-            <EditOutlined className={`${customBtn} text-white`} />
-            <span className="ms-1">{t('edit')}</span>
-          </Button>
+          <div className="d-flex gap-2 align-items-center">
+            <Button 
+              type="link" 
+              onClick={() => {
+                setEditingIndex(index);
+                setEditingValue(record.name);
+                setEditingStatus(record.status);
+                setOriginalData(record);
+              }}
+              className={`${customBtn} d-flex align-items-center justify-content-center`}
+              title={t('edit')}
+              style={{width: '32px'}}
+            >
+              <EditOutlined className={`${customBtn} text-white`} />
+            </Button>
+            <Button
+              className={`${customBtn} d-flex align-items-center justify-content-center`}
+              onClick={() => handleArchive(record)}
+              icon={<FaArchive />}
+              title={t('archive')}
+              style={{width: '32px'}}
+            />
+          </div>
         )
       ),
     },

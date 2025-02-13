@@ -104,6 +104,7 @@ const CuDashboard = () => {
     return hasQuantitySheet ? hasQuantitySheet.quantitySheet : false;
   };
 
+
   const generateQueryString = (projectIds) => {
     return projectIds.map(id => `projectIds=${id}`).join('&');
   };
@@ -128,12 +129,14 @@ const projectCompletionPercentages = await API.get(`/Transactions/all-project-co
 console.log(projectCompletionPercentages)
  // Check if the response is an array before using .find()
 
+
         const mergedData = projectData.data.map((project) => {
           const percentage = projectCompletionPercentages.data.find(
             (p) => p.projectId === project.projectId
           );
           return {
             ...project,
+
             completionPercentage: percentage
               ? percentage.completionPercentage
               : 0,
@@ -165,18 +168,23 @@ console.log(projectCompletionPercentages)
         const finalData = [...projectsWithQtySheet, ...projectsWithoutQtySheet];
 
         setData(finalData);
+
       } catch (error) {
         console.error("Error fetching data:", error);
+      } finally {
+        setIsLoading(prev => ({ ...prev, projects: false }));
       }
       finally {
 
         setIsLoading(prev => ({ ...prev, projects: false }))
       }
     };
+  
     fetchPercentages();
   }, [userData.userId, hasquantitySheet]);
 
   useEffect(() => {
+
     const fetchHasQuantitySheet = async () => {
       setIsLoading(prev => ({ ...prev, quantitySheet: true }));
       try {
@@ -199,6 +207,7 @@ console.log(projectCompletionPercentages)
   }, []);
 
   useEffect(() => {
+
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowDropdown(false);

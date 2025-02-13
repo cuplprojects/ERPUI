@@ -28,8 +28,6 @@ const DashboardGrid = ({ projectId, lotNo }) => {
   });
 
 
-
-
   const getColumnDefs = useCallback(() => [
     {
       field: "quantitySheetId",
@@ -91,6 +89,8 @@ const DashboardGrid = ({ projectId, lotNo }) => {
         }
       } catch (error) {
         console.error("Error fetching transactions:", error);
+      } finally {
+        setIsLoading(prev => ({ ...prev, transactions: false }));
       }
       finally {
         setIsLoading(prev => ({ ...prev, transactions: false }));
@@ -106,6 +106,8 @@ const DashboardGrid = ({ projectId, lotNo }) => {
         }
       } catch (error) {
         console.error("Error fetching transaction data:", error);
+      } finally {
+        setIsLoading(prev => ({ ...prev, transactionData: false }));
       }
       finally {
         setIsLoading(prev => ({ ...prev, transactionData: false }));

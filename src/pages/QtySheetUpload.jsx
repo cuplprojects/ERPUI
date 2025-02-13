@@ -16,12 +16,14 @@ import API from "../CustomHooks/MasterApiHooks/api";
 import { useTranslation } from "react-i18next";
 import { decrypt } from "./../Security/Security";
 import { BsCheckCircleFill } from "react-icons/bs";
+
 import {
   success,
   error,
   warning,
 } from "./../CustomHooks/Services/AlertMessageService";
 import UpdateQuantitySheet from "./UpdateQuantitySheet";
+
 
 // Helper function to convert Excel date number to JS Date
 const convertExcelDate = (excelDate) => {
@@ -84,6 +86,7 @@ const QtySheetUpload = () => {
   const [isUpdateMode, setIsUpdateMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showArchivedLots, setShowArchivedLots] = useState(false);
 
   // Track mouse position for context menu
   const [contextMenuPosition, setContextMenuPosition] = useState({
@@ -478,6 +481,7 @@ const QtySheetUpload = () => {
   const processFile = async (file) => {
     const reader = new FileReader();
     reader.onload = async (e) => {
+
       try {
         const data = new Uint8Array(e.target.result);
         const workbook = XLSX.read(data, { type: "array" });
@@ -513,6 +517,7 @@ const QtySheetUpload = () => {
           // Assign the matching headers (or empty array if no match found)
           autoMappings[col] = matchingHeaders.length > 0 ? matchingHeaders : [];
         });
+
 
         setFieldMappings(autoMappings);
         success(t("fileProcessedSuccessfully"));
@@ -603,6 +608,13 @@ const QtySheetUpload = () => {
       >
         {t("releaseForProduction")}
       </Menu.Item>
+      <Menu.Item
+        key="1"
+        onClick={releaseForProduction}
+        className={`w-100 rounded-3 `}
+      >
+        {t("Archive Lot")}
+      </Menu.Item>
     </Menu>
   );
 
@@ -675,6 +687,7 @@ const QtySheetUpload = () => {
       <Row className="mb-2">
         <Col lg={12}>
           <Form layout="vertical" form={form}>
+
             {/* File Upload */}
             {!isUpdateMode ? (
               <>
@@ -784,6 +797,7 @@ const QtySheetUpload = () => {
               </>
             ) : (
               <div className="d-flex justify-content-end mb-2">
+
                 <Button
                   className={`${customBtn} d-flex align-items-center gap-2`}
                   type="primary"
@@ -791,6 +805,7 @@ const QtySheetUpload = () => {
                 >
                   <CloseOutlined />
                 </Button>
+
               </div>
             )}
 
@@ -818,6 +833,7 @@ const QtySheetUpload = () => {
               showTable={showTable}
               lots={lots}
             />
+
           </Form>
         </Col>
       </Row>

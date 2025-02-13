@@ -9,7 +9,11 @@ import themeStore from '../../../store/themeStore';
 import EditProjectModal from '../components/EditProjectModal';
 import AddProjectModal from '../components/AddProjectModal';
 import { error, success } from '../../../CustomHooks/Services/AlertMessageService';
+
 import { encrypt } from '../../../Security/Security';
+
+
+import { FaArchive } from "react-icons/fa";
 
 const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
   const { t } = useTranslation();
@@ -47,6 +51,7 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
   const getProjects = async () => {
     try {
       const response = await API.get('/Project');
+      console.log(response.data)
       setProjects(response.data);
       setTotal(response.data.length);
     } catch (err) {
@@ -58,22 +63,27 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
   const getGroups = async () => {
     try {
       const response = await API.get('/Groups');
+
       const activeGroups = response.data.filter(group => group.status === true);
       setGroups(activeGroups);
     } catch (err) {
       console.error('Failed to fetch groups', err);
       error(t('unableToFetchGroups'));
+
     }
   };
 
   const getTypes = async () => {
     try {
       const response = await API.get('/PaperTypes');
+
+      // Filter out types where status is false
+
       const activeTypes = response.data.filter(type => type.status === true);
       setTypes(activeTypes);
     } catch (err) {
       console.error('Failed to fetch types', err);
-      error(t('unableToFetchTypes'));
+      error(t('unableToFetchTypes')); 
     }
   };
 
@@ -193,12 +203,14 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
       title: t('action'),
       key: 'action',
       render: (_, record) => (
+
         <div className="d-flex align-items-center justify-content-center">
           <Button
             className={`${customBtn} me-2`}
             onClick={() => {
               setEditingProject(record);
               setNumberOfSeries(record.noOfSeries); // Set numberOfSeries when editing
+
               setSeriesNames(record.seriesName);
               editForm.setFieldsValue({
                 name: record.name,
@@ -214,6 +226,7 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
             }}
             icon={<EditOutlined />}
             title={t('edit')}
+
           >
             
           </Button>
@@ -223,6 +236,14 @@ const ProjectTab = ({ setActiveTabKey, setSelectedProject }) => {
             icon={<UploadOutlined />}
             title={t('Upload Quantity Sheet')}
           />
+
+          {/* <Button
+            className={`${customBtn} d-flex align-items-center justify-content-center`}
+            onClick={() => handleArchive(record)}
+            icon={<FaArchive />}
+            title={t('archive')}
+          /> */}
+
         </div>
       ),
     },
