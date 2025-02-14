@@ -12,7 +12,7 @@ const { Search } = Input;
 const CuDetailedAgGrid = ({ projectId , clickedProject }) => {
   const { getCssClasses } = useStore(themeStore);
   const [
-    customDark,
+    customDark, 
     customMid,
     customLight,
     customBtn,

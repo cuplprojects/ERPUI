@@ -11,8 +11,30 @@ const ProcessProgressTrain = ({ ProjectID, lotNumber, previousProcess }) => {
   const [visibleSections, setVisibleSections] = useState(2);
   const [sectionsData, setsectionsData] = useState([]);
   const { processId, processName } = useCurrentProcessStore();
+  const [isDispatched, setIsDispatched] = useState(false);
 
   console.log(ProjectID, lotNumber);
+  useEffect(() => {
+    const fetchDispatch = async () =>{
+      if(ProjectID && lotNumber)
+      {
+        const projectIdInt = parseInt(ProjectID, 10);
+
+        const response = await API.get(
+          `https://localhost:7212/api/Dispatch/project/${projectIdInt}/lot/${lotNumber}`
+        );
+        console.log(response.data);
+        if (response.data.length !=0 && response.data[0].status === true) {
+          setIsDispatched(true);
+        }
+      }
+    };
+
+    fetchDispatch()
+  },[ProjectID,lotNumber])
+  
+  
+  
   useEffect(() => {
     const fetchData = async () => {
       if (ProjectID && lotNumber) {
@@ -22,6 +44,10 @@ const ProcessProgressTrain = ({ ProjectID, lotNumber, previousProcess }) => {
         const response = await API.get(
           `Transactions/Process-Train?projectId=${projectIdInt}&LotNo=${lotNumberInt}`
         );
+
+        if(response.data == 'Dispatched') {
+          setsectionsData([]);
+        }
         setsectionsData(response.data);
         console.log(response.data);
       }
@@ -82,86 +108,92 @@ const ProcessProgressTrain = ({ ProjectID, lotNumber, previousProcess }) => {
 
   return (
     <div className="trcontainer">
-      {visibleSections === 2 ? (
-        <>
-          {previousProcessData && (
-            <div className={`box ${getCardColorClass(previousProcessData)}`}>
-              <div className="box2">
-                {previousProcessData.processName
-                  .split(" ")
-                  .slice(0, 2)
-                  .join(" ")}
-              </div>
-              <div className="box3">
-                <TooltipSection>
-                  {previousProcessData.remainingCatchNo}/
-                  {previousProcessData.remainingQuantity}
-                </TooltipSection>
-                <TooltipSection>
-                  {previousProcessData.wipCount}/
-                  {previousProcessData.wipTotalQuantity}
-                </TooltipSection>
-                <TooltipSection>
-                  {previousProcessData.completedCount}/
-                  {previousProcessData.completedTotalQuantity}
-                </TooltipSection>
-              </div>
-            </div>
-          )}
-          <div className={`box ${getCardColorClass(currentProcessData)}`}>
-            <div className="box2">
-              {currentProcessData
-                ? currentProcessData.processName
-                    .split(" ")
-                    .slice(0, 2)
-                    .join(" ")
-                : "No Current Process"}
-            </div>
-            <div className="box3">
-              <TooltipSection>
-                {currentProcessData?.remainingCatchNo}/
-                {currentProcessData?.remainingQuantity}
-              </TooltipSection>
-              <TooltipSection>
-                {currentProcessData?.wipCount}/
-                {currentProcessData?.wipTotalQuantity}
-              </TooltipSection>
-              <TooltipSection>
-                {currentProcessData?.completedCount}/
-                {currentProcessData?.completedTotalQuantity}
-              </TooltipSection>
-            </div>
-          </div>
-        </>
+      {isDispatched ? (
+        <div className="box7">Dispatched</div>
       ) : (
-        sectionsData.slice(0, visibleSections).map((section, index) => (
-          <div key={index} className={`box ${getCardColorClass(section)}`}>
-            <div className="box2">
-              {section.processName.split(" ").slice(0, 2).join(" ")}
-            </div>
-            <div className="box3">
-              <TooltipSection>
-                {section.remainingCatchNo}/{section.remainingQuantity}
-              </TooltipSection>
-              <TooltipSection>
-                {section?.wipCount}/{section?.wipTotalQuantity}
-              </TooltipSection>
-              <TooltipSection>
-                {section.completedCount}/{section?.completedTotalQuantity}
-              </TooltipSection>
-            </div>
-          </div>
-        ))
-      )}
-      {visibleSections < sectionsData.length && (
-        <button onClick={handleExpand} className="expand-button">
-          &gt;&gt;
-        </button>
-      )}
-      {visibleSections > 2 && (
-        <button onClick={handleCollapse} className="collapse-button">
-          &lt;&lt;
-        </button>
+        <>
+          {visibleSections === 2 ? (
+            <>
+              {previousProcessData && (
+                <div className={`box ${getCardColorClass(previousProcessData)}`}>
+                  <div className="box2">
+                    {previousProcessData.processName
+                      .split(" ")
+                      .slice(0, 2)
+                      .join(" ")}
+                  </div>
+                  <div className="box3">
+                    <TooltipSection>
+                      {previousProcessData.remainingCatchNo}/
+                      {previousProcessData.remainingQuantity}
+                    </TooltipSection>
+                    <TooltipSection>
+                      {previousProcessData.wipCount}/
+                      {previousProcessData.wipTotalQuantity}
+                    </TooltipSection>
+                    <TooltipSection>
+                      {previousProcessData.completedCount}/
+                      {previousProcessData.completedTotalQuantity}
+                    </TooltipSection>
+                  </div>
+                </div>
+              )}
+              <div className={`box ${getCardColorClass(currentProcessData)}`}>
+                <div className="box2">
+                  {currentProcessData
+                    ? currentProcessData.processName
+                        .split(" ")
+                        .slice(0, 2)
+                        .join(" ")
+                    : "No Current Process"}
+                </div>
+                <div className="box3">
+                  <TooltipSection>
+                    {currentProcessData?.remainingCatchNo}/
+                    {currentProcessData?.remainingQuantity}
+                  </TooltipSection>
+                  <TooltipSection>
+                    {currentProcessData?.wipCount}/
+                    {currentProcessData?.wipTotalQuantity}
+                  </TooltipSection>
+                  <TooltipSection>
+                    {currentProcessData?.completedCount}/
+                    {currentProcessData?.completedTotalQuantity}
+                  </TooltipSection>
+                </div>
+              </div>
+            </>
+          ) : (
+            sectionsData.slice(0, visibleSections).map((section, index) => (
+              <div key={index} className={`box ${getCardColorClass(section)}`}>
+                <div className="box2">
+                  {section.processName.split(" ").slice(0, 2).join(" ")}
+                </div>
+                <div className="box3">
+                  <TooltipSection>
+                    {section.remainingCatchNo}/{section.remainingQuantity}
+                  </TooltipSection>
+                  <TooltipSection>
+                    {section?.wipCount}/{section?.wipTotalQuantity}
+                  </TooltipSection>
+                  <TooltipSection>
+                    {section.completedCount}/{section?.completedTotalQuantity}
+                  </TooltipSection>
+                </div>
+              </div>
+            ))
+          )}
+          {visibleSections < sectionsData.length && (
+            <button onClick={handleExpand} className="expand-button">
+              &gt;&gt;
+            </button>
+          )}
+          {visibleSections > 2 && (
+            <button onClick={handleCollapse} className="collapse-button">
+              &lt;&lt;
+            </button>
+          )}
+        </>
       )}
     </div>
   );
