@@ -92,9 +92,6 @@ const DashboardGrid = ({ projectId, lotNo }) => {
       } finally {
         setIsLoading(prev => ({ ...prev, transactions: false }));
       }
-      finally {
-        setIsLoading(prev => ({ ...prev, transactions: false }));
-      }
     };
 
     const fetchTransactionData = async () => {
@@ -107,9 +104,6 @@ const DashboardGrid = ({ projectId, lotNo }) => {
       } catch (error) {
         console.error("Error fetching transaction data:", error);
       } finally {
-        setIsLoading(prev => ({ ...prev, transactionData: false }));
-      }
-      finally {
         setIsLoading(prev => ({ ...prev, transactionData: false }));
       }
     };

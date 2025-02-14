@@ -24,7 +24,6 @@ const CuDetailedAgGrid = ({ projectId , clickedProject }) => {
   ] = getCssClasses();
   const { t } = useTranslation();
   const containerStyle = useMemo(() => ({ width: '100%', height: '100%' }), []);
-  const [isLoading, setIsLoading] = useState(true);
   const [rowData, setRowData] = useState([]);
   const [processNames, setProcessNames] = useState({});
   const [searchText, setSearchText] = useState('');
@@ -48,9 +47,6 @@ const CuDetailedAgGrid = ({ projectId , clickedProject }) => {
       } catch (error) {
         console.error('Error fetching process names:', error);
       } finally {
-        setIsLoading(prev => ({ ...prev, processes: false }));
-      }
-      finally {
         setIsLoading(prev => ({ ...prev, processes: false }));
       }
     };
@@ -80,9 +76,6 @@ const CuDetailedAgGrid = ({ projectId , clickedProject }) => {
           console.error('Error fetching process data:', error);
         } finally {
           setIsLoading(prev => ({ ...prev, data: false }));
-        }
-        finally {
-          setIsLoading(prev => ({ ...prev, processes: false }));
         }
       }
     };

@@ -174,10 +174,6 @@ console.log(projectCompletionPercentages)
       } finally {
         setIsLoading(prev => ({ ...prev, projects: false }));
       }
-      finally {
-
-        setIsLoading(prev => ({ ...prev, projects: false }))
-      }
     };
   
     fetchPercentages();
