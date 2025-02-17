@@ -54,10 +54,46 @@ const PdfExport = ({ data, projectName, groupName, visibleColumns, lotNo }) => {
       'Status': sheet => sheet.catchStatus === 'Completed' ? 'Completed' :
                         sheet.catchStatus === 'Running' ? 'Running' :
                         sheet.catchStatus === 'Pending' ? 'Pending' : 'N/A',
-       'Current Process': sheet => sheet.currentProcessName,                 
       'Inner Envelope': sheet => sheet.innerEnvelope,
-      'Outer Envelope': sheet => sheet.outerEnvelope
+      'Outer Envelope': sheet => sheet.outerEnvelope ? sheet.outerEnvelope : ''
     };
+
+    // Get visible headers based on visibleColumns with mapping
+    const headerMapping = {
+      catchNo: 'Catch No',
+      subject: 'Subject',
+      course: 'Course',
+      paper: 'Paper',
+      examDate: 'Exam Date',
+      examTime: 'Exam Time',
+      quantity: 'Quantity',
+      pages: 'Pages',
+      status: 'Status',
+      currentProcess: 'Current Process',
+      innerEnvelope: 'Inner Envelope',
+      outerEnvelope: 'Outer Envelope'
+    };
+
+    // Get visible headers using the mapping
+    const headers = Object.entries(visibleColumns)
+      .filter(([key, isVisible]) => isVisible)
+      .map(([key]) => headerMapping[key])
+      .filter((header, index, self) => self.indexOf(header) === index);
+
+    // Update headerMap after headers are defined
+    headers.forEach(header => {
+      if (header === 'Current Process' && !headerMap[header]) {
+        headerMap[header] = sheet => sheet.currentProcessName;
+      }
+    });
+
+    // Format table data using the header map
+    const tableData = data.map(sheet => {
+      return headers.map(header => {
+        const dataFn = headerMap[header];
+        return dataFn ? dataFn(sheet) : '';
+      });
+    });
 
     // Column width configurations - adjusted for landscape
     const columnWidthMap = {
@@ -75,26 +111,12 @@ const PdfExport = ({ data, projectName, groupName, visibleColumns, lotNo }) => {
       'Outer Envelope': { width: 25, halign: 'center' }
     };
 
-    // Get visible headers based on visibleColumns
-    const headers = Object.entries(visibleColumns)
-      .filter(([key, isVisible]) => isVisible)
-      .map(([key]) => {
-        const headerKey = key.replace(/([A-Z])/g, ' $1').trim(); // Convert camelCase to Title Case
-        return headerKey.charAt(0).toUpperCase() + headerKey.slice(1);
-      });
-
-    // Format table data using the header map
-    const tableData = data.map(sheet => {
-      return headers.map(header => {
-        const dataFn = headerMap[header];
-        return dataFn ? dataFn(sheet) : '';
-      });
-    });
-
-    // Build column styles object
+    // Build column styles object - only for visible headers
     const columnStyles = {};
     headers.forEach((header, index) => {
-      columnStyles[index] = columnWidthMap[header];
+      if (columnWidthMap[header]) {  // Only add styles for headers that exist in the map
+        columnStyles[index] = columnWidthMap[header];
+      }
     });
 
     // Add table with improved styling for landscape A4
@@ -114,7 +136,7 @@ const PdfExport = ({ data, projectName, groupName, visibleColumns, lotNo }) => {
       headStyles: {
         fillColor: [52, 73, 94],
         textColor: 255,
-        fontSize: 7, // Reduced from 9
+        fontSize: 7,
         fontStyle: 'bold',
         halign: 'center',
         cellPadding: 3
@@ -129,7 +151,7 @@ const PdfExport = ({ data, projectName, groupName, visibleColumns, lotNo }) => {
       margin: { top: 25, right: 15, bottom: 15, left: 15 },
       didDrawPage: function(data) {
         // Add page number at bottom center
-        doc.setFontSize(6); // Reduced from 8
+        doc.setFontSize(6);
         doc.setTextColor(44, 62, 80);
         const currentPage = doc.internal.getNumberOfPages();
       
@@ -141,7 +163,7 @@ const PdfExport = ({ data, projectName, groupName, visibleColumns, lotNo }) => {
         );
 
         // Add datetime watermark footer at bottom right
-        doc.setFontSize(5); // Reduced from 6
+        doc.setFontSize(5);
         doc.setTextColor(180, 180, 180);
         const datetime = new Date().toLocaleString();
         doc.text(

@@ -63,17 +63,14 @@ const ProjectReport = () => {
         { id: 'subject', label: 'Subject' },
         { id: 'paper', label: 'Paper' },
         { id: 'course', label: 'Course' },
-
         { id: 'examDate', label: 'Exam Date' },
         { id: 'examTime', label: 'Exam Time' },
         { id: 'quantity', label: 'Quantity' },
         { id: 'pages', label: 'Pages' },
         { id: 'status', label: 'Status' },
-        { id: 'current Process', label: 'Current Process' },
+        { id: 'currentProcess', label: 'Current Process' },
         { id: 'innerEnvelope', label: 'Inner Envelope' },
         { id: 'outerEnvelope', label: 'Outer Envelope' },
-        { id: 'dispatchDate', label: 'Dispatch Date' },
-
     ];
 
     useEffect(() => {
@@ -316,6 +313,10 @@ const ProjectReport = () => {
                     aValue = a.catchStatus;
                     bValue = b.catchStatus;
                     break;
+                case 'currentProcess':
+                    aValue = a.currentProcessName;
+                    bValue = b.currentProcessName;
+                    break;
                 case 'dispatchDate':
                     aValue = a.dispatchDate;
                     bValue = b.dispatchDate;
@@ -413,7 +414,7 @@ const ProjectReport = () => {
                 {/* Filters */}
                 <div className="d-flex align-items-center justify-content-between">
                     {/* Group Dropdown */}
-                    <Col xs={12} md={3} lg={2} className="mb-3 mb-md-0">
+                    <Col xs={12} md={2} lg={1} className="mb-3 mb-md-0">
                         <Form.Label className="fw-bold text-primary mb-2" style={{ fontSize: "1.1rem", letterSpacing: "0.5px", fontWeight: "700" }}>
                             <span style={{ color: '#2c3e50', textShadow: '1px 1px 2px rgba(0,0,0,0.1)' }}>Group</span>
                             <span style={{ color: '#e74c3c' }}>*</span>
@@ -430,7 +431,8 @@ const ProjectReport = () => {
                                 backgroundColor: "#f8f9fa",
                                 cursor: "pointer",
                                 transition: "all 0.2s ease",
-                                boxShadow: "0 2px 4px rgba(0,0,0,0.05)"
+                                boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+                                fontSize: "0.9rem"
                             }}
                         >
                             <option value="">Select Group</option>
@@ -441,7 +443,7 @@ const ProjectReport = () => {
                     </Col>
 
                     {/* Project Dropdown */}
-                    <Col xs={12} md={3} lg={2} className="mb-3 mb-md-0">
+                    <Col xs={12} md={4} lg={2} className="mb-3 mb-md-0">
                         <Form.Label className="fw-bold text-primary mb-2" style={{ fontSize: "1.1rem", letterSpacing: "0.5px", fontWeight: "700" }}>
                             <span style={{ color: '#2c3e50', textShadow: '1px 1px 2px rgba(0,0,0,0.1)' }}>Project</span>
                             <span style={{ color: '#e74c3c' }}>*</span>
@@ -458,7 +460,8 @@ const ProjectReport = () => {
                                 backgroundColor: "#f8f9fa",
                                 cursor: "pointer",
                                 transition: "all 0.2s ease",
-                                boxShadow: "0 2px 4px rgba(0,0,0,0.05)"
+                                boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+                                fontSize: "0.9rem"
                             }}
                         >
                             <option value="">Select Project</option>
@@ -470,7 +473,7 @@ const ProjectReport = () => {
                     </Col>
 
                     {/* Lot Dropdown */}
-                    <Col xs={12} md={3} lg={2} className="mb-3 mb-md-0">
+                    <Col xs={12} md={2} lg={1} className="mb-3 mb-md-0">
                         <Form.Label className="fw-bold text-primary mb-2" style={{ fontSize: "1.1rem", letterSpacing: "0.5px", fontWeight: "700" }}>
                             <span style={{ color: '#2c3e50', textShadow: '1px 1px 2px rgba(0,0,0,0.1)' }}>Lot</span>
                             <span style={{ color: '#e74c3c' }}>*</span>
@@ -488,7 +491,8 @@ const ProjectReport = () => {
                                 cursor: "pointer",
                                 transition: "all 0.2s ease",
                                 boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-                                opacity: selectedProjectId ? 1 : 0.7
+                                opacity: selectedProjectId ? 1 : 0.7,
+                                fontSize: "0.9rem"
                             }}
                         >
                             <option value="">Select Lot</option>
@@ -498,6 +502,15 @@ const ProjectReport = () => {
                         </Form.Select>
                     </Col>
 
+                    {/* DispatchDate Button */}
+                    <Col xs={12} md={2} lg={1} className="mt-4 mb-md-0">
+                        {showTable && quantitySheets.length > 0 && (
+                            <Form.Label className="fw-bold text-primary mb-2" style={{ fontSize: "0.9rem", letterSpacing: "0.5px", fontWeight: "700", whiteSpace: "nowrap" }}>
+                                <span style={{ color: '#2c3e50', textShadow: '1px 1px 2px rgba(0,0,0,0.1)' }}>Dispatch Date: {quantitySheets[0]?.dispatchDate || 'N/A'}</span>
+                            </Form.Label>
+                        )}
+                    </Col>
+
                     {/* View Report Button */}
                     <Col xs={12} md={3} lg={2} className="mt-4 mb-md-0 d-flex align-items-end justify-content-center">
                         {selectedGroup && selectedProjectId && selectedLot && (
@@ -505,12 +518,14 @@ const ProjectReport = () => {
                                 variant="primary"
                                 onClick={handleViewReport}
                                 disabled={isLoading}
-                                className="w-50 py-2 rounded fw-bold"
+                                className="w-40 rounded fw-bold text-center d-flex align-items-center justify-content-center"
                                 style={{
                                     transition: "all 0.3s ease",
                                     boxShadow: "0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08)",
                                     opacity: isLoading ? 0.7 : 1,
-                                    transform: isLoading ? "none" : "translateY(-1px)"
+                                    transform: isLoading ? "none" : "translateY(-1px)", 
+                                    fontSize: "0.9rem",
+                                    height: "30px"
                                 }}
                             >
                                 View Report
@@ -519,12 +534,13 @@ const ProjectReport = () => {
                     </Col>
 
                     {/* Search Dropdown */}
-                    <Col xs={12} md={3} lg={2} className="mb- mb-md-0">
+                    <Col xs={12} md={2} lg={1} className="mb-3 mb-md-0">
                         <div className="d-flex justify-content-end mt-4">
                             <div className="position-relative">
                                 <Form.Control
                                     type="text"
                                     placeholder="Quick search ..."
+                                    fontSize="0.9rem"
                                     value={searchTerm}
                                     onChange={(e) => {
                                         setSearchTerm(e.target.value);
@@ -536,7 +552,9 @@ const ProjectReport = () => {
                                         backgroundColor: "#f8f9fa",
                                         padding: "10px 20px 10px 40px",
                                         boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-                                        width: "300px",
+                                        width: "210px",
+                                        height: "30px",
+                                        fontSize: "0.9rem"
                                     }}
                                 />
                                 <FaSearch
@@ -860,7 +878,8 @@ const ProjectReport = () => {
                                         <Form.Control
                                             style={{
                                                 height: "40px",
-                                                paddingRight: "40px"
+                                                width: "210px",
+                                                paddingLeft: "35px" // Changed from paddingRight to paddingLeft
                                             }}
                                             type="search"
                                             placeholder="Search..."
@@ -899,7 +918,7 @@ const ProjectReport = () => {
                                         <FaSearch
                                             style={{
                                                 position: "absolute",
-                                                right: "15px",
+                                                left: "10px", // Changed from right to left
                                                 top: "50%",
                                                 transform: "translateY(-50%)",
                                                 color: "#6c757d",
@@ -1087,17 +1106,28 @@ const ProjectReport = () => {
                                                         <button
                                                             className="btn btn-sm btn-light ms-2"
                                                             onClick={() => {
-                                                                // Toggle all process details
+                                                                // Toggle first 5 process details initially
                                                                 setFilteredSheets(sheets => {
                                                                     // Check if any sheet has showProcessDetails as false
                                                                     const hasHiddenDetails = sheets.some(sheet => !sheet.showProcessDetails);
 
-                                                                    // If any are hidden, show all. Otherwise hide all
-                                                                    return sheets.map(sheet => ({
+                                                                    // If any are hidden, show first 5. Otherwise hide all
+                                                                    return sheets.map((sheet, index) => ({
                                                                         ...sheet,
-                                                                        showProcessDetails: hasHiddenDetails
+                                                                        showProcessDetails: hasHiddenDetails && index < 5
                                                                     }));
                                                                 });
+
+                                                                // Load remaining process details after delay
+                                                                setTimeout(() => {
+                                                                    setFilteredSheets(sheets => {
+                                                                        const hasHiddenDetails = sheets.some(sheet => !sheet.showProcessDetails);
+                                                                        return sheets.map(sheet => ({
+                                                                            ...sheet,
+                                                                            showProcessDetails: hasHiddenDetails
+                                                                        }));
+                                                                    });
+                                                                }, 500);
                                                             }}
                                                             title="Toggle All Process Details"
                                                         >
@@ -1245,12 +1275,12 @@ const ProjectReport = () => {
                                                 </th>
                                             )}
 
-                                            {visibleColumns.status && (
+                                            {visibleColumns.currentProcess && (
 
 
                                                 <th onClick={() => handleSort('currentProcess')} style={{ cursor: 'pointer' }}>
                                                     <div className="d-flex align-items-center justify-content-center">
-                                                        CurrentProcess
+                                                        Current Process
                                                         <div className="d-flex flex-column ms-2" style={{ fontSize: '12px' }}>
                                                             <FaSortUp
                                                                 color={sortField === 'currentProcess' && sortDirection === 'asc' ? '#fff' : '#000'}
@@ -1298,23 +1328,7 @@ const ProjectReport = () => {
                                                     </div>
                                                 </th>
                                             )}
-                                            {visibleColumns.dispatchDate && (
-                                                <th onClick={() => handleSort('dispatchDate')} style={{ cursor: 'pointer' }}>
-                                                    <div className="d-flex align-items-center justify-content-center">
-                                                        Dispatch Date
-                                                        <div className="d-flex flex-column ms-2" style={{ fontSize: '12px' }}>
-                                                            <FaSortUp
-                                                                color={sortField === 'dispatchDate' && sortDirection === 'asc' ? '#fff' : '#000'}
-                                                                style={{ marginBottom: '-3px' }}
-                                                            />
-                                                            <FaSortDown
-                                                                color={sortField === 'dispatchDate' && sortDirection === 'desc' ? '#fff' : '#000'}
-                                                                style={{ marginTop: '-3px' }}
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                </th>
-                                            )}
+                                            
 
                                         </tr>
                                     </thead>
@@ -1354,8 +1368,8 @@ const ProjectReport = () => {
                                                     {visibleColumns.currentProcess && <td className="text-center">{sheet.currentProcessName}</td>}
 
                                                     {visibleColumns.innerEnvelope && <td className="text-center">{sheet.innerEnvelope}</td>}
-                                                    {visibleColumns.outerEnvelope && <td className="text-center">{sheet.outerEnvelope}</td>}
-                                                    {visibleColumns.dispatchDate && <td className="text-center">{sheet.dispatchDate}</td>}
+                                                    {visibleColumns.outerEnvelope && <td className="text-center">{sheet.outerEnvelope || ''}</td>}
+                                                  
 
                                                 </tr>,
                                                 sheet.showProcessDetails && (

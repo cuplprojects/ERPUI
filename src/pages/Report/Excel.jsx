@@ -21,7 +21,7 @@ const ExcelExport = ({ data, projectName, groupName, visibleColumns, lotNo }) =>
         'Current Process': sheet => sheet.currentProcessName,
         
         'Inner Envelope': sheet => sheet.innerEnvelope,
-        'Outer Envelope': sheet => sheet.outerEnvelope,
+        'Outer Envelope': sheet => sheet.outerEnvelope ? sheet.outerEnvelope : '',
         'Dispatch Date': sheet => sheet.dispatchDate
       };
 
