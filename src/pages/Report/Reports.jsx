@@ -160,6 +160,22 @@ const ProjectReport = () => {
         setCurrentPage(0);
     }, [quantitySheets]);
 
+
+    const fetchProjectName = async () => {
+        try {
+            const response = await API.get('/Project');
+            const projects = response.data;
+            const projectData = projects.map(project => ({
+                projectId: project.projectId,
+                name: project.name
+            }));
+            return projectData;
+        } catch (error) {
+            console.error("Error fetching project names:", error);
+            return [];
+        }
+    }
+
     const handleViewReport = async () => {
         setSelectedItem(null);
         if (selectedProjectId) {
@@ -196,10 +212,20 @@ const ProjectReport = () => {
                 }
             });
 
+            // Map project IDs to project names
+            const projectNames = await fetchProjectName();
+            const resultsWithProjectNames = response.data.results.map(result => {
+                const project = projectNames.find(p => p.projectId === result.projectId);
+                return {
+                    ...result,
+                    projectName: project ? project.name : 'Unknown Project'
+                };
+            });
+
             if (page === 1) {
-                setSearchResults(response.data.results);
+                setSearchResults(resultsWithProjectNames);
             } else {
-                setSearchResults(prev => [...prev, ...response.data.results]);
+                setSearchResults(prev => [...prev, ...resultsWithProjectNames]);
             }
 
             setHasMoreResults(response.data.results.length === pageSize);
@@ -551,6 +577,8 @@ const ProjectReport = () => {
                                                             <div className="fw-bold text-primary">
                                                                 {result.matchedColumn}: {result.matchedValue}
                                                             </div>
+                                                            <div className="fw-bold text-primary">Project Name: {result.projectName}</div>
+                                                            <div className="fw-bold text-primary">Lot No: {result.lotNo}</div>
                                                         </div>
                                                     ))}
                                                 </div>
